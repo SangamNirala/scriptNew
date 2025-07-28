@@ -266,6 +266,79 @@ async def get_scripts():
         raise HTTPException(status_code=500, detail=f"Error fetching scripts: {str(e)}")
 
 # Voice and TTS Endpoints
+
+def extract_clean_script(raw_script):
+    """
+    Extract only the spoken content from a formatted script, removing:
+    - Timestamps [0:00-0:05]
+    - Scene headers [SCENE START], [HOOK], [PROBLEM], etc.
+    - Speaker labels (NARRATOR:, HOST:, VOICEOVER:)
+    - Tone/delivery instructions (Fast-paced, energetic)
+    - Stage directions and metadata
+    """
+    
+    # Start with the raw script
+    clean_text = raw_script.strip()
+    
+    # Remove timestamps [0:00-0:05], [00:15-00:30], etc.
+    clean_text = re.sub(r'\[\d+:\d+\-\d+:\d+\]', '', clean_text)
+    clean_text = re.sub(r'\[\d+:\d+\]', '', clean_text)
+    
+    # Remove scene headers and labels in brackets
+    # [SCENE START], [HOOK], [THE PROBLEM], [SOLUTION], etc.
+    clean_text = re.sub(r'\[(?:SCENE|HOOK|PROBLEM|SOLUTION|INTRO|OUTRO|TRANSITION|CTA|CALL.*ACTION).*?\]', '', clean_text, flags=re.IGNORECASE)
+    clean_text = re.sub(r'\[[A-Z\s]+:\]', '', clean_text)
+    clean_text = re.sub(r'\[[A-Z\s]+\]', '', clean_text)
+    
+    # Remove speaker labels like NARRATOR:, HOST:, VOICEOVER:, etc.
+    clean_text = re.sub(r'^[A-Z\s]+(\([^)]+\))?:\s*', '', clean_text, flags=re.MULTILINE)
+    clean_text = re.sub(r'\b(NARRATOR|HOST|VOICEOVER|SPEAKER|ANNOUNCER|PRESENTER)(\s*\([^)]+\))?:\s*', '', clean_text, flags=re.IGNORECASE)
+    
+    # Remove tone and delivery instructions in parentheses
+    # (Fast-paced, energetic), (Calm, reassuring), (Excited), etc.
+    clean_text = re.sub(r'\([^)]*(?:paced|energetic|calm|excited|dramatic|slow|fast|tone|voice|delivery|style)[^)]*\)', '', clean_text, flags=re.IGNORECASE)
+    clean_text = re.sub(r'\([^)]*(?:whisper|shout|loud|quiet|emphasis|stress)[^)]*\)', '', clean_text, flags=re.IGNORECASE)
+    
+    # Remove remaining stage directions and notes in parentheses (but keep natural speech in parentheses)
+    # Remove if contains common stage direction words
+    clean_text = re.sub(r'\([^)]*(?:camera|shot|zoom|pan|cut|fade|scene|background|music|sound|sfx|effect)[^)]*\)', '', clean_text, flags=re.IGNORECASE)
+    
+    # Remove remaining empty brackets and parentheses
+    clean_text = re.sub(r'\[\s*\]', '', clean_text)
+    clean_text = re.sub(r'\(\s*\)', '', clean_text)
+    
+    # Remove video production terms that might appear
+    production_terms = [
+        'B-ROLL', 'CUTAWAY', 'MONTAGE', 'GRAPHICS', 'TITLE CARD', 'LOWER THIRD',
+        'FADE IN', 'FADE OUT', 'CUT TO', 'DISSOLVE', 'TRANSITION', 'OVERLAY'
+    ]
+    for term in production_terms:
+        clean_text = re.sub(f'\\b{term}\\b[^\\n]*', '', clean_text, flags=re.IGNORECASE)
+    
+    # Remove markdown formatting
+    clean_text = re.sub(r'\*\*([^*]+)\*\*', r'\1', clean_text)  # Bold **text**
+    clean_text = re.sub(r'\*([^*]+)\*', r'\1', clean_text)      # Italic *text*
+    clean_text = re.sub(r'__([^_]+)__', r'\1', clean_text)      # Bold __text__
+    clean_text = re.sub(r'_([^_]+)_', r'\1', clean_text)        # Italic _text_
+    
+    # Clean up whitespace and line breaks
+    clean_text = re.sub(r'\n\s*\n', '\n\n', clean_text)  # Normalize double line breaks
+    clean_text = re.sub(r'\n{3,}', '\n\n', clean_text)   # Remove excessive line breaks
+    clean_text = re.sub(r'[ \t]+', ' ', clean_text)       # Normalize spaces
+    clean_text = clean_text.strip()
+    
+    # If the result is too short or seems empty, return a basic cleanup
+    if len(clean_text.strip()) < 20:
+        # Fallback to basic cleanup
+        fallback_text = raw_script
+        fallback_text = re.sub(r'\[.*?\]', '', fallback_text)
+        fallback_text = re.sub(r'\(.*?\)', '', fallback_text)
+        fallback_text = re.sub(r'[A-Z\s]+:', '', fallback_text)
+        fallback_text = ' '.join(fallback_text.split())
+        return fallback_text if len(fallback_text.strip()) > 10 else raw_script
+    
+    return clean_text
+
 @api_router.get("/voices", response_model=List[VoiceOption])
 async def get_available_voices():
     """Get list of available TTS voices"""
