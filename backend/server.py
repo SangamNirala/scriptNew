@@ -306,6 +306,8 @@ def extract_clean_script(raw_script):
     # Remove remaining empty brackets and parentheses
     clean_text = re.sub(r'\[\s*\]', '', clean_text)
     clean_text = re.sub(r'\(\s*\)', '', clean_text)
+    clean_text = re.sub(r'[\[\]]+', '', clean_text)  # Remove any remaining brackets
+    clean_text = re.sub(r'[\(\)]+', '', clean_text)  # Remove any remaining parentheses
     
     # Remove video production terms that might appear
     production_terms = [
