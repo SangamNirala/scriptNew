@@ -37,8 +37,24 @@ const ScriptGenerator = () => {
     }
   };
 
+  const fetchVoices = async () => {
+    try {
+      const response = await axios.get(`${API}/voices`);
+      setVoices(response.data);
+      // Set default voice to the first female voice (usually Aria)
+      if (response.data.length > 0) {
+        const defaultVoice = response.data.find(v => v.gender === 'Female') || response.data[0];
+        setSelectedVoice(defaultVoice);
+      }
+    } catch (err) {
+      console.error("Error fetching voices:", err);
+      setError("Error loading voices. Please refresh the page.");
+    }
+  };
+
   useEffect(() => {
     fetchScripts();
+    fetchVoices();
   }, []);
 
   const handleEnhancePrompt = async () => {
