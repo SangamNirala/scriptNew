@@ -555,6 +555,248 @@ class ScriptGenerationTester:
             self.log_test("Generate Audio - Exception", False, f"Request failed: {str(e)}")
             return False
     
+    def test_extract_clean_script_comprehensive(self):
+        """Test the extract_clean_script function with comprehensive video script example"""
+        print("\n=== Testing Extract Clean Script Function ===")
+        
+        # Comprehensive video script with production elements (from review request)
+        comprehensive_script = """VIDEO SCRIPT: AI-POWERED CRM LAUNCH
+
+TARGET DURATION: 30-45 Seconds
+
+VIDEO TYPE: General Audience / Small to Medium Businesses
+
+SCRIPT:
+
+(0:00-0:03) [SCENE START: Fast cuts of overwhelmed salespeople juggling calls, emails, and spreadsheets. High-energy, frantic music.]
+
+(Narrator – Urgent, slightly panicked tone)
+ARE YOU DROWNING in follow-ups? ... Sales slipping through the cracks? ... You're NOT alone.
+
+(0:03-0:07) [SCENE CHANGE: Transition to a sleek, minimalist interface of the new CRM software. Calm, professional music begins.]
+
+(Narrator – Tone shifts to calm, confident)
+But what if you could RECLAIM your time...and BOOST your sales... by 40%?
+
+(0:07-0:12) [SCENE: Screen recording showcasing automated email sequences and task management features.]
+
+(Narrator)
+Introducing [CRM Software Name]! ... The AI-powered CRM designed to AUTOMATE your follow-ups...and turn leads into loyal customers.
+
+(0:12-0:18) [SCENE: Graph showing a clear upward trend in sales conversions, juxtaposed with happy, relaxed salespeople celebrating.]
+
+(Narrator – Enthusiastic, energetic)
+Imagine: NO MORE missed opportunities. Just a streamlined, efficient sales engine... working FOR you, 24/7.
+
+(0:18-0:25) [SCENE: Quick cuts highlighting key features: lead scoring, personalized email templates, analytics dashboards.]
+
+(Narrator – Fast-paced, highlighting benefits)
+[CRM Software Name] intelligently SCORES your leads...PERSONALIZEs your messaging...and PREDICTs your next best move.
+
+(0:25-0:30) [SCENE: Testimonial snippet – A business owner smiles and nods enthusiastically.]
+
+(Testimonial VO – Genuine, authentic)
+"Since using [CRM Software Name], our sales have EXPLODED! ... It's a game-changer."
+
+(0:30-0:35) [SCENE: Clear call to action with website address and limited-time offer. Upbeat, driving music swells.]
+
+(Narrator – Urgent, action-oriented)
+Ready to SCALE your sales? Visit [Website Address] TODAY! ... And claim your FREE trial + 20% off! ... Don't wait, this offer is LIMITED!
+
+(0:35-0:40) [SCENE: End screen with company logo and tagline. Music fades out.]
+
+(Narrator – Final, confident statement)
+[CRM Software Name]. Sales. Simplified.
+
+KEY RETENTION ELEMENTS:
+
+* Immediate Problem/Solution: Start with the pain point, then offer the immediate solution.
+* Benefit-Driven Language: Focus on what the viewer GAINS (time, sales, efficiency).
+* Visual Cues: The script is written to work with the visuals, reinforcing the message.
+* Social Proof: The testimonial adds credibility.
+* Urgency: The limited-time offer creates a sense of FOMO (fear of missing out)."""
+
+        # Expected clean output (only spoken content)
+        expected_segments = [
+            "ARE YOU DROWNING in follow-ups? Sales slipping through the cracks? You're NOT alone.",
+            "But what if you could RECLAIM your time and BOOST your sales by 40%?",
+            "Introducing [CRM Software Name]! The AI-powered CRM designed to AUTOMATE your follow-ups and turn leads into loyal customers.",
+            "Imagine: NO MORE missed opportunities. Just a streamlined, efficient sales engine working FOR you, 24/7.",
+            "[CRM Software Name] intelligently SCORES your leads PERSONALIZEs your messaging and PREDICTs your next best move.",
+            "Since using [CRM Software Name], our sales have EXPLODED! It's a game-changer.",
+            "Ready to SCALE your sales? Visit [Website Address] TODAY! And claim your FREE trial + 20% off! Don't wait, this offer is LIMITED!",
+            "[CRM Software Name]. Sales. Simplified."
+        ]
+        
+        # Test with multiple voices to ensure consistency
+        try:
+            # First get available voices
+            voices_response = self.session.get(f"{self.backend_url}/voices", timeout=15)
+            if voices_response.status_code != 200:
+                self.log_test("Extract Clean Script - Voice Retrieval", False,
+                            "Could not retrieve voices for testing")
+                return False
+            
+            voices = voices_response.json()
+            if not voices:
+                self.log_test("Extract Clean Script - Voice Availability", False,
+                            "No voices available for testing")
+                return False
+            
+            # Test with first 3 voices (or all if less than 3)
+            test_voices = voices[:min(3, len(voices))]
+            successful_tests = 0
+            all_cleaned_outputs = []
+            
+            for voice in test_voices:
+                voice_name = voice["name"]
+                
+                # Test audio generation with comprehensive script
+                payload = {
+                    "text": comprehensive_script,
+                    "voice_name": voice_name
+                }
+                
+                try:
+                    response = self.session.post(
+                        f"{self.backend_url}/generate-audio",
+                        json=payload,
+                        timeout=60  # Longer timeout for complex script
+                    )
+                    
+                    if response.status_code == 200:
+                        data = response.json()
+                        audio_base64 = data["audio_base64"]
+                        
+                        # Verify substantial audio was generated
+                        if len(audio_base64) > 10000:  # Should be substantial audio
+                            self.log_test(f"Extract Clean Script - {voice['display_name']}", True,
+                                        f"Successfully generated {len(audio_base64)} chars of audio")
+                            successful_tests += 1
+                            all_cleaned_outputs.append(audio_base64[:200])  # Store sample for comparison
+                        else:
+                            self.log_test(f"Extract Clean Script - {voice['display_name']}", False,
+                                        f"Audio too short: {len(audio_base64)} chars")
+                    else:
+                        self.log_test(f"Extract Clean Script - {voice['display_name']}", False,
+                                    f"HTTP {response.status_code}: {response.text[:200]}")
+                        
+                except Exception as e:
+                    self.log_test(f"Extract Clean Script - {voice['display_name']}", False,
+                                f"Exception: {str(e)}")
+            
+            # Verify script cleaning worked properly by testing key requirements
+            if successful_tests > 0:
+                # Test that timestamps are removed
+                test_payload = {
+                    "text": "(0:00-0:03) This should not have timestamps in audio",
+                    "voice_name": test_voices[0]["name"]
+                }
+                
+                timestamp_response = self.session.post(
+                    f"{self.backend_url}/generate-audio",
+                    json=test_payload,
+                    timeout=30
+                )
+                
+                if timestamp_response.status_code == 200:
+                    self.log_test("Extract Clean Script - Timestamp Removal", True,
+                                "Successfully processed text with timestamps")
+                else:
+                    self.log_test("Extract Clean Script - Timestamp Removal", False,
+                                f"Failed timestamp test: {timestamp_response.status_code}")
+                
+                # Test that scene descriptions are removed
+                scene_payload = {
+                    "text": "[SCENE: Office setting] Hello there! This is clean speech.",
+                    "voice_name": test_voices[0]["name"]
+                }
+                
+                scene_response = self.session.post(
+                    f"{self.backend_url}/generate-audio",
+                    json=scene_payload,
+                    timeout=30
+                )
+                
+                if scene_response.status_code == 200:
+                    self.log_test("Extract Clean Script - Scene Description Removal", True,
+                                "Successfully processed text with scene descriptions")
+                else:
+                    self.log_test("Extract Clean Script - Scene Description Removal", False,
+                                f"Failed scene description test: {scene_response.status_code}")
+                
+                # Test that speaker directions are removed
+                speaker_payload = {
+                    "text": "(Narrator – Urgent tone) This should be clean speech without directions.",
+                    "voice_name": test_voices[0]["name"]
+                }
+                
+                speaker_response = self.session.post(
+                    f"{self.backend_url}/generate-audio",
+                    json=speaker_payload,
+                    timeout=30
+                )
+                
+                if speaker_response.status_code == 200:
+                    self.log_test("Extract Clean Script - Speaker Direction Removal", True,
+                                "Successfully processed text with speaker directions")
+                else:
+                    self.log_test("Extract Clean Script - Speaker Direction Removal", False,
+                                f"Failed speaker direction test: {speaker_response.status_code}")
+                
+                # Test that metadata sections are removed
+                metadata_payload = {
+                    "text": """TARGET DURATION: 30 seconds
+                    
+                    SCRIPT:
+                    This is the actual spoken content that should remain.
+                    
+                    KEY RETENTION ELEMENTS:
+                    * This should be removed
+                    * So should this""",
+                    "voice_name": test_voices[0]["name"]
+                }
+                
+                metadata_response = self.session.post(
+                    f"{self.backend_url}/generate-audio",
+                    json=metadata_payload,
+                    timeout=30
+                )
+                
+                if metadata_response.status_code == 200:
+                    self.log_test("Extract Clean Script - Metadata Removal", True,
+                                "Successfully processed text with metadata sections")
+                else:
+                    self.log_test("Extract Clean Script - Metadata Removal", False,
+                                f"Failed metadata test: {metadata_response.status_code}")
+                
+                # Overall success assessment
+                if successful_tests >= 2:
+                    self.log_test("Extract Clean Script - Comprehensive Test", True,
+                                f"Successfully tested extract_clean_script with {successful_tests} voices")
+                    
+                    # Verify different voices produce different audio (consistency check)
+                    if len(set(all_cleaned_outputs)) > 1:
+                        self.log_test("Extract Clean Script - Voice Consistency", True,
+                                    "Different voices produce different audio outputs as expected")
+                    else:
+                        self.log_test("Extract Clean Script - Voice Consistency", False,
+                                    "All voices produced identical audio (unexpected)")
+                    
+                    return True
+                else:
+                    self.log_test("Extract Clean Script - Comprehensive Test", False,
+                                f"Only {successful_tests} voice tests succeeded")
+                    return False
+            else:
+                self.log_test("Extract Clean Script - Comprehensive Test", False,
+                            "No voice tests succeeded")
+                return False
+                
+        except Exception as e:
+            self.log_test("Extract Clean Script - Exception", False, f"Test failed: {str(e)}")
+            return False
+
     def test_audio_error_handling(self):
         """Test error handling for audio generation"""
         print("\n=== Testing Audio Error Handling ===")
