@@ -577,6 +577,21 @@ const ScriptGenerator = () => {
                       )}
                     </button>
                   )}
+
+                  {lastGeneratedAudio && (
+                    <button
+                      onClick={() => setShowAvatarOptions(true)}
+                      disabled={isGeneratingVideo}
+                      className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center space-x-2 ${
+                        isGeneratingVideo 
+                          ? 'bg-yellow-500/20 text-yellow-300 cursor-not-allowed' 
+                          : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700'
+                      }`}
+                    >
+                      <span>✨</span>
+                      <span>Enhanced Avatar Video</span>
+                    </button>
+                  )}
                   
                   {!isPlaying && !isGeneratingAudio && !lastGeneratedAudio && (
                     <div className="text-xs text-gray-400 flex items-center">
