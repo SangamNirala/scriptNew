@@ -264,6 +264,92 @@ async def get_scripts():
         logger.error(f"Error fetching scripts: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error fetching scripts: {str(e)}")
 
+# Voice and TTS Endpoints
+@api_router.get("/voices", response_model=List[VoiceOption])
+async def get_available_voices():
+    """Get list of available TTS voices"""
+    try:
+        voices = await edge_tts.list_voices()
+        
+        # Filter and format voices for better user experience
+        voice_options = []
+        
+        # Select popular voices with good variety
+        popular_voices = {
+            "en-US-AriaNeural": {"display": "Aria (US Female - Natural)", "gender": "Female"},
+            "en-US-DavisNeural": {"display": "Davis (US Male - Natural)", "gender": "Male"}, 
+            "en-US-JennyNeural": {"display": "Jenny (US Female - Friendly)", "gender": "Female"},
+            "en-US-GuyNeural": {"display": "Guy (US Male - Professional)", "gender": "Male"},
+            "en-GB-SoniaNeural": {"display": "Sonia (UK Female)", "gender": "Female"},
+            "en-GB-RyanNeural": {"display": "Ryan (UK Male)", "gender": "Male"},
+            "en-AU-NatashaNeural": {"display": "Natasha (Australian Female)", "gender": "Female"},
+            "en-AU-WilliamNeural": {"display": "William (Australian Male)", "gender": "Male"},
+            "en-CA-ClaraNeural": {"display": "Clara (Canadian Female)", "gender": "Female"},
+            "en-CA-LiamNeural": {"display": "Liam (Canadian Male)", "gender": "Male"}
+        }
+        
+        for voice in voices:
+            voice_name = voice.get('Name', '')
+            if voice_name in popular_voices:
+                voice_info = popular_voices[voice_name]
+                voice_options.append(VoiceOption(
+                    name=voice_name,
+                    display_name=voice_info["display"],
+                    language=voice.get('Locale', 'en-US'),
+                    gender=voice_info["gender"]
+                ))
+        
+        # Sort by gender and then by name for better UI organization
+        voice_options.sort(key=lambda x: (x.gender, x.display_name))
+        
+        return voice_options
+        
+    except Exception as e:
+        logger.error(f"Error fetching voices: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error fetching voices: {str(e)}")
+
+@api_router.post("/generate-audio", response_model=AudioResponse)
+async def generate_audio(request: TextToSpeechRequest):
+    """Generate audio from text using selected voice"""
+    try:
+        # Clean the text for better TTS (remove formatting)
+        clean_text = request.text.strip()
+        if not clean_text:
+            raise HTTPException(status_code=400, detail="Text cannot be empty")
+        
+        # Remove script formatting for better speech
+        clean_text = clean_text.replace('[', '').replace(']', '')  # Remove scene descriptions
+        clean_text = clean_text.replace('(', '').replace(')', '')  # Remove speaker directions  
+        clean_text = clean_text.replace('**', '')  # Remove bold formatting
+        clean_text = ' '.join(clean_text.split())  # Normalize whitespace
+        
+        # Create TTS communication
+        communicate = edge_tts.Communicate(clean_text, request.voice_name)
+        
+        # Generate audio in memory
+        audio_data = b""
+        async for chunk in communicate.stream():
+            if chunk["type"] == "audio":
+                audio_data += chunk["data"]
+        
+        if not audio_data:
+            raise HTTPException(status_code=500, detail="Failed to generate audio data")
+        
+        # Convert to base64 for frontend
+        audio_base64 = base64.b64encode(audio_data).decode('utf-8')
+        
+        return AudioResponse(
+            audio_base64=audio_base64,
+            voice_used=request.voice_name,
+            duration_seconds=len(audio_data) / 16000  # Rough estimation
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error generating audio: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error generating audio: {str(e)}")
+
 # Include the router in the main app
 app.include_router(api_router)
 
