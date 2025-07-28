@@ -266,9 +266,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Edge-TTS Integration"
     - "Voice Selection UI"
-    - "Audio Generation and Playback"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
