@@ -422,9 +422,9 @@ const ScriptGenerator = () => {
                     📋 Copy Script
                   </button>
                   
-                  {!isPlaying && (
+                  {!isPlaying && !isGeneratingAudio && (
                     <div className="text-xs text-gray-400 flex items-center">
-                      💡 Click "Listen" to hear your script read aloud
+                      💡 Click "Listen" to choose a voice and hear your script read aloud
                     </div>
                   )}
                 </div>
