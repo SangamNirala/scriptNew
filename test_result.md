@@ -255,7 +255,7 @@ frontend:
     file: "server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
         - working: false
           agent: "main"
@@ -263,6 +263,9 @@ frontend:
         - working: true
           agent: "testing"
           comment: "✅ COMPREHENSIVE TESTING PASSED: Enhanced extract_clean_script function successfully tested with complex video script examples. All 39 tests passed with 100% success rate. Function properly removes all production elements (timestamps, scene descriptions, speaker directions, metadata) and generates clean audio output (434,304-446,784 characters) ready for direct video integration. Tested across multiple voices with consistent cleaning results. Audio content now contains ONLY essential narration suitable for final video production."
+        - working: true
+          agent: "main"
+          comment: "FIXED TIMESTAMP SPACING ISSUE: Updated extract_clean_script function to properly handle timestamps with spaces around dash (e.g., '0:30 - 0:45'). Enhanced regex patterns: 1) Added \\s* around [-–] to handle spaces, 2) Changed timestamp removal to work anywhere in line (not just beginning), 3) Added final cleanup for any remaining timestamp patterns. Verified fix removes timestamps completely from audio - original '(0:30 - 0:45) Welcome...' becomes just 'Welcome...' - 28 characters of timestamps removed. TTS will no longer speak timestamp portions."
 
   - task: "Avatar Video Generation Integration"
     implemented: true
