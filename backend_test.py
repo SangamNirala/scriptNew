@@ -2231,6 +2231,7 @@ KEY RETENTION ELEMENTS:
             self.test_scripts_retrieval_endpoint,
             self.test_voices_endpoint,
             self.test_generate_audio_endpoint,
+            self.test_enhanced_script_filtering_review_request,  # NEW: Focus test for review request
             self.test_timestamp_removal_comprehensive,  # New focused timestamp removal test
             self.test_audio_error_handling,
             self.test_voice_audio_integration,
