@@ -1416,6 +1416,507 @@ KEY RETENTION ELEMENTS:
             self.log_test("Avatar Video Lengths - Exception", False, f"Test failed: {str(e)}")
             return False
     
+    def test_enhanced_avatar_video_generation_endpoint(self):
+        """Test the new /api/generate-enhanced-avatar-video endpoint"""
+        print("\n=== Testing Enhanced Avatar Video Generation Endpoint ===")
+        
+        # First, generate some audio to use for enhanced avatar video testing
+        try:
+            # Get available voices
+            voices_response = self.session.get(f"{self.backend_url}/voices", timeout=15)
+            if voices_response.status_code != 200:
+                self.log_test("Enhanced Avatar Video - Voice Retrieval", False,
+                            "Could not retrieve voices for enhanced avatar video testing")
+                return False
+            
+            voices = voices_response.json()
+            if not voices:
+                self.log_test("Enhanced Avatar Video - Voice Availability", False,
+                            "No voices available for enhanced avatar video testing")
+                return False
+            
+            test_voice = voices[0]["name"]
+            
+            # Generate sample audio for enhanced avatar video
+            audio_text = "Welcome to our presentation. This is about technology and innovation in the modern world."
+            audio_payload = {
+                "text": audio_text,
+                "voice_name": test_voice
+            }
+            
+            audio_response = self.session.post(
+                f"{self.backend_url}/generate-audio",
+                json=audio_payload,
+                timeout=30
+            )
+            
+            if audio_response.status_code != 200:
+                self.log_test("Enhanced Avatar Video - Audio Generation", False,
+                            f"Failed to generate audio for enhanced avatar video: {audio_response.status_code}")
+                return False
+            
+            audio_data = audio_response.json()
+            audio_base64 = audio_data["audio_base64"]
+            
+            self.log_test("Enhanced Avatar Video - Audio Generation", True,
+                        f"Successfully generated {len(audio_base64)} chars of base64 audio for enhanced avatar video")
+            
+        except Exception as e:
+            self.log_test("Enhanced Avatar Video - Audio Setup", False, f"Failed to setup audio: {str(e)}")
+            return False
+        
+        # Test Case 1: Default avatar option
+        try:
+            default_payload = {
+                "audio_base64": audio_base64,
+                "avatar_option": "default",
+                "script_text": "Welcome to our presentation. This is about technology and innovation in the modern world."
+            }
+            
+            default_response = self.session.post(
+                f"{self.backend_url}/generate-enhanced-avatar-video",
+                json=default_payload,
+                timeout=180  # Enhanced avatar video generation can take longer
+            )
+            
+            if default_response.status_code == 200:
+                default_data = default_response.json()
+                
+                # Verify response structure
+                required_fields = ["video_base64", "duration_seconds", "request_id", "avatar_option", "script_segments", "sadtalker_used"]
+                missing_fields = [field for field in required_fields if field not in default_data]
+                
+                if missing_fields:
+                    self.log_test("Enhanced Avatar Video - Default Response Structure", False,
+                                f"Missing fields: {missing_fields}")
+                    return False
+                
+                # Verify video data
+                video_base64 = default_data["video_base64"]
+                if not video_base64 or len(video_base64) < 1000:
+                    self.log_test("Enhanced Avatar Video - Default Video Data", False,
+                                "Video base64 data is too short or empty",
+                                {"video_length": len(video_base64) if video_base64 else 0})
+                    return False
+                
+                # Verify duration is reasonable
+                duration = default_data["duration_seconds"]
+                if duration <= 0 or duration > 120:  # Should be reasonable duration
+                    self.log_test("Enhanced Avatar Video - Default Duration", False,
+                                f"Unreasonable duration: {duration} seconds")
+                    return False
+                
+                # Verify avatar option matches
+                if default_data["avatar_option"] != "default":
+                    self.log_test("Enhanced Avatar Video - Default Avatar Option", False,
+                                f"Expected 'default', got '{default_data['avatar_option']}'")
+                    return False
+                
+                # Verify script segments
+                script_segments = default_data["script_segments"]
+                if script_segments <= 0:
+                    self.log_test("Enhanced Avatar Video - Default Script Segments", False,
+                                f"Expected positive script segments, got {script_segments}")
+                    return False
+                
+                # Verify sadtalker_used is boolean
+                sadtalker_used = default_data["sadtalker_used"]
+                if not isinstance(sadtalker_used, bool):
+                    self.log_test("Enhanced Avatar Video - Default SadTalker Flag", False,
+                                f"Expected boolean for sadtalker_used, got {type(sadtalker_used)}")
+                    return False
+                
+                self.log_test("Enhanced Avatar Video - Default Avatar", True,
+                            f"Successfully generated {len(video_base64)} chars of base64 video, duration: {duration:.2f}s, segments: {script_segments}, SadTalker: {sadtalker_used}")
+                
+            else:
+                self.log_test("Enhanced Avatar Video - Default HTTP Response", False,
+                            f"HTTP {default_response.status_code}: {default_response.text[:500]}")
+                return False
+                
+        except Exception as e:
+            self.log_test("Enhanced Avatar Video - Default Generation Exception", False, f"Request failed: {str(e)}")
+            return False
+        
+        # Test Case 2: AI Generated avatar option
+        try:
+            ai_payload = {
+                "audio_base64": audio_base64,
+                "avatar_option": "ai_generated",
+                "script_text": "This is a test of AI-generated avatar functionality."
+            }
+            
+            ai_response = self.session.post(
+                f"{self.backend_url}/generate-enhanced-avatar-video",
+                json=ai_payload,
+                timeout=180
+            )
+            
+            if ai_response.status_code == 200:
+                ai_data = ai_response.json()
+                
+                # Verify avatar option matches
+                if ai_data["avatar_option"] != "ai_generated":
+                    self.log_test("Enhanced Avatar Video - AI Generated Avatar Option", False,
+                                f"Expected 'ai_generated', got '{ai_data['avatar_option']}'")
+                    return False
+                
+                # Verify video was generated
+                if not ai_data["video_base64"] or len(ai_data["video_base64"]) < 1000:
+                    self.log_test("Enhanced Avatar Video - AI Generated Video Data", False,
+                                "AI generated video data is too short or empty")
+                    return False
+                
+                self.log_test("Enhanced Avatar Video - AI Generated Avatar", True,
+                            f"Successfully generated AI avatar video: {len(ai_data['video_base64'])} chars, duration: {ai_data['duration_seconds']:.2f}s")
+                
+            else:
+                self.log_test("Enhanced Avatar Video - AI Generated HTTP Response", False,
+                            f"HTTP {ai_response.status_code}: {ai_response.text[:500]}")
+                return False
+                
+        except Exception as e:
+            self.log_test("Enhanced Avatar Video - AI Generated Exception", False, f"Request failed: {str(e)}")
+            return False
+        
+        # Test Case 3: Upload avatar option (without actual image - should fail gracefully)
+        try:
+            upload_payload = {
+                "audio_base64": audio_base64,
+                "avatar_option": "upload",
+                "script_text": "This should fail without user image."
+            }
+            
+            upload_response = self.session.post(
+                f"{self.backend_url}/generate-enhanced-avatar-video",
+                json=upload_payload,
+                timeout=60
+            )
+            
+            # This should fail with 400 because no user_image_base64 provided
+            if upload_response.status_code == 400:
+                self.log_test("Enhanced Avatar Video - Upload Validation", True,
+                            "Properly validated missing user image for upload option")
+            else:
+                self.log_test("Enhanced Avatar Video - Upload Validation", False,
+                            f"Expected 400 for missing user image, got {upload_response.status_code}")
+                
+        except Exception as e:
+            self.log_test("Enhanced Avatar Video - Upload Validation Exception", False, f"Request failed: {str(e)}")
+        
+        # Test Case 4: Invalid avatar option
+        try:
+            invalid_payload = {
+                "audio_base64": audio_base64,
+                "avatar_option": "invalid_option",
+                "script_text": "This should fail with invalid avatar option."
+            }
+            
+            invalid_response = self.session.post(
+                f"{self.backend_url}/generate-enhanced-avatar-video",
+                json=invalid_payload,
+                timeout=60
+            )
+            
+            # This should fail with 400 because of invalid avatar option
+            if invalid_response.status_code == 400:
+                self.log_test("Enhanced Avatar Video - Invalid Option Validation", True,
+                            "Properly validated invalid avatar option")
+            else:
+                self.log_test("Enhanced Avatar Video - Invalid Option Validation", False,
+                            f"Expected 400 for invalid avatar option, got {invalid_response.status_code}")
+                
+        except Exception as e:
+            self.log_test("Enhanced Avatar Video - Invalid Option Exception", False, f"Request failed: {str(e)}")
+        
+        # Test Case 5: Different script contexts
+        try:
+            contexts = [
+                {"script": "Welcome to our business meeting. Let's discuss quarterly results.", "expected_bg": "office"},
+                {"script": "Today we'll learn about advanced mathematics and problem solving.", "expected_bg": "education"},
+                {"script": "Discover the latest in artificial intelligence and machine learning technology.", "expected_bg": "tech"}
+            ]
+            
+            context_success = 0
+            for i, context in enumerate(contexts):
+                context_payload = {
+                    "audio_base64": audio_base64,
+                    "avatar_option": "default",
+                    "script_text": context["script"]
+                }
+                
+                context_response = self.session.post(
+                    f"{self.backend_url}/generate-enhanced-avatar-video",
+                    json=context_payload,
+                    timeout=180
+                )
+                
+                if context_response.status_code == 200:
+                    context_data = context_response.json()
+                    if context_data["script_segments"] > 0:
+                        context_success += 1
+                        self.log_test(f"Enhanced Avatar Video - Context {i+1}", True,
+                                    f"Successfully processed context-aware script with {context_data['script_segments']} segments")
+                    else:
+                        self.log_test(f"Enhanced Avatar Video - Context {i+1}", False,
+                                    "No script segments generated")
+                else:
+                    self.log_test(f"Enhanced Avatar Video - Context {i+1}", False,
+                                f"Failed with status {context_response.status_code}")
+            
+            if context_success >= 2:
+                self.log_test("Enhanced Avatar Video - Context Awareness", True,
+                            f"Successfully processed {context_success}/3 context-aware scripts")
+            else:
+                self.log_test("Enhanced Avatar Video - Context Awareness", False,
+                            f"Only {context_success}/3 context tests succeeded")
+                
+        except Exception as e:
+            self.log_test("Enhanced Avatar Video - Context Testing Exception", False, f"Context testing failed: {str(e)}")
+        
+        return True
+    
+    def test_enhanced_avatar_video_error_handling(self):
+        """Test error handling for enhanced avatar video generation"""
+        print("\n=== Testing Enhanced Avatar Video Error Handling ===")
+        
+        # Test Case 1: Empty audio data
+        try:
+            empty_audio_response = self.session.post(
+                f"{self.backend_url}/generate-enhanced-avatar-video",
+                json={
+                    "audio_base64": "",
+                    "avatar_option": "default"
+                },
+                timeout=30
+            )
+            
+            if empty_audio_response.status_code == 400:
+                self.log_test("Enhanced Avatar Video Error - Empty Audio", True,
+                            "Properly handled empty audio data")
+            else:
+                self.log_test("Enhanced Avatar Video Error - Empty Audio", False,
+                            f"Unexpected status code for empty audio: {empty_audio_response.status_code}")
+        except Exception as e:
+            self.log_test("Enhanced Avatar Video Error - Empty Audio", False, f"Exception: {str(e)}")
+        
+        # Test Case 2: Invalid avatar option
+        try:
+            # First get valid audio
+            voices_response = self.session.get(f"{self.backend_url}/voices", timeout=15)
+            if voices_response.status_code == 200:
+                voices = voices_response.json()
+                if voices:
+                    test_voice = voices[0]["name"]
+                    audio_response = self.session.post(
+                        f"{self.backend_url}/generate-audio",
+                        json={"text": "Test audio", "voice_name": test_voice},
+                        timeout=30
+                    )
+                    
+                    if audio_response.status_code == 200:
+                        audio_base64 = audio_response.json()["audio_base64"]
+                        
+                        invalid_option_response = self.session.post(
+                            f"{self.backend_url}/generate-enhanced-avatar-video",
+                            json={
+                                "audio_base64": audio_base64,
+                                "avatar_option": "invalid_option"
+                            },
+                            timeout=30
+                        )
+                        
+                        if invalid_option_response.status_code == 400:
+                            self.log_test("Enhanced Avatar Video Error - Invalid Option", True,
+                                        "Properly handled invalid avatar option")
+                        else:
+                            self.log_test("Enhanced Avatar Video Error - Invalid Option", False,
+                                        f"Unexpected status code for invalid option: {invalid_option_response.status_code}")
+                    else:
+                        self.log_test("Enhanced Avatar Video Error - Invalid Option", False,
+                                    "Could not generate test audio")
+                else:
+                    self.log_test("Enhanced Avatar Video Error - Invalid Option", False,
+                                "No voices available for testing")
+            else:
+                self.log_test("Enhanced Avatar Video Error - Invalid Option", False,
+                            "Could not retrieve voices for testing")
+        except Exception as e:
+            self.log_test("Enhanced Avatar Video Error - Invalid Option", False, f"Exception: {str(e)}")
+        
+        # Test Case 3: Missing required fields
+        try:
+            missing_fields_response = self.session.post(
+                f"{self.backend_url}/generate-enhanced-avatar-video",
+                json={},  # Missing audio_base64 and avatar_option
+                timeout=10
+            )
+            
+            if missing_fields_response.status_code == 422:  # Validation error expected
+                self.log_test("Enhanced Avatar Video Error - Missing Fields", True,
+                            "Properly handled missing required fields")
+            else:
+                self.log_test("Enhanced Avatar Video Error - Missing Fields", False,
+                            f"Unexpected status code for missing fields: {missing_fields_response.status_code}")
+        except Exception as e:
+            self.log_test("Enhanced Avatar Video Error - Missing Fields", False, f"Exception: {str(e)}")
+        
+        return True
+    
+    def test_enhanced_avatar_video_integration(self):
+        """Test the complete enhanced avatar video integration workflow"""
+        print("\n=== Testing Enhanced Avatar Video Integration ===")
+        
+        try:
+            # Step 1: Generate a script
+            script_payload = {
+                "prompt": "Create a professional presentation about artificial intelligence and its impact on modern business",
+                "video_type": "educational",
+                "duration": "short"
+            }
+            
+            script_response = self.session.post(
+                f"{self.backend_url}/generate-script",
+                json=script_payload,
+                timeout=45
+            )
+            
+            if script_response.status_code != 200:
+                self.log_test("Enhanced Avatar Integration - Script Generation", False,
+                            f"Script generation failed: {script_response.status_code}")
+                return False
+            
+            script_data = script_response.json()
+            generated_script = script_data["generated_script"]
+            
+            self.log_test("Enhanced Avatar Integration - Script Generation", True,
+                        f"Successfully generated {len(generated_script)} character script")
+            
+            # Step 2: Get available voices
+            voices_response = self.session.get(f"{self.backend_url}/voices", timeout=15)
+            
+            if voices_response.status_code != 200:
+                self.log_test("Enhanced Avatar Integration - Voice Retrieval", False,
+                            f"Voice retrieval failed: {voices_response.status_code}")
+                return False
+            
+            voices = voices_response.json()
+            if not voices:
+                self.log_test("Enhanced Avatar Integration - Voice Availability", False,
+                            "No voices available")
+                return False
+            
+            selected_voice = voices[0]["name"]  # Use first available voice
+            
+            # Step 3: Generate audio from script
+            # Use first 400 characters to avoid timeout
+            script_excerpt = generated_script[:400] if len(generated_script) > 400 else generated_script
+            
+            audio_payload = {
+                "text": script_excerpt,
+                "voice_name": selected_voice
+            }
+            
+            audio_response = self.session.post(
+                f"{self.backend_url}/generate-audio",
+                json=audio_payload,
+                timeout=45
+            )
+            
+            if audio_response.status_code != 200:
+                self.log_test("Enhanced Avatar Integration - Audio Generation", False,
+                            f"Audio generation failed: {audio_response.status_code}")
+                return False
+            
+            audio_data = audio_response.json()
+            audio_base64 = audio_data["audio_base64"]
+            
+            self.log_test("Enhanced Avatar Integration - Audio Generation", True,
+                        f"Successfully generated {len(audio_base64)} chars of base64 audio")
+            
+            # Step 4: Generate enhanced avatar video from audio and script
+            enhanced_avatar_payload = {
+                "audio_base64": audio_base64,
+                "avatar_option": "default",
+                "script_text": script_excerpt
+            }
+            
+            enhanced_avatar_response = self.session.post(
+                f"{self.backend_url}/generate-enhanced-avatar-video",
+                json=enhanced_avatar_payload,
+                timeout=180
+            )
+            
+            if enhanced_avatar_response.status_code != 200:
+                self.log_test("Enhanced Avatar Integration - Enhanced Avatar Video Generation", False,
+                            f"Enhanced avatar video generation failed: {enhanced_avatar_response.status_code}")
+                return False
+            
+            enhanced_avatar_data = enhanced_avatar_response.json()
+            video_base64 = enhanced_avatar_data["video_base64"]
+            duration = enhanced_avatar_data["duration_seconds"]
+            script_segments = enhanced_avatar_data["script_segments"]
+            sadtalker_used = enhanced_avatar_data["sadtalker_used"]
+            
+            self.log_test("Enhanced Avatar Integration - Enhanced Avatar Video Generation", True,
+                        f"Successfully generated {len(video_base64)} chars of base64 video")
+            
+            # Step 5: Verify the complete enhanced workflow
+            if len(video_base64) > 10000 and duration > 0 and script_segments > 0:
+                self.log_test("Enhanced Avatar Integration - Complete Workflow", True,
+                            f"Successfully completed script → audio → enhanced avatar video workflow. Final video: {len(video_base64)} chars, {duration:.2f}s, {script_segments} segments, SadTalker: {sadtalker_used}")
+                
+                # Test different avatar options in the same workflow
+                avatar_options = ["default", "ai_generated"]
+                successful_options = 0
+                
+                for avatar_option in avatar_options:
+                    try:
+                        option_payload = {
+                            "audio_base64": audio_base64,
+                            "avatar_option": avatar_option,
+                            "script_text": script_excerpt
+                        }
+                        
+                        option_response = self.session.post(
+                            f"{self.backend_url}/generate-enhanced-avatar-video",
+                            json=option_payload,
+                            timeout=180
+                        )
+                        
+                        if option_response.status_code == 200:
+                            option_data = option_response.json()
+                            if option_data["avatar_option"] == avatar_option and len(option_data["video_base64"]) > 1000:
+                                successful_options += 1
+                                self.log_test(f"Enhanced Avatar Integration - {avatar_option.title()} Option", True,
+                                            f"Successfully generated video with {avatar_option} avatar option")
+                            else:
+                                self.log_test(f"Enhanced Avatar Integration - {avatar_option.title()} Option", False,
+                                            "Generated video but with issues")
+                        else:
+                            self.log_test(f"Enhanced Avatar Integration - {avatar_option.title()} Option", False,
+                                        f"Failed with status {option_response.status_code}")
+                    except Exception as e:
+                        self.log_test(f"Enhanced Avatar Integration - {avatar_option.title()} Option", False,
+                                    f"Exception: {str(e)}")
+                
+                if successful_options >= 1:
+                    self.log_test("Enhanced Avatar Integration - Multiple Avatar Options", True,
+                                f"Successfully tested {successful_options}/{len(avatar_options)} avatar options")
+                else:
+                    self.log_test("Enhanced Avatar Integration - Multiple Avatar Options", False,
+                                "No avatar options worked successfully")
+                
+                return True
+            else:
+                self.log_test("Enhanced Avatar Integration - Complete Workflow", False,
+                            f"Workflow completed but video quality insufficient: {len(video_base64)} chars, {duration:.2f}s, {script_segments} segments")
+                return False
+            
+        except Exception as e:
+            self.log_test("Enhanced Avatar Integration - Exception", False, f"Integration test failed: {str(e)}")
+            return False
+
     def test_error_handling(self):
         """Test error handling for invalid inputs"""
         print("\n=== Testing Error Handling ===")
