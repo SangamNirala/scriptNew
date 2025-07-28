@@ -513,6 +513,46 @@ const ScriptGenerator = () => {
               </div>
             )}
 
+            {/* Avatar Video Display */}
+            {avatarVideoData && (
+              <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-2xl font-bold text-white">
+                    🎥 Generated Avatar Video
+                  </h2>
+                  <button
+                    onClick={downloadAvatarVideo}
+                    className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-lg shadow-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 flex items-center space-x-2"
+                  >
+                    <span>📥</span>
+                    <span>Download Video</span>
+                  </button>
+                </div>
+                
+                <div className="bg-white/5 p-4 rounded-lg">
+                  <video 
+                    src={avatarVideoData.url} 
+                    controls 
+                    className="w-full max-w-md mx-auto rounded-lg"
+                    style={{ maxHeight: '400px' }}
+                  >
+                    Your browser does not support the video tag.
+                  </video>
+                  
+                  <div className="mt-4 text-center">
+                    <p className="text-gray-300 text-sm">
+                      Duration: {Math.round(avatarVideoData.duration || 0)}s | 
+                      Ready for video integration
+                    </p>
+                    <p className="text-xs text-gray-400 mt-2">
+                      💡 This avatar video contains only the essential narration from your script, 
+                      perfectly synchronized with lip movements for professional video content.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Recent Scripts */}
             {scripts.length > 0 && (
               <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
