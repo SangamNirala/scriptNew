@@ -442,6 +442,66 @@ const ScriptGenerator = () => {
             )}
           </div>
         </div>
+
+        {/* Voice Selection Modal */}
+        {showVoiceSelection && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20 max-w-md w-full max-h-[80vh] overflow-y-auto">
+              <h3 className="text-2xl font-bold text-white mb-4">🎤 Choose Voice</h3>
+              
+              <div className="space-y-3 mb-6">
+                {voices.map((voice) => (
+                  <button
+                    key={voice.name}
+                    onClick={() => handleVoiceSelect(voice)}
+                    className={`w-full p-3 rounded-lg text-left transition-all duration-200 ${
+                      selectedVoice?.name === voice.name
+                        ? 'bg-purple-500/30 border-purple-400 border-2 text-white'
+                        : 'bg-white/5 border border-white/20 text-gray-300 hover:bg-white/10'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="font-medium">{voice.display_name}</div>
+                        <div className="text-sm text-gray-400">{voice.language}</div>
+                      </div>
+                      <div className={`px-2 py-1 rounded text-xs ${
+                        voice.gender === 'Female' 
+                          ? 'bg-pink-500/20 text-pink-300' 
+                          : 'bg-blue-500/20 text-blue-300'
+                      }`}>
+                        {voice.gender}
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => setShowVoiceSelection(false)}
+                  className="flex-1 py-3 px-4 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleGenerateAndPlayAudio}
+                  disabled={!selectedVoice || isGeneratingAudio}
+                  className="flex-1 py-3 px-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-lg shadow-lg hover:from-purple-700 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                >
+                  {isGeneratingAudio ? (
+                    <div className="flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Generating...
+                    </div>
+                  ) : (
+                    "🎵 Generate Audio"
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
