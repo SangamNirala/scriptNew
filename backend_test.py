@@ -356,6 +356,353 @@ class ScriptGenerationTester:
             self.log_test("Integration Flow - Exception", False, f"Integration test failed: {str(e)}")
             return False
     
+    def test_voices_endpoint(self):
+        """Test the /api/voices endpoint"""
+        print("\n=== Testing Voices Endpoint ===")
+        
+        try:
+            response = self.session.get(f"{self.backend_url}/voices", timeout=15)
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                if not isinstance(data, list):
+                    self.log_test("Voices Endpoint - Data Type", False,
+                                "Response is not a list", {"response_type": type(data).__name__})
+                    return False
+                
+                if len(data) == 0:
+                    self.log_test("Voices Endpoint - Empty List", False,
+                                "No voices returned - expected at least some voices")
+                    return False
+                
+                # Verify voice structure
+                first_voice = data[0]
+                required_fields = ["name", "display_name", "language", "gender"]
+                missing_fields = [field for field in required_fields if field not in first_voice]
+                
+                if missing_fields:
+                    self.log_test("Voices Endpoint - Voice Structure", False,
+                                f"Missing fields in voice: {missing_fields}")
+                    return False
+                
+                # Check for variety of voices
+                genders = set(voice.get("gender", "") for voice in data)
+                languages = set(voice.get("language", "") for voice in data)
+                
+                if len(genders) < 2:
+                    self.log_test("Voices Endpoint - Gender Variety", False,
+                                f"Expected both male and female voices, got: {genders}")
+                else:
+                    self.log_test("Voices Endpoint - Gender Variety", True,
+                                f"Good gender variety: {genders}")
+                
+                if len(languages) < 2:
+                    self.log_test("Voices Endpoint - Language Variety", False,
+                                f"Expected multiple language variants, got: {languages}")
+                else:
+                    self.log_test("Voices Endpoint - Language Variety", True,
+                                f"Good language variety: {len(languages)} variants")
+                
+                # Check for expected popular voices
+                voice_names = [voice.get("name", "") for voice in data]
+                expected_voices = ["en-US-AriaNeural", "en-US-DavisNeural", "en-GB-SoniaNeural"]
+                found_expected = [voice for voice in expected_voices if voice in voice_names]
+                
+                if len(found_expected) >= 2:
+                    self.log_test("Voices Endpoint - Popular Voices", True,
+                                f"Found expected popular voices: {found_expected}")
+                else:
+                    self.log_test("Voices Endpoint - Popular Voices", False,
+                                f"Expected popular voices not found. Available: {voice_names[:5]}")
+                
+                self.log_test("Voices Endpoint - Basic Functionality", True,
+                            f"Successfully retrieved {len(data)} voices")
+                return True
+                
+            else:
+                self.log_test("Voices Endpoint - HTTP Response", False,
+                            f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_test("Voices Endpoint - Exception", False, f"Request failed: {str(e)}")
+            return False
+    
+    def test_generate_audio_endpoint(self):
+        """Test the /api/generate-audio endpoint"""
+        print("\n=== Testing Generate Audio Endpoint ===")
+        
+        # First get available voices
+        try:
+            voices_response = self.session.get(f"{self.backend_url}/voices", timeout=15)
+            if voices_response.status_code != 200:
+                self.log_test("Generate Audio - Voice Retrieval", False,
+                            "Could not retrieve voices for testing")
+                return False
+            
+            voices = voices_response.json()
+            if not voices:
+                self.log_test("Generate Audio - Voice Availability", False,
+                            "No voices available for testing")
+                return False
+            
+            test_voice = voices[0]["name"]  # Use first available voice
+            
+        except Exception as e:
+            self.log_test("Generate Audio - Voice Setup", False, f"Failed to get voices: {str(e)}")
+            return False
+        
+        # Test Case 1: Basic audio generation
+        test_text = "Hello, this is a test of the text-to-speech functionality."
+        payload = {
+            "text": test_text,
+            "voice_name": test_voice
+        }
+        
+        try:
+            response = self.session.post(
+                f"{self.backend_url}/generate-audio",
+                json=payload,
+                timeout=30
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Verify response structure
+                required_fields = ["audio_base64", "voice_used"]
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if missing_fields:
+                    self.log_test("Generate Audio - Structure", False,
+                                f"Missing fields: {missing_fields}", data)
+                    return False
+                
+                # Verify audio data
+                audio_base64 = data["audio_base64"]
+                if not audio_base64 or len(audio_base64) < 100:
+                    self.log_test("Generate Audio - Audio Data", False,
+                                "Audio base64 data is too short or empty",
+                                {"audio_length": len(audio_base64) if audio_base64 else 0})
+                    return False
+                
+                # Verify voice used matches request
+                if data["voice_used"] != test_voice:
+                    self.log_test("Generate Audio - Voice Matching", False,
+                                f"Requested {test_voice}, got {data['voice_used']}")
+                    return False
+                
+                self.log_test("Generate Audio - Basic Functionality", True,
+                            f"Successfully generated {len(audio_base64)} chars of base64 audio")
+                
+                # Test Case 2: Different voices
+                if len(voices) > 1:
+                    different_voice = voices[1]["name"]
+                    different_payload = {
+                        "text": test_text,
+                        "voice_name": different_voice
+                    }
+                    
+                    different_response = self.session.post(
+                        f"{self.backend_url}/generate-audio",
+                        json=different_payload,
+                        timeout=30
+                    )
+                    
+                    if different_response.status_code == 200:
+                        different_data = different_response.json()
+                        
+                        # Verify different voices produce different audio
+                        if different_data["audio_base64"] != audio_base64:
+                            self.log_test("Generate Audio - Voice Variation", True,
+                                        "Different voices produce different audio output")
+                        else:
+                            self.log_test("Generate Audio - Voice Variation", False,
+                                        "Different voices produced identical audio")
+                    else:
+                        self.log_test("Generate Audio - Multiple Voices", False,
+                                    f"Failed with different voice: {different_response.status_code}")
+                
+                # Test Case 3: Script formatting removal
+                script_text = "[Scene: Office setting] Hello there! (speaking enthusiastically) This is a **test** of script formatting removal."
+                script_payload = {
+                    "text": script_text,
+                    "voice_name": test_voice
+                }
+                
+                script_response = self.session.post(
+                    f"{self.backend_url}/generate-audio",
+                    json=script_payload,
+                    timeout=30
+                )
+                
+                if script_response.status_code == 200:
+                    self.log_test("Generate Audio - Script Formatting", True,
+                                "Successfully processed text with script formatting")
+                else:
+                    self.log_test("Generate Audio - Script Formatting", False,
+                                f"Failed with script formatting: {script_response.status_code}")
+                
+                return True
+                
+            else:
+                self.log_test("Generate Audio - HTTP Response", False,
+                            f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_test("Generate Audio - Exception", False, f"Request failed: {str(e)}")
+            return False
+    
+    def test_audio_error_handling(self):
+        """Test error handling for audio generation"""
+        print("\n=== Testing Audio Error Handling ===")
+        
+        # Test empty text
+        try:
+            empty_text_response = self.session.post(
+                f"{self.backend_url}/generate-audio",
+                json={"text": "", "voice_name": "en-US-AriaNeural"},
+                timeout=10
+            )
+            
+            if empty_text_response.status_code == 400:
+                self.log_test("Audio Error Handling - Empty Text", True,
+                            "Properly handled empty text request")
+            else:
+                self.log_test("Audio Error Handling - Empty Text", False,
+                            f"Unexpected status code for empty text: {empty_text_response.status_code}")
+        except Exception as e:
+            self.log_test("Audio Error Handling - Empty Text", False, f"Exception: {str(e)}")
+        
+        # Test invalid voice name
+        try:
+            invalid_voice_response = self.session.post(
+                f"{self.backend_url}/generate-audio",
+                json={"text": "Test text", "voice_name": "invalid-voice-name"},
+                timeout=15
+            )
+            
+            if invalid_voice_response.status_code in [400, 500]:
+                self.log_test("Audio Error Handling - Invalid Voice", True,
+                            "Properly handled invalid voice name")
+            else:
+                self.log_test("Audio Error Handling - Invalid Voice", False,
+                            f"Unexpected status code for invalid voice: {invalid_voice_response.status_code}")
+        except Exception as e:
+            self.log_test("Audio Error Handling - Invalid Voice", False, f"Exception: {str(e)}")
+        
+        # Test very long text
+        try:
+            long_text = "This is a very long text. " * 200  # ~5000 characters
+            long_text_response = self.session.post(
+                f"{self.backend_url}/generate-audio",
+                json={"text": long_text, "voice_name": "en-US-AriaNeural"},
+                timeout=60
+            )
+            
+            if long_text_response.status_code == 200:
+                self.log_test("Audio Error Handling - Long Text", True,
+                            "Successfully handled very long text")
+            elif long_text_response.status_code in [400, 413, 500]:
+                self.log_test("Audio Error Handling - Long Text", True,
+                            "Properly rejected very long text with appropriate error")
+            else:
+                self.log_test("Audio Error Handling - Long Text", False,
+                            f"Unexpected status code for long text: {long_text_response.status_code}")
+        except Exception as e:
+            self.log_test("Audio Error Handling - Long Text", False, f"Exception: {str(e)}")
+    
+    def test_voice_audio_integration(self):
+        """Test the complete voice selection and audio generation integration"""
+        print("\n=== Testing Voice-Audio Integration ===")
+        
+        try:
+            # Step 1: Get available voices
+            voices_response = self.session.get(f"{self.backend_url}/voices", timeout=15)
+            
+            if voices_response.status_code != 200:
+                self.log_test("Voice-Audio Integration - Voice Retrieval", False,
+                            f"Failed to get voices: {voices_response.status_code}")
+                return False
+            
+            voices = voices_response.json()
+            if len(voices) < 2:
+                self.log_test("Voice-Audio Integration - Voice Count", False,
+                            f"Need at least 2 voices for integration test, got {len(voices)}")
+                return False
+            
+            # Step 2: Generate script first
+            script_payload = {
+                "prompt": "Create a short motivational message about perseverance",
+                "video_type": "motivational",
+                "duration": "short"
+            }
+            
+            script_response = self.session.post(
+                f"{self.backend_url}/generate-script",
+                json=script_payload,
+                timeout=30
+            )
+            
+            if script_response.status_code != 200:
+                self.log_test("Voice-Audio Integration - Script Generation", False,
+                            f"Failed to generate script: {script_response.status_code}")
+                return False
+            
+            script_data = script_response.json()
+            generated_script = script_data["generated_script"]
+            
+            # Step 3: Test audio generation with multiple voices using the generated script
+            successful_generations = 0
+            different_audio_outputs = set()
+            
+            for i, voice in enumerate(voices[:3]):  # Test with first 3 voices
+                audio_payload = {
+                    "text": generated_script[:500],  # Use first 500 chars to avoid timeout
+                    "voice_name": voice["name"]
+                }
+                
+                audio_response = self.session.post(
+                    f"{self.backend_url}/generate-audio",
+                    json=audio_payload,
+                    timeout=45
+                )
+                
+                if audio_response.status_code == 200:
+                    audio_data = audio_response.json()
+                    audio_base64 = audio_data["audio_base64"]
+                    different_audio_outputs.add(audio_base64[:100])  # Compare first 100 chars
+                    successful_generations += 1
+                    
+                    self.log_test(f"Voice-Audio Integration - {voice['display_name']}", True,
+                                f"Successfully generated audio with {voice['display_name']}")
+                else:
+                    self.log_test(f"Voice-Audio Integration - {voice['display_name']}", False,
+                                f"Failed with {voice['display_name']}: {audio_response.status_code}")
+            
+            # Verify different voices produce different outputs
+            if len(different_audio_outputs) > 1:
+                self.log_test("Voice-Audio Integration - Audio Variety", True,
+                            f"Different voices produced {len(different_audio_outputs)} distinct audio outputs")
+            else:
+                self.log_test("Voice-Audio Integration - Audio Variety", False,
+                            "All voices produced identical audio (unexpected)")
+            
+            if successful_generations >= 2:
+                self.log_test("Voice-Audio Integration - Complete Flow", True,
+                            f"Successfully completed voice selection → script generation → audio generation flow")
+                return True
+            else:
+                self.log_test("Voice-Audio Integration - Complete Flow", False,
+                            f"Only {successful_generations} voice generations succeeded")
+                return False
+            
+        except Exception as e:
+            self.log_test("Voice-Audio Integration - Exception", False, f"Integration test failed: {str(e)}")
+            return False
+    
     def test_error_handling(self):
         """Test error handling for invalid inputs"""
         print("\n=== Testing Error Handling ===")
