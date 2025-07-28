@@ -683,6 +683,11 @@ const ScriptGenerator = () => {
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-2xl font-bold text-white">
                     🎥 Generated Avatar Video
+                    {avatarVideoData.qualityLevel && (
+                      <span className="text-sm font-normal text-gray-300 ml-2">
+                        ({avatarVideoData.qualityLevel})
+                      </span>
+                    )}
                   </h2>
                   <button
                     onClick={downloadAvatarVideo}
@@ -705,13 +710,55 @@ const ScriptGenerator = () => {
                   
                   <div className="mt-4 text-center">
                     <p className="text-gray-300 text-sm">
-                      Duration: {Math.round(avatarVideoData.duration || 0)}s | 
-                      Ready for video integration
+                      Duration: {Math.round(avatarVideoData.duration || 0)}s
+                      {avatarVideoData.scriptSegments && (
+                        <span> | Script Segments: {avatarVideoData.scriptSegments}</span>
+                      )}
                     </p>
-                    <p className="text-xs text-gray-400 mt-2">
-                      💡 This avatar video contains only the essential narration from your script, 
-                      perfectly synchronized with lip movements for professional video content.
-                    </p>
+                    
+                    {/* Ultra-Realistic Features Info */}
+                    {avatarVideoData.qualityLevel === "Ultra-Realistic" && (
+                      <div className="mt-3 p-3 bg-gradient-to-r from-pink-500/20 to-red-500/20 rounded-lg border border-pink-500/30">
+                        <div className="flex items-center justify-center space-x-4 text-xs text-white">
+                          <div className="flex items-center space-x-1">
+                            <span>🎭</span>
+                            <span>Style: {avatarVideoData.avatarStyle?.replace('_', ' ')}</span>
+                          </div>
+                          <div className="flex items-center space-x-1">
+                            <span>👤</span>
+                            <span>Gender: {avatarVideoData.gender}</span>
+                          </div>
+                          <div className="flex items-center space-x-1">
+                            <span>🤖</span>
+                            <span>AI: {avatarVideoData.aiModelUsed}</span>
+                          </div>
+                        </div>
+                        
+                        {avatarVideoData.backgroundContexts && avatarVideoData.backgroundContexts.length > 0 && (
+                          <div className="mt-2 text-xs text-gray-300">
+                            <span className="font-medium">🎬 Dynamic Backgrounds: </span>
+                            {avatarVideoData.backgroundContexts.join(', ')}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    
+                    {/* Enhanced Features Info */}
+                    {avatarVideoData.qualityLevel === "Enhanced" && (
+                      <div className="mt-3 text-xs text-gray-400">
+                        <span className="font-medium">✨ Enhanced Features: </span>
+                        Avatar Option: {avatarVideoData.avatarOption}
+                        {avatarVideoData.sadtalkerUsed && " | SadTalker: Enabled"}
+                      </div>
+                    )}
+                    
+                    {/* Basic Features Info */}
+                    {!avatarVideoData.qualityLevel && (
+                      <div className="mt-3 text-xs text-gray-400">
+                        💡 This avatar video contains essential narration from your script, 
+                        perfectly synchronized with lip movements for professional video content.
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
