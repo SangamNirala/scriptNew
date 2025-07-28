@@ -20,6 +20,13 @@ const ScriptGenerator = () => {
   const [scripts, setScripts] = useState([]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentUtterance, setCurrentUtterance] = useState(null);
+  
+  // Voice selection state
+  const [voices, setVoices] = useState([]);
+  const [selectedVoice, setSelectedVoice] = useState(null);
+  const [showVoiceSelection, setShowVoiceSelection] = useState(false);
+  const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
+  const [audioData, setAudioData] = useState(null);
 
   const fetchScripts = async () => {
     try {
