@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Script Optimization: Improve the script generation logic so that the output is significantly more efficient, emotionally compelling, and highly engaging — enough to keep viewers hooked from start to finish. Focus on storytelling, pacing, and tone. Video Impact: Ensure the generated script translates into better videos in terms of flow, clarity, and viewer retention. Prompt Enhancement Feature: Add a new UI feature just above the Generate Script button — an Enhance Prompt button. When clicked, it should automatically upgrade or rewrite the user's input prompt to make it more effective, creative, and result in higher-quality script outputs."
+user_problem_statement: "You are an expert in text-to-speech (TTS) systems and user interface design. I want to improve the current audio generation feature by allowing users to choose from different voice options before generating speech audio from the script. After the script is generated, and before generating the audio, the system should prompt the user to select from multiple voice options (e.g., male, female, robotic, various accents). The selection should be presented through a dropdown menu or modal interface with clear labels (e.g., \"Male – US\", \"Female – UK\"). Once a voice is selected, the system should generate the audio using that specific voice model. Replace the current default male voice setup with a flexible voice engine that supports multiple voices. Use a free TTS engine with voice support like Edge-TTS."
 
 backend:
   - task: "Gemini Integration Setup"
