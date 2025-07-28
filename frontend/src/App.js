@@ -27,6 +27,11 @@ const ScriptGenerator = () => {
   const [showVoiceSelection, setShowVoiceSelection] = useState(false);
   const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
   const [audioData, setAudioData] = useState(null);
+  
+  // Avatar video state
+  const [isGeneratingVideo, setIsGeneratingVideo] = useState(false);
+  const [avatarVideoData, setAvatarVideoData] = useState(null);
+  const [lastGeneratedAudio, setLastGeneratedAudio] = useState(null);
 
   const fetchScripts = async () => {
     try {
