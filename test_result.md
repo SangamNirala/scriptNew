@@ -131,6 +131,9 @@ backend:
         - working: false
           agent: "main"
           comment: "Replaced Web Speech API with voice selection modal. Added voice selection interface with gender-coded buttons, voice preview, and audio generation. Users can now select from multiple voices before generating audio. Modal shows voice name, language, and gender with clear visual indicators."
+        - working: "NA"
+          agent: "testing"
+          comment: "Frontend UI testing not performed as per system limitations. Backend voice/TTS functionality fully tested and working perfectly."
 
   - task: "Audio Generation and Playback"
     implemented: true
