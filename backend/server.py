@@ -516,8 +516,7 @@ async def generate_audio(request: TextToSpeechRequest):
         return AudioResponse(
             audio_base64=audio_base64,
             voice_used=request.voice_name,
-            duration_seconds=len(audio_data) / 16000,  # Rough estimation
-            cleaned_text=clean_text  # For testing purposes
+            duration_seconds=len(audio_data) / 16000  # Rough estimation
         )
         
     except HTTPException:
