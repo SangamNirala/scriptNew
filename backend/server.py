@@ -16,6 +16,7 @@ import io
 import tempfile
 import asyncio
 import re
+from lib.avatar_generator import avatar_generator
 
 
 ROOT_DIR = Path(__file__).parent
