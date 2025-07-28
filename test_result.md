@@ -259,49 +259,14 @@ metadata:
   run_ui: true
 
 test_plan:
-  current_focus: []
+  current_focus:
+    - "Edge-TTS Integration"
+    - "Voice Selection UI"
+    - "Audio Generation and Playback"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
-  - task: "Enhanced Prompt Formatting"
-    implemented: true
-    working: true
-    file: "server.py, App.js"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-        - working: true
-          agent: "main"
-          comment: "Enhanced prompt now returns properly formatted text with paragraph breaks and line spacing. Frontend displays formatted content with proper HTML rendering."
-
-  - task: "Dual Script Generation Options"
-    implemented: true
-    working: true
-    file: "App.js"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-        - working: true
-          agent: "main"
-          comment: "Added two buttons after prompt enhancement: 'Generate with Original' and 'Generate with Enhanced'. Users can now choose which version to use for script generation."
-
-  - task: "Voice Preview Feature"
-    implemented: true
-    working: true
-    file: "App.js"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-        - working: true
-          agent: "main"
-          comment: "Implemented text-to-speech functionality using Web Speech API. Users can click 'Listen' button to hear generated scripts read aloud with proper text cleaning for better speech synthesis."
-
 agent_communication:
     - agent: "main"
-      message: "Successfully implemented all three requested enhancements: 1) Enhanced prompts now have proper formatting with paragraph breaks for better readability, 2) Added dual script generation buttons allowing users to choose between original or enhanced prompt, 3) Restored voice preview feature using Web Speech API for text-to-speech playback of generated scripts. All features tested and working correctly."
-    - agent: "testing"
-      message: "✅ BACKEND TESTING COMPLETE: All backend API endpoints tested and working perfectly. Comprehensive testing performed on /api/enhance-prompt, /api/generate-script, and /api/scripts endpoints. Verified Gemini API integration, content quality (122x prompt enhancement ratio, 3600+ character scripts with proper formatting), database persistence, error handling, and complete integration flow. All 15 test cases passed with 100% success rate. Backend functionality is production-ready with high-quality AI-generated content optimized for video production."
+      message: "Implemented complete voice selection feature using Edge-TTS. Replaced browser Web Speech API with server-side TTS generation. Added voice selection modal with 10+ voice options including US, UK, Australian, and Canadian accents. Backend provides /api/voices and /api/generate-audio endpoints. Frontend features voice selection modal, audio generation with loading states, and proper audio playback. Ready for comprehensive testing."
