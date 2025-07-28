@@ -10,6 +10,11 @@ from typing import List, Optional
 import uuid
 from datetime import datetime
 from emergentintegrations.llm.chat import LlmChat, UserMessage
+import edge_tts
+import base64
+import io
+import tempfile
+import asyncio
 
 
 ROOT_DIR = Path(__file__).parent
