@@ -138,6 +138,38 @@ const ScriptGenerator = () => {
     }
   };
 
+  const handleGenerateAIScript = async () => {
+    if (!prompt.trim()) {
+      setError("Please enter a prompt first");
+      return;
+    }
+
+    setIsGeneratingAIScript(true);
+    setError("");
+    setShowAIScriptOptions(false);
+
+    try {
+      const response = await axios.post(`${API}/generate-ai-video-script`, {
+        prompt: prompt,
+        video_type: videoType,
+        duration: duration,
+        visual_style: visualStyle,
+        target_platform: targetPlatform,
+        mood: mood
+      });
+
+      setAiScriptData(response.data);
+      setGeneratedScript(response.data.generated_script);
+      setGeneratedWithPrompt("ai-optimized");
+      fetchScripts(); // Refresh the scripts list
+    } catch (err) {
+      setError("Error generating AI-optimized script. Please try again.");
+      console.error("Error generating AI script:", err);
+    } finally {
+      setIsGeneratingAIScript(false);
+    }
+  };
+
   const handlePlayScript = () => {
     if (isPlaying) {
       // Stop current playback
