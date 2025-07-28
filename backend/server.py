@@ -61,6 +61,10 @@ class PromptEnhancementResponse(BaseModel):
     enhanced_prompt: str
     enhancement_explanation: str
 
+class TextToSpeechRequest(BaseModel):
+    text: str
+    voice_name: Optional[str] = "default"
+
 # Add your routes to the router instead of directly to app
 @api_router.get("/")
 async def root():
