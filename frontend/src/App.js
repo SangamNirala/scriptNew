@@ -907,6 +907,171 @@ const ScriptGenerator = () => {
               </div>
             </div>
           </div>
+        {/* Ultra-Realistic Avatar Options Modal */}
+        {showUltraRealisticOptions && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20 max-w-lg w-full max-h-[90vh] overflow-y-auto">
+              <h3 className="text-2xl font-bold text-white mb-6 flex items-center">
+                <span className="mr-2">🎬</span>
+                Ultra-Realistic Avatar Options
+              </h3>
+              
+              <div className="space-y-6">
+                {/* Avatar Style Selection */}
+                <div>
+                  <label className="block text-white text-sm font-medium mb-3">
+                    Avatar Style
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div
+                      onClick={() => setUltraAvatarStyle("business_professional")}
+                      className={`p-3 rounded-lg cursor-pointer transition-all duration-200 ${
+                        ultraAvatarStyle === "business_professional"
+                          ? 'bg-pink-500/30 border-pink-400 border-2'
+                          : 'bg-white/5 border border-white/20 hover:bg-white/10'
+                      }`}
+                    >
+                      <div className="flex items-center space-x-2">
+                        <div className="text-xl">👔</div>
+                        <div>
+                          <div className="font-medium text-white">Business Professional</div>
+                          <div className="text-xs text-gray-400">Formal, corporate style</div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div
+                      onClick={() => setUltraAvatarStyle("casual")}
+                      className={`p-3 rounded-lg cursor-pointer transition-all duration-200 ${
+                        ultraAvatarStyle === "casual"
+                          ? 'bg-pink-500/30 border-pink-400 border-2'
+                          : 'bg-white/5 border border-white/20 hover:bg-white/10'
+                      }`}
+                    >
+                      <div className="flex items-center space-x-2">
+                        <div className="text-xl">👕</div>
+                        <div>
+                          <div className="font-medium text-white">Casual</div>
+                          <div className="text-xs text-gray-400">Relaxed, friendly style</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Gender Selection */}
+                <div>
+                  <label className="block text-white text-sm font-medium mb-3">
+                    Avatar Gender
+                  </label>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div
+                      onClick={() => setUltraAvatarGender("female")}
+                      className={`p-3 rounded-lg cursor-pointer transition-all duration-200 ${
+                        ultraAvatarGender === "female"
+                          ? 'bg-pink-500/30 border-pink-400 border-2'
+                          : 'bg-white/5 border border-white/20 hover:bg-white/10'
+                      }`}
+                    >
+                      <div className="text-center">
+                        <div className="text-xl mb-1">👩</div>
+                        <div className="text-sm font-medium text-white">Female</div>
+                      </div>
+                    </div>
+                    
+                    <div
+                      onClick={() => setUltraAvatarGender("male")}
+                      className={`p-3 rounded-lg cursor-pointer transition-all duration-200 ${
+                        ultraAvatarGender === "male"
+                          ? 'bg-pink-500/30 border-pink-400 border-2'
+                          : 'bg-white/5 border border-white/20 hover:bg-white/10'
+                      }`}
+                    >
+                      <div className="text-center">
+                        <div className="text-xl mb-1">👨</div>
+                        <div className="text-sm font-medium text-white">Male</div>
+                      </div>
+                    </div>
+                    
+                    <div
+                      onClick={() => setUltraAvatarGender("diverse")}
+                      className={`p-3 rounded-lg cursor-pointer transition-all duration-200 ${
+                        ultraAvatarGender === "diverse"
+                          ? 'bg-pink-500/30 border-pink-400 border-2'
+                          : 'bg-white/5 border border-white/20 hover:bg-white/10'
+                      }`}
+                    >
+                      <div className="text-center">
+                        <div className="text-xl mb-1">🌍</div>
+                        <div className="text-sm font-medium text-white">Diverse</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Avatar Index Selection */}
+                <div>
+                  <label className="block text-white text-sm font-medium mb-3">
+                    Avatar Variation
+                  </label>
+                  <div className="grid grid-cols-3 gap-3">
+                    {[1, 2, 3].map((index) => (
+                      <div
+                        key={index}
+                        onClick={() => setUltraAvatarIndex(index)}
+                        className={`p-3 rounded-lg cursor-pointer transition-all duration-200 ${
+                          ultraAvatarIndex === index
+                            ? 'bg-pink-500/30 border-pink-400 border-2'
+                            : 'bg-white/5 border border-white/20 hover:bg-white/10'
+                        }`}
+                      >
+                        <div className="text-center">
+                          <div className="text-xl mb-1">🎭</div>
+                          <div className="text-sm font-medium text-white">Option {index}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Features Info */}
+                <div className="bg-white/5 p-4 rounded-lg border border-white/20">
+                  <h4 className="text-sm font-medium text-white mb-2">🚀 Ultra-Realistic Features:</h4>
+                  <ul className="text-xs text-gray-300 space-y-1">
+                    <li>• Professional AI-generated human faces</li>
+                    <li>• Perfect lip-sync with advanced audio analysis</li>
+                    <li>• Dynamic backgrounds that change with script content</li>
+                    <li>• Realistic facial expressions and micro-movements</li>
+                    <li>• Studio-quality lighting and composition</li>
+                    <li>• Maximum quality optimized for professional use</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={() => setShowUltraRealisticOptions(false)}
+                  className="flex-1 py-3 px-4 bg-gray-600 text-white font-semibold rounded-lg shadow-lg hover:bg-gray-700 transition-all duration-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleGenerateUltraRealisticAvatarVideo}
+                  disabled={isGeneratingVideo}
+                  className="flex-1 py-3 px-4 bg-gradient-to-r from-pink-600 to-red-600 text-white font-semibold rounded-lg shadow-lg hover:from-pink-700 hover:to-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                >
+                  {isGeneratingVideo ? (
+                    <div className="flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Generating...
+                    </div>
+                  ) : (
+                    "🎬 Generate Ultra-Realistic Video"
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>
