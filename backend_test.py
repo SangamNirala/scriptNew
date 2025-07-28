@@ -555,11 +555,102 @@ class ScriptGenerationTester:
             self.log_test("Generate Audio - Exception", False, f"Request failed: {str(e)}")
             return False
     
-    def test_extract_clean_script_comprehensive(self):
-        """Test the extract_clean_script function with comprehensive video script example"""
-        print("\n=== Testing Extract Clean Script Function ===")
+    def test_timestamp_removal_comprehensive(self):
+        """Test timestamp removal functionality as specified in review request"""
+        print("\n=== Testing Timestamp Removal (Review Request Focus) ===")
         
-        # Comprehensive video script with production elements (from review request)
+        # Test cases for different timestamp formats as specified in review request
+        timestamp_test_cases = [
+            {
+                "name": "Format with spaces",
+                "input": "(0:30 - 0:45) Content here should remain without timestamps",
+                "expected_clean": "Content here should remain without timestamps"
+            },
+            {
+                "name": "Format without spaces", 
+                "input": "(0:00-0:03) Content here should remain clean",
+                "expected_clean": "Content here should remain clean"
+            },
+            {
+                "name": "Mixed formats in same text",
+                "input": "(0:00-0:03) First part. (0:30 - 0:45) Second part. (1:00-1:15) Third part.",
+                "expected_clean": "First part. Second part. Third part."
+            },
+            {
+                "name": "Timestamps with different dash types",
+                "input": "(0:00–0:03) Content with en-dash. (0:30-0:45) Content with hyphen.",
+                "expected_clean": "Content with en-dash. Content with hyphen."
+            },
+            {
+                "name": "Multiple timestamps per line",
+                "input": "(0:00-0:03) Start content (0:15-0:20) middle content (0:30 - 0:45) end content",
+                "expected_clean": "Start content middle content end content"
+            },
+            {
+                "name": "Timestamps at different positions",
+                "input": "Before text (0:30 - 0:45) middle text after text",
+                "expected_clean": "Before text middle text after text"
+            }
+        ]
+        
+        # Get available voices for testing
+        try:
+            voices_response = self.session.get(f"{self.backend_url}/voices", timeout=15)
+            if voices_response.status_code != 200:
+                self.log_test("Timestamp Removal - Voice Setup", False,
+                            "Could not retrieve voices for testing")
+                return False
+            
+            voices = voices_response.json()
+            if not voices:
+                self.log_test("Timestamp Removal - Voice Availability", False,
+                            "No voices available for testing")
+                return False
+            
+            test_voice = voices[0]["name"]
+            
+        except Exception as e:
+            self.log_test("Timestamp Removal - Voice Setup", False, f"Failed to get voices: {str(e)}")
+            return False
+        
+        # Test each timestamp format
+        successful_tests = 0
+        
+        for test_case in timestamp_test_cases:
+            try:
+                # Test audio generation with timestamp text
+                payload = {
+                    "text": test_case["input"],
+                    "voice_name": test_voice
+                }
+                
+                response = self.session.post(
+                    f"{self.backend_url}/generate-audio",
+                    json=payload,
+                    timeout=30
+                )
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    audio_base64 = data["audio_base64"]
+                    
+                    # Verify audio was generated (indicating text was cleaned successfully)
+                    if len(audio_base64) > 1000:  # Should have substantial audio
+                        self.log_test(f"Timestamp Removal - {test_case['name']}", True,
+                                    f"Successfully processed and generated {len(audio_base64)} chars of audio")
+                        successful_tests += 1
+                    else:
+                        self.log_test(f"Timestamp Removal - {test_case['name']}", False,
+                                    f"Audio too short: {len(audio_base64)} chars")
+                else:
+                    self.log_test(f"Timestamp Removal - {test_case['name']}", False,
+                                f"HTTP {response.status_code}: {response.text[:200]}")
+                    
+            except Exception as e:
+                self.log_test(f"Timestamp Removal - {test_case['name']}", False,
+                            f"Exception: {str(e)}")
+        
+        # Test the comprehensive script from review request
         comprehensive_script = """VIDEO SCRIPT: AI-POWERED CRM LAUNCH
 
 TARGET DURATION: 30-45 Seconds
