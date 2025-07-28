@@ -945,6 +945,386 @@ KEY RETENTION ELEMENTS:
             self.log_test("Voice-Audio Integration - Exception", False, f"Integration test failed: {str(e)}")
             return False
     
+    def test_avatar_video_generation_endpoint(self):
+        """Test the new /api/generate-avatar-video endpoint"""
+        print("\n=== Testing Avatar Video Generation Endpoint ===")
+        
+        # First, generate some audio to use for avatar video testing
+        try:
+            # Get available voices
+            voices_response = self.session.get(f"{self.backend_url}/voices", timeout=15)
+            if voices_response.status_code != 200:
+                self.log_test("Avatar Video - Voice Retrieval", False,
+                            "Could not retrieve voices for avatar video testing")
+                return False
+            
+            voices = voices_response.json()
+            if not voices:
+                self.log_test("Avatar Video - Voice Availability", False,
+                            "No voices available for avatar video testing")
+                return False
+            
+            test_voice = voices[0]["name"]
+            
+            # Generate sample audio for avatar video
+            audio_text = "Hello! This is a test of the avatar video generation system. The avatar should move and speak naturally."
+            audio_payload = {
+                "text": audio_text,
+                "voice_name": test_voice
+            }
+            
+            audio_response = self.session.post(
+                f"{self.backend_url}/generate-audio",
+                json=audio_payload,
+                timeout=30
+            )
+            
+            if audio_response.status_code != 200:
+                self.log_test("Avatar Video - Audio Generation", False,
+                            f"Failed to generate audio for avatar video: {audio_response.status_code}")
+                return False
+            
+            audio_data = audio_response.json()
+            audio_base64 = audio_data["audio_base64"]
+            
+            self.log_test("Avatar Video - Audio Generation", True,
+                        f"Successfully generated {len(audio_base64)} chars of base64 audio for avatar video")
+            
+        except Exception as e:
+            self.log_test("Avatar Video - Audio Setup", False, f"Failed to setup audio: {str(e)}")
+            return False
+        
+        # Test Case 1: Basic avatar video generation
+        try:
+            avatar_payload = {
+                "audio_base64": audio_base64
+                # avatar_image_path is optional - should use default
+            }
+            
+            avatar_response = self.session.post(
+                f"{self.backend_url}/generate-avatar-video",
+                json=avatar_payload,
+                timeout=120  # Avatar video generation can take longer
+            )
+            
+            if avatar_response.status_code == 200:
+                avatar_data = avatar_response.json()
+                
+                # Verify response structure
+                required_fields = ["video_base64", "duration_seconds", "request_id"]
+                missing_fields = [field for field in required_fields if field not in avatar_data]
+                
+                if missing_fields:
+                    self.log_test("Avatar Video - Response Structure", False,
+                                f"Missing fields: {missing_fields}")
+                    return False
+                
+                # Verify video data
+                video_base64 = avatar_data["video_base64"]
+                if not video_base64 or len(video_base64) < 1000:
+                    self.log_test("Avatar Video - Video Data", False,
+                                "Video base64 data is too short or empty",
+                                {"video_length": len(video_base64) if video_base64 else 0})
+                    return False
+                
+                # Verify duration is reasonable
+                duration = avatar_data["duration_seconds"]
+                if duration <= 0 or duration > 60:  # Should be reasonable duration
+                    self.log_test("Avatar Video - Duration", False,
+                                f"Unreasonable duration: {duration} seconds")
+                    return False
+                
+                # Verify request ID is present
+                request_id = avatar_data["request_id"]
+                if not request_id or len(request_id) < 4:
+                    self.log_test("Avatar Video - Request ID", False,
+                                "Request ID is missing or too short")
+                    return False
+                
+                self.log_test("Avatar Video - Basic Generation", True,
+                            f"Successfully generated {len(video_base64)} chars of base64 video, duration: {duration:.2f}s")
+                
+                # Test Case 2: Test with custom avatar image path (should still work with default)
+                custom_avatar_payload = {
+                    "audio_base64": audio_base64,
+                    "avatar_image_path": "/custom/path/avatar.jpg"  # This should fallback to default
+                }
+                
+                custom_response = self.session.post(
+                    f"{self.backend_url}/generate-avatar-video",
+                    json=custom_avatar_payload,
+                    timeout=120
+                )
+                
+                if custom_response.status_code == 200:
+                    self.log_test("Avatar Video - Custom Avatar Path", True,
+                                "Successfully handled custom avatar path (fallback to default)")
+                else:
+                    self.log_test("Avatar Video - Custom Avatar Path", False,
+                                f"Failed with custom avatar path: {custom_response.status_code}")
+                
+                return True
+                
+            else:
+                self.log_test("Avatar Video - HTTP Response", False,
+                            f"HTTP {avatar_response.status_code}: {avatar_response.text[:500]}")
+                return False
+                
+        except Exception as e:
+            self.log_test("Avatar Video - Generation Exception", False, f"Request failed: {str(e)}")
+            return False
+    
+    def test_avatar_video_error_handling(self):
+        """Test error handling for avatar video generation"""
+        print("\n=== Testing Avatar Video Error Handling ===")
+        
+        # Test Case 1: Empty audio data
+        try:
+            empty_audio_response = self.session.post(
+                f"{self.backend_url}/generate-avatar-video",
+                json={"audio_base64": ""},
+                timeout=30
+            )
+            
+            if empty_audio_response.status_code == 400:
+                self.log_test("Avatar Video Error - Empty Audio", True,
+                            "Properly handled empty audio data")
+            else:
+                self.log_test("Avatar Video Error - Empty Audio", False,
+                            f"Unexpected status code for empty audio: {empty_audio_response.status_code}")
+        except Exception as e:
+            self.log_test("Avatar Video Error - Empty Audio", False, f"Exception: {str(e)}")
+        
+        # Test Case 2: Invalid base64 audio data
+        try:
+            invalid_audio_response = self.session.post(
+                f"{self.backend_url}/generate-avatar-video",
+                json={"audio_base64": "invalid-base64-data"},
+                timeout=30
+            )
+            
+            if invalid_audio_response.status_code in [400, 500]:
+                self.log_test("Avatar Video Error - Invalid Audio", True,
+                            "Properly handled invalid base64 audio data")
+            else:
+                self.log_test("Avatar Video Error - Invalid Audio", False,
+                            f"Unexpected status code for invalid audio: {invalid_audio_response.status_code}")
+        except Exception as e:
+            self.log_test("Avatar Video Error - Invalid Audio", False, f"Exception: {str(e)}")
+        
+        # Test Case 3: Missing required fields
+        try:
+            missing_fields_response = self.session.post(
+                f"{self.backend_url}/generate-avatar-video",
+                json={},  # Missing audio_base64
+                timeout=10
+            )
+            
+            if missing_fields_response.status_code == 422:  # Validation error expected
+                self.log_test("Avatar Video Error - Missing Fields", True,
+                            "Properly handled missing required fields")
+            else:
+                self.log_test("Avatar Video Error - Missing Fields", False,
+                            f"Unexpected status code for missing fields: {missing_fields_response.status_code}")
+        except Exception as e:
+            self.log_test("Avatar Video Error - Missing Fields", False, f"Exception: {str(e)}")
+    
+    def test_complete_avatar_workflow(self):
+        """Test the complete workflow: script → audio → avatar video"""
+        print("\n=== Testing Complete Avatar Workflow ===")
+        
+        try:
+            # Step 1: Generate a script
+            script_payload = {
+                "prompt": "Create a short welcome message for a new product launch",
+                "video_type": "marketing",
+                "duration": "short"
+            }
+            
+            script_response = self.session.post(
+                f"{self.backend_url}/generate-script",
+                json=script_payload,
+                timeout=45
+            )
+            
+            if script_response.status_code != 200:
+                self.log_test("Avatar Workflow - Script Generation", False,
+                            f"Script generation failed: {script_response.status_code}")
+                return False
+            
+            script_data = script_response.json()
+            generated_script = script_data["generated_script"]
+            
+            self.log_test("Avatar Workflow - Script Generation", True,
+                        f"Successfully generated {len(generated_script)} character script")
+            
+            # Step 2: Get available voices
+            voices_response = self.session.get(f"{self.backend_url}/voices", timeout=15)
+            
+            if voices_response.status_code != 200:
+                self.log_test("Avatar Workflow - Voice Retrieval", False,
+                            f"Voice retrieval failed: {voices_response.status_code}")
+                return False
+            
+            voices = voices_response.json()
+            if not voices:
+                self.log_test("Avatar Workflow - Voice Availability", False,
+                            "No voices available")
+                return False
+            
+            selected_voice = voices[0]["name"]  # Use first available voice
+            
+            # Step 3: Generate audio from script
+            # Use first 300 characters to avoid timeout
+            script_excerpt = generated_script[:300] if len(generated_script) > 300 else generated_script
+            
+            audio_payload = {
+                "text": script_excerpt,
+                "voice_name": selected_voice
+            }
+            
+            audio_response = self.session.post(
+                f"{self.backend_url}/generate-audio",
+                json=audio_payload,
+                timeout=45
+            )
+            
+            if audio_response.status_code != 200:
+                self.log_test("Avatar Workflow - Audio Generation", False,
+                            f"Audio generation failed: {audio_response.status_code}")
+                return False
+            
+            audio_data = audio_response.json()
+            audio_base64 = audio_data["audio_base64"]
+            
+            self.log_test("Avatar Workflow - Audio Generation", True,
+                        f"Successfully generated {len(audio_base64)} chars of base64 audio")
+            
+            # Step 4: Generate avatar video from audio
+            avatar_payload = {
+                "audio_base64": audio_base64
+            }
+            
+            avatar_response = self.session.post(
+                f"{self.backend_url}/generate-avatar-video",
+                json=avatar_payload,
+                timeout=120
+            )
+            
+            if avatar_response.status_code != 200:
+                self.log_test("Avatar Workflow - Avatar Video Generation", False,
+                            f"Avatar video generation failed: {avatar_response.status_code}")
+                return False
+            
+            avatar_data = avatar_response.json()
+            video_base64 = avatar_data["video_base64"]
+            duration = avatar_data["duration_seconds"]
+            
+            self.log_test("Avatar Workflow - Avatar Video Generation", True,
+                        f"Successfully generated {len(video_base64)} chars of base64 video")
+            
+            # Step 5: Verify the complete workflow
+            if len(video_base64) > 10000 and duration > 0:
+                self.log_test("Avatar Workflow - Complete Integration", True,
+                            f"Successfully completed script → audio → avatar video workflow. Final video: {len(video_base64)} chars, {duration:.2f}s")
+                return True
+            else:
+                self.log_test("Avatar Workflow - Complete Integration", False,
+                            f"Workflow completed but video quality insufficient: {len(video_base64)} chars, {duration:.2f}s")
+                return False
+            
+        except Exception as e:
+            self.log_test("Avatar Workflow - Exception", False, f"Workflow test failed: {str(e)}")
+            return False
+    
+    def test_avatar_video_with_different_audio_lengths(self):
+        """Test avatar video generation with different audio lengths"""
+        print("\n=== Testing Avatar Video with Different Audio Lengths ===")
+        
+        try:
+            # Get available voices
+            voices_response = self.session.get(f"{self.backend_url}/voices", timeout=15)
+            if voices_response.status_code != 200 or not voices_response.json():
+                self.log_test("Avatar Video Lengths - Voice Setup", False,
+                            "Could not get voices for testing")
+                return False
+            
+            test_voice = voices_response.json()[0]["name"]
+            
+            # Test different text lengths
+            test_cases = [
+                {"name": "Short", "text": "Hello world!", "expected_min_duration": 0.5},
+                {"name": "Medium", "text": "This is a medium length text that should generate a reasonable duration video with proper lip sync animation.", "expected_min_duration": 3.0},
+                {"name": "Long", "text": "This is a much longer text that will test the avatar video generation system's ability to handle extended speech. The system should create a video that matches the full duration of the audio with consistent lip sync animation throughout the entire duration. This tests the robustness of the video generation pipeline.", "expected_min_duration": 8.0}
+            ]
+            
+            successful_tests = 0
+            
+            for test_case in test_cases:
+                try:
+                    # Generate audio
+                    audio_payload = {
+                        "text": test_case["text"],
+                        "voice_name": test_voice
+                    }
+                    
+                    audio_response = self.session.post(
+                        f"{self.backend_url}/generate-audio",
+                        json=audio_payload,
+                        timeout=30
+                    )
+                    
+                    if audio_response.status_code != 200:
+                        self.log_test(f"Avatar Video Lengths - {test_case['name']} Audio", False,
+                                    f"Audio generation failed: {audio_response.status_code}")
+                        continue
+                    
+                    audio_base64 = audio_response.json()["audio_base64"]
+                    
+                    # Generate avatar video
+                    avatar_payload = {
+                        "audio_base64": audio_base64
+                    }
+                    
+                    avatar_response = self.session.post(
+                        f"{self.backend_url}/generate-avatar-video",
+                        json=avatar_payload,
+                        timeout=120
+                    )
+                    
+                    if avatar_response.status_code == 200:
+                        avatar_data = avatar_response.json()
+                        duration = avatar_data["duration_seconds"]
+                        video_size = len(avatar_data["video_base64"])
+                        
+                        if duration >= test_case["expected_min_duration"] * 0.5:  # Allow 50% tolerance
+                            self.log_test(f"Avatar Video Lengths - {test_case['name']}", True,
+                                        f"Successfully generated {video_size} chars video, duration: {duration:.2f}s")
+                            successful_tests += 1
+                        else:
+                            self.log_test(f"Avatar Video Lengths - {test_case['name']}", False,
+                                        f"Duration too short: {duration:.2f}s (expected min: {test_case['expected_min_duration']}s)")
+                    else:
+                        self.log_test(f"Avatar Video Lengths - {test_case['name']}", False,
+                                    f"Avatar generation failed: {avatar_response.status_code}")
+                        
+                except Exception as e:
+                    self.log_test(f"Avatar Video Lengths - {test_case['name']}", False,
+                                f"Exception: {str(e)}")
+            
+            if successful_tests >= 2:
+                self.log_test("Avatar Video Lengths - Overall", True,
+                            f"Successfully tested {successful_tests}/3 different audio lengths")
+                return True
+            else:
+                self.log_test("Avatar Video Lengths - Overall", False,
+                            f"Only {successful_tests}/3 tests succeeded")
+                return False
+                
+        except Exception as e:
+            self.log_test("Avatar Video Lengths - Exception", False, f"Test failed: {str(e)}")
+            return False
+    
     def test_error_handling(self):
         """Test error handling for invalid inputs"""
         print("\n=== Testing Error Handling ===")
