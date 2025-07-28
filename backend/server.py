@@ -551,6 +551,8 @@ async def generate_avatar_video(request: AvatarVideoRequest):
             request_id=result["request_id"]
         )
         
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error generating avatar video: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error generating avatar video: {str(e)}")
