@@ -344,8 +344,8 @@ def extract_clean_script(raw_script):
             continue
             
         # Now extract actual spoken content from mixed lines
-        # Remove timestamps at the beginning
-        line = re.sub(r'^\(\d+:\d+[-–]\d+:\d+\)\s*', '', line)
+        # Remove timestamps at the beginning or anywhere in the line - handle spaces around dash
+        line = re.sub(r'\(\d+:\d+\s*[-–]\s*\d+:\d+\)', '', line)
         
         # Remove scene descriptions in brackets
         line = re.sub(r'\[.*?\]', '', line)
