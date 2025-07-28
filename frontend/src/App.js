@@ -114,52 +114,80 @@ const ScriptGenerator = () => {
   };
 
   const handlePlayScript = () => {
-    if ('speechSynthesis' in window) {
-      if (isPlaying) {
-        // Stop current playback
-        window.speechSynthesis.cancel();
-        setIsPlaying(false);
-        setCurrentUtterance(null);
-        return;
+    if (isPlaying) {
+      // Stop current playback
+      if (audioData) {
+        audioData.pause();
+        audioData.currentTime = 0;
       }
+      setIsPlaying(false);
+      setAudioData(null);
+      return;
+    }
 
-      // Clean the script text for better speech synthesis
-      const cleanText = generatedScript
-        .replace(/\[([^\]]+)\]/g, '') // Remove scene descriptions
-        .replace(/\(([^)]+)\)/g, '') // Remove speaker directions
-        .replace(/\*\*([^*]+)\*\*/g, '$1') // Remove bold formatting
-        .replace(/\n+/g, ' ') // Replace line breaks with spaces
-        .replace(/\s+/g, ' ') // Replace multiple spaces with single space
-        .trim();
+    // Show voice selection modal
+    setShowVoiceSelection(true);
+  };
 
-      const utterance = new SpeechSynthesisUtterance(cleanText);
+  const handleVoiceSelect = (voice) => {
+    setSelectedVoice(voice);
+  };
+
+  const handleGenerateAndPlayAudio = async () => {
+    if (!selectedVoice || !generatedScript) {
+      setError("Please select a voice and ensure you have a script to read.");
+      return;
+    }
+
+    setIsGeneratingAudio(true);
+    setShowVoiceSelection(false);
+    setError("");
+
+    try {
+      const response = await axios.post(`${API}/generate-audio`, {
+        text: generatedScript,
+        voice_name: selectedVoice.name
+      });
+
+      // Convert base64 to audio blob and play
+      const audioBase64 = response.data.audio_base64;
+      const audioBytes = atob(audioBase64);
+      const audioArray = new Uint8Array(audioBytes.length);
       
-      // Configure speech settings
-      utterance.rate = 0.9; // Slightly slower for better comprehension
-      utterance.pitch = 1.0;
-      utterance.volume = 1.0;
-
-      // Event handlers
-      utterance.onstart = () => {
+      for (let i = 0; i < audioBytes.length; i++) {
+        audioArray[i] = audioBytes.charCodeAt(i);
+      }
+      
+      const audioBlob = new Blob([audioArray], { type: 'audio/mp3' });
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const audio = new Audio(audioUrl);
+      
+      audio.onloadstart = () => {
         setIsPlaying(true);
       };
-
-      utterance.onend = () => {
+      
+      audio.onended = () => {
         setIsPlaying(false);
-        setCurrentUtterance(null);
+        setAudioData(null);
+        URL.revokeObjectURL(audioUrl);
       };
-
-      utterance.onerror = (event) => {
-        console.error('Speech synthesis error:', event);
+      
+      audio.onerror = (e) => {
+        console.error('Audio playback error:', e);
         setIsPlaying(false);
-        setCurrentUtterance(null);
+        setAudioData(null);
         setError("Error playing audio. Please try again.");
+        URL.revokeObjectURL(audioUrl);
       };
-
-      setCurrentUtterance(utterance);
-      window.speechSynthesis.speak(utterance);
-    } else {
-      setError("Text-to-speech is not supported in your browser.");
+      
+      setAudioData(audio);
+      audio.play();
+      
+    } catch (err) {
+      console.error("Error generating audio:", err);
+      setError("Error generating audio. Please try again.");
+    } finally {
+      setIsGeneratingAudio(false);
     }
   };
 
