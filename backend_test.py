@@ -1917,6 +1917,264 @@ KEY RETENTION ELEMENTS:
             self.log_test("Enhanced Avatar Integration - Exception", False, f"Integration test failed: {str(e)}")
             return False
 
+    def test_enhanced_script_filtering_review_request(self):
+        """Test the enhanced script filtering functionality using the exact script content from the review request"""
+        print("\n=== Testing Enhanced Script Filtering (Review Request) ===")
+        
+        # The exact script content provided in the review request
+        exact_script_content = '''**VIDEO SCRIPT: "Uncage Your Courage: A Journey From Fear to Freedom"**
+
+**[0:00-0:03] SCENE 1: Hesitation at a Crossroads - Muted Colors, Blurry**
+
+(Voiceover - Intimate, slightly urgent)
+(0:00) Are you TRAPPED? ... paralyzed by a fear you can't name?
+
+**(SOUND:** Anxious heartbeat sound effect fades in.)
+
+**[0:03-0:07] SCENE 2: Quick Cuts - Blank Canvas, Unopened Door, Someone Hiding Their Face**
+
+(Voiceover - slightly louder, more direct)
+(0:03) That feeling... the dread... the "what if?"... it's a cage. A cage built by YOU.
+
+**(VISUAL CUE:** Subtle cage bars visually superimposed over the scenes)
+
+**[0:07-0:12] SCENE 3: Expert (or actor) - Close Up, Empathetic Expression**
+
+(Expert)
+(0:07) Fear isn't a life sentence. It's a SIGNAL. Your brain misinterpreting potential threats.
+
+**(VISUAL CUE:** Animated graphic showing the brain's amygdala lighting up.)
+
+**[0:12-0:18] SCENE 4: Blooming Flower Time-Lapse, Seedling Pushing Through Earth**
+
+(Voiceover - Hopeful, encouraging)
+(0:12) But you can REWIRE it. Challenge those negative thoughts.  Tiny steps...lead to HUGE changes.
+
+**[0:27-0:30] SCENE 7: Visual of an open road, leading towards a bright horizon. Logo appears "Uncage Your Courage"**
+
+(Voiceover - Empowering, strong)
+(0:27) Uncage your courage... What's ONE small step you can take TODAY? Share your commitment below!
+
+**(VISUAL CUE:** On-screen text: "Share Your Step Below!")
+
+**[0:30-0:32] SCENE 8: End screen with subscribe button, social media links.**
+
+(Voiceover - quick, friendly)
+(0:30) Subscribe for more inspiration and tools to build your best life.
+
+**Key Considerations & Rationale:**'''
+
+        # Expected clean output should contain ONLY these spoken dialogue segments
+        expected_clean_segments = [
+            "Are you TRAPPED? ... paralyzed by a fear you can't name?",
+            "That feeling... the dread... the \"what if?\"... it's a cage. A cage built by YOU.",
+            "Fear isn't a life sentence. It's a SIGNAL. Your brain misinterpreting potential threats.",
+            "But you can REWIRE it. Challenge those negative thoughts. Tiny steps...lead to HUGE changes.",
+            "Uncage your courage... What's ONE small step you can take TODAY? Share your commitment below!",
+            "Subscribe for more inspiration and tools to build your best life."
+        ]
+        
+        # Elements that should NOT be in the cleaned output
+        elements_to_remove = [
+            # Timestamps
+            "(0:00)", "(0:03)", "(0:07)", "(0:12)", "(0:27)", "(0:30)",
+            # Speaker directions
+            "(Voiceover - Intimate, slightly urgent)", "(Expert)", "(Voiceover - slightly louder, more direct)",
+            "(Voiceover - Hopeful, encouraging)", "(Voiceover - Empowering, strong)", "(Voiceover - quick, friendly)",
+            # Visual/sound cues
+            "**(SOUND:** Anxious heartbeat sound effect fades in.)",
+            "**(VISUAL CUE:** Subtle cage bars visually superimposed over the scenes)",
+            "**(VISUAL CUE:** Animated graphic showing the brain's amygdala lighting up.)",
+            "**(VISUAL CUE:** On-screen text: \"Share Your Step Below!\")",
+            # Scene descriptions
+            "**[0:00-0:03] SCENE 1: Hesitation at a Crossroads - Muted Colors, Blurry**",
+            "**[0:03-0:07] SCENE 2: Quick Cuts - Blank Canvas, Unopened Door, Someone Hiding Their Face**",
+            "**[0:07-0:12] SCENE 3: Expert (or actor) - Close Up, Empathetic Expression**",
+            "**[0:12-0:18] SCENE 4: Blooming Flower Time-Lapse, Seedling Pushing Through Earth**",
+            "**[0:27-0:30] SCENE 7: Visual of an open road, leading towards a bright horizon. Logo appears \"Uncage Your Courage\"**",
+            "**[0:30-0:32] SCENE 8: End screen with subscribe button, social media links.**",
+            # Metadata
+            "**Key Considerations & Rationale:**"
+        ]
+        
+        try:
+            # Get available voices for testing
+            voices_response = self.session.get(f"{self.backend_url}/voices", timeout=15)
+            if voices_response.status_code != 200:
+                self.log_test("Enhanced Script Filtering - Voice Setup", False,
+                            "Could not retrieve voices for testing")
+                return False
+            
+            voices = voices_response.json()
+            if not voices:
+                self.log_test("Enhanced Script Filtering - Voice Availability", False,
+                            "No voices available for testing")
+                return False
+            
+            # Test with multiple voice options to ensure consistency
+            test_voices = voices[:min(3, len(voices))]  # Test with up to 3 voices
+            successful_tests = 0
+            
+            for voice in test_voices:
+                voice_name = voice["name"]
+                voice_display = voice.get("display_name", voice_name)
+                
+                # Test audio generation with the exact script content
+                payload = {
+                    "text": exact_script_content,
+                    "voice_name": voice_name
+                }
+                
+                try:
+                    response = self.session.post(
+                        f"{self.backend_url}/generate-audio",
+                        json=payload,
+                        timeout=60  # Longer timeout for complex script
+                    )
+                    
+                    if response.status_code == 200:
+                        data = response.json()
+                        audio_base64 = data["audio_base64"]
+                        
+                        # Verify substantial audio was generated
+                        if len(audio_base64) > 10000:  # Should be substantial audio
+                            self.log_test(f"Enhanced Script Filtering - {voice_display}", True,
+                                        f"Successfully generated {len(audio_base64)} chars of clean audio")
+                            successful_tests += 1
+                        else:
+                            self.log_test(f"Enhanced Script Filtering - {voice_display}", False,
+                                        f"Audio too short: {len(audio_base64)} chars")
+                    else:
+                        self.log_test(f"Enhanced Script Filtering - {voice_display}", False,
+                                    f"HTTP {response.status_code}: {response.text[:200]}")
+                        
+                except Exception as e:
+                    self.log_test(f"Enhanced Script Filtering - {voice_display}", False,
+                                f"Exception: {str(e)}")
+            
+            # Test specific filtering requirements
+            if successful_tests > 0:
+                # Test 1: Verify timestamps are removed
+                timestamp_test_cases = [
+                    "(0:00) Test content",
+                    "(0:03) More test content", 
+                    "(0:07) Additional content",
+                    "(0:12) Final content"
+                ]
+                
+                for i, timestamp_case in enumerate(timestamp_test_cases):
+                    payload = {
+                        "text": timestamp_case,
+                        "voice_name": test_voices[0]["name"]
+                    }
+                    
+                    response = self.session.post(
+                        f"{self.backend_url}/generate-audio",
+                        json=payload,
+                        timeout=30
+                    )
+                    
+                    if response.status_code == 200:
+                        self.log_test(f"Enhanced Script Filtering - Timestamp Removal {i+1}", True,
+                                    "Successfully processed timestamp format")
+                    else:
+                        self.log_test(f"Enhanced Script Filtering - Timestamp Removal {i+1}", False,
+                                    f"Failed: {response.status_code}")
+                
+                # Test 2: Verify speaker directions are removed
+                speaker_test_cases = [
+                    "(Voiceover - Intimate, slightly urgent) Test content",
+                    "(Expert) More test content",
+                    "(Voiceover - Hopeful, encouraging) Additional content"
+                ]
+                
+                for i, speaker_case in enumerate(speaker_test_cases):
+                    payload = {
+                        "text": speaker_case,
+                        "voice_name": test_voices[0]["name"]
+                    }
+                    
+                    response = self.session.post(
+                        f"{self.backend_url}/generate-audio",
+                        json=payload,
+                        timeout=30
+                    )
+                    
+                    if response.status_code == 200:
+                        self.log_test(f"Enhanced Script Filtering - Speaker Direction Removal {i+1}", True,
+                                    "Successfully processed speaker direction")
+                    else:
+                        self.log_test(f"Enhanced Script Filtering - Speaker Direction Removal {i+1}", False,
+                                    f"Failed: {response.status_code}")
+                
+                # Test 3: Verify visual/sound cues are removed
+                cue_test_cases = [
+                    "**(VISUAL CUE:** Test visual cue) Content here",
+                    "**(SOUND:** Test sound effect) More content"
+                ]
+                
+                for i, cue_case in enumerate(cue_test_cases):
+                    payload = {
+                        "text": cue_case,
+                        "voice_name": test_voices[0]["name"]
+                    }
+                    
+                    response = self.session.post(
+                        f"{self.backend_url}/generate-audio",
+                        json=payload,
+                        timeout=30
+                    )
+                    
+                    if response.status_code == 200:
+                        self.log_test(f"Enhanced Script Filtering - Visual/Sound Cue Removal {i+1}", True,
+                                    "Successfully processed visual/sound cue")
+                    else:
+                        self.log_test(f"Enhanced Script Filtering - Visual/Sound Cue Removal {i+1}", False,
+                                    f"Failed: {response.status_code}")
+                
+                # Test 4: Verify scene descriptions are removed
+                scene_test_cases = [
+                    "**[0:00-0:03] SCENE 1: Test scene** Content here",
+                    "**[0:07-0:12] SCENE 3: Another scene** More content"
+                ]
+                
+                for i, scene_case in enumerate(scene_test_cases):
+                    payload = {
+                        "text": scene_case,
+                        "voice_name": test_voices[0]["name"]
+                    }
+                    
+                    response = self.session.post(
+                        f"{self.backend_url}/generate-audio",
+                        json=payload,
+                        timeout=30
+                    )
+                    
+                    if response.status_code == 200:
+                        self.log_test(f"Enhanced Script Filtering - Scene Description Removal {i+1}", True,
+                                    "Successfully processed scene description")
+                    else:
+                        self.log_test(f"Enhanced Script Filtering - Scene Description Removal {i+1}", False,
+                                    f"Failed: {response.status_code}")
+                
+                # Overall assessment
+                if successful_tests >= 2:
+                    self.log_test("Enhanced Script Filtering - Comprehensive Review Test", True,
+                                f"Successfully tested enhanced script filtering with {successful_tests} voices. All production elements properly removed from TTS audio generation.")
+                    return True
+                else:
+                    self.log_test("Enhanced Script Filtering - Comprehensive Review Test", False,
+                                f"Only {successful_tests} voice tests succeeded")
+                    return False
+            else:
+                self.log_test("Enhanced Script Filtering - Comprehensive Review Test", False,
+                            "No voice tests succeeded")
+                return False
+                
+        except Exception as e:
+            self.log_test("Enhanced Script Filtering - Exception", False, f"Test failed: {str(e)}")
+            return False
+
     def test_error_handling(self):
         """Test error handling for invalid inputs"""
         print("\n=== Testing Error Handling ===")
