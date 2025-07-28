@@ -225,11 +225,7 @@ metadata:
   run_ui: true
 
 test_plan:
-  current_focus:
-    - "Script Generation Endpoint"
-    - "Prompt Enhancement Endpoint"
-    - "Script Generation UI"
-    - "Enhance Prompt Button"
+  current_focus: []
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
