@@ -83,6 +83,15 @@ class AudioResponse(BaseModel):
     voice_used: str
     duration_seconds: Optional[float] = None
 
+class AvatarVideoRequest(BaseModel):
+    audio_base64: str
+    avatar_image_path: Optional[str] = None
+
+class AvatarVideoResponse(BaseModel):
+    video_base64: str
+    duration_seconds: float
+    request_id: str
+
 # Add your routes to the router instead of directly to app
 @api_router.get("/")
 async def root():
