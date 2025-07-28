@@ -395,6 +395,204 @@ async def get_scripts():
         logger.error(f"Error fetching scripts: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error fetching scripts: {str(e)}")
 
+@api_router.post("/generate-ai-video-script", response_model=AIVideoScriptResponse)
+async def generate_ai_video_script(request: AIVideoScriptRequest):
+    """Generate a comprehensive, AI-video-generator-optimized script with maximum visual detail"""
+    try:
+        # Create a specialized chat instance for AI video script generation
+        chat = LlmChat(
+            api_key=GEMINI_API_KEY,
+            session_id=f"ai-script-{str(uuid.uuid4())[:8]}",
+            system_message=f"""You are an ELITE AI Video Production Script Generator specializing in creating ultra-detailed, production-ready scripts specifically optimized for AI video generation platforms like RunwayML, Pika Labs, Stable Video Diffusion, Luma Dream Machine, and other advanced text-to-video AI tools.
+
+🎬 ULTIMATE MISSION: Create scripts so incredibly detailed and visually specific that AI video generators can produce HOLLYWOOD-QUALITY, PROFESSIONAL VIDEOS with perfect visual execution, cinematic composition, and broadcast-level production value.
+
+🏆 EXPERTISE AREAS:
+- Visual Style: {request.visual_style}
+- Target Platform: {request.target_platform}
+- Mood & Tone: {request.mood}
+- Content Type: {request.video_type}
+
+📋 ULTRA-COMPREHENSIVE SCRIPT REQUIREMENTS:
+
+1. **EXTREME VISUAL DETAIL** (Every 1-2 seconds):
+   - EXACT camera specifications: "Medium close-up, 85mm lens equivalent, shallow depth of field f/2.8"
+   - PRECISE camera movements: "Smooth dolly-in over 3 seconds, starting wide and ending tight"
+   - DETAILED character descriptions: "Caucasian female, 28 years old, shoulder-length chestnut brown hair with subtle waves, wearing cream-colored cashmere sweater, natural makeup with subtle rose lipstick, confident smile with slight head tilt"
+   - COMPREHENSIVE lighting setups: "Three-point lighting setup: key light camera left at 45 degrees (warm 3200K), fill light camera right at 30% intensity, hair light from behind at 70% to create rim lighting effect"
+   - COMPLETE environment descriptions: "Modern minimalist living room, white walls with warm wood accent wall, large windows with sheer curtains filtering afternoon sunlight, mid-century modern furniture in warm oak and cream upholstery"
+
+2. **CINEMATIC COMPOSITION MASTERY**:
+   - Rule of thirds positioning: "Subject positioned on left third line, eyes at upper third intersection"
+   - Leading lines: "Architectural lines of window frames guide viewer's eye to subject"
+   - Depth layering: "Foreground: coffee cup steam, Middle ground: subject, Background: soft-focus bookshelf"
+   - Color theory application: "Complementary orange and teal color palette, warm skin tones against cool background"
+   - Visual hierarchy: "Subject as primary focal point, props as secondary elements supporting narrative"
+
+3. **PROFESSIONAL CHARACTER DEVELOPMENT**:
+   - Physical attributes: Age, ethnicity, build, height, distinctive features
+   - Wardrobe specifics: Brand style, colors, textures, accessories, seasonal appropriateness
+   - Facial expressions: Micro-expressions, eye contact direction, mouth position
+   - Body language: Posture, hand gestures, movement patterns, energy level
+   - Performance notes: Emotional state, motivation, relationship to camera/audience
+
+4. **TECHNICAL PRODUCTION SPECIFICATIONS**:
+   - Frame rate: "24fps for cinematic feel" or "60fps for smooth motion"
+   - Camera settings: Aperture, ISO equivalent, shutter speed suggestions
+   - Focus techniques: "Rack focus from background prop to subject face over 2 seconds"
+   - Motion blur: "Subtle motion blur on hand gestures to add natural movement"
+   - Stabilization: "Handheld with subtle shake" or "Smooth gimbal movement"
+
+5. **ENVIRONMENTAL MASTERY**:
+   - Architecture: Building style, materials, proportions, design elements
+   - Lighting conditions: Natural vs artificial, time of day, weather, shadows
+   - Props and set decoration: Specific items, placement, purpose, storytelling function
+   - Atmospheric elements: Dust particles in sunbeams, steam, fog, reflections
+   - Seasonal/temporal context: Season indicators, time markers, cultural references
+
+6. **ADVANCED AI-OPTIMIZATION FORMATTING**:
+   ```
+   **[TIMESTAMP: 0:00-0:03]**
+   **[CAMERA:]** Medium shot, 50mm lens, f/2.8, eye-level angle, static
+   **[SETTING:]** Contemporary office, floor-to-ceiling windows, urban skyline, golden hour
+   **[CHARACTER:]** Business professional, 35, confident posture, navy suit, subtle smile
+   **[LIGHTING:]** Warm natural light from windows, soft fill from ceiling panels
+   **[COMPOSITION:]** Subject on right third, leading lines from window frames
+   **[MOVEMENT:]** Subject leans forward slightly, maintains eye contact with camera
+   **[COLOR PALETTE:]** Warm golds and deep blues, high contrast, professional
+   **[MOOD:]** Confident, approachable, authoritative
+   **[AUDIO SYNC:]** Voice matches confident facial expression and posture
+   **[TRANSITION:]** Cut to close-up on next beat
+   ```
+
+7. **PLATFORM-SPECIFIC OPTIMIZATION** (for {request.target_platform}):
+   - Aspect ratio considerations: 16:9 for YouTube, 9:16 for TikTok/Instagram, 1:1 for social square
+   - Pacing adjustments: Fast cuts for social media, slower for professional/educational
+   - Text overlay regions: Safe zones for platform UI elements
+   - Thumbnail moments: Visually striking frames for preview images
+   - Engagement hooks: Platform-specific attention grabbers
+
+8. **NARRATIVE & ENGAGEMENT ARCHITECTURE**:
+   - Opening hook: Visually compelling first frame + intriguing dialogue
+   - Story progression: Clear beginning, middle, end with visual variety
+   - Emotional beats: Visual cues that support emotional journey
+   - Retention elements: Visual surprises, reveals, pattern breaks
+   - Call-to-action: Strong closing visual + clear next step
+
+9. **AI GENERATION SUCCESS FACTORS**:
+   - Consistent character appearance across shots
+   - Logical spatial relationships between scenes
+   - Appropriate scale and proportion maintenance
+   - Realistic lighting and shadow behavior
+   - Natural movement and gesture patterns
+   - Coherent visual style throughout
+
+10. **PRODUCTION INTELLIGENCE**:
+   - Shot complexity rating: Simple/Medium/Complex for AI capability matching
+   - Alternative angle suggestions: Multiple options for varied coverage
+   - Backup descriptions: Simplified versions if AI struggles with complexity
+   - Quality checkpoints: Key visual elements to verify in AI output
+   - Post-production notes: Enhancement suggestions for final polish
+
+REMEMBER: Your scripts must be so detailed that an AI video generator can create broadcast-quality, professional videos that rival human-produced content. Every visual element, every camera choice, every lighting decision must be specified with precision."""
+        ).with_model("gemini", "gemini-2.0-flash")
+
+        # Calculate shot timing based on duration
+        duration_shots = {
+            "short": "15-25 shots (2-4 seconds each)",
+            "medium": "30-60 shots (2-6 seconds each)", 
+            "long": "60-120 shots (3-5 seconds each)"
+        }
+
+        script_message = UserMessage(
+            text=f"""Create an ULTRA-DETAILED, professional AI video generation script based on this creative brief:
+
+**CREATIVE BRIEF:**
+"{request.prompt}"
+
+**PRODUCTION SPECIFICATIONS:**
+- Duration: {request.duration} ({duration_shots.get(request.duration, '15-25 shots')})
+- Video Type: {request.video_type}
+- Visual Style: {request.visual_style}  
+- Target Platform: {request.target_platform}
+- Mood: {request.mood}
+
+**MANDATORY DELIVERABLES:**
+
+1. **COMPLETE SHOT LIST** with extreme visual detail:
+   - Every shot numbered and timed precisely
+   - Camera specs, movements, and compositions
+   - Character descriptions and performances  
+   - Environmental and lighting details
+   - Color palettes and visual moods
+
+2. **AI-OPTIMIZED FORMATTING** for each shot:
+   - [CAMERA:], [SETTING:], [CHARACTER:], [LIGHTING:], [MOVEMENT:] tags
+   - Specific technical specifications
+   - Visual composition guidelines
+   - Quality assurance checkpoints
+
+3. **PRODUCTION INTELLIGENCE:**
+   - Estimated shot count and complexity ratings
+   - Platform-specific optimization notes
+   - AI generation tips and best practices
+   - Alternative angles for shot variety
+   - Quality control checkpoints
+
+4. **NARRATIVE EXCELLENCE:**
+   - Compelling opening hook (first 3 seconds)
+   - Strong story arc with visual progression
+   - Engagement retention throughout
+   - Professional closing and call-to-action
+
+Generate a script so comprehensive that when input into AI video generation tools, it will produce professional, broadcast-quality video content that exceeds client expectations and industry standards."""
+        )
+
+        generated_script = await chat.send_message(script_message)
+        
+        # Count estimated shots from the generated script
+        shot_count = len([line for line in generated_script.split('\n') if 'SHOT' in line.upper() or '[0:' in line])
+        if shot_count == 0:  # Fallback estimation
+            shot_count = {"short": 20, "medium": 45, "long": 90}.get(request.duration, 20)
+        
+        # Estimate production time
+        production_time = {
+            "short": "2-4 hours with AI tools",
+            "medium": "4-8 hours with AI tools", 
+            "long": "8-16 hours with AI tools"
+        }.get(request.duration, "2-4 hours with AI tools")
+        
+        # Generate AI-specific tips
+        ai_tips = f"""AI Generation Tips for {request.visual_style} style on {request.target_platform}:
+- Use consistent character descriptions throughout all shots
+- Specify lighting conditions clearly for each scene  
+- Include backup simpler descriptions for complex shots
+- Test key shots individually before full video generation
+- Allow extra time for character consistency across shots
+- Consider generating shots in batches for better consistency"""
+        
+        # Store the AI video script in database
+        script_data = AIVideoScriptResponse(
+            original_prompt=request.prompt,
+            generated_script=generated_script,
+            video_type=request.video_type or "general",
+            duration=request.duration or "short",
+            visual_style=request.visual_style or "cinematic",
+            target_platform=request.target_platform or "general",
+            mood=request.mood or "professional",
+            shot_count=shot_count,
+            estimated_production_time=production_time,
+            ai_generation_tips=ai_tips
+        )
+        
+        await db.ai_video_scripts.insert_one(script_data.dict())
+        
+        return script_data
+        
+    except Exception as e:
+        logger.error(f"Error generating AI video script: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error generating AI video script: {str(e)}")
+
 # Voice and TTS Endpoints
 
 def extract_clean_script(raw_script):
