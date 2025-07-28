@@ -331,8 +331,8 @@ def extract_clean_script(raw_script):
         if in_metadata_section:
             continue
         
-        # Skip standalone timestamps
-        if re.match(r'^\(\d+:\d+[-–]\d+:\d+\)', line):
+        # Skip standalone timestamps - handle various formats with spaces
+        if re.match(r'^\(\d+:\d+\s*[-–]\s*\d+:\d+\)', line):
             continue
         
         # Skip pure scene descriptions in brackets
