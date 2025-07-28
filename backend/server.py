@@ -318,9 +318,10 @@ def extract_clean_script(raw_script):
     Removes ALL production elements and keeps ONLY what should be spoken in the final video.
     
     This includes removing:
-    - Timestamps (0:00-0:03)
+    - Timestamps (0:00), (0:00-0:03)
     - Scene descriptions [SCENE START: ...]
-    - Speaker/narrator directions (Narrator – tone description)
+    - Speaker/narrator directions (Expert), (Narrator), (Person Speaking)
+    - Visual and sound cues **(VISUAL CUE:**, **(SOUND:**
     - Section headers (TARGET DURATION, VIDEO TYPE, etc.)
     - Production notes and metadata
     - Bullet points and formatting instructions
@@ -333,7 +334,8 @@ def extract_clean_script(raw_script):
     skip_sections = [
         'TARGET DURATION', 'VIDEO TYPE', 'VIDEO SCRIPT', 'SCRIPT:', 'KEY RETENTION ELEMENTS',
         'NOTES:', 'RETENTION ELEMENTS:', 'ADJUSTMENTS:', 'OPTIMIZATION:', 'METRICS:',
-        'NOTES', 'SCRIPT', 'DURATION', 'TYPE'
+        'NOTES', 'SCRIPT', 'DURATION', 'TYPE', 'KEY CONSIDERATIONS', 'RATIONALE:',
+        'END.', '**KEY CONSIDERATIONS', '**END**'
     ]
     
     # Track if we're in a metadata section
@@ -345,6 +347,14 @@ def extract_clean_script(raw_script):
         
         # Skip empty lines
         if not line:
+            continue
+        
+        # Skip visual and sound cues completely
+        if line.startswith('**(VISUAL CUE:') or line.startswith('**(SOUND:') or line.startswith('**(VISUAL'):
+            continue
+            
+        # Skip lines that start with bold section markers
+        if line.startswith('**[') and line.endswith(']**') or line.startswith('**SCENE'):
             continue
         
         # Check for section headers - skip entire sections
@@ -366,29 +376,53 @@ def extract_clean_script(raw_script):
         if in_metadata_section:
             continue
         
-        # Skip standalone timestamps - handle various formats with spaces
-        if re.match(r'^\(\d+:\d+\s*[-–]\s*\d+:\d+\)', line):
+        # Skip standalone timestamps - handle both single and range formats
+        if re.match(r'^\(\d+:\d+\s*[-–]\s*\d+:\d+\)$', line):  # (0:00-0:03)
+            continue
+        if re.match(r'^\(\d+:\d+\)$', line):  # (0:00)
             continue
         
         # Skip pure scene descriptions in brackets
         if re.match(r'^\[.*\]$', line):
             continue
             
-        # Skip standalone speaker directions
-        if re.match(r'^\([^)]*(?:Narrator|Host|Speaker|VO|Voiceover|Testimonial)[^)]*\)$', line, re.IGNORECASE):
+        # Skip standalone speaker directions - ENHANCED to catch more patterns
+        speaker_patterns = [
+            r'^\([^)]*(?:Narrator|Host|Speaker|VO|Voiceover|Testimonial|Expert|Person Speaking)[^)]*\)$',
+            r'^\([^)]*(?:Intimate|urgent|louder|direct|Hopeful|encouraging|Empowering|strong|quick|friendly)[^)]*\)$',
+            r'^\(Voiceover[^)]*\)$',
+            r'^\([^)]*Speaking[^)]*\)$'
+        ]
+        skip_line = False
+        for pattern in speaker_patterns:
+            if re.match(pattern, line, re.IGNORECASE):
+                skip_line = True
+                break
+        if skip_line:
             continue
             
         # Now extract actual spoken content from mixed lines
-        # Remove timestamps at the beginning or anywhere in the line - handle spaces around dash
-        line = re.sub(r'\(\d+:\d+\s*[-–]\s*\d+:\d+\)', '', line)
+        # Remove timestamps at the beginning or anywhere in the line - handle both formats
+        line = re.sub(r'\(\d+:\d+\s*[-–]\s*\d+:\d+\)', '', line)  # (0:00-0:03)
+        line = re.sub(r'\(\d+:\d+\)', '', line)  # (0:00)
         
         # Remove scene descriptions in brackets
         line = re.sub(r'\[.*?\]', '', line)
         
-        # Remove speaker directions - more comprehensive patterns
-        line = re.sub(r'\([^)]*(?:Narrator|Host|Speaker|VO|Voiceover|Testimonial)[^)]*\)', '', line, re.IGNORECASE)
-        line = re.sub(r'\([^)]*(?:tone|music|sound|audio|video|cut|scene|transition)[^)]*\)', '', line, re.IGNORECASE)
+        # Remove visual and sound cues
+        line = re.sub(r'\*\*\(VISUAL CUE:[^)]*\)\*\*', '', line)
+        line = re.sub(r'\*\*\(SOUND:[^)]*\)\*\*', '', line)
+        
+        # Remove speaker directions - ENHANCED patterns
+        line = re.sub(r'\([^)]*(?:Narrator|Host|Speaker|VO|Voiceover|Testimonial|Expert|Person Speaking)[^)]*\)', '', line, re.IGNORECASE)
+        line = re.sub(r'\([^)]*(?:Intimate|urgent|louder|direct|Hopeful|encouraging|Empowering|strong|quick|friendly)[^)]*\)', '', line, re.IGNORECASE)
+        line = re.sub(r'\([^)]*(?:tone|music|sound|audio|video|cut|scene|transition|relatable|Genuine)[^)]*\)', '', line, re.IGNORECASE)
         line = re.sub(r'\([^)]*(?:–|—)[^)]*\)', '', line)  # Remove parentheses with dashes (speaker directions)
+        
+        # Remove standalone speaker identifiers in parentheses
+        line = re.sub(r'\(Expert\)', '', line, re.IGNORECASE)
+        line = re.sub(r'\(Person Speaking[^)]*\)', '', line, re.IGNORECASE)
+        line = re.sub(r'\(Voiceover[^)]*\)', '', line, re.IGNORECASE)
         
         # Clean up the line
         line = line.strip()
@@ -425,6 +459,7 @@ def extract_clean_script(raw_script):
     
     # Final timestamp cleanup - catch any remaining timestamp patterns
     final_script = re.sub(r'\b\d+:\d+\s*[-–]\s*\d+:\d+\b', '', final_script)
+    final_script = re.sub(r'\b\d+:\d+\b', '', final_script)  # Single timestamps
     
     final_script = re.sub(r'\s+', ' ', final_script).strip()
     
