@@ -15,6 +15,7 @@ import base64
 import io
 import tempfile
 import asyncio
+import re
 
 
 ROOT_DIR = Path(__file__).parent
