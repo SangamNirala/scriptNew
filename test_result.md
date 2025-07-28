@@ -296,7 +296,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Voice Selection UI"
+    - "Avatar Video Generation Integration"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
