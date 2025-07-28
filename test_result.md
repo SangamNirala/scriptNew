@@ -324,7 +324,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Avatar Video Generation Integration"
+    - "Audio Content Filtering Enhancement"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
