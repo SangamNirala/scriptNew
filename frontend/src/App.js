@@ -307,12 +307,66 @@ const ScriptGenerator = () => {
         requestId: response.data.request_id,
         avatarOption: response.data.avatar_option,
         scriptSegments: response.data.script_segments,
-        sadtalkerUsed: response.data.sadtalker_used
+        sadtalkerUsed: response.data.sadtalker_used,
+        qualityLevel: "Enhanced"
       });
 
     } catch (err) {
       console.error("Error generating enhanced avatar video:", err);
       setError("Error generating enhanced avatar video. Please try again.");
+    } finally {
+      setIsGeneratingVideo(false);
+    }
+  };
+
+  const handleGenerateUltraRealisticAvatarVideo = async () => {
+    if (!lastGeneratedAudio) {
+      setError("Please generate audio first before creating avatar video.");
+      return;
+    }
+
+    setIsGeneratingVideo(true);
+    setError("");
+    setShowUltraRealisticOptions(false);
+
+    try {
+      const response = await axios.post(`${API}/generate-ultra-realistic-avatar-video`, {
+        audio_base64: lastGeneratedAudio,
+        avatar_style: ultraAvatarStyle,
+        gender: ultraAvatarGender,
+        avatar_index: ultraAvatarIndex,
+        script_text: generatedScript
+      });
+
+      // Convert base64 video to blob for download
+      const videoBase64 = response.data.video_base64;
+      const videoBytes = atob(videoBase64);
+      const videoArray = new Uint8Array(videoBytes.length);
+      
+      for (let i = 0; i < videoBytes.length; i++) {
+        videoArray[i] = videoBytes.charCodeAt(i);
+      }
+      
+      const videoBlob = new Blob([videoArray], { type: 'video/mp4' });
+      const videoUrl = URL.createObjectURL(videoBlob);
+      
+      setAvatarVideoData({
+        url: videoUrl,
+        blob: videoBlob,
+        duration: response.data.duration_seconds,
+        requestId: response.data.request_id,
+        avatarStyle: response.data.avatar_style,
+        gender: response.data.gender,
+        avatarIndex: response.data.avatar_index,
+        scriptSegments: response.data.script_segments,
+        backgroundContexts: response.data.background_contexts,
+        aiModelUsed: response.data.ai_model_used,
+        qualityLevel: response.data.quality_level
+      });
+
+    } catch (err) {
+      console.error("Error generating ultra-realistic avatar video:", err);
+      setError("Error generating ultra-realistic avatar video. Please try again.");
     } finally {
       setIsGeneratingVideo(false);
     }
