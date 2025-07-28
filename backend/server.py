@@ -53,12 +53,34 @@ class ScriptRequest(BaseModel):
     video_type: Optional[str] = "general"  # general, educational, entertainment, marketing
     duration: Optional[str] = "short"  # short (30s-1min), medium (1-3min), long (3-5min)
 
+class AIVideoScriptRequest(BaseModel):
+    prompt: str
+    video_type: Optional[str] = "general"  # general, educational, entertainment, marketing, explainer, storytelling
+    duration: Optional[str] = "short"  # short (30s-1min), medium (1-3min), long (3-5min)
+    visual_style: Optional[str] = "cinematic"  # cinematic, documentary, commercial, animated, realistic
+    target_platform: Optional[str] = "general"  # youtube, tiktok, instagram, linkedin, general
+    mood: Optional[str] = "professional"  # professional, casual, energetic, calm, dramatic, inspiring
+
 class ScriptResponse(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     original_prompt: str
     generated_script: str
     video_type: str
     duration: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class AIVideoScriptResponse(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    original_prompt: str
+    generated_script: str
+    video_type: str
+    duration: str
+    visual_style: str
+    target_platform: str
+    mood: str
+    shot_count: int
+    estimated_production_time: str
+    ai_generation_tips: str
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 class PromptEnhancementRequest(BaseModel):
