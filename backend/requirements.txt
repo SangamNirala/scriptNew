@@ -40,3 +40,14 @@ joblib
 scikit-image
 litellm
 httpx
+# Additional dependencies for ultra-realistic avatar generation
+face-recognition
+mediapipe
+dlib
+insightface
+onnx
+onnxruntime
+transformers
+diffusers
+accelerate
+xformers
