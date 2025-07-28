@@ -1479,6 +1479,9 @@ KEY RETENTION ELEMENTS:
             self.test_avatar_video_error_handling,
             self.test_complete_avatar_workflow,
             self.test_avatar_video_with_different_audio_lengths,
+            self.test_enhanced_avatar_video_generation_endpoint,  # New enhanced avatar video tests
+            self.test_enhanced_avatar_video_error_handling,
+            self.test_enhanced_avatar_video_integration,
             self.test_integration_flow,
             self.test_error_handling
         ]
