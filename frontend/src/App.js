@@ -725,6 +725,114 @@ const ScriptGenerator = () => {
             </div>
           </div>
         )}
+
+        {/* Avatar Options Modal */}
+        {showAvatarOptions && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20 max-w-md w-full max-h-[80vh] overflow-y-auto">
+              <h3 className="text-2xl font-bold text-white mb-4">✨ Avatar Options</h3>
+              
+              <div className="space-y-4 mb-6">
+                {/* Default Avatar Option */}
+                <div
+                  onClick={() => setAvatarOption("default")}
+                  className={`p-4 rounded-lg cursor-pointer transition-all duration-200 ${
+                    avatarOption === "default"
+                      ? 'bg-purple-500/30 border-purple-400 border-2'
+                      : 'bg-white/5 border border-white/20 hover:bg-white/10'
+                  }`}
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="text-2xl">🤖</div>
+                    <div>
+                      <div className="font-medium text-white">Default AI Avatar</div>
+                      <div className="text-sm text-gray-400">Use our built-in professional avatar</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Upload Your Photo Option */}
+                <div
+                  onClick={() => setAvatarOption("upload")}
+                  className={`p-4 rounded-lg cursor-pointer transition-all duration-200 ${
+                    avatarOption === "upload"
+                      ? 'bg-purple-500/30 border-purple-400 border-2'
+                      : 'bg-white/5 border border-white/20 hover:bg-white/10'
+                  }`}
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="text-2xl">📸</div>
+                    <div>
+                      <div className="font-medium text-white">Upload Your Photo</div>
+                      <div className="text-sm text-gray-400">Use your own image as the avatar</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* AI Generated Avatar Option */}
+                <div
+                  onClick={() => setAvatarOption("ai_generated")}
+                  className={`p-4 rounded-lg cursor-pointer transition-all duration-200 ${
+                    avatarOption === "ai_generated"
+                      ? 'bg-purple-500/30 border-purple-400 border-2'
+                      : 'bg-white/5 border border-white/20 hover:bg-white/10'
+                  }`}
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="text-2xl">🎭</div>
+                    <div>
+                      <div className="font-medium text-white">AI Generated Avatar</div>
+                      <div className="text-sm text-gray-400">Create a unique AI-generated human face</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* File Upload for Upload Option */}
+                {avatarOption === "upload" && (
+                  <div className="mt-4 p-4 bg-white/5 rounded-lg border border-white/20">
+                    <label className="block text-white text-sm font-medium mb-2">
+                      Upload your photo:
+                    </label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="w-full p-2 bg-white/10 border border-white/20 rounded-lg text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-purple-500/20 file:text-purple-300 hover:file:bg-purple-500/30"
+                    />
+                    {userImageFile && (
+                      <div className="mt-2 text-sm text-green-400">
+                        ✓ Image uploaded: {userImageFile.name}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowAvatarOptions(false)}
+                  className="flex-1 py-3 px-4 bg-gray-600 text-white font-semibold rounded-lg shadow-lg hover:bg-gray-700 transition-all duration-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleGenerateEnhancedAvatarVideo}
+                  disabled={isGeneratingVideo || (avatarOption === "upload" && !userImageBase64)}
+                  className="flex-1 py-3 px-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-lg shadow-lg hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                >
+                  {isGeneratingVideo ? (
+                    <div className="flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Generating...
+                    </div>
+                  ) : (
+                    "✨ Generate Enhanced Video"
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
