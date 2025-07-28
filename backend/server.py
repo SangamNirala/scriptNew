@@ -387,6 +387,10 @@ def extract_clean_script(raw_script):
     
     # Remove any remaining stray brackets or parentheses
     final_script = re.sub(r'[\[\]()]+', '', final_script)
+    
+    # Final timestamp cleanup - catch any remaining timestamp patterns
+    final_script = re.sub(r'\b\d+:\d+\s*[-–]\s*\d+:\d+\b', '', final_script)
+    
     final_script = re.sub(r'\s+', ' ', final_script).strip()
     
     # If result is too short, try extracting quoted content as fallback
