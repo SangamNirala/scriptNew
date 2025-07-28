@@ -338,11 +338,17 @@ async def generate_audio(request: TextToSpeechRequest):
         if not clean_text:
             raise HTTPException(status_code=400, detail="Text cannot be empty")
         
+        # Debug logging
+        logger.info(f"Received TTS request with voice: {request.voice_name}")
+        logger.info(f"Original text (first 100 chars): {clean_text[:100]}...")
+        
         # Remove script formatting for better speech
         clean_text = clean_text.replace('[', '').replace(']', '')  # Remove scene descriptions
         clean_text = clean_text.replace('(', '').replace(')', '')  # Remove speaker directions  
         clean_text = clean_text.replace('**', '')  # Remove bold formatting
         clean_text = ' '.join(clean_text.split())  # Normalize whitespace
+        
+        logger.info(f"Cleaned text (first 100 chars): {clean_text[:100]}...")
         
         # Create TTS communication
         communicate = edge_tts.Communicate(clean_text, request.voice_name)
