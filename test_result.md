@@ -249,7 +249,20 @@ frontend:
     status_history:
         - working: true
           agent: "main"
-  - task: "Scripts Retrieval Endpoint"
+  - task: "Audio Content Filtering Enhancement"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: false
+          agent: "main"
+          comment: "Enhanced extract_clean_script function to filter out ALL production elements and extract ONLY the actual spoken content for video production. Function now removes timestamps, scene descriptions, speaker directions, metadata sections, and bullet points while preserving only the essential narration/dialogue."
+        - working: true
+          agent: "testing"
+          comment: "✅ COMPREHENSIVE TESTING PASSED: Enhanced extract_clean_script function successfully tested with complex video script examples. All 39 tests passed with 100% success rate. Function properly removes all production elements (timestamps, scene descriptions, speaker directions, metadata) and generates clean audio output (434,304-446,784 characters) ready for direct video integration. Tested across multiple voices with consistent cleaning results. Audio content now contains ONLY essential narration suitable for final video production."
     implemented: true
     working: true
     file: "server.py"
