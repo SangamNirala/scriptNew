@@ -78,6 +78,168 @@ async def get_status_checks():
     status_checks = await db.status_checks.find().to_list(1000)
     return [StatusCheck(**status_check) for status_check in status_checks]
 
+# Script Generation Endpoints
+@api_router.post("/enhance-prompt", response_model=PromptEnhancementResponse)
+async def enhance_prompt(request: PromptEnhancementRequest):
+    """Enhance user's prompt to make it more effective for script generation"""
+    try:
+        # Create a new chat instance for prompt enhancement
+        chat = LlmChat(
+            api_key=GEMINI_API_KEY,
+            session_id=f"enhance-{str(uuid.uuid4())[:8]}",
+            system_message="""You are an expert script writing consultant specializing in creating engaging video content. Your job is to take basic user prompts and transform them into detailed, emotionally compelling briefs that will result in high-quality, engaging video scripts.
+
+Key areas to enhance:
+1. EMOTIONAL HOOKS: Add elements that create immediate emotional connection
+2. STORYTELLING STRUCTURE: Suggest narrative arcs, character development, conflict/resolution
+3. AUDIENCE ENGAGEMENT: Include techniques to maintain viewer attention throughout
+4. VISUAL STORYTELLING: Add suggestions for visual elements that enhance the script
+5. PACING & RHYTHM: Recommend timing and flow for maximum impact
+6. CALL-TO-ACTION: Include compelling endings that drive viewer response
+
+Always provide:
+- Enhanced prompt that's 3-5x more detailed than the original
+- Brief explanation of what you enhanced and why
+- Keep the core intent but make it much more actionable for script generation"""
+        ).with_model("gemini", "gemini-2.0-flash")
+
+        enhancement_message = UserMessage(
+            text=f"""Original prompt: "{request.original_prompt}"
+Video type: {request.video_type}
+
+Please enhance this prompt to make it more effective for generating an engaging video script. Return your response in this exact format:
+
+ENHANCED_PROMPT:
+[Your enhanced prompt here - make it detailed, specific, and emotionally compelling]
+
+EXPLANATION:
+[Brief explanation of what you enhanced and why it will make the script better]"""
+        )
+
+        response = await chat.send_message(enhancement_message)
+        
+        # Parse the response
+        response_parts = response.split("EXPLANATION:")
+        if len(response_parts) != 2:
+            raise HTTPException(status_code=500, detail="Invalid AI response format")
+        
+        enhanced_prompt = response_parts[0].replace("ENHANCED_PROMPT:", "").strip()
+        explanation = response_parts[1].strip()
+
+        return PromptEnhancementResponse(
+            original_prompt=request.original_prompt,
+            enhanced_prompt=enhanced_prompt,
+            enhancement_explanation=explanation
+        )
+        
+    except Exception as e:
+        logger.error(f"Error enhancing prompt: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error enhancing prompt: {str(e)}")
+
+@api_router.post("/generate-script", response_model=ScriptResponse)
+async def generate_script(request: ScriptRequest):
+    """Generate an engaging video script based on the prompt"""
+    try:
+        # Create a new chat instance for script generation
+        chat = LlmChat(
+            api_key=GEMINI_API_KEY,
+            session_id=f"script-{str(uuid.uuid4())[:8]}",
+            system_message=f"""You are a world-class video script writer who creates emotionally compelling, highly engaging content that keeps viewers hooked from start to finish. You specialize in {request.video_type} content and understand the psychology of viewer retention.
+
+CRITICAL REQUIREMENTS FOR ENGAGING SCRIPTS:
+
+1. HOOK (First 3-5 seconds):
+   - Start with a compelling question, shocking statement, or immediate promise
+   - Create curiosity gap that MUST be filled
+   - Use pattern interrupts to grab attention
+
+2. STORYTELLING STRUCTURE:
+   - Use proven narrative frameworks (Hero's Journey, Problem-Solution, Before-After)
+   - Include conflict, tension, and resolution
+   - Build emotional investment in characters/outcomes
+
+3. PACING & FLOW:
+   - Vary sentence length and rhythm
+   - Use strategic pauses and emphasis
+   - Include transition phrases that maintain momentum
+   - Build to emotional peaks and strategic breaks
+
+4. ENGAGEMENT TECHNIQUES:
+   - Ask rhetorical questions to involve viewers mentally
+   - Use "you" language to make it personal
+   - Include relatable scenarios and emotions
+   - Create "aha moments" and revelations
+
+5. VISUAL STORYTELLING:
+   - Write for the medium - include visual cues and scene descriptions
+   - Suggest compelling b-roll and graphics
+   - Use cinematic language that translates to engaging visuals
+
+6. EMOTIONAL TRIGGERS:
+   - Tap into core human emotions: fear, hope, curiosity, belonging
+   - Use power words and vivid imagery
+   - Create emotional peaks and valleys
+
+7. RETENTION OPTIMIZATION:
+   - Plant "seeds" early that pay off later
+   - Use cliffhangers and open loops
+   - Include unexpected twists or insights
+   - End each section with a reason to keep watching
+
+8. DURATION-SPECIFIC OPTIMIZATION:
+   - Short (30s-1min): Rapid-fire value, single focused message
+   - Medium (1-3min): Full story arc with development
+   - Long (3-5min): Deep dive with multiple value points
+
+Your scripts should be formatted with:
+- Scene descriptions in [brackets]
+- Speaker directions in (parentheses)
+- Clear timing indicators
+- Emphasis on KEY WORDS
+- Strategic pauses marked as ...
+
+Remember: Every word should serve viewer retention. If it doesn't add value or engagement, cut it."""
+        ).with_model("gemini", "gemini-2.0-flash")
+
+        script_message = UserMessage(
+            text=f"""Create an engaging {request.duration} duration video script for {request.video_type} content based on this prompt:
+
+"{request.prompt}"
+
+Duration target: {request.duration}
+Video type: {request.video_type}
+
+Please create a script that maximizes viewer engagement and retention. Include all formatting, visual cues, and timing suggestions."""
+        )
+
+        generated_script = await chat.send_message(script_message)
+        
+        # Store the script in database
+        script_data = ScriptResponse(
+            original_prompt=request.prompt,
+            generated_script=generated_script,
+            video_type=request.video_type or "general",
+            duration=request.duration or "short"
+        )
+        
+        await db.scripts.insert_one(script_data.dict())
+        
+        return script_data
+        
+    except Exception as e:
+        logger.error(f"Error generating script: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error generating script: {str(e)}")
+
+@api_router.get("/scripts", response_model=List[ScriptResponse])
+async def get_scripts():
+    """Get all generated scripts"""
+    try:
+        scripts = await db.scripts.find().sort("created_at", -1).to_list(100)
+        return [ScriptResponse(**script) for script in scripts]
+    except Exception as e:
+        logger.error(f"Error fetching scripts: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error fetching scripts: {str(e)}")
+
 # Include the router in the main app
 app.include_router(api_router)
 
