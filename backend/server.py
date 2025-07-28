@@ -107,13 +107,17 @@ Always provide:
             text=f"""Original prompt: "{request.original_prompt}"
 Video type: {request.video_type}
 
-Please enhance this prompt to make it more effective for generating an engaging video script. Return your response in this exact format:
+Please enhance this prompt to make it more effective for generating an engaging video script. 
+
+IMPORTANT: Format your response with proper paragraph breaks and line spacing for readability. Use double line breaks between major sections.
+
+Return your response in this exact format:
 
 ENHANCED_PROMPT:
-[Your enhanced prompt here - make it detailed, specific, and emotionally compelling]
+[Your enhanced prompt here - make it detailed, specific, and emotionally compelling. Use proper paragraph breaks and formatting for readability. Separate different aspects with line breaks.]
 
 EXPLANATION:
-[Brief explanation of what you enhanced and why it will make the script better]"""
+[Brief explanation of what you enhanced and why it will make the script better. Use proper paragraph formatting.]"""
         )
 
         response = await chat.send_message(enhancement_message)
