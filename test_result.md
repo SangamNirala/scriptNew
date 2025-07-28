@@ -230,8 +230,44 @@ test_plan:
   test_all: false
   test_priority: "high_first"
 
+  - task: "Enhanced Prompt Formatting"
+    implemented: true
+    working: true
+    file: "server.py, App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "Enhanced prompt now returns properly formatted text with paragraph breaks and line spacing. Frontend displays formatted content with proper HTML rendering."
+
+  - task: "Dual Script Generation Options"
+    implemented: true
+    working: true
+    file: "App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "Added two buttons after prompt enhancement: 'Generate with Original' and 'Generate with Enhanced'. Users can now choose which version to use for script generation."
+
+  - task: "Voice Preview Feature"
+    implemented: true
+    working: true
+    file: "App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "Implemented text-to-speech functionality using Web Speech API. Users can click 'Listen' button to hear generated scripts read aloud with proper text cleaning for better speech synthesis."
+
 agent_communication:
     - agent: "main"
-      message: "Successfully implemented complete script generation app with Gemini integration. Backend has optimized prompts for emotional engagement, storytelling, and viewer retention. Frontend has enhance prompt feature positioned above generate script button as requested. Ready for comprehensive testing of all endpoints and UI functionality."
+      message: "Successfully implemented all three requested enhancements: 1) Enhanced prompts now have proper formatting with paragraph breaks for better readability, 2) Added dual script generation buttons allowing users to choose between original or enhanced prompt, 3) Restored voice preview feature using Web Speech API for text-to-speech playback of generated scripts. All features tested and working correctly."
     - agent: "testing"
       message: "✅ BACKEND TESTING COMPLETE: All backend API endpoints tested and working perfectly. Comprehensive testing performed on /api/enhance-prompt, /api/generate-script, and /api/scripts endpoints. Verified Gemini API integration, content quality (122x prompt enhancement ratio, 3600+ character scripts with proper formatting), database persistence, error handling, and complete integration flow. All 15 test cases passed with 100% success rate. Backend functionality is production-ready with high-quality AI-generated content optimized for video production."
