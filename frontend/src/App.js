@@ -386,14 +386,26 @@ const ScriptGenerator = () => {
                   </h2>
                   <button
                     onClick={handlePlayScript}
+                    disabled={isGeneratingAudio}
                     className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center space-x-2 ${
                       isPlaying 
                         ? 'bg-red-500/20 text-red-300 hover:bg-red-500/30' 
+                        : isGeneratingAudio
+                        ? 'bg-yellow-500/20 text-yellow-300'
                         : 'bg-green-500/20 text-green-300 hover:bg-green-500/30'
-                    }`}
+                    } ${isGeneratingAudio ? 'cursor-not-allowed opacity-75' : ''}`}
                   >
-                    <span>{isPlaying ? '⏹️' : '🎵'}</span>
-                    <span>{isPlaying ? 'Stop' : 'Listen'}</span>
+                    {isGeneratingAudio ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-yellow-300"></div>
+                        <span>Generating...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>{isPlaying ? '⏹️' : '🎵'}</span>
+                        <span>{isPlaying ? 'Stop' : 'Listen'}</span>
+                      </>
+                    )}
                   </button>
                 </div>
                 
