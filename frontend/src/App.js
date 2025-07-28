@@ -652,6 +652,21 @@ const ScriptGenerator = () => {
                       <span>Enhanced Avatar Video</span>
                     </button>
                   )}
+
+                  {lastGeneratedAudio && (
+                    <button
+                      onClick={() => setShowUltraRealisticOptions(true)}
+                      disabled={isGeneratingVideo}
+                      className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center space-x-2 ${
+                        isGeneratingVideo 
+                          ? 'bg-yellow-500/20 text-yellow-300 cursor-not-allowed' 
+                          : 'bg-gradient-to-r from-pink-600 to-red-600 text-white hover:from-pink-700 hover:to-red-700'
+                      }`}
+                    >
+                      <span>🎬</span>
+                      <span>Ultra-Realistic Avatar</span>
+                    </button>
+                  )}
                   
                   {!isPlaying && !isGeneratingAudio && !lastGeneratedAudio && (
                     <div className="text-xs text-gray-400 flex items-center">
