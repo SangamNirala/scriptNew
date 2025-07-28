@@ -244,6 +244,74 @@ const ScriptGenerator = () => {
     }
   };
 
+  const handleImageUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setUserImageFile(file);
+      
+      // Convert to base64
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const base64 = e.target.result.split(',')[1]; // Remove data:image/...;base64, prefix
+        setUserImageBase64(base64);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleGenerateEnhancedAvatarVideo = async () => {
+    if (!lastGeneratedAudio) {
+      setError("Please generate audio first before creating avatar video.");
+      return;
+    }
+
+    if (avatarOption === "upload" && !userImageBase64) {
+      setError("Please upload an image for the upload option.");
+      return;
+    }
+
+    setIsGeneratingVideo(true);
+    setError("");
+    setShowAvatarOptions(false);
+
+    try {
+      const response = await axios.post(`${API}/generate-enhanced-avatar-video`, {
+        audio_base64: lastGeneratedAudio,
+        avatar_option: avatarOption,
+        user_image_base64: userImageBase64,
+        script_text: generatedScript
+      });
+
+      // Convert base64 video to blob for download
+      const videoBase64 = response.data.video_base64;
+      const videoBytes = atob(videoBase64);
+      const videoArray = new Uint8Array(videoBytes.length);
+      
+      for (let i = 0; i < videoBytes.length; i++) {
+        videoArray[i] = videoBytes.charCodeAt(i);
+      }
+      
+      const videoBlob = new Blob([videoArray], { type: 'video/mp4' });
+      const videoUrl = URL.createObjectURL(videoBlob);
+      
+      setAvatarVideoData({
+        url: videoUrl,
+        blob: videoBlob,
+        duration: response.data.duration_seconds,
+        requestId: response.data.request_id,
+        avatarOption: response.data.avatar_option,
+        scriptSegments: response.data.script_segments,
+        sadtalkerUsed: response.data.sadtalker_used
+      });
+
+    } catch (err) {
+      console.error("Error generating enhanced avatar video:", err);
+      setError("Error generating enhanced avatar video. Please try again.");
+    } finally {
+      setIsGeneratingVideo(false);
+    }
+  };
+
   const downloadAvatarVideo = () => {
     if (avatarVideoData) {
       const link = document.createElement('a');
