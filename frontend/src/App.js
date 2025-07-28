@@ -144,11 +144,6 @@ const ScriptGenerator = () => {
     setError("");
 
     try {
-      // Debug logging
-      console.log("Generating audio for text:", generatedScript.substring(0, 100) + "...");
-      console.log("Using voice:", selectedVoice.name);
-      console.log("Enhanced prompt:", enhancedPrompt.substring(0, 100) + "...");
-      
       const response = await axios.post(`${API}/generate-audio`, {
         text: generatedScript,
         voice_name: selectedVoice.name
