@@ -196,6 +196,9 @@ class AvatarVideoGenerator:
                 avatar_image_path, wav_audio_path, temp_video_path
             )
             
+            # Get video duration before cleanup
+            duration_seconds = self.get_video_duration(final_video_path)
+            
             # Convert video to base64 for return
             with open(final_video_path, 'rb') as video_file:
                 video_base64 = base64.b64encode(video_file.read()).decode('utf-8')
@@ -205,7 +208,7 @@ class AvatarVideoGenerator:
             
             return {
                 "video_base64": video_base64,
-                "duration_seconds": self.get_video_duration(final_video_path),
+                "duration_seconds": duration_seconds,
                 "request_id": request_id
             }
             
