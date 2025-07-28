@@ -33,6 +33,12 @@ const ScriptGenerator = () => {
   const [avatarVideoData, setAvatarVideoData] = useState(null);
   const [lastGeneratedAudio, setLastGeneratedAudio] = useState(null);
 
+  // Enhanced avatar generation state
+  const [avatarOption, setAvatarOption] = useState("default");
+  const [userImageFile, setUserImageFile] = useState(null);
+  const [userImageBase64, setUserImageBase64] = useState(null);
+  const [showAvatarOptions, setShowAvatarOptions] = useState(false);
+
   const fetchScripts = async () => {
     try {
       const response = await axios.get(`${API}/scripts`);
