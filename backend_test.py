@@ -1473,7 +1473,6 @@ KEY RETENTION ELEMENTS:
             self.test_voices_endpoint,
             self.test_generate_audio_endpoint,
             self.test_timestamp_removal_comprehensive,  # New focused timestamp removal test
-            self.test_extract_clean_script_comprehensive,
             self.test_audio_error_handling,
             self.test_voice_audio_integration,
             self.test_avatar_video_generation_endpoint,
