@@ -39,6 +39,12 @@ const ScriptGenerator = () => {
   const [userImageBase64, setUserImageBase64] = useState(null);
   const [showAvatarOptions, setShowAvatarOptions] = useState(false);
 
+  // Ultra-realistic avatar generation state
+  const [showUltraRealisticOptions, setShowUltraRealisticOptions] = useState(false);
+  const [ultraAvatarStyle, setUltraAvatarStyle] = useState("business_professional");
+  const [ultraAvatarGender, setUltraAvatarGender] = useState("female");
+  const [ultraAvatarIndex, setUltraAvatarIndex] = useState(1);
+
   const fetchScripts = async () => {
     try {
       const response = await axios.get(`${API}/scripts`);
