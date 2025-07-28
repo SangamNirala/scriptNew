@@ -527,7 +527,7 @@ async def generate_avatar_video(request: AvatarVideoRequest):
     try:
         logger.info("Starting avatar video generation")
         
-        if not request.audio_base64:
+        if not request.audio_base64 or request.audio_base64.strip() == "":
             raise HTTPException(status_code=400, detail="Audio data is required")
         
         # Generate avatar video in a separate thread to avoid blocking
