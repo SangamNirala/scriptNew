@@ -300,14 +300,49 @@ Remember: AI video generators need EXTREME detail to produce quality results. Ev
         ).with_model("gemini", "gemini-2.0-flash")
 
         script_message = UserMessage(
-            text=f"""Create an engaging {request.duration} duration video script for {request.video_type} content based on this prompt:
+            text=f"""Create a comprehensive, AI-video-generator-optimized script for {request.video_type} content based on this prompt:
 
 "{request.prompt}"
 
-Duration target: {request.duration}
-Video type: {request.video_type}
+SPECIFICATIONS:
+- Duration target: {request.duration}
+- Video type: {request.video_type}
+- AI Video Generator Optimization: MAXIMUM DETAIL
 
-Please create a script that maximizes viewer engagement and retention. Include all formatting, visual cues, and timing suggestions."""
+REQUIRED OUTPUT FORMAT:
+Generate a script with EXTREME visual detail that includes:
+
+1. **SHOT-BY-SHOT BREAKDOWN** (Every 2-3 seconds):
+   - Precise camera specifications (angle, movement, framing)
+   - Complete environment descriptions (location, lighting, weather, time)
+   - Detailed character descriptions (appearance, clothing, expressions, gestures)
+   - Specific color palettes and visual moods
+   - Exact timing markers
+
+2. **TECHNICAL SPECIFICATIONS**:
+   - Camera movements and transitions between shots
+   - Lighting setup and atmospheric details
+   - Props, set decoration, and background elements
+   - Character positioning and blocking
+   - Visual effects and post-production notes
+
+3. **AI-FRIENDLY FORMATTING**:
+   - Use **[CAMERA:]**, **[SETTING:]**, **[CHARACTER:]**, **[LIGHTING:]**, **[MOVEMENT:]** tags
+   - Include specific visual descriptions that AI can interpret
+   - Provide alternative angle suggestions for variety
+   - Specify continuity between shots
+
+4. **ENGAGEMENT OPTIMIZATION**:
+   - Hook within first 3 seconds with compelling visuals and dialogue
+   - Visual variety every 2-3 seconds to maintain attention
+   - Strong emotional arc with visual storytelling
+   - Clear narrative progression
+   - Professional production value
+
+5. **COMPREHENSIVE SCENE DESCRIPTIONS**:
+   Each shot should be so detailed that an AI video generator can create professional-quality footage without additional input. Include everything needed for high-quality AI video generation.
+
+Create a script that will produce a visually stunning, professionally crafted video when used with AI video generation tools."""
         )
 
         generated_script = await chat.send_message(script_message)
