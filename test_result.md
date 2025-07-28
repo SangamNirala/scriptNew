@@ -206,7 +206,17 @@ frontend:
     status_history:
         - working: true
           agent: "main"
-          comment: "Added recent scripts sidebar showing latest 5 generated scripts with metadata."
+  - task: "Scripts Retrieval Endpoint"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ COMPREHENSIVE TESTING PASSED: Successfully tested /api/scripts endpoint. Verified proper retrieval of generated scripts in reverse chronological order (newest first). Response structure validated with all required fields (id, original_prompt, generated_script, video_type, duration, created_at). Database persistence confirmed through integration testing. Error handling verified for edge cases."
 
 metadata:
   created_by: "main_agent"
