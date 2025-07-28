@@ -39,6 +39,28 @@ class StatusCheck(BaseModel):
 class StatusCheckCreate(BaseModel):
     client_name: str
 
+class ScriptRequest(BaseModel):
+    prompt: str
+    video_type: Optional[str] = "general"  # general, educational, entertainment, marketing
+    duration: Optional[str] = "short"  # short (30s-1min), medium (1-3min), long (3-5min)
+
+class ScriptResponse(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    original_prompt: str
+    generated_script: str
+    video_type: str
+    duration: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class PromptEnhancementRequest(BaseModel):
+    original_prompt: str
+    video_type: Optional[str] = "general"
+
+class PromptEnhancementResponse(BaseModel):
+    original_prompt: str
+    enhanced_prompt: str
+    enhancement_explanation: str
+
 # Add your routes to the router instead of directly to app
 @api_router.get("/")
 async def root():
