@@ -1384,6 +1384,10 @@ KEY RETENTION ELEMENTS:
             self.test_extract_clean_script_comprehensive,
             self.test_audio_error_handling,
             self.test_voice_audio_integration,
+            self.test_avatar_video_generation_endpoint,
+            self.test_avatar_video_error_handling,
+            self.test_complete_avatar_workflow,
+            self.test_avatar_video_with_different_audio_lengths,
             self.test_integration_flow,
             self.test_error_handling
         ]
