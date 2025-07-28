@@ -82,6 +82,7 @@ class AudioResponse(BaseModel):
     audio_base64: str
     voice_used: str
     duration_seconds: Optional[float] = None
+    cleaned_text: Optional[str] = None  # For testing purposes
 
 class AvatarVideoRequest(BaseModel):
     audio_base64: str
