@@ -270,76 +270,120 @@ async def get_scripts():
 def extract_clean_script(raw_script):
     """
     Extract only the spoken content from a formatted script, removing:
-    - Timestamps [0:00-0:05]
-    - Scene headers [SCENE START], [HOOK], [PROBLEM], etc.
-    - Speaker labels (NARRATOR:, HOST:, VOICEOVER:)
-    - Tone/delivery instructions (Fast-paced, energetic)
-    - Stage directions and metadata
+    - Timestamps, scene descriptions, speaker notes, production metadata
+    - Section headers like TARGET DURATION, VIDEO TYPE, KEY RETENTION ELEMENTS
+    - All bracketed content and parenthetical directions
     """
     
     # Start with the raw script
-    clean_text = raw_script.strip()
+    lines = raw_script.strip().split('\n')
+    clean_lines = []
     
-    # Remove timestamps [0:00-0:05], [00:15-00:30], etc.
-    clean_text = re.sub(r'\[\d+:\d+\-\d+:\d+\]', '', clean_text)
-    clean_text = re.sub(r'\[\d+:\d+\]', '', clean_text)
-    
-    # Remove scene headers and labels in brackets
-    # [SCENE START], [HOOK], [THE PROBLEM], [SOLUTION], etc.
-    clean_text = re.sub(r'\[(?:SCENE|HOOK|PROBLEM|SOLUTION|INTRO|OUTRO|TRANSITION|CTA|CALL.*ACTION).*?\]', '', clean_text, flags=re.IGNORECASE)
-    clean_text = re.sub(r'\[[A-Z\s]+:\]', '', clean_text)
-    clean_text = re.sub(r'\[[A-Z\s]+\]', '', clean_text)
-    
-    # Remove speaker labels like NARRATOR:, HOST:, VOICEOVER:, etc.
-    clean_text = re.sub(r'^[A-Z\s]+(\([^)]+\))?:\s*', '', clean_text, flags=re.MULTILINE)
-    clean_text = re.sub(r'\b(NARRATOR|HOST|VOICEOVER|SPEAKER|ANNOUNCER|PRESENTER)(\s*\([^)]+\))?:\s*', '', clean_text, flags=re.IGNORECASE)
-    
-    # Remove tone and delivery instructions in parentheses
-    # (Fast-paced, energetic), (Calm, reassuring), (Excited), etc.
-    clean_text = re.sub(r'\([^)]*(?:paced|energetic|calm|excited|dramatic|slow|fast|tone|voice|delivery|style)[^)]*\)', '', clean_text, flags=re.IGNORECASE)
-    clean_text = re.sub(r'\([^)]*(?:whisper|shout|loud|quiet|emphasis|stress)[^)]*\)', '', clean_text, flags=re.IGNORECASE)
-    
-    # Remove remaining stage directions and notes in parentheses (but keep natural speech in parentheses)
-    # Remove if contains common stage direction words
-    clean_text = re.sub(r'\([^)]*(?:camera|shot|zoom|pan|cut|fade|scene|background|music|sound|sfx|effect)[^)]*\)', '', clean_text, flags=re.IGNORECASE)
-    
-    # Remove remaining empty brackets and parentheses
-    clean_text = re.sub(r'\[\s*\]', '', clean_text)
-    clean_text = re.sub(r'\(\s*\)', '', clean_text)
-    clean_text = re.sub(r'[\[\]]+', '', clean_text)  # Remove any remaining brackets
-    clean_text = re.sub(r'[\(\)]+', '', clean_text)  # Remove any remaining parentheses
-    
-    # Remove video production terms that might appear
-    production_terms = [
-        'B-ROLL', 'CUTAWAY', 'MONTAGE', 'GRAPHICS', 'TITLE CARD', 'LOWER THIRD',
-        'FADE IN', 'FADE OUT', 'CUT TO', 'DISSOLVE', 'TRANSITION', 'OVERLAY'
+    # Skip common section headers and metadata
+    skip_sections = [
+        'TARGET DURATION', 'VIDEO TYPE', 'VIDEO SCRIPT', 'SCRIPT:', 'KEY RETENTION ELEMENTS',
+        'NOTES:', 'RETENTION ELEMENTS:', 'ADJUSTMENTS:', 'OPTIMIZATION:', 'METRICS:'
     ]
-    for term in production_terms:
-        clean_text = re.sub(f'\\b{term}\\b[^\\n]*', '', clean_text, flags=re.IGNORECASE)
     
-    # Remove markdown formatting
-    clean_text = re.sub(r'\*\*([^*]+)\*\*', r'\1', clean_text)  # Bold **text**
-    clean_text = re.sub(r'\*([^*]+)\*', r'\1', clean_text)      # Italic *text*
-    clean_text = re.sub(r'__([^_]+)__', r'\1', clean_text)      # Bold __text__
-    clean_text = re.sub(r'_([^_]+)_', r'\1', clean_text)        # Italic _text_
+    in_skip_section = False
     
-    # Clean up whitespace and line breaks
-    clean_text = re.sub(r'\n\s*\n', '\n\n', clean_text)  # Normalize double line breaks
-    clean_text = re.sub(r'\n{3,}', '\n\n', clean_text)   # Remove excessive line breaks
-    clean_text = re.sub(r'[ \t]+', ' ', clean_text)       # Normalize spaces
+    for line in lines:
+        line = line.strip()
+        
+        # Skip empty lines in processing (we'll add them back selectively)
+        if not line:
+            continue
+            
+        # Check if we're entering a section to skip
+        if any(line.upper().startswith(section) for section in skip_sections):
+            in_skip_section = True
+            continue
+            
+        # Check if we're in a bullet point section (skip until next main section)
+        if line.startswith('*') or line.startswith('•') or line.startswith('-'):
+            in_skip_section = True
+            continue
+            
+        # Skip lines that are clearly metadata or headers
+        if line.upper() in ['SCRIPT:', 'NOTES:', 'KEY RETENTION ELEMENTS:', 'ADJUSTMENTS:']:
+            in_skip_section = True
+            continue
+            
+        # If line starts with a new section that looks like content, stop skipping
+        if line.startswith('(') and ':' in line and 'SCENE' in line.upper():
+            in_skip_section = False
+            # Continue processing this line
+            
+        if in_skip_section:
+            continue
+            
+        # Remove timestamps (0:00-0:03), (0:03-0:07), etc.
+        line = re.sub(r'^\(\d+:\d+\-\d+:\d+\)', '', line).strip()
+        
+        # Remove scene descriptions [SCENE START: ...], [SCENE CHANGE: ...], [SCENE: ...]
+        line = re.sub(r'\[SCENE[^]]*\]', '', line)
+        line = re.sub(r'\[[^]]*SCENE[^]]*\]', '', line)
+        line = re.sub(r'\[[^]]*cut[^]]*\]', '', line, flags=re.IGNORECASE)
+        
+        # Remove all other bracketed content [anything]
+        line = re.sub(r'\[[^]]+\]', '', line)
+        
+        # Remove speaker directions (Narrator – tone description)
+        line = re.sub(r'\([^)]*(?:Narrator|Host|Speaker|VO|Voiceover)[^)]*\)', '', line, flags=re.IGNORECASE)
+        
+        # Remove testimonial indicators
+        line = re.sub(r'\(Testimonial[^)]*\)', '', line, flags=re.IGNORECASE)
+        
+        # Remove all remaining parenthetical directions
+        line = re.sub(r'\([^)]*(?:tone|music|sound|audio|video)[^)]*\)', '', line, flags=re.IGNORECASE)
+        
+        # Clean up the line
+        line = line.strip()
+        
+        # If line has content after cleaning, add it
+        if line and len(line) > 2:
+            # Remove any remaining formatting
+            line = re.sub(r'\*\*([^*]+)\*\*', r'\1', line)  # Bold
+            line = re.sub(r'\*([^*]+)\*', r'\1', line)      # Italic
+            line = re.sub(r'__([^_]+)__', r'\1', line)      # Underline
+            
+            # Clean up extra spaces
+            line = re.sub(r'\s+', ' ', line).strip()
+            
+            # Add the cleaned line
+            clean_lines.append(line)
+    
+    # Join the lines and do final cleanup
+    clean_text = ' '.join(clean_lines)
+    
+    # Remove any remaining brackets or parentheses that might be left
+    clean_text = re.sub(r'[\[\]()]+', '', clean_text)
+    
+    # Clean up multiple spaces and normalize punctuation
+    clean_text = re.sub(r'\s+', ' ', clean_text)
+    clean_text = re.sub(r'\s*\.\.\.\s*', '... ', clean_text)  # Normalize ellipses
+    clean_text = re.sub(r'\s*!\s*', '! ', clean_text)         # Normalize exclamation
+    clean_text = re.sub(r'\s*\?\s*', '? ', clean_text)        # Normalize questions
+    
     clean_text = clean_text.strip()
     
-    # If the result is too short or seems empty, return a basic cleanup
-    if len(clean_text.strip()) < 20:
-        # Fallback to basic cleanup
-        fallback_text = raw_script
-        fallback_text = re.sub(r'\[.*?\]', '', fallback_text)
-        fallback_text = re.sub(r'\(.*?\)', '', fallback_text)
-        fallback_text = re.sub(r'[A-Z\s]+:', '', fallback_text)
-        fallback_text = ' '.join(fallback_text.split())
-        return fallback_text if len(fallback_text.strip()) > 10 else raw_script
+    # If the result is too short, try a more basic approach
+    if len(clean_text) < 50:
+        # Fallback: extract anything that looks like speech
+        speech_patterns = re.findall(r'"([^"]+)"', raw_script)  # Quoted speech
+        if speech_patterns:
+            clean_text = ' '.join(speech_patterns)
+        else:
+            # Last resort: basic cleanup
+            fallback = raw_script
+            fallback = re.sub(r'\([^)]*\)', '', fallback)
+            fallback = re.sub(r'\[[^]]*\]', '', fallback)
+            fallback = re.sub(r'^[A-Z\s:]+$', '', fallback, flags=re.MULTILINE)
+            fallback = ' '.join(fallback.split())
+            if len(fallback.strip()) > len(clean_text.strip()):
+                clean_text = fallback
     
-    return clean_text
+    return clean_text.strip()
 
 @api_router.get("/voices", response_model=List[VoiceOption])
 async def get_available_voices():
