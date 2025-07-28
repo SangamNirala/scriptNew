@@ -68,7 +68,18 @@ class PromptEnhancementResponse(BaseModel):
 
 class TextToSpeechRequest(BaseModel):
     text: str
-    voice_name: Optional[str] = "default"
+    voice_name: Optional[str] = "en-US-AriaNeural"
+
+class VoiceOption(BaseModel):
+    name: str
+    display_name: str
+    language: str
+    gender: str
+
+class AudioResponse(BaseModel):
+    audio_base64: str
+    voice_used: str
+    duration_seconds: Optional[float] = None
 
 # Add your routes to the router instead of directly to app
 @api_router.get("/")
