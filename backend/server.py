@@ -289,7 +289,7 @@ async def get_available_voices():
         }
         
         for voice in voices:
-            voice_name = voice.get('Name', '')
+            voice_name = voice.get('ShortName', '')  # Use ShortName instead of Name
             if voice_name in popular_voices:
                 voice_info = popular_voices[voice_name]
                 voice_options.append(VoiceOption(
@@ -298,6 +298,27 @@ async def get_available_voices():
                     language=voice.get('Locale', 'en-US'),
                     gender=voice_info["gender"]
                 ))
+        
+        # If no popular voices found, add first 10 English voices
+        if not voice_options:
+            count = 0
+            for voice in voices:
+                if voice.get('Locale', '').startswith('en-') and count < 10:
+                    voice_name = voice.get('ShortName', '')
+                    gender = voice.get('Gender', 'Unknown')
+                    locale = voice.get('Locale', 'en-US')
+                    
+                    # Create display name from ShortName
+                    name_part = voice_name.split('-')[-1].replace('Neural', '')
+                    display_name = f"{name_part} ({locale} {gender})"
+                    
+                    voice_options.append(VoiceOption(
+                        name=voice_name,
+                        display_name=display_name,
+                        language=locale,
+                        gender=gender
+                    ))
+                    count += 1
         
         # Sort by gender and then by name for better UI organization
         voice_options.sort(key=lambda x: (x.gender, x.display_name))
