@@ -269,121 +269,134 @@ async def get_scripts():
 
 def extract_clean_script(raw_script):
     """
-    Extract only the spoken content from a formatted script, removing:
-    - Timestamps, scene descriptions, speaker notes, production metadata
-    - Section headers like TARGET DURATION, VIDEO TYPE, KEY RETENTION ELEMENTS
-    - All bracketed content and parenthetical directions
+    Extract only the actual spoken content from a formatted video script.
+    Removes ALL production elements and keeps ONLY what should be spoken in the final video.
+    
+    This includes removing:
+    - Timestamps (0:00-0:03)
+    - Scene descriptions [SCENE START: ...]
+    - Speaker/narrator directions (Narrator – tone description)
+    - Section headers (TARGET DURATION, VIDEO TYPE, etc.)
+    - Production notes and metadata
+    - Bullet points and formatting instructions
     """
     
-    # Start with the raw script
     lines = raw_script.strip().split('\n')
-    clean_lines = []
+    spoken_content = []
     
-    # Skip common section headers and metadata
+    # Section headers and metadata to completely skip
     skip_sections = [
         'TARGET DURATION', 'VIDEO TYPE', 'VIDEO SCRIPT', 'SCRIPT:', 'KEY RETENTION ELEMENTS',
-        'NOTES:', 'RETENTION ELEMENTS:', 'ADJUSTMENTS:', 'OPTIMIZATION:', 'METRICS:'
+        'NOTES:', 'RETENTION ELEMENTS:', 'ADJUSTMENTS:', 'OPTIMIZATION:', 'METRICS:',
+        'NOTES', 'SCRIPT', 'DURATION', 'TYPE'
     ]
     
-    in_skip_section = False
+    # Track if we're in a metadata section
+    in_metadata_section = False
     
     for line in lines:
+        original_line = line
         line = line.strip()
         
-        # Skip empty lines in processing (we'll add them back selectively)
+        # Skip empty lines
         if not line:
             continue
-            
-        # Check if we're entering a section to skip
-        if any(line.upper().startswith(section) for section in skip_sections):
-            in_skip_section = True
+        
+        # Check for section headers - skip entire sections
+        line_upper = line.upper()
+        if any(line_upper.startswith(section) or section in line_upper for section in skip_sections):
+            in_metadata_section = True
+            continue
+        
+        # Skip bullet points and lists (metadata sections)
+        if line.startswith('*') or line.startswith('•') or line.startswith('-') or line.startswith('◦'):
+            in_metadata_section = True
+            continue
+        
+        # If we encounter what looks like actual content after metadata, reset flag
+        if in_metadata_section and (line.startswith('(') or line.startswith('[') or line.count('.') > 1):
+            in_metadata_section = False
+        
+        # Skip if still in metadata section
+        if in_metadata_section:
+            continue
+        
+        # Skip standalone timestamps
+        if re.match(r'^\(\d+:\d+[-–]\d+:\d+\)', line):
+            continue
+        
+        # Skip pure scene descriptions in brackets
+        if re.match(r'^\[.*\]$', line):
             continue
             
-        # Check if we're in a bullet point section (skip until next main section)
-        if line.startswith('*') or line.startswith('•') or line.startswith('-'):
-            in_skip_section = True
+        # Skip standalone speaker directions
+        if re.match(r'^\([^)]*(?:Narrator|Host|Speaker|VO|Voiceover|Testimonial)[^)]*\)$', line, re.IGNORECASE):
             continue
             
-        # Skip lines that are clearly metadata or headers
-        if line.upper() in ['SCRIPT:', 'NOTES:', 'KEY RETENTION ELEMENTS:', 'ADJUSTMENTS:']:
-            in_skip_section = True
-            continue
-            
-        # If line starts with a new section that looks like content, stop skipping
-        if line.startswith('(') and ':' in line and 'SCENE' in line.upper():
-            in_skip_section = False
-            # Continue processing this line
-            
-        if in_skip_section:
-            continue
-            
-        # Remove timestamps (0:00-0:03), (0:03-0:07), etc.
-        line = re.sub(r'^\(\d+:\d+\-\d+:\d+\)', '', line).strip()
+        # Now extract actual spoken content from mixed lines
+        # Remove timestamps at the beginning
+        line = re.sub(r'^\(\d+:\d+[-–]\d+:\d+\)\s*', '', line)
         
-        # Remove scene descriptions [SCENE START: ...], [SCENE CHANGE: ...], [SCENE: ...]
-        line = re.sub(r'\[SCENE[^]]*\]', '', line)
-        line = re.sub(r'\[[^]]*SCENE[^]]*\]', '', line)
-        line = re.sub(r'\[[^]]*cut[^]]*\]', '', line, flags=re.IGNORECASE)
+        # Remove scene descriptions in brackets
+        line = re.sub(r'\[.*?\]', '', line)
         
-        # Remove all other bracketed content [anything]
-        line = re.sub(r'\[[^]]+\]', '', line)
-        
-        # Remove speaker directions (Narrator – tone description)
-        line = re.sub(r'\([^)]*(?:Narrator|Host|Speaker|VO|Voiceover)[^)]*\)', '', line, flags=re.IGNORECASE)
-        
-        # Remove testimonial indicators
-        line = re.sub(r'\(Testimonial[^)]*\)', '', line, flags=re.IGNORECASE)
-        
-        # Remove all remaining parenthetical directions
-        line = re.sub(r'\([^)]*(?:tone|music|sound|audio|video)[^)]*\)', '', line, flags=re.IGNORECASE)
+        # Remove speaker directions - more comprehensive patterns
+        line = re.sub(r'\([^)]*(?:Narrator|Host|Speaker|VO|Voiceover|Testimonial)[^)]*\)', '', line, re.IGNORECASE)
+        line = re.sub(r'\([^)]*(?:tone|music|sound|audio|video|cut|scene|transition)[^)]*\)', '', line, re.IGNORECASE)
+        line = re.sub(r'\([^)]*(?:–|—)[^)]*\)', '', line)  # Remove parentheses with dashes (speaker directions)
         
         # Clean up the line
         line = line.strip()
         
-        # If line has content after cleaning, add it
-        if line and len(line) > 2:
-            # Remove any remaining formatting
+        # Only keep lines that have substantial spoken content
+        if line and len(line) > 3:
+            # Remove markdown formatting
             line = re.sub(r'\*\*([^*]+)\*\*', r'\1', line)  # Bold
             line = re.sub(r'\*([^*]+)\*', r'\1', line)      # Italic
             line = re.sub(r'__([^_]+)__', r'\1', line)      # Underline
             
-            # Clean up extra spaces
+            # Remove any remaining isolated parentheses or brackets
+            line = re.sub(r'^\s*[\[\]()]+\s*$', '', line)
+            
+            # Clean up extra spaces and normalize punctuation
             line = re.sub(r'\s+', ' ', line).strip()
             
-            # Add the cleaned line
-            clean_lines.append(line)
+            # Only add if it's not just punctuation or whitespace
+            if line and not re.match(r'^[\s\[\]().,!?-]*$', line):
+                spoken_content.append(line)
     
-    # Join the lines and do final cleanup
-    clean_text = ' '.join(clean_lines)
+    # Join all spoken content
+    final_script = ' '.join(spoken_content)
     
-    # Remove any remaining brackets or parentheses that might be left
-    clean_text = re.sub(r'[\[\]()]+', '', clean_text)
+    # Final cleanup
+    final_script = re.sub(r'\s+', ' ', final_script)  # Multiple spaces
+    final_script = re.sub(r'\s*\.\.\.\s*', '... ', final_script)  # Normalize ellipses
+    final_script = re.sub(r'\s*!\s*', '! ', final_script)  # Normalize exclamation
+    final_script = re.sub(r'\s*\?\s*', '? ', final_script)  # Normalize questions
+    final_script = re.sub(r'\s*,\s*', ', ', final_script)  # Normalize commas
     
-    # Clean up multiple spaces and normalize punctuation
-    clean_text = re.sub(r'\s+', ' ', clean_text)
-    clean_text = re.sub(r'\s*\.\.\.\s*', '... ', clean_text)  # Normalize ellipses
-    clean_text = re.sub(r'\s*!\s*', '! ', clean_text)         # Normalize exclamation
-    clean_text = re.sub(r'\s*\?\s*', '? ', clean_text)        # Normalize questions
+    # Remove any remaining stray brackets or parentheses
+    final_script = re.sub(r'[\[\]()]+', '', final_script)
+    final_script = re.sub(r'\s+', ' ', final_script).strip()
     
-    clean_text = clean_text.strip()
-    
-    # If the result is too short, try a more basic approach
-    if len(clean_text) < 50:
-        # Fallback: extract anything that looks like speech
-        speech_patterns = re.findall(r'"([^"]+)"', raw_script)  # Quoted speech
-        if speech_patterns:
-            clean_text = ' '.join(speech_patterns)
+    # If result is too short, try extracting quoted content as fallback
+    if len(final_script) < 20:
+        quoted_content = re.findall(r'"([^"]+)"', raw_script)
+        if quoted_content:
+            final_script = ' '.join(quoted_content)
         else:
-            # Last resort: basic cleanup
+            # Last resort: very basic cleanup
             fallback = raw_script
-            fallback = re.sub(r'\([^)]*\)', '', fallback)
-            fallback = re.sub(r'\[[^]]*\]', '', fallback)
-            fallback = re.sub(r'^[A-Z\s:]+$', '', fallback, flags=re.MULTILINE)
+            # Remove common patterns
+            fallback = re.sub(r'\([^)]*\)', ' ', fallback)
+            fallback = re.sub(r'\[[^]]*\]', ' ', fallback)
+            fallback = re.sub(r'^\s*[A-Z\s:]+\s*$', '', fallback, flags=re.MULTILINE)
+            fallback = re.sub(r'^\s*\*.*$', '', fallback, flags=re.MULTILINE)
             fallback = ' '.join(fallback.split())
-            if len(fallback.strip()) > len(clean_text.strip()):
-                clean_text = fallback
+            if len(fallback.strip()) > len(final_script):
+                final_script = fallback
     
-    return clean_text.strip()
+    return final_script.strip()
 
 @api_router.get("/voices", response_model=List[VoiceOption])
 async def get_available_voices():
