@@ -1001,6 +1001,7 @@ KEY RETENTION ELEMENTS:
             self.test_scripts_retrieval_endpoint,
             self.test_voices_endpoint,
             self.test_generate_audio_endpoint,
+            self.test_extract_clean_script_comprehensive,
             self.test_audio_error_handling,
             self.test_voice_audio_integration,
             self.test_integration_flow,
