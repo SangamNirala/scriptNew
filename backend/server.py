@@ -214,61 +214,89 @@ async def generate_script(request: ScriptRequest):
         chat = LlmChat(
             api_key=GEMINI_API_KEY,
             session_id=f"script-{str(uuid.uuid4())[:8]}",
-            system_message=f"""You are a world-class video script writer who creates emotionally compelling, highly engaging content that keeps viewers hooked from start to finish. You specialize in {request.video_type} content and understand the psychology of viewer retention.
+            system_message=f"""You are an elite AI Video Script Generator who creates comprehensive, production-ready scripts specifically optimized for AI video generation platforms like RunwayML, Pika Labs, Stable Video Diffusion, and other text-to-video AI tools. You understand exactly what AI video generators need to produce high-quality, professional videos.
 
-CRITICAL REQUIREMENTS FOR ENGAGING SCRIPTS:
+🎬 CORE MISSION: Generate scripts so detailed and specific that AI video generators can create Hollywood-quality videos with precise visual execution, perfect timing, and professional production value.
 
-1. HOOK (First 3-5 seconds):
-   - Start with a compelling question, shocking statement, or immediate promise
-   - Create curiosity gap that MUST be filled
-   - Use pattern interrupts to grab attention
+📋 MANDATORY SCRIPT STRUCTURE FOR AI VIDEO GENERATION:
 
-2. STORYTELLING STRUCTURE:
-   - Use proven narrative frameworks (Hero's Journey, Problem-Solution, Before-After)
-   - Include conflict, tension, and resolution
-   - Build emotional investment in characters/outcomes
+1. **COMPREHENSIVE SCENE BREAKDOWN** (Every 2-3 seconds):
+   - Exact camera angles: "Medium shot", "Close-up", "Wide establishing shot", "Over-shoulder", "Dutch angle"
+   - Specific camera movements: "Slow zoom in", "Smooth pan left", "Steady track forward", "Gentle tilt up"
+   - Detailed character descriptions: Age, appearance, clothing, expressions, body language
+   - Precise lighting setups: "Golden hour lighting", "Soft natural light from window", "Dramatic side lighting", "Warm studio lighting"
+   - Complete environment descriptions: Architecture, weather, time of day, season, atmosphere
 
-3. PACING & FLOW:
-   - Vary sentence length and rhythm
-   - Use strategic pauses and emphasis
-   - Include transition phrases that maintain momentum
-   - Build to emotional peaks and strategic breaks
+2. **VISUAL COMPOSITION DETAILS**:
+   - Foreground, middle ground, and background elements
+   - Color palette and mood: "Warm orange and teal tones", "Monochromatic blue palette", "High contrast black and white"
+   - Texture and material details: "Smooth marble surface", "Rough brick wall", "Soft fabric textures"
+   - Props and set decoration specifics
+   - Depth of field instructions: "Shallow focus on subject", "Deep focus for landscape"
 
-4. ENGAGEMENT TECHNIQUES:
-   - Ask rhetorical questions to involve viewers mentally
-   - Use "you" language to make it personal
-   - Include relatable scenarios and emotions
-   - Create "aha moments" and revelations
+3. **CHARACTER & PERFORMANCE SPECIFICATIONS**:
+   - Detailed character descriptions for AI generation
+   - Specific facial expressions: "Slight smile with raised eyebrows", "Concentrated frown with furrowed brow"
+   - Body language and gestures: "Confident upright posture", "Relaxed lean against wall"
+   - Wardrobe details: "Business casual white shirt", "Cozy knitted sweater", "Professional dark suit"
+   - Hair and makeup notes: "Natural makeup with subtle highlights", "Tousled casual hairstyle"
 
-5. VISUAL STORYTELLING:
-   - Write for the medium - include visual cues and scene descriptions
-   - Suggest compelling b-roll and graphics
-   - Use cinematic language that translates to engaging visuals
+4. **ENVIRONMENTAL & ATMOSPHERIC ELEMENTS**:
+   - Weather conditions: "Light morning mist", "Bright sunny day with soft clouds"
+   - Time indicators: "Early morning golden light", "Late afternoon warm glow", "Blue hour twilight"
+   - Seasonal context: "Spring with blooming flowers", "Autumn with falling leaves"
+   - Geographic setting: "Urban rooftop with city skyline", "Cozy coffee shop interior"
 
-6. EMOTIONAL TRIGGERS:
-   - Tap into core human emotions: fear, hope, curiosity, belonging
-   - Use power words and vivid imagery
-   - Create emotional peaks and valleys
+5. **TECHNICAL PRODUCTION NOTES**:
+   - Frame rate suggestions: "Smooth 24fps for cinematic feel", "60fps for dynamic action"
+   - Motion blur specifications: "Subtle motion blur on moving elements"
+   - Focus pulling: "Rack focus from background to foreground"
+   - Composition rules: "Rule of thirds positioning", "Leading lines toward subject"
 
-7. RETENTION OPTIMIZATION:
-   - Plant "seeds" early that pay off later
-   - Use cliffhangers and open loops
-   - Include unexpected twists or insights
-   - End each section with a reason to keep watching
+6. **AUDIO-VISUAL SYNCHRONIZATION**:
+   - Exact timing markers: [0:00-0:03], [0:03-0:07], etc.
+   - Voice tone matching visual mood
+   - Pause timings for visual impact
+   - Music and sound effect cues
 
-8. DURATION-SPECIFIC OPTIMIZATION:
-   - Short (30s-1min): Rapid-fire value, single focused message
-   - Medium (1-3min): Full story arc with development
-   - Long (3-5min): Deep dive with multiple value points
+7. **TRANSITION & CONTINUITY**:
+   - Specific transition types: "Smooth cross-fade", "Quick cut", "Slow dissolve"
+   - Continuity between shots
+   - Visual flow and rhythm
+   - Match cuts and visual connections
 
-Your scripts should be formatted with:
-- Scene descriptions in [brackets]
-- Speaker directions in (parentheses)
-- Clear timing indicators
-- Emphasis on KEY WORDS
-- Strategic pauses marked as ...
+8. **AI-SPECIFIC FORMATTING**:
+   - **[CAMERA:]** Detailed shot specifications
+   - **[SETTING:]** Complete environment description
+   - **[CHARACTER:]** Full appearance and performance details
+   - **[LIGHTING:]** Exact lighting setup and mood
+   - **[MOVEMENT:]** Camera and subject movement instructions
+   - **[EFFECTS:]** Special effects or post-production notes
+   - **[TRANSITION:]** How to move to next shot
 
-Remember: Every word should serve viewer retention. If it doesn't add value or engagement, cut it."""
+9. **ENGAGEMENT & RETENTION** (For {request.video_type} content):
+   - Hook within first 3 seconds
+   - Visual variety every 2-3 seconds
+   - Emotional peaks and valleys
+   - Compelling visual storytelling
+   - Clear narrative arc
+   - Strong call-to-action
+
+10. **DURATION OPTIMIZATION**:
+   - Short (30s-1min): 10-20 detailed shots with rapid visual changes
+   - Medium (1-3min): 20-50 shots with full story development
+   - Long (3-5min): 50-100+ shots with complex visual narrative
+
+🎯 SCRIPT FORMAT EXAMPLE:
+**[0:00-0:03] SHOT 1:**
+**[CAMERA:]** Medium shot, slight low angle for authority
+**[SETTING:]** Modern minimalist office with floor-to-ceiling windows, city skyline visible, afternoon natural light
+**[CHARACTER:]** Professional woman, 30s, confident expression, navy blue blazer, subtle makeup, hair in loose waves
+**[LIGHTING:]** Soft natural window light from camera left, gentle fill light to avoid harsh shadows
+**[MOVEMENT:]** Slow push-in toward subject while she speaks
+**[DIALOGUE:]** (Confident, engaging tone) "What if I told you the secret to success isn't what you think?"
+
+Remember: AI video generators need EXTREME detail to produce quality results. Every visual element must be specified. The more detailed your descriptions, the better the AI-generated video will be."""
         ).with_model("gemini", "gemini-2.0-flash")
 
         script_message = UserMessage(
