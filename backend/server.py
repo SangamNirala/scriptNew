@@ -408,21 +408,22 @@ async def generate_audio(request: TextToSpeechRequest):
     """Generate audio from text using selected voice"""
     try:
         # Clean the text for better TTS (remove formatting)
-        clean_text = request.text.strip()
-        if not clean_text:
+        original_text = request.text.strip()
+        if not original_text:
             raise HTTPException(status_code=400, detail="Text cannot be empty")
         
         # Debug logging
         logger.info(f"Received TTS request with voice: {request.voice_name}")
-        logger.info(f"Original text (first 100 chars): {clean_text[:100]}...")
+        logger.info(f"Original text (first 200 chars): {original_text[:200]}...")
         
-        # Remove script formatting for better speech
-        clean_text = clean_text.replace('[', '').replace(']', '')  # Remove scene descriptions
-        clean_text = clean_text.replace('(', '').replace(')', '')  # Remove speaker directions  
-        clean_text = clean_text.replace('**', '')  # Remove bold formatting
-        clean_text = ' '.join(clean_text.split())  # Normalize whitespace
+        # Use sophisticated script cleaning
+        clean_text = extract_clean_script(original_text)
         
-        logger.info(f"Cleaned text (first 100 chars): {clean_text[:100]}...")
+        if not clean_text.strip():
+            raise HTTPException(status_code=400, detail="After cleaning, no readable text remains")
+        
+        logger.info(f"Cleaned text (first 200 chars): {clean_text[:200]}...")
+        logger.info(f"Text reduction: {len(original_text)} → {len(clean_text)} chars")
         
         # Create TTS communication
         communicate = edge_tts.Communicate(clean_text, request.voice_name)
