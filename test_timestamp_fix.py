@@ -7,7 +7,7 @@ import os
 
 # Test script to verify timestamp filtering is working
 def test_timestamp_filtering():
-    backend_url = "http://localhost:8001"
+    backend_url = "https://f9b94224-42ab-48b2-af99-c98bceaa65d6.preview.emergentagent.com"
     
     # Test cases with different timestamp formats
     test_cases = [
