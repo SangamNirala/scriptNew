@@ -39,3 +39,4 @@ pyyaml
 joblib
 scikit-image
 litellm
+httpx
