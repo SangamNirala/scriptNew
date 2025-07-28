@@ -186,6 +186,7 @@ const ScriptGenerator = () => {
       };
       
       setAudioData(audio);
+      setLastGeneratedAudio(audioBase64); // Store for avatar video generation
       audio.play();
       
     } catch (err) {
@@ -193,6 +194,58 @@ const ScriptGenerator = () => {
       setError("Error generating audio. Please try again.");
     } finally {
       setIsGeneratingAudio(false);
+    }
+  };
+
+  const handleGenerateAvatarVideo = async () => {
+    if (!lastGeneratedAudio) {
+      setError("Please generate audio first before creating avatar video.");
+      return;
+    }
+
+    setIsGeneratingVideo(true);
+    setError("");
+
+    try {
+      const response = await axios.post(`${API}/generate-avatar-video`, {
+        audio_base64: lastGeneratedAudio
+      });
+
+      // Convert base64 video to blob for download
+      const videoBase64 = response.data.video_base64;
+      const videoBytes = atob(videoBase64);
+      const videoArray = new Uint8Array(videoBytes.length);
+      
+      for (let i = 0; i < videoBytes.length; i++) {
+        videoArray[i] = videoBytes.charCodeAt(i);
+      }
+      
+      const videoBlob = new Blob([videoArray], { type: 'video/mp4' });
+      const videoUrl = URL.createObjectURL(videoBlob);
+      
+      setAvatarVideoData({
+        url: videoUrl,
+        blob: videoBlob,
+        duration: response.data.duration_seconds,
+        requestId: response.data.request_id
+      });
+      
+    } catch (err) {
+      console.error("Error generating avatar video:", err);
+      setError("Error generating avatar video. Please try again.");
+    } finally {
+      setIsGeneratingVideo(false);
+    }
+  };
+
+  const downloadAvatarVideo = () => {
+    if (avatarVideoData) {
+      const link = document.createElement('a');
+      link.href = avatarVideoData.url;
+      link.download = `avatar-video-${avatarVideoData.requestId}.mp4`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
   };
 
