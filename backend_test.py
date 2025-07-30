@@ -410,6 +410,15 @@ def main():
     test_results.append(tester.test_get_specific_contract())
     test_results.append(tester.test_invalid_contract_generation())
     
+    # PDF Download tests
+    print("\n" + "="*40)
+    print("📄 Testing PDF Download Functionality")
+    print("="*40)
+    
+    test_results.append(tester.test_pdf_download_valid_contract())
+    test_results.append(tester.test_pdf_download_invalid_contract())
+    test_results.append(tester.test_pdf_download_nonexistent_contract())
+    
     # Print final results
     print("\n" + "="*60)
     print("📊 TEST RESULTS SUMMARY")
