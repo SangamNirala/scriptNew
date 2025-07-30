@@ -503,7 +503,19 @@ const ScriptGenerator = () => {
     return text
       .replace(/\n\n/g, '<br/><br/>') // Double line breaks for paragraphs
       .replace(/\n/g, '<br/>') // Single line breaks
-      .replace(/\*\*([^*]+)\*\*/g, '<strong class="font-bold">$1</strong>'); // Bold text
+      .replace(/\*\*([^*]+)\*\*/g, '<strong class="font-bold text-white">$1</strong>') // Bold text in white
+      // Format framework section headers with colored styling
+      .replace(/🎬 COMPREHENSIVE SCRIPT FRAMEWORK/g, '<span class="text-purple-400 font-bold text-lg">🎬 COMPREHENSIVE SCRIPT FRAMEWORK</span>')
+      .replace(/📋 SCRIPT FRAMEWORK:/g, '<span class="text-blue-400 font-bold">📋 SCRIPT FRAMEWORK:</span>')
+      .replace(/🎯 PRODUCTION GUIDELINES:/g, '<span class="text-green-400 font-bold">🎯 PRODUCTION GUIDELINES:</span>')
+      .replace(/🧠 PSYCHOLOGICAL TRIGGERS INTEGRATED:/g, '<span class="text-yellow-400 font-bold">🧠 PSYCHOLOGICAL TRIGGERS:</span>')
+      .replace(/📱 PLATFORM ADAPTATIONS:/g, '<span class="text-pink-400 font-bold">📱 PLATFORM ADAPTATIONS:</span>')
+      // Format template placeholders
+      .replace(/\[([A-Z_]+)\]/g, '<span class="bg-purple-500/20 text-purple-300 px-2 py-1 rounded text-xs font-mono">[$1]</span>')
+      // Format bullet points and lists
+      .replace(/^- ([^\n]+)/gm, '<span class="text-gray-300">• $1</span>')
+      // Format numbered lists
+      .replace(/^(\d+)\. ([^\n]+)/gm, '<span class="text-blue-300 font-medium">$1.</span> <span class="text-gray-200">$2</span>');
   };
 
   return (
