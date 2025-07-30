@@ -366,6 +366,26 @@ class LegalMateAgents:
         return re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', text)
 
     @staticmethod
+    def process_signature_image_direct(signature_base64: str) -> io.BytesIO:
+        """Process base64 signature image directly without PIL processing for better PDF compatibility"""
+        try:
+            # Remove data URL prefix if present
+            if signature_base64.startswith('data:image'):
+                signature_base64 = signature_base64.split(',')[1]
+            
+            # Decode base64 data directly
+            signature_data = base64.b64decode(signature_base64)
+            
+            # Create BytesIO buffer directly from the decoded data
+            output_buffer = io.BytesIO(signature_data)
+            output_buffer.seek(0)
+            return output_buffer
+                
+        except Exception as e:
+            logging.error(f"Error processing signature image directly: {e}")
+            raise Exception(f"Invalid signature image: {str(e)}")
+    
+    @staticmethod
     def process_signature_image(signature_base64: str) -> io.BytesIO:
         """Process base64 signature image and return a BytesIO object for reportlab"""
         try:
