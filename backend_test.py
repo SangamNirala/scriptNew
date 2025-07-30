@@ -2826,6 +2826,479 @@ class LegalMateAPITester:
             print(f"❌ PDF generation error: {str(e)}")
             return False, {}
 
+    # ===================================================================
+    # ENHANCED USER EXPERIENCE TESTS - Phase 1: Contract Wizard + Smart Form Fields
+    # ===================================================================
+    
+    def test_user_profile_creation(self):
+        """Test creating a user profile with realistic data"""
+        user_data = {
+            "name": "John Doe",
+            "email": "john.doe@techfreelancer.com",
+            "phone": "+1-555-0123",
+            "role": "freelancer",
+            "industry": "technology",
+            "preferences": {
+                "default_jurisdiction": "US",
+                "preferred_contract_types": ["freelance_agreement", "NDA", "consulting_agreement"],
+                "notification_settings": {
+                    "email_notifications": True,
+                    "contract_reminders": True
+                }
+            }
+        }
+        
+        success, response = self.run_test(
+            "Create User Profile - John Doe (Freelancer)",
+            "POST",
+            "users/profile",
+            201,
+            user_data
+        )
+        
+        if success and response:
+            self.user_profile_id = response.get('id')
+            print(f"   Created User Profile ID: {self.user_profile_id}")
+            print(f"   User Name: {response.get('name')}")
+            print(f"   User Role: {response.get('role')}")
+            print(f"   User Industry: {response.get('industry')}")
+            
+            # Verify response structure matches UserProfile model
+            required_fields = ['id', 'name', 'email', 'role', 'created_at', 'updated_at']
+            missing_fields = [field for field in required_fields if field not in response]
+            if missing_fields:
+                print(f"   ⚠️  Missing required fields: {missing_fields}")
+            else:
+                print(f"   ✅ All required UserProfile fields present")
+                
+        return success, response
+    
+    def test_user_profile_retrieval(self):
+        """Test retrieving user profile by ID"""
+        if not hasattr(self, 'user_profile_id') or not self.user_profile_id:
+            print("❌ No user profile ID available for retrieval test")
+            return False, {}
+        
+        success, response = self.run_test(
+            "Get User Profile by ID",
+            "GET",
+            f"users/profile/{self.user_profile_id}",
+            200
+        )
+        
+        if success and response:
+            print(f"   Retrieved User: {response.get('name')} ({response.get('role')})")
+            print(f"   Industry: {response.get('industry')}")
+            print(f"   Email: {response.get('email')}")
+            
+            # Verify data consistency
+            if response.get('name') == "John Doe" and response.get('role') == "freelancer":
+                print(f"   ✅ User profile data consistent with creation")
+            else:
+                print(f"   ❌ User profile data inconsistent")
+                
+        return success, response
+    
+    def test_user_profile_update(self):
+        """Test updating user profile"""
+        if not hasattr(self, 'user_profile_id') or not self.user_profile_id:
+            print("❌ No user profile ID available for update test")
+            return False, {}
+        
+        update_data = {
+            "phone": "+1-555-0124",  # Updated phone
+            "preferences": {
+                "default_jurisdiction": "CA",  # Changed to Canada
+                "preferred_contract_types": ["freelance_agreement", "NDA", "consulting_agreement", "software_license"],
+                "notification_settings": {
+                    "email_notifications": True,
+                    "contract_reminders": False  # Changed setting
+                }
+            }
+        }
+        
+        success, response = self.run_test(
+            "Update User Profile",
+            "PUT",
+            f"users/profile/{self.user_profile_id}",
+            200,
+            update_data
+        )
+        
+        if success and response:
+            print(f"   Updated Phone: {response.get('phone')}")
+            print(f"   Updated Jurisdiction: {response.get('preferences', {}).get('default_jurisdiction')}")
+            
+            # Verify updates were applied
+            if (response.get('phone') == "+1-555-0124" and 
+                response.get('preferences', {}).get('default_jurisdiction') == "CA"):
+                print(f"   ✅ Profile updates applied successfully")
+            else:
+                print(f"   ❌ Profile updates not applied correctly")
+                
+        return success, response
+    
+    def test_company_profile_creation(self):
+        """Test creating a company profile with realistic data"""
+        if not hasattr(self, 'user_profile_id') or not self.user_profile_id:
+            print("❌ No user profile ID available for company creation")
+            return False, {}
+        
+        company_data = {
+            "name": "TechCorp Inc",
+            "industry": "technology",
+            "size": "startup",
+            "legal_structure": "corporation",
+            "address": {
+                "street": "123 Innovation Drive",
+                "city": "San Francisco",
+                "state": "CA",
+                "country": "US",
+                "zip": "94105"
+            },
+            "phone": "+1-415-555-0100",
+            "email": "contact@techcorp.com",
+            "website": "https://www.techcorp.com",
+            "tax_id": "12-3456789",
+            "user_id": self.user_profile_id
+        }
+        
+        success, response = self.run_test(
+            "Create Company Profile - TechCorp Inc (Technology Startup)",
+            "POST",
+            "companies/profile",
+            201,
+            company_data
+        )
+        
+        if success and response:
+            self.company_profile_id = response.get('id')
+            print(f"   Created Company Profile ID: {self.company_profile_id}")
+            print(f"   Company Name: {response.get('name')}")
+            print(f"   Industry: {response.get('industry')}")
+            print(f"   Size: {response.get('size')}")
+            print(f"   Legal Structure: {response.get('legal_structure')}")
+            
+            # Verify response structure matches CompanyProfile model
+            required_fields = ['id', 'name', 'industry', 'size', 'legal_structure', 'user_id', 'created_at', 'updated_at']
+            missing_fields = [field for field in required_fields if field not in response]
+            if missing_fields:
+                print(f"   ⚠️  Missing required fields: {missing_fields}")
+            else:
+                print(f"   ✅ All required CompanyProfile fields present")
+                
+        return success, response
+    
+    def test_company_profile_retrieval(self):
+        """Test retrieving company profile by ID"""
+        if not hasattr(self, 'company_profile_id') or not self.company_profile_id:
+            print("❌ No company profile ID available for retrieval test")
+            return False, {}
+        
+        success, response = self.run_test(
+            "Get Company Profile by ID",
+            "GET",
+            f"companies/profile/{self.company_profile_id}",
+            200
+        )
+        
+        if success and response:
+            print(f"   Retrieved Company: {response.get('name')}")
+            print(f"   Industry: {response.get('industry')} | Size: {response.get('size')}")
+            print(f"   Legal Structure: {response.get('legal_structure')}")
+            
+            # Verify data consistency
+            if (response.get('name') == "TechCorp Inc" and 
+                response.get('industry') == "technology" and 
+                response.get('size') == "startup"):
+                print(f"   ✅ Company profile data consistent with creation")
+            else:
+                print(f"   ❌ Company profile data inconsistent")
+                
+        return success, response
+    
+    def test_user_companies_list(self):
+        """Test getting all companies for a user"""
+        if not hasattr(self, 'user_profile_id') or not self.user_profile_id:
+            print("❌ No user profile ID available for companies list test")
+            return False, {}
+        
+        success, response = self.run_test(
+            "Get User's Companies List",
+            "GET",
+            f"users/{self.user_profile_id}/companies",
+            200
+        )
+        
+        if success and response:
+            companies_count = len(response) if isinstance(response, list) else 0
+            print(f"   Found {companies_count} companies for user")
+            
+            if companies_count > 0:
+                for i, company in enumerate(response[:3]):  # Show first 3 companies
+                    print(f"   Company {i+1}: {company.get('name')} ({company.get('industry')})")
+                
+                # Verify our created company is in the list
+                company_names = [comp.get('name') for comp in response]
+                if "TechCorp Inc" in company_names:
+                    print(f"   ✅ Created company found in user's companies list")
+                else:
+                    print(f"   ❌ Created company not found in user's companies list")
+            else:
+                print(f"   ⚠️  No companies found for user")
+                
+        return success, response
+    
+    def test_contract_wizard_initialization(self):
+        """Test initializing contract wizard with smart suggestions"""
+        if not hasattr(self, 'user_profile_id') or not self.user_profile_id:
+            print("❌ No user profile ID available for wizard initialization")
+            return False, {}
+        
+        if not hasattr(self, 'company_profile_id') or not self.company_profile_id:
+            print("❌ No company profile ID available for wizard initialization")
+            return False, {}
+        
+        wizard_request = {
+            "user_id": self.user_profile_id,
+            "company_id": self.company_profile_id,
+            "contract_type": "freelance_agreement",
+            "current_step": 1,
+            "partial_data": {}
+        }
+        
+        success, response = self.run_test(
+            "Initialize Contract Wizard with Smart Suggestions",
+            "POST",
+            "contract-wizard/initialize",
+            200,
+            wizard_request,
+            timeout=45  # AI generation might take longer
+        )
+        
+        if success and response:
+            print(f"   Current Step: {response.get('current_step', {}).get('step_number')}")
+            print(f"   Step Title: {response.get('current_step', {}).get('title')}")
+            print(f"   Progress: {response.get('progress', 0)*100:.1f}%")
+            print(f"   Estimated Completion: {response.get('estimated_completion_time')}")
+            
+            # Verify response structure matches ContractWizardResponse model
+            required_fields = ['current_step', 'suggestions', 'progress', 'estimated_completion_time']
+            missing_fields = [field for field in required_fields if field not in response]
+            if missing_fields:
+                print(f"   ⚠️  Missing required fields: {missing_fields}")
+            else:
+                print(f"   ✅ All required ContractWizardResponse fields present")
+            
+            # Check suggestions
+            suggestions = response.get('suggestions', [])
+            print(f"   Generated {len(suggestions)} smart suggestions:")
+            
+            for i, suggestion in enumerate(suggestions[:3]):  # Show first 3 suggestions
+                print(f"     {i+1}. Field: {suggestion.get('field_name')}")
+                print(f"        Value: {suggestion.get('suggested_value')}")
+                print(f"        Confidence: {suggestion.get('confidence', 0)*100:.1f}%")
+                print(f"        Source: {suggestion.get('source')}")
+                print(f"        Reasoning: {suggestion.get('reasoning')}")
+            
+            # Verify confidence scores are valid (0-1 range)
+            invalid_confidence = [s for s in suggestions if not (0 <= s.get('confidence', 0) <= 1)]
+            if invalid_confidence:
+                print(f"   ❌ Found {len(invalid_confidence)} suggestions with invalid confidence scores")
+            else:
+                print(f"   ✅ All suggestions have valid confidence scores (0-1 range)")
+                
+        return success, response
+    
+    def test_contract_wizard_field_suggestions(self):
+        """Test getting field-specific suggestions"""
+        if not hasattr(self, 'user_profile_id') or not self.user_profile_id:
+            print("❌ No user profile ID available for field suggestions test")
+            return False, {}
+        
+        if not hasattr(self, 'company_profile_id') or not self.company_profile_id:
+            print("❌ No company profile ID available for field suggestions test")
+            return False, {}
+        
+        # Test multiple field suggestions
+        test_fields = [
+            {"field": "payment_terms", "expected_suggestions": 1},
+            {"field": "party1_name", "expected_suggestions": 1},
+            {"field": "party1_email", "expected_suggestions": 1},
+            {"field": "company_name", "expected_suggestions": 1}
+        ]
+        
+        all_tests_passed = True
+        
+        for test_field in test_fields:
+            field_name = test_field["field"]
+            
+            suggestion_request = {
+                "contract_type": "freelance_agreement",
+                "field_name": field_name,
+                "user_id": self.user_profile_id,
+                "company_id": self.company_profile_id,
+                "context": {
+                    "industry": "technology",
+                    "jurisdiction": "US"
+                }
+            }
+            
+            success, response = self.run_test(
+                f"Get Field Suggestions - {field_name}",
+                "POST",
+                "contract-wizard/suggestions",
+                200,
+                suggestion_request,
+                timeout=30
+            )
+            
+            if success and response:
+                suggestions = response.get('suggestions', [])
+                print(f"   Generated {len(suggestions)} suggestions for '{field_name}':")
+                
+                for suggestion in suggestions:
+                    print(f"     - Value: {suggestion.get('suggested_value')}")
+                    print(f"       Confidence: {suggestion.get('confidence', 0)*100:.1f}%")
+                    print(f"       Source: {suggestion.get('source')}")
+                    print(f"       Reasoning: {suggestion.get('reasoning')}")
+                
+                # Verify we got expected number of suggestions
+                if len(suggestions) >= test_field["expected_suggestions"]:
+                    print(f"   ✅ Got expected number of suggestions for {field_name}")
+                else:
+                    print(f"   ⚠️  Expected at least {test_field['expected_suggestions']} suggestions, got {len(suggestions)}")
+                    
+                # Verify suggestion structure
+                for suggestion in suggestions:
+                    required_suggestion_fields = ['field_name', 'suggested_value', 'confidence', 'reasoning', 'source']
+                    missing_suggestion_fields = [field for field in required_suggestion_fields if field not in suggestion]
+                    if missing_suggestion_fields:
+                        print(f"   ❌ Suggestion missing fields: {missing_suggestion_fields}")
+                        all_tests_passed = False
+                    
+            else:
+                all_tests_passed = False
+        
+        return all_tests_passed, {"tested_fields": len(test_fields)}
+    
+    def test_profile_based_auto_suggestions(self):
+        """Test that profile-based auto-suggestions work correctly"""
+        if not hasattr(self, 'user_profile_id') or not self.user_profile_id:
+            print("❌ No user profile ID available for auto-suggestions test")
+            return False, {}
+        
+        if not hasattr(self, 'company_profile_id') or not self.company_profile_id:
+            print("❌ No company profile ID available for auto-suggestions test")
+            return False, {}
+        
+        # Test party1_name suggestion should use user profile name
+        suggestion_request = {
+            "contract_type": "freelance_agreement",
+            "field_name": "party1_name",
+            "user_id": self.user_profile_id,
+            "company_id": self.company_profile_id,
+            "context": {}
+        }
+        
+        success, response = self.run_test(
+            "Test Profile-Based Auto-Suggestions",
+            "POST",
+            "contract-wizard/suggestions",
+            200,
+            suggestion_request
+        )
+        
+        if success and response:
+            suggestions = response.get('suggestions', [])
+            
+            # Look for user profile-based suggestions
+            user_profile_suggestions = [s for s in suggestions if s.get('source') == 'user_profile']
+            company_profile_suggestions = [s for s in suggestions if s.get('source') == 'company_profile']
+            
+            print(f"   User Profile Suggestions: {len(user_profile_suggestions)}")
+            print(f"   Company Profile Suggestions: {len(company_profile_suggestions)}")
+            
+            # Verify John Doe appears in suggestions
+            john_doe_suggestions = [s for s in suggestions if 'John Doe' in s.get('suggested_value', '')]
+            if john_doe_suggestions:
+                print(f"   ✅ Found user name 'John Doe' in suggestions")
+                for suggestion in john_doe_suggestions:
+                    print(f"     - Field: {suggestion.get('field_name')}")
+                    print(f"     - Value: {suggestion.get('suggested_value')}")
+                    print(f"     - Confidence: {suggestion.get('confidence', 0)*100:.1f}%")
+            else:
+                print(f"   ❌ User name 'John Doe' not found in suggestions")
+            
+            # Verify TechCorp Inc appears in suggestions for company fields
+            techcorp_suggestions = [s for s in suggestions if 'TechCorp Inc' in s.get('suggested_value', '')]
+            if techcorp_suggestions:
+                print(f"   ✅ Found company name 'TechCorp Inc' in suggestions")
+            else:
+                print(f"   ⚠️  Company name 'TechCorp Inc' not found in suggestions (may be field-specific)")
+            
+            # Verify high confidence for profile-based suggestions
+            high_confidence_suggestions = [s for s in user_profile_suggestions + company_profile_suggestions 
+                                         if s.get('confidence', 0) >= 0.9]
+            if high_confidence_suggestions:
+                print(f"   ✅ Profile-based suggestions have high confidence (≥90%)")
+            else:
+                print(f"   ⚠️  Profile-based suggestions have lower confidence than expected")
+                
+        return success, response
+    
+    def test_ai_powered_suggestions(self):
+        """Test AI-powered suggestions using Gemini"""
+        wizard_request = {
+            "user_id": None,  # Test without profiles to focus on AI suggestions
+            "company_id": None,
+            "contract_type": "NDA",
+            "current_step": 3,  # Terms step
+            "partial_data": {}
+        }
+        
+        success, response = self.run_test(
+            "Test AI-Powered Suggestions (Gemini)",
+            "POST",
+            "contract-wizard/initialize",
+            200,
+            wizard_request,
+            timeout=45  # AI generation might take longer
+        )
+        
+        if success and response:
+            suggestions = response.get('suggestions', [])
+            
+            # Look for AI-generated suggestions
+            ai_suggestions = [s for s in suggestions if s.get('source') == 'ai_generated']
+            industry_suggestions = [s for s in suggestions if s.get('source') == 'industry_standard']
+            
+            print(f"   AI-Generated Suggestions: {len(ai_suggestions)}")
+            print(f"   Industry Standard Suggestions: {len(industry_suggestions)}")
+            
+            if ai_suggestions:
+                print(f"   ✅ AI-powered suggestions generated successfully")
+                for i, suggestion in enumerate(ai_suggestions[:2]):  # Show first 2 AI suggestions
+                    print(f"     AI Suggestion {i+1}:")
+                    print(f"       Field: {suggestion.get('field_name')}")
+                    print(f"       Value: {suggestion.get('suggested_value')}")
+                    print(f"       Reasoning: {suggestion.get('reasoning')}")
+            else:
+                print(f"   ⚠️  No AI-generated suggestions found")
+            
+            # Verify AI suggestions have reasonable confidence
+            ai_confidence_scores = [s.get('confidence', 0) for s in ai_suggestions]
+            if ai_confidence_scores:
+                avg_confidence = sum(ai_confidence_scores) / len(ai_confidence_scores)
+                print(f"   Average AI Suggestion Confidence: {avg_confidence*100:.1f}%")
+                
+                if avg_confidence >= 0.5:  # AI suggestions should have at least 50% confidence
+                    print(f"   ✅ AI suggestions have reasonable confidence levels")
+                else:
+                    print(f"   ⚠️  AI suggestions have low confidence levels")
+            
+        return success, response
+
 def main():
     print("🚀 Starting LegalMate AI Backend API Tests")
     print("=" * 60)
