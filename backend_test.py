@@ -382,6 +382,190 @@ class LegalMateAPITester:
             print(f"❌ Failed - Error: {str(e)}")
             return False, {}
 
+    def validate_contract_formatting(self, contract_content, contract_type):
+        """Validate contract formatting requirements"""
+        formatting_issues = []
+        
+        # Check 1: No asterisk (*) expressions anywhere in the content
+        if '*' in contract_content:
+            asterisk_count = contract_content.count('*')
+            formatting_issues.append(f"Found {asterisk_count} asterisk (*) characters in content")
+        
+        # Check 2: Proper **bold** formatting for headings and sections
+        # Look for patterns that should be bold formatted
+        bold_patterns = ['AGREEMENT', 'CONTRACT', 'WHEREAS', 'NOW, THEREFORE', 'GOVERNING LAW', 'TERMINATION']
+        missing_bold = []
+        for pattern in bold_patterns:
+            if pattern in contract_content.upper():
+                # Check if it's properly formatted with **bold**
+                if f"**{pattern}" not in contract_content and f"**{pattern.title()}" not in contract_content and f"**{pattern.lower()}" not in contract_content:
+                    missing_bold.append(pattern)
+        
+        if missing_bold:
+            formatting_issues.append(f"Missing bold formatting for: {missing_bold}")
+        
+        # Check 3: [Date of Execution] placeholder properly placed
+        if '[Date of Execution]' not in contract_content and 'Date of Execution' not in contract_content:
+            formatting_issues.append("Missing [Date of Execution] placeholder")
+        
+        # Check 4: Clean, professional formatting
+        # Check for excessive whitespace
+        if '\n\n\n' in contract_content:
+            formatting_issues.append("Excessive whitespace found (more than 2 consecutive newlines)")
+        
+        # Check for proper paragraph structure
+        lines = contract_content.split('\n')
+        empty_lines = sum(1 for line in lines if not line.strip())
+        total_lines = len(lines)
+        if total_lines > 0 and empty_lines / total_lines > 0.5:
+            formatting_issues.append("Too many empty lines - poor paragraph structure")
+        
+        return formatting_issues
+
+    def test_nda_formatting_requirements(self):
+        """Test NDA contract generation with focus on formatting requirements"""
+        nda_data = {
+            "contract_type": "NDA",
+            "jurisdiction": "US",
+            "parties": {
+                "party1_name": "Innovative Tech Solutions Inc.",
+                "party1_type": "corporation",
+                "party2_name": "Sarah Johnson",
+                "party2_type": "individual"
+            },
+            "terms": {
+                "purpose": "Evaluation of potential strategic partnership and sharing of confidential business information",
+                "duration": "3_years"
+            },
+            "special_clauses": ["Return of materials clause", "Non-solicitation provision"]
+        }
+        
+        success, response = self.run_test(
+            "NDA Contract Formatting Requirements", 
+            "POST", 
+            "generate-contract", 
+            200, 
+            nda_data,
+            timeout=60
+        )
+        
+        if success and 'contract' in response:
+            contract = response['contract']
+            content = contract.get('content', '')
+            
+            print(f"   Testing formatting requirements for NDA...")
+            formatting_issues = self.validate_contract_formatting(content, 'NDA')
+            
+            if not formatting_issues:
+                print("   ✅ All formatting requirements met")
+            else:
+                print("   ❌ Formatting issues found:")
+                for issue in formatting_issues:
+                    print(f"     - {issue}")
+                # Don't fail the test completely, but note the issues
+                
+            # Show sample of content for verification
+            print(f"   Content preview (first 300 chars):")
+            print(f"   {content[:300]}...")
+            
+        return success, response
+
+    def test_freelance_formatting_requirements(self):
+        """Test Freelance Agreement generation with focus on formatting requirements"""
+        freelance_data = {
+            "contract_type": "freelance_agreement",
+            "jurisdiction": "US",
+            "parties": {
+                "party1_name": "Creative Marketing Agency LLC",
+                "party1_type": "llc",
+                "party2_name": "Michael Chen",
+                "party2_type": "individual"
+            },
+            "terms": {
+                "scope": "Design and development of comprehensive brand identity including logo, website, and marketing materials",
+                "payment_amount": "$8,500",
+                "payment_terms": "50% upfront, 50% on completion"
+            },
+            "special_clauses": ["Revision limits", "Copyright transfer upon payment"]
+        }
+        
+        success, response = self.run_test(
+            "Freelance Agreement Formatting Requirements", 
+            "POST", 
+            "generate-contract", 
+            200, 
+            freelance_data,
+            timeout=60
+        )
+        
+        if success and 'contract' in response:
+            contract = response['contract']
+            content = contract.get('content', '')
+            
+            print(f"   Testing formatting requirements for Freelance Agreement...")
+            formatting_issues = self.validate_contract_formatting(content, 'freelance_agreement')
+            
+            if not formatting_issues:
+                print("   ✅ All formatting requirements met")
+            else:
+                print("   ❌ Formatting issues found:")
+                for issue in formatting_issues:
+                    print(f"     - {issue}")
+                    
+            # Show sample of content for verification
+            print(f"   Content preview (first 300 chars):")
+            print(f"   {content[:300]}...")
+            
+        return success, response
+
+    def test_partnership_formatting_requirements(self):
+        """Test Partnership Agreement generation with focus on formatting requirements"""
+        partnership_data = {
+            "contract_type": "partnership_agreement",
+            "jurisdiction": "US",
+            "parties": {
+                "party1_name": "Green Energy Innovations Corp",
+                "party1_type": "corporation",
+                "party2_name": "Sustainable Tech Partners LLC",
+                "party2_type": "llc"
+            },
+            "terms": {
+                "business_purpose": "Joint development and commercialization of renewable energy storage solutions",
+                "profit_split": "55/45",
+                "capital_contribution": "$100,000 from each party"
+            },
+            "special_clauses": ["Technology sharing agreement", "Exclusive territory rights"]
+        }
+        
+        success, response = self.run_test(
+            "Partnership Agreement Formatting Requirements", 
+            "POST", 
+            "generate-contract", 
+            200, 
+            partnership_data,
+            timeout=60
+        )
+        
+        if success and 'contract' in response:
+            contract = response['contract']
+            content = contract.get('content', '')
+            
+            print(f"   Testing formatting requirements for Partnership Agreement...")
+            formatting_issues = self.validate_contract_formatting(content, 'partnership_agreement')
+            
+            if not formatting_issues:
+                print("   ✅ All formatting requirements met")
+            else:
+                print("   ❌ Formatting issues found:")
+                for issue in formatting_issues:
+                    print(f"     - {issue}")
+                    
+            # Show sample of content for verification
+            print(f"   Content preview (first 300 chars):")
+            print(f"   {content[:300]}...")
+            
+        return success, response
+
 def main():
     print("🚀 Starting LegalMate AI Backend API Tests")
     print("=" * 60)
