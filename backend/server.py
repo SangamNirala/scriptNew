@@ -737,7 +737,9 @@ async def download_contract_pdf(contract_id: str):
                     try:
                         # Process signature image using new helper method
                         signature_buffer = LegalMateAgents.process_signature_image(first_party_info['signature'])
-                        signature_image = Image(signature_buffer, width=200, height=50)
+                        # Use the reportlab ImageReader class for better compatibility
+                        from reportlab.lib.utils import ImageReader
+                        signature_image = Image(ImageReader(signature_buffer), width=200, height=50)
                         content.append(signature_image)
                     except Exception as e:
                         logging.warning(f"Error processing first party signature: {e}")
