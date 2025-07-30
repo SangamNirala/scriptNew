@@ -186,7 +186,6 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Edited PDF generation endpoint for modified contracts"
     - "Contract editing functionality with Edit tab"
     - "PDF download button functionality"
   stuck_tasks: []
