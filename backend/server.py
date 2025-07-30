@@ -380,6 +380,66 @@ Enhanced: "POV: You're told you'll 'never make it' in {industry_focus}... 6 mont
     
     return examples
 
+async def _get_trend_alignment_data(industry_focus: str, video_type: str) -> dict:
+    """Get real-time trend data for enhanced viral optimization"""
+    
+    # In a real implementation, this would fetch from trend APIs like Google Trends, 
+    # social media APIs, or trend analysis services. For now, we'll return structured
+    # trend data based on industry and video type.
+    
+    trend_data = {
+        "trending_topics": f"Current {industry_focus} trends and viral topics",
+        "platform_signals": f"Engagement patterns for {video_type} content",
+        "cultural_context": "2025 digital culture and zeitgeist moments",
+        "industry_trends": f"Latest developments in {industry_focus} sector"
+    }
+    
+    # Industry-specific trend customization
+    industry_trends = {
+        "marketing": {
+            "trending_topics": "AI-powered personalization, authentic storytelling, micro-influencer partnerships",
+            "platform_signals": "Short-form video dominance, interactive content, user-generated campaigns",
+            "cultural_context": "Transparency culture, sustainability focus, digital-first mindset",
+            "industry_trends": "Cookieless advertising, first-party data strategies, omnichannel experiences"
+        },
+        "education": {
+            "trending_topics": "Microlearning, gamification, AI tutoring, skill-based learning",
+            "platform_signals": "Interactive video content, bite-sized lessons, community learning",
+            "cultural_context": "Lifelong learning culture, remote education normalization",
+            "industry_trends": "Adaptive learning platforms, VR/AR integration, competency-based assessment"
+        },
+        "entertainment": {
+            "trending_topics": "Interactive storytelling, behind-the-scenes content, creator collaborations",
+            "platform_signals": "Multi-platform narratives, audience participation, real-time engagement",
+            "cultural_context": "Authenticity over perfection, diverse representation, mental health awareness",
+            "industry_trends": "Streaming platform competition, creator economy growth, immersive experiences"
+        },
+        "tech": {
+            "trending_topics": "AI democratization, quantum computing, sustainable tech, Web3 evolution",
+            "platform_signals": "Technical deep-dives, product demos, developer-focused content",
+            "cultural_context": "Tech ethics discussions, privacy-first mindset, open-source collaboration",
+            "industry_trends": "Edge computing, no-code/low-code platforms, cybersecurity focus"
+        },
+        "health": {
+            "trending_topics": "Preventive care, mental health awareness, personalized medicine, telehealth",
+            "platform_signals": "Evidence-based content, expert interviews, patient stories",
+            "cultural_context": "Holistic wellness approach, health equity focus, misinformation combat",
+            "industry_trends": "Digital therapeutics, wearable integration, AI diagnostics"
+        },
+        "finance": {
+            "trending_topics": "Financial literacy, cryptocurrency education, sustainable investing, fintech innovation",
+            "platform_signals": "Educational content, market analysis, personal finance tips",
+            "cultural_context": "Financial transparency, generational wealth gaps, economic uncertainty",
+            "industry_trends": "DeFi growth, regulatory changes, embedded finance, ESG investing"
+        }
+    }
+    
+    # Update with industry-specific data if available
+    if industry_focus in industry_trends:
+        trend_data.update(industry_trends[industry_focus])
+    
+    return trend_data
+
 async def _generate_enhancement_variations(request: PromptEnhancementRequest, audience_analysis: AudienceAnalysis, industry_context: dict) -> List[EnhancementVariation]:
     """Generate comprehensive script framework variations using advanced prompt engineering"""
     
