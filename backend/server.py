@@ -19,6 +19,7 @@ import re
 from lib.avatar_generator import avatar_generator
 from lib.enhanced_avatar_generator import enhanced_avatar_generator
 from lib.ultra_realistic_avatar_generator import ultra_realistic_avatar_generator
+from lib.context_integration import ContextIntegrationSystem
 
 
 ROOT_DIR = Path(__file__).parent
