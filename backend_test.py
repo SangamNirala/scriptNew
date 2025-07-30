@@ -251,6 +251,137 @@ class LegalMateAPITester:
         
         return success, response
 
+    def test_pdf_download_valid_contract(self):
+        """Test PDF download for a valid contract"""
+        if not self.contract_id:
+            print("⚠️  Skipping PDF download test - no contract ID available")
+            return True, {}
+        
+        url = f"{self.api_url}/contracts/{self.contract_id}/download-pdf"
+        
+        self.tests_run += 1
+        print(f"\n🔍 Testing PDF Download for Valid Contract...")
+        print(f"   URL: {url}")
+        
+        try:
+            response = requests.get(url, timeout=30)
+            print(f"   Status: {response.status_code}")
+            
+            if response.status_code == 200:
+                self.tests_passed += 1
+                print(f"✅ Passed - Status: {response.status_code}")
+                
+                # Check response headers
+                content_type = response.headers.get('content-type', '')
+                content_disposition = response.headers.get('content-disposition', '')
+                
+                print(f"   Content-Type: {content_type}")
+                print(f"   Content-Disposition: {content_disposition}")
+                
+                # Verify PDF headers
+                if 'application/pdf' in content_type:
+                    print("   ✅ Correct PDF content type")
+                else:
+                    print(f"   ⚠️  Expected PDF content type, got: {content_type}")
+                
+                if 'attachment' in content_disposition and 'filename' in content_disposition:
+                    print("   ✅ Correct download headers")
+                else:
+                    print(f"   ⚠️  Missing or incorrect download headers")
+                
+                # Check PDF content size
+                content_length = len(response.content)
+                print(f"   PDF Size: {content_length} bytes")
+                
+                if content_length > 1000:  # PDF should be reasonably sized
+                    print("   ✅ PDF has reasonable size")
+                else:
+                    print("   ⚠️  PDF seems too small")
+                
+                # Check if content starts with PDF header
+                if response.content.startswith(b'%PDF'):
+                    print("   ✅ Valid PDF format")
+                else:
+                    print("   ❌ Invalid PDF format - missing PDF header")
+                
+                return True, {"content_length": content_length, "headers": dict(response.headers)}
+            else:
+                print(f"❌ Failed - Expected 200, got {response.status_code}")
+                try:
+                    error_data = response.json()
+                    print(f"   Error: {error_data}")
+                except:
+                    print(f"   Error: {response.text}")
+                return False, {}
+                
+        except Exception as e:
+            print(f"❌ Failed - Error: {str(e)}")
+            return False, {}
+
+    def test_pdf_download_invalid_contract(self):
+        """Test PDF download for invalid contract ID"""
+        invalid_contract_id = "invalid-contract-id-12345"
+        
+        url = f"{self.api_url}/contracts/{invalid_contract_id}/download-pdf"
+        
+        self.tests_run += 1
+        print(f"\n🔍 Testing PDF Download for Invalid Contract...")
+        print(f"   URL: {url}")
+        
+        try:
+            response = requests.get(url, timeout=30)
+            print(f"   Status: {response.status_code}")
+            
+            if response.status_code == 404:
+                self.tests_passed += 1
+                print(f"✅ Passed - Correctly returned 404 for invalid contract")
+                try:
+                    error_data = response.json()
+                    print(f"   Error message: {error_data}")
+                except:
+                    print(f"   Error text: {response.text}")
+                return True, {}
+            else:
+                print(f"❌ Failed - Expected 404, got {response.status_code}")
+                return False, {}
+                
+        except Exception as e:
+            print(f"❌ Failed - Error: {str(e)}")
+            return False, {}
+
+    def test_pdf_download_nonexistent_contract(self):
+        """Test PDF download for non-existent but valid UUID format contract"""
+        import uuid
+        nonexistent_id = str(uuid.uuid4())
+        
+        url = f"{self.api_url}/contracts/{nonexistent_id}/download-pdf"
+        
+        self.tests_run += 1
+        print(f"\n🔍 Testing PDF Download for Non-existent Contract...")
+        print(f"   URL: {url}")
+        print(f"   Contract ID: {nonexistent_id}")
+        
+        try:
+            response = requests.get(url, timeout=30)
+            print(f"   Status: {response.status_code}")
+            
+            if response.status_code == 404:
+                self.tests_passed += 1
+                print(f"✅ Passed - Correctly returned 404 for non-existent contract")
+                try:
+                    error_data = response.json()
+                    print(f"   Error message: {error_data}")
+                except:
+                    print(f"   Error text: {response.text}")
+                return True, {}
+            else:
+                print(f"❌ Failed - Expected 404, got {response.status_code}")
+                return False, {}
+                
+        except Exception as e:
+            print(f"❌ Failed - Error: {str(e)}")
+            return False, {}
+
 def main():
     print("🚀 Starting LegalMate AI Backend API Tests")
     print("=" * 60)
