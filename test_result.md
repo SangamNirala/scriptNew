@@ -118,20 +118,17 @@ backend:
         -comment: "Added new endpoint /contracts/{contract_id}/download-pdf using reportlab library for PDF generation. Added necessary imports and PDF generation logic. Installed reportlab>=4.0.0 in requirements.txt."
 
 frontend:
-  - task: "Fix input field focus issue in TermsStep component"
+  - task: "PDF download button functionality"
     implemented: true
-    working: true
+    working: false
     file: "/app/frontend/src/App.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
-        -working: true
+        -working: false
         -agent: "main"
-        -comment: "Applied same fix as PartiesStep - moved TermsStep component outside App component to prevent recreation on every render. This maintains input focus during typing."
-        -working: true
-        -agent: "testing"
-        -comment: "CRITICAL SUCCESS: Comprehensive testing completed. Purpose of Disclosure textarea tested with 216 characters of continuous typing - ZERO focus loss detected. Agreement Duration select dropdown working perfectly. Special Clauses textarea maintains focus during typing. All contract types (NDA, Freelance, Partnership) input fields working correctly. Hero section, step indicators, navigation buttons all functional. The input field focus fix is working perfectly as intended."
+        -comment: "Added downloadPDF function and onClick handler to Download PDF button. Function uses axios to call the new backend endpoint and handles file download with proper blob handling and filename generation."
 
 metadata:
   created_by: "main_agent"
