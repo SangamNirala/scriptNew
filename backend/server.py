@@ -225,7 +225,7 @@ class LegalMateAgents:
         try:
             chat_completion = groq_client.chat.completions.create(
                 messages=[{"role": "user", "content": prompt}],
-                model="llama-3.1-70b-versatile",
+                model="llama-3.3-70b-versatile",
                 temperature=0.1,
                 max_tokens=1000
             )
