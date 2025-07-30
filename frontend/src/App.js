@@ -1012,34 +1012,54 @@ function App() {
       
       <div className="py-12 px-6">
         <div className="max-w-6xl mx-auto">
-          {currentStep < 4 && (
-            <div className="mb-8">
-              <div className="flex items-center justify-center space-x-8 mb-6">
-                {[1, 2, 3].map((step) => (
-                  <div key={step} className="flex items-center">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
-                      currentStep >= step ? 'bg-blue-600 text-white' : 'bg-gray-300 text-gray-600'
-                    }`}>
-                      {currentStep > step ? <CheckCircle className="h-5 w-5" /> : step}
-                    </div>
-                    <span className="ml-2 text-sm font-medium">
-                      {step === 1 && 'Contract Type'}
-                      {step === 2 && 'Parties'}
-                      {step === 3 && 'Terms'}
-                    </span>
-                    {step < 3 && <div className="w-16 h-px bg-gray-300 ml-4"></div>}
-                  </div>
-                ))}
-              </div>
-            </div>
+          {/* Enhanced Contract Wizard */}
+          {useEnhancedWizard && (
+            <EnhancedContractWizard
+              contractTypes={contractTypes}
+              jurisdictions={jurisdictions}
+              onContractGenerated={(contract) => {
+                setGeneratedContract(contract);
+                setCurrentStep(4);
+                setUseEnhancedWizard(false);
+                loadContracts();
+              }}
+              onBack={() => setUseEnhancedWizard(false)}
+            />
           )}
+          
+          {/* Classic Mode */}
+          {!useEnhancedWizard && (
+            <>
+              {currentStep < 4 && (
+                <div className="mb-8">
+                  <div className="flex items-center justify-center space-x-8 mb-6">
+                    {[1, 2, 3].map((step) => (
+                      <div key={step} className="flex items-center">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
+                          currentStep >= step ? 'bg-blue-600 text-white' : 'bg-gray-300 text-gray-600'
+                        }`}>
+                          {currentStep > step ? <CheckCircle className="h-5 w-5" /> : step}
+                        </div>
+                        <span className="ml-2 text-sm font-medium">
+                          {step === 1 && 'Contract Type'}
+                          {step === 2 && 'Parties'}
+                          {step === 3 && 'Terms'}
+                        </span>
+                        {step < 3 && <div className="w-16 h-px bg-gray-300 ml-4"></div>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
-          {currentStep === 1 && <ContractTypeStep />}
-          {currentStep === 2 && <PartiesStep contractData={contractData} updateParties={updateParties} setCurrentStep={setCurrentStep} />}
-          {currentStep === 3 && <TermsStep contractData={contractData} contractTypes={contractTypes} updateTerms={updateTerms} setContractData={setContractData} generateContract={generateContract} isGenerating={isGenerating} setCurrentStep={setCurrentStep} />}
-          {currentStep === 4 && <ContractResult />}
+              {currentStep === 1 && <ContractTypeStep />}
+              {currentStep === 2 && <PartiesStep contractData={contractData} updateParties={updateParties} setCurrentStep={setCurrentStep} />}
+              {currentStep === 3 && <TermsStep contractData={contractData} contractTypes={contractTypes} updateTerms={updateTerms} setContractData={setContractData} generateContract={generateContract} isGenerating={isGenerating} setCurrentStep={setCurrentStep} />}
+              {currentStep === 4 && <ContractResult />}
 
-          {currentStep === 1 && <div className="mt-12"><ContractLibrary /></div>}
+              {currentStep === 1 && <div className="mt-12"><ContractLibrary /></div>}
+            </>
+          )}
         </div>
       </div>
     </div>
