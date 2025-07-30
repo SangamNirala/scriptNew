@@ -253,9 +253,22 @@ class LegalMateAgents:
     def format_contract_content(content: str) -> str:
         """Post-process contract content to ensure formatting requirements are met"""
         
-        # Remove all asterisk (*) expressions
-        content = re.sub(r'\*+[^*]*\*+', '', content)
-        content = re.sub(r'\*', '', content)
+        # Remove single asterisks but preserve **bold** formatting
+        # First, temporarily replace **bold** patterns with placeholders
+        bold_patterns = re.findall(r'\*\*[^*]+\*\*', content)
+        temp_replacements = {}
+        for i, pattern in enumerate(bold_patterns):
+            placeholder = f"__BOLD_PLACEHOLDER_{i}__"
+            temp_replacements[placeholder] = pattern
+            content = content.replace(pattern, placeholder, 1)
+        
+        # Now remove all remaining single asterisks and malformed asterisk expressions
+        content = re.sub(r'\*+(?!\*)', '', content)  # Remove single or multiple asterisks but not **
+        content = re.sub(r'(?<!\*)\*(?!\*)', '', content)  # Remove isolated single asterisks
+        
+        # Restore **bold** formatting
+        for placeholder, original in temp_replacements.items():
+            content = content.replace(placeholder, original)
         
         # Ensure Date of Execution line exists if not already present
         if '[Date of Execution]' not in content and 'Date of Execution' not in content:
