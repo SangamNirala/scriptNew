@@ -601,7 +601,7 @@ function App() {
 
           {currentStep === 1 && <ContractTypeStep />}
           {currentStep === 2 && <PartiesStep contractData={contractData} updateParties={updateParties} setCurrentStep={setCurrentStep} />}
-          {currentStep === 3 && <TermsStep />}
+          {currentStep === 3 && <TermsStep contractData={contractData} contractTypes={contractTypes} updateTerms={updateTerms} setContractData={setContractData} generateContract={generateContract} isGenerating={isGenerating} setCurrentStep={setCurrentStep} />}
           {currentStep === 4 && <ContractResult />}
 
           {currentStep === 1 && <div className="mt-12"><ContractLibrary /></div>}
