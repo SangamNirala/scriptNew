@@ -64,7 +64,10 @@ const EnhancedContractWizard = ({
   });
 
   useEffect(() => {
-    initializeWizard();
+    // Only initialize wizard when moving to a new step, not when user is just editing
+    if (currentStep > 1 && !stepData[`step${currentStep}`]?.initialized) {
+      initializeWizard();
+    }
   }, [currentStep]);
 
   const initializeWizard = async () => {
