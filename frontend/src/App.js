@@ -146,7 +146,6 @@ const ScriptGenerator = () => {
       finalPrompt = enhancedPrompt;
       promptTypeLabel = "enhanced";
     }
-    const promptType = useEnhanced ? "enhanced" : "original";
     
     if (!finalPrompt.trim()) {
       setError("Please enter a prompt first");
@@ -164,8 +163,8 @@ const ScriptGenerator = () => {
       });
 
       setGeneratedScript(response.data.generated_script);
-      setGeneratedWithPrompt(promptType);
-      fetchScripts(); // Refresh the scripts list
+      setGeneratedWithPrompt(promptTypeLabel);
+      fetchScripts(); // Refresh the list
     } catch (err) {
       setError("Error generating script. Please try again.");
       console.error("Error generating script:", err);
