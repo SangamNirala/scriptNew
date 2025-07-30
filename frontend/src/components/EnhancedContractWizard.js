@@ -107,6 +107,11 @@ const EnhancedContractWizard = ({
   };
 
   const applySuggestions = (newSuggestions) => {
+    // Don't apply suggestions if user is actively typing
+    if (userIsTyping) {
+      return;
+    }
+    
     const currentStepKey = `step${currentStep}`;
     const updatedStepData = { ...stepData[currentStepKey] };
     
