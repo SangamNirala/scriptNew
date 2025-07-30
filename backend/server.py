@@ -2447,6 +2447,359 @@ async def generate_ultra_realistic_avatar_video(request: UltraRealisticAvatarVid
         logger.error(f"Error generating ultra-realistic avatar video: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error generating ultra-realistic avatar video: {str(e)}")
 
+# =============================================================================
+# PHASE 3: ADVANCED ANALYTICS AND VALIDATION ENDPOINTS
+# =============================================================================
+
+# Phase 3 Data Models
+class AdvancedAnalysisRequest(BaseModel):
+    script: str
+    metadata: Optional[Dict[str, Any]] = {}
+
+class QualityAnalysisRequest(BaseModel):
+    script: str 
+    metadata: Optional[Dict[str, Any]] = {}
+
+class ValidationRequest(BaseModel):
+    script: str
+    requirements: Dict[str, Any]
+
+class PerformanceTrackingRequest(BaseModel):
+    script_id: str
+    performance_metrics: Dict[str, Any]
+
+class ScriptPreviewRequest(BaseModel):
+    script: str
+    metadata: Optional[Dict[str, Any]] = {}
+
+class PerformanceInsightsRequest(BaseModel):
+    filters: Optional[Dict[str, Any]] = {}
+
+class ScriptRecommendationsRequest(BaseModel):
+    script_context: Dict[str, Any]
+
+# Priority 1: Prompt Enhancement Pipeline
+
+@api_router.post("/advanced-context-analysis")
+async def advanced_context_analysis(request: AdvancedAnalysisRequest):
+    """Advanced context enrichment with trend analysis, competitor insights, and performance prediction"""
+    try:
+        enriched_context = await advanced_context_engine.enrich_prompt_context(
+            request.script, request.metadata
+        )
+        
+        return {
+            "status": "SUCCESS",
+            "analysis_type": "ADVANCED_CONTEXT_ENRICHMENT",
+            "enriched_context": enriched_context,
+            "generated_at": datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error in advanced context analysis: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Advanced context analysis failed: {str(e)}")
+
+@api_router.post("/script-quality-analysis")
+async def script_quality_analysis(request: QualityAnalysisRequest):
+    """Comprehensive script quality analysis with retention, engagement, and optimization scoring"""
+    try:
+        quality_analysis = script_quality_analyzer.analyze_script_quality(
+            request.script, request.metadata
+        )
+        
+        return {
+            "status": "SUCCESS",
+            "analysis_type": "SCRIPT_QUALITY_ANALYSIS",
+            "quality_analysis": quality_analysis,
+            "generated_at": datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error in script quality analysis: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Script quality analysis failed: {str(e)}")
+
+# Priority 2: Validation and Feedback Loop
+
+@api_router.post("/script-validation")
+async def script_validation(request: ValidationRequest):
+    """Comprehensive script structure validation and quality assurance"""
+    try:
+        validation_results = script_validator.validate_script_structure(
+            request.script, request.requirements
+        )
+        
+        return {
+            "status": "SUCCESS",
+            "validation_type": "COMPREHENSIVE_VALIDATION",
+            "validation_results": validation_results,
+            "generated_at": datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error in script validation: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Script validation failed: {str(e)}")
+
+@api_router.post("/track-performance")
+async def track_script_performance(request: PerformanceTrackingRequest):
+    """Track script performance for learning and improvement"""
+    try:
+        tracking_results = await script_performance_tracker.track_script_performance(
+            request.script_id, request.performance_metrics
+        )
+        
+        return {
+            "status": "SUCCESS",
+            "tracking_type": "PERFORMANCE_TRACKING",
+            "tracking_results": tracking_results,
+            "generated_at": datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error tracking performance: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Performance tracking failed: {str(e)}")
+
+@api_router.post("/performance-insights")
+async def get_performance_insights(request: PerformanceInsightsRequest):
+    """Get comprehensive performance insights and learning patterns"""
+    try:
+        insights = await script_performance_tracker.get_performance_insights(request.filters)
+        
+        return {
+            "status": "SUCCESS",
+            "insights_type": "PERFORMANCE_INSIGHTS",
+            "insights": insights,
+            "generated_at": datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting performance insights: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Performance insights failed: {str(e)}")
+
+@api_router.post("/script-recommendations")
+async def get_script_recommendations(request: ScriptRecommendationsRequest):
+    """Get personalized script recommendations based on performance learning"""
+    try:
+        recommendations = await script_performance_tracker.get_script_recommendations(
+            request.script_context
+        )
+        
+        return {
+            "status": "SUCCESS",
+            "recommendation_type": "PERSONALIZED_RECOMMENDATIONS",
+            "recommendations": recommendations,
+            "generated_at": datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting script recommendations: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Script recommendations failed: {str(e)}")
+
+# Priority 3: User Experience Enhancements
+
+@api_router.post("/script-preview")
+async def generate_script_preview(request: ScriptPreviewRequest):
+    """Generate comprehensive script preview with engagement predictions and optimization suggestions"""
+    try:
+        preview = script_preview_generator.generate_script_preview(
+            request.script, request.metadata
+        )
+        
+        return {
+            "status": "SUCCESS",
+            "preview_type": "COMPREHENSIVE_PREVIEW",
+            "preview": preview,
+            "generated_at": datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error generating script preview: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Script preview generation failed: {str(e)}")
+
+@api_router.post("/engagement-timeline")
+async def create_engagement_timeline(request: ScriptPreviewRequest):
+    """Create detailed engagement timeline curve for script analysis"""
+    try:
+        platform = request.metadata.get('target_platform', 'youtube') if request.metadata else 'youtube'
+        engagement_timeline = script_preview_generator.create_engagement_curve(
+            request.script, platform
+        )
+        
+        return {
+            "status": "SUCCESS",
+            "timeline_type": "ENGAGEMENT_TIMELINE",
+            "engagement_timeline": engagement_timeline,
+            "generated_at": datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error creating engagement timeline: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Engagement timeline creation failed: {str(e)}")
+
+@api_router.post("/retention-predictions")
+async def predict_retention_points(request: ScriptPreviewRequest):
+    """Predict audience drop-off points and retention metrics"""
+    try:
+        platform = request.metadata.get('target_platform', 'youtube') if request.metadata else 'youtube'
+        retention_predictions = script_preview_generator.predict_drop_off_points(
+            request.script, platform
+        )
+        
+        return {
+            "status": "SUCCESS",
+            "prediction_type": "RETENTION_PREDICTIONS",
+            "retention_predictions": retention_predictions,
+            "generated_at": datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error predicting retention: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Retention prediction failed: {str(e)}")
+
+@api_router.post("/optimization-suggestions")
+async def get_optimization_suggestions(request: ScriptPreviewRequest):
+    """Generate comprehensive optimization suggestions for script improvement"""
+    try:
+        optimization_suggestions = script_preview_generator.suggest_improvements(
+            request.script, request.metadata
+        )
+        
+        return {
+            "status": "SUCCESS",
+            "suggestion_type": "OPTIMIZATION_SUGGESTIONS",
+            "optimization_suggestions": optimization_suggestions,
+            "generated_at": datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error generating optimization suggestions: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Optimization suggestions failed: {str(e)}")
+
+# Comprehensive Analysis Endpoint
+
+@api_router.post("/comprehensive-script-analysis")
+async def comprehensive_script_analysis(request: AdvancedAnalysisRequest):
+    """
+    Comprehensive script analysis combining all Phase 3 features:
+    - Advanced context enrichment
+    - Quality analysis
+    - Structure validation
+    - Preview generation
+    """
+    try:
+        # Prepare metadata with defaults
+        metadata = request.metadata or {}
+        platform = metadata.get('target_platform', 'youtube')
+        
+        # Run all analyses in parallel for efficiency
+        results = await asyncio.gather(
+            # Context enrichment
+            advanced_context_engine.enrich_prompt_context(request.script, metadata),
+            
+            # Quality analysis
+            asyncio.create_task(asyncio.to_thread(
+                script_quality_analyzer.analyze_script_quality, request.script, metadata
+            )),
+            
+            # Structure validation
+            asyncio.create_task(asyncio.to_thread(
+                script_validator.validate_script_structure, 
+                request.script, 
+                {"platform": platform, **metadata}
+            )),
+            
+            # Preview generation
+            asyncio.create_task(asyncio.to_thread(
+                script_preview_generator.generate_script_preview, request.script, metadata
+            )),
+            
+            return_exceptions=True
+        )
+        
+        context_analysis, quality_analysis, validation_results, preview_results = results
+        
+        # Handle any exceptions
+        analyses = {}
+        if not isinstance(context_analysis, Exception):
+            analyses["context_analysis"] = context_analysis
+        if not isinstance(quality_analysis, Exception):
+            analyses["quality_analysis"] = quality_analysis
+        if not isinstance(validation_results, Exception):
+            analyses["validation_results"] = validation_results
+        if not isinstance(preview_results, Exception):
+            analyses["preview_results"] = preview_results
+        
+        # Generate comprehensive summary
+        comprehensive_summary = _generate_comprehensive_summary(analyses)
+        
+        return {
+            "status": "SUCCESS",
+            "analysis_type": "COMPREHENSIVE_ANALYSIS",
+            "comprehensive_summary": comprehensive_summary,
+            "detailed_analyses": analyses,
+            "generated_at": datetime.utcnow().isoformat(),
+            "analysis_metadata": {
+                "script_length": len(request.script),
+                "word_count": len(request.script.split()),
+                "platform": platform,
+                "analyses_completed": len(analyses)
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Error in comprehensive script analysis: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Comprehensive analysis failed: {str(e)}")
+
+def _generate_comprehensive_summary(analyses: Dict[str, Any]) -> Dict[str, Any]:
+    """Generate summary from all completed analyses"""
+    summary = {
+        "overall_health": "UNKNOWN",
+        "key_strengths": [],
+        "critical_issues": [],
+        "top_recommendations": [],
+        "performance_forecast": "MODERATE"
+    }
+    
+    try:
+        # Extract key metrics from each analysis
+        if "quality_analysis" in analyses:
+            quality = analyses["quality_analysis"]
+            summary["overall_health"] = quality.get("quality_grade", "UNKNOWN")
+            summary["key_strengths"].extend(quality.get("strengths", [])[:3])
+        
+        if "validation_results" in analyses:
+            validation = analyses["validation_results"]
+            critical_issues = validation.get("critical_issues", [])
+            summary["critical_issues"].extend([issue.get("issue", "") for issue in critical_issues][:3])
+        
+        if "preview_results" in analyses:
+            preview = analyses["preview_results"]
+            recommendations = preview.get("actionable_recommendations", [])
+            summary["top_recommendations"].extend(recommendations[:5])
+            
+            forecast = preview.get("performance_forecast", {})
+            viral_potential = forecast.get("viral_potential", "MODERATE")
+            summary["performance_forecast"] = viral_potential
+        
+        if "context_analysis" in analyses:
+            context = analyses["context_analysis"]
+            synthesis = context.get("context_synthesis", {})
+            success_prob = synthesis.get("success_probability", 50)
+            
+            if success_prob > 75:
+                summary["performance_forecast"] = "HIGH"
+            elif success_prob < 40:
+                summary["performance_forecast"] = "LOW"
+    
+    except Exception as e:
+        logger.error(f"Error generating comprehensive summary: {str(e)}")
+        summary["error"] = str(e)
+    
+    return summary
+
+# =============================================================================
+# END PHASE 3 ENDPOINTS
+# =============================================================================
+
 # Include the router in the main app
 app.include_router(api_router)
 
