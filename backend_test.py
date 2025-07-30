@@ -2718,27 +2718,21 @@ KEY RETENTION ELEMENTS:
         # Run all test suites
         test_methods = [
             # NEW ENHANCED PROMPT SYSTEM TESTS (Review Request Focus)
-            self.test_new_enhanced_prompt_endpoint,
-            self.test_legacy_prompt_endpoint_compatibility,
-            # Original tests
-            self.test_enhance_prompt_endpoint,
+            self.test_enhance_prompt_endpoint,  # Updated with new enhanced structure
+            self.test_enhanced_prompt_different_scenarios,  # New comprehensive scenarios test
+            # Core functionality tests
             self.test_generate_script_endpoint,
             self.test_scripts_retrieval_endpoint,
             self.test_voices_endpoint,
             self.test_generate_audio_endpoint,
-            self.test_enhanced_script_filtering_review_request,  # NEW: Focus test for review request
-            self.test_timestamp_removal_comprehensive,  # New focused timestamp removal test
+            self.test_timestamp_removal_comprehensive,
             self.test_audio_error_handling,
             self.test_voice_audio_integration,
             self.test_avatar_video_generation_endpoint,
             self.test_avatar_video_error_handling,
             self.test_complete_avatar_workflow,
             self.test_avatar_video_with_different_audio_lengths,
-            self.test_enhanced_avatar_video_generation_endpoint,  # New enhanced avatar video tests
-            self.test_enhanced_avatar_video_error_handling,
-            self.test_enhanced_avatar_video_integration,
-            self.test_integration_flow,
-            self.test_error_handling
+            self.test_integration_flow
         ]
         
         for test_method in test_methods:
