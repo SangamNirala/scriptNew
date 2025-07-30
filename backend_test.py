@@ -3120,7 +3120,7 @@ class LegalMateAPITester:
             print("❌ No company profile ID available for field suggestions test")
             return False, {}
         
-        # Test multiple field suggestions
+        # Test multiple field suggestions using query parameters
         test_fields = [
             {"field": "payment_terms", "expected_suggestions": 1},
             {"field": "party1_name", "expected_suggestions": 1},
@@ -3133,23 +3133,16 @@ class LegalMateAPITester:
         for test_field in test_fields:
             field_name = test_field["field"]
             
-            suggestion_request = {
-                "contract_type": "freelance_agreement",
-                "field_name": field_name,
-                "user_id": self.user_profile_id,
-                "company_id": self.company_profile_id,
-                "context": {
-                    "industry": "technology",
-                    "jurisdiction": "US"
-                }
-            }
+            # Build query parameters
+            query_params = f"?contract_type=freelance_agreement&field_name={field_name}&user_id={self.user_profile_id}&company_id={self.company_profile_id}"
+            endpoint = f"contract-wizard/suggestions{query_params}"
             
             success, response = self.run_test(
                 f"Get Field Suggestions - {field_name}",
                 "POST",
-                "contract-wizard/suggestions",
+                endpoint,
                 200,
-                suggestion_request,
+                None,  # No JSON body needed
                 timeout=30
             )
             
