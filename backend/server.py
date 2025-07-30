@@ -575,6 +575,84 @@ async def download_contract_pdf(contract_id: str):
         logging.error(f"Error generating PDF for contract {contract_id}: {e}")
         raise HTTPException(status_code=500, detail=f"Error generating PDF: {str(e)}")
 
+class EditedContractRequest(BaseModel):
+    contract: Dict[str, Any]
+
+@api_router.post("/contracts/download-pdf-edited")
+async def download_edited_contract_pdf(request: EditedContractRequest):
+    """Generate and download PDF for edited contract content"""
+    try:
+        contract = request.contract
+        
+        # Create PDF buffer
+        buffer = io.BytesIO()
+        
+        # Create PDF document
+        doc = SimpleDocTemplate(buffer, pagesize=A4, 
+                              rightMargin=72, leftMargin=72,
+                              topMargin=72, bottomMargin=18)
+        
+        # Get styles
+        styles = getSampleStyleSheet()
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontSize=18,
+            spaceAfter=30,
+            alignment=1  # Center alignment
+        )
+        
+        # Build PDF content
+        content = []
+        
+        # Title
+        title = f"{contract['contract_type'].upper()} CONTRACT"
+        content.append(Paragraph(title, title_style))
+        content.append(Spacer(1, 12))
+        
+        # Contract metadata
+        metadata_style = styles['Normal']
+        content.append(Paragraph(f"<b>Contract ID:</b> {contract['id']}", metadata_style))
+        content.append(Paragraph(f"<b>Jurisdiction:</b> {contract['jurisdiction']}", metadata_style))
+        content.append(Paragraph(f"<b>Generated:</b> {contract['created_at']}", metadata_style))
+        content.append(Paragraph(f"<b>Compliance Score:</b> {contract['compliance_score']:.0f}%", metadata_style))
+        content.append(Paragraph("<b>Status:</b> Edited", metadata_style))
+        content.append(Spacer(1, 20))
+        
+        # Contract content (edited)
+        contract_content = contract['content']
+        
+        # Split content into paragraphs and add to PDF with proper bold formatting
+        paragraphs = contract_content.split('\n\n')
+        for paragraph in paragraphs:
+            if paragraph.strip():
+                # Process bold formatting - convert **text** to <b>text</b> for reportlab
+                formatted_paragraph = LegalMateAgents.convert_markdown_to_html_bold(paragraph.strip())
+                content.append(Paragraph(formatted_paragraph, styles['Normal']))
+                content.append(Spacer(1, 12))
+        
+        # Build PDF
+        doc.build(content)
+        
+        # Get PDF data
+        buffer.seek(0)
+        pdf_data = buffer.getvalue()
+        buffer.close()
+        
+        # Create filename
+        filename = f"contract_{contract['id']}_edited.pdf"
+        
+        # Return as streaming response
+        return StreamingResponse(
+            io.BytesIO(pdf_data),
+            media_type="application/pdf",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+        
+    except Exception as e:
+        logging.error(f"Error generating edited PDF: {e}")
+        raise HTTPException(status_code=500, detail=f"Error generating PDF: {str(e)}")
+
 # Include the router in the main app
 app.include_router(api_router)
 
