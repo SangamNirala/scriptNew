@@ -1907,17 +1907,22 @@ async def compare_contracts(request: ContractComparisonRequest):
         raise HTTPException(status_code=500, detail=f"Error comparing contracts: {str(e)}")
 
 @api_router.post("/compliance-check")
-async def enhanced_compliance_check(
-    contract_content: str,
-    jurisdictions: List[str] = ["US"]
-):
+async def enhanced_compliance_check(request: dict):
     """Enhanced multi-jurisdiction compliance validation"""
     try:
+        contract_content = request.get("contract_content", "")
+        jurisdictions = request.get("jurisdictions", ["US"])
+        
+        if not contract_content:
+            raise HTTPException(status_code=400, detail="contract_content is required")
+        
         compliance_result = await LegalMateAgents.enhanced_compliance_checker(
             contract_content, jurisdictions
         )
         return compliance_result
         
+    except HTTPException:
+        raise
     except Exception as e:
         logging.error(f"Compliance check error: {e}")
         raise HTTPException(status_code=500, detail=f"Error checking compliance: {str(e)}")
