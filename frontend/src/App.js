@@ -610,24 +610,78 @@ const ScriptGenerator = () => {
             </div>
 
             {/* Enhanced Prompt Display */}
-            {showEnhanced && enhancedPrompt && (
+            {showEnhanced && (enhancedPrompt || enhancementVariations.length > 0) && (
               <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
-                <h3 className="text-xl font-bold text-white mb-4">✨ Enhanced Prompt</h3>
+                <h3 className="text-xl font-bold text-white mb-4">✨ Enhanced Prompts</h3>
                 
                 <div className="mb-4">
                   <h4 className="text-sm font-medium text-gray-300 mb-2">Original:</h4>
                   <p className="text-gray-400 bg-white/5 p-3 rounded-lg">{prompt}</p>
                 </div>
+
+                {/* Multiple Enhancement Variations */}
+                {enhancementVariations.length > 0 && (
+                  <div className="mb-6">
+                    <h4 className="text-sm font-medium text-gray-300 mb-3">Enhancement Variations:</h4>
+                    <div className="space-y-3">
+                      {enhancementVariations.map((variation, index) => (
+                        <div 
+                          key={variation.id} 
+                          className={`p-4 rounded-lg border transition-all duration-200 cursor-pointer ${
+                            selectedVariation?.id === variation.id 
+                              ? 'bg-purple-500/20 border-purple-400/50' 
+                              : 'bg-white/5 border-white/20 hover:bg-white/10 hover:border-white/30'
+                          }`}
+                          onClick={() => handleVariationSelect(variation)}
+                        >
+                          <div className="flex justify-between items-start mb-2">
+                            <div className="flex items-center space-x-2">
+                              <span className="text-white font-medium">{variation.title}</span>
+                              <span className="text-xs px-2 py-1 bg-blue-500/20 text-blue-300 rounded-full">
+                                {variation.focus_strategy}
+                              </span>
+                              <span className="text-xs px-2 py-1 bg-green-500/20 text-green-300 rounded-full">
+                                Score: {Math.round(variation.estimated_performance_score)}/10
+                              </span>
+                            </div>
+                            {selectedVariation?.id === variation.id && (
+                              <span className="text-purple-400 text-xs">✓ Selected</span>
+                            )}
+                          </div>
+                          <div 
+                            className="text-gray-300 text-sm leading-relaxed"
+                            dangerouslySetInnerHTML={{ __html: formatEnhancedPrompt(variation.enhanced_prompt) }}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Single Enhanced Prompt (backward compatibility) */}
+                {enhancementVariations.length === 0 && enhancedPrompt && (
+                  <div className="mb-6">
+                    <h4 className="text-sm font-medium text-gray-300 mb-2">Enhanced:</h4>
+                    <div 
+                      className="text-white bg-white/5 p-3 rounded-lg leading-relaxed"
+                      dangerouslySetInnerHTML={{ __html: formatEnhancedPrompt(enhancedPrompt) }}
+                    />
+                  </div>
+                )}
                 
-                <div className="mb-6">
-                  <h4 className="text-sm font-medium text-gray-300 mb-2">Enhanced:</h4>
-                  <div 
-                    className="text-white bg-white/5 p-3 rounded-lg leading-relaxed"
-                    dangerouslySetInnerHTML={{ __html: formatEnhancedPrompt(enhancedPrompt) }}
-                  />
-                </div>
-                
-                {enhancementExplanation && (
+                {/* Recommendation */}
+                {enhancementRecommendation && (
+                  <div className="mb-6">
+                    <h4 className="text-sm font-medium text-gray-300 mb-2">AI Recommendation:</h4>
+                    <div 
+                      className="text-gray-300 bg-blue-500/10 border border-blue-500/20 p-3 rounded-lg text-sm leading-relaxed"
+                      dangerouslySetInnerHTML={{ __html: formatEnhancedPrompt(enhancementRecommendation) }}
+                    />
+                  </div>
+                )}
+
+                {/* Enhancement Explanation (fallback) */}
+                {!enhancementRecommendation && enhancementExplanation && (
                   <div className="mb-6">
                     <h4 className="text-sm font-medium text-gray-300 mb-2">Why this is better:</h4>
                     <div 
@@ -656,7 +710,7 @@ const ScriptGenerator = () => {
                   
                   <button
                     onClick={() => handleGenerateScript(true)}
-                    disabled={isGenerating}
+                    disabled={isGenerating || !enhancedPrompt}
                     className="py-3 px-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-lg shadow-lg hover:from-purple-700 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 text-sm"
                   >
                     {isGenerating ? (
