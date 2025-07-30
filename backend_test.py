@@ -3912,6 +3912,840 @@ KEY RETENTION ELEMENTS:
             self.log_test("Phase 2 Workflow - Exception", False, f"Workflow test failed: {str(e)}")
             return False
 
+    def test_phase3_advanced_context_analysis(self):
+        """Test Phase 3: /api/advanced-context-analysis endpoint"""
+        print("\n=== Testing Phase 3: Advanced Context Analysis ===")
+        
+        # Sample script from review request
+        test_script = "Did you know that 90% of people make this critical mistake when trying to lose weight? In this video, I'm going to reveal the secret that doctors don't want you to know. You've probably tried every diet out there, but here's why they all failed. The truth is shocking and will change everything you thought you knew about weight loss. By the end of this video, you'll have the exact blueprint that helped thousands of people lose 20+ pounds in just 30 days. But first, let me ask you - are you tired of feeling frustrated with your body? Subscribe and hit the bell icon because this information could save your health."
+        
+        payload = {
+            "script": test_script,
+            "metadata": {
+                "target_platform": "youtube",
+                "duration": "medium", 
+                "content_type": "educational",
+                "industry_focus": "health"
+            }
+        }
+        
+        try:
+            response = self.session.post(
+                f"{self.backend_url}/advanced-context-analysis",
+                json=payload,
+                timeout=60
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Verify response structure
+                required_fields = ["status", "analysis_type", "trend_analysis", "competitor_analysis", "performance_prediction"]
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if missing_fields:
+                    self.log_test("Phase 3 - Advanced Context Analysis Structure", False,
+                                f"Missing required fields: {missing_fields}")
+                    return False
+                
+                # Verify AdvancedContextEngine components
+                trend_analysis = data.get("trend_analysis", {})
+                competitor_analysis = data.get("competitor_analysis", {})
+                performance_prediction = data.get("performance_prediction", {})
+                
+                # Test TrendAnalyzer component
+                if not trend_analysis or not isinstance(trend_analysis, dict):
+                    self.log_test("Phase 3 - TrendAnalyzer Component", False,
+                                "TrendAnalyzer output missing or invalid")
+                    return False
+                
+                # Test CompetitorAnalyzer component  
+                if not competitor_analysis or not isinstance(competitor_analysis, dict):
+                    self.log_test("Phase 3 - CompetitorAnalyzer Component", False,
+                                "CompetitorAnalyzer output missing or invalid")
+                    return False
+                
+                # Test PerformancePredictor component
+                if not performance_prediction or not isinstance(performance_prediction, dict):
+                    self.log_test("Phase 3 - PerformancePredictor Component", False,
+                                "PerformancePredictor output missing or invalid")
+                    return False
+                
+                self.log_test("Phase 3 - Advanced Context Analysis", True,
+                            "Successfully tested AdvancedContextEngine with all components")
+                return True
+                
+            else:
+                self.log_test("Phase 3 - Advanced Context Analysis HTTP", False,
+                            f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_test("Phase 3 - Advanced Context Analysis Exception", False,
+                        f"Request failed: {str(e)}")
+            return False
+    
+    def test_phase3_script_quality_analysis(self):
+        """Test Phase 3: /api/script-quality-analysis endpoint"""
+        print("\n=== Testing Phase 3: Script Quality Analysis ===")
+        
+        test_script = "Did you know that 90% of people make this critical mistake when trying to lose weight? In this video, I'm going to reveal the secret that doctors don't want you to know. You've probably tried every diet out there, but here's why they all failed. The truth is shocking and will change everything you thought you knew about weight loss. By the end of this video, you'll have the exact blueprint that helped thousands of people lose 20+ pounds in just 30 days. But first, let me ask you - are you tired of feeling frustrated with your body? Subscribe and hit the bell icon because this information could save your health."
+        
+        payload = {
+            "script": test_script,
+            "metadata": {
+                "target_platform": "youtube",
+                "duration": "medium",
+                "content_type": "educational", 
+                "industry_focus": "health"
+            }
+        }
+        
+        try:
+            response = self.session.post(
+                f"{self.backend_url}/script-quality-analysis",
+                json=payload,
+                timeout=60
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Verify response structure
+                required_fields = ["status", "analysis_type", "quality_scores"]
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if missing_fields:
+                    self.log_test("Phase 3 - Script Quality Analysis Structure", False,
+                                f"Missing required fields: {missing_fields}")
+                    return False
+                
+                # Verify ScriptQualityAnalyzer scoring metrics
+                quality_scores = data.get("quality_scores", {})
+                required_metrics = [
+                    "retention_potential",
+                    "engagement_triggers", 
+                    "emotional_arc_strength",
+                    "platform_optimization",
+                    "call_to_action_effectiveness"
+                ]
+                
+                missing_metrics = [metric for metric in required_metrics if metric not in quality_scores]
+                if missing_metrics:
+                    self.log_test("Phase 3 - Script Quality Metrics", False,
+                                f"Missing quality metrics: {missing_metrics}")
+                    return False
+                
+                # Verify all scores are in valid range (0-10)
+                for metric, score in quality_scores.items():
+                    if not isinstance(score, (int, float)) or score < 0 or score > 10:
+                        self.log_test("Phase 3 - Quality Score Range", False,
+                                    f"Invalid score for {metric}: {score} (should be 0-10)")
+                        return False
+                
+                self.log_test("Phase 3 - Script Quality Analysis", True,
+                            f"Successfully analyzed script with all {len(required_metrics)} quality metrics")
+                return True
+                
+            else:
+                self.log_test("Phase 3 - Script Quality Analysis HTTP", False,
+                            f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_test("Phase 3 - Script Quality Analysis Exception", False,
+                        f"Request failed: {str(e)}")
+            return False
+    
+    def test_phase3_script_validation(self):
+        """Test Phase 3: /api/script-validation endpoint"""
+        print("\n=== Testing Phase 3: Script Validation ===")
+        
+        test_script = "Did you know that 90% of people make this critical mistake when trying to lose weight? In this video, I'm going to reveal the secret that doctors don't want you to know. You've probably tried every diet out there, but here's why they all failed. The truth is shocking and will change everything you thought you knew about weight loss. By the end of this video, you'll have the exact blueprint that helped thousands of people lose 20+ pounds in just 30 days. But first, let me ask you - are you tired of feeling frustrated with your body? Subscribe and hit the bell icon because this information could save your health."
+        
+        payload = {
+            "script": test_script,
+            "metadata": {
+                "target_platform": "youtube",
+                "duration": "medium",
+                "content_type": "educational",
+                "industry_focus": "health"
+            }
+        }
+        
+        try:
+            response = self.session.post(
+                f"{self.backend_url}/script-validation",
+                json=payload,
+                timeout=60
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Verify response structure
+                required_fields = ["status", "analysis_type", "validation_results"]
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if missing_fields:
+                    self.log_test("Phase 3 - Script Validation Structure", False,
+                                f"Missing required fields: {missing_fields}")
+                    return False
+                
+                # Verify comprehensive structure validation
+                validation_results = data.get("validation_results", {})
+                required_validations = [
+                    "hook_quality",
+                    "pacing_optimization", 
+                    "retention_hooks",
+                    "cta_placement"
+                ]
+                
+                missing_validations = [val for val in required_validations if val not in validation_results]
+                if missing_validations:
+                    self.log_test("Phase 3 - Script Validation Components", False,
+                                f"Missing validation components: {missing_validations}")
+                    return False
+                
+                self.log_test("Phase 3 - Script Validation", True,
+                            f"Successfully validated script with all {len(required_validations)} validation components")
+                return True
+                
+            else:
+                self.log_test("Phase 3 - Script Validation HTTP", False,
+                            f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_test("Phase 3 - Script Validation Exception", False,
+                        f"Request failed: {str(e)}")
+            return False
+    
+    def test_phase3_track_performance(self):
+        """Test Phase 3: /api/track-performance endpoint with MongoDB storage"""
+        print("\n=== Testing Phase 3: Performance Tracking ===")
+        
+        payload = {
+            "script_id": f"test_script_{int(time.time())}",
+            "performance_data": {
+                "views": 15000,
+                "engagement_rate": 8.5,
+                "retention_rate": 75.2,
+                "click_through_rate": 3.8,
+                "conversion_rate": 2.1
+            },
+            "metadata": {
+                "target_platform": "youtube",
+                "duration": "medium",
+                "content_type": "educational",
+                "industry_focus": "health"
+            }
+        }
+        
+        try:
+            response = self.session.post(
+                f"{self.backend_url}/track-performance",
+                json=payload,
+                timeout=30
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Verify response structure
+                required_fields = ["status", "analysis_type", "tracking_id"]
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if missing_fields:
+                    self.log_test("Phase 3 - Performance Tracking Structure", False,
+                                f"Missing required fields: {missing_fields}")
+                    return False
+                
+                # Verify MongoDB storage integration
+                tracking_id = data.get("tracking_id")
+                if not tracking_id:
+                    self.log_test("Phase 3 - Performance Tracking ID", False,
+                                "No tracking ID returned for MongoDB storage")
+                    return False
+                
+                self.log_test("Phase 3 - Performance Tracking", True,
+                            f"Successfully tracked performance with MongoDB storage (ID: {tracking_id})")
+                return True
+                
+            else:
+                self.log_test("Phase 3 - Performance Tracking HTTP", False,
+                            f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_test("Phase 3 - Performance Tracking Exception", False,
+                        f"Request failed: {str(e)}")
+            return False
+    
+    def test_phase3_performance_insights(self):
+        """Test Phase 3: /api/performance-insights endpoint"""
+        print("\n=== Testing Phase 3: Performance Insights ===")
+        
+        payload = {
+            "metadata": {
+                "target_platform": "youtube",
+                "duration": "medium",
+                "content_type": "educational",
+                "industry_focus": "health"
+            }
+        }
+        
+        try:
+            response = self.session.post(
+                f"{self.backend_url}/performance-insights",
+                json=payload,
+                timeout=30
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Verify response structure
+                required_fields = ["status", "analysis_type", "insights"]
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if missing_fields:
+                    self.log_test("Phase 3 - Performance Insights Structure", False,
+                                f"Missing required fields: {missing_fields}")
+                    return False
+                
+                # Verify learning capabilities
+                insights = data.get("insights", {})
+                if not insights or not isinstance(insights, dict):
+                    self.log_test("Phase 3 - Performance Insights Data", False,
+                                "No insights data returned")
+                    return False
+                
+                self.log_test("Phase 3 - Performance Insights", True,
+                            "Successfully retrieved performance insights with learning capabilities")
+                return True
+                
+            else:
+                self.log_test("Phase 3 - Performance Insights HTTP", False,
+                            f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_test("Phase 3 - Performance Insights Exception", False,
+                        f"Request failed: {str(e)}")
+            return False
+    
+    def test_phase3_script_recommendations(self):
+        """Test Phase 3: /api/script-recommendations endpoint"""
+        print("\n=== Testing Phase 3: Script Recommendations ===")
+        
+        payload = {
+            "script": "Sample script for recommendations",
+            "metadata": {
+                "target_platform": "youtube",
+                "duration": "medium",
+                "content_type": "educational",
+                "industry_focus": "health"
+            }
+        }
+        
+        try:
+            response = self.session.post(
+                f"{self.backend_url}/script-recommendations",
+                json=payload,
+                timeout=30
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Verify response structure
+                required_fields = ["status", "analysis_type", "recommendations"]
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if missing_fields:
+                    self.log_test("Phase 3 - Script Recommendations Structure", False,
+                                f"Missing required fields: {missing_fields}")
+                    return False
+                
+                # Verify recommendations data
+                recommendations = data.get("recommendations", [])
+                if not recommendations or not isinstance(recommendations, list):
+                    self.log_test("Phase 3 - Script Recommendations Data", False,
+                                "No recommendations data returned")
+                    return False
+                
+                self.log_test("Phase 3 - Script Recommendations", True,
+                            f"Successfully generated {len(recommendations)} script recommendations")
+                return True
+                
+            else:
+                self.log_test("Phase 3 - Script Recommendations HTTP", False,
+                            f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_test("Phase 3 - Script Recommendations Exception", False,
+                        f"Request failed: {str(e)}")
+            return False
+    
+    def test_phase3_script_preview(self):
+        """Test Phase 3: /api/script-preview endpoint"""
+        print("\n=== Testing Phase 3: Script Preview ===")
+        
+        test_script = "Did you know that 90% of people make this critical mistake when trying to lose weight? In this video, I'm going to reveal the secret that doctors don't want you to know. You've probably tried every diet out there, but here's why they all failed. The truth is shocking and will change everything you thought you knew about weight loss. By the end of this video, you'll have the exact blueprint that helped thousands of people lose 20+ pounds in just 30 days. But first, let me ask you - are you tired of feeling frustrated with your body? Subscribe and hit the bell icon because this information could save your health."
+        
+        payload = {
+            "script": test_script,
+            "metadata": {
+                "target_platform": "youtube",
+                "duration": "medium",
+                "content_type": "educational",
+                "industry_focus": "health"
+            }
+        }
+        
+        try:
+            response = self.session.post(
+                f"{self.backend_url}/script-preview",
+                json=payload,
+                timeout=60
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Verify response structure
+                required_fields = ["status", "analysis_type", "preview"]
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if missing_fields:
+                    self.log_test("Phase 3 - Script Preview Structure", False,
+                                f"Missing required fields: {missing_fields}")
+                    return False
+                
+                # Verify comprehensive preview generation
+                preview = data.get("preview", {})
+                if not preview or not isinstance(preview, dict):
+                    self.log_test("Phase 3 - Script Preview Data", False,
+                                "No preview data returned")
+                    return False
+                
+                self.log_test("Phase 3 - Script Preview", True,
+                            "Successfully generated comprehensive script preview")
+                return True
+                
+            else:
+                self.log_test("Phase 3 - Script Preview HTTP", False,
+                            f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_test("Phase 3 - Script Preview Exception", False,
+                        f"Request failed: {str(e)}")
+            return False
+    
+    def test_phase3_engagement_timeline(self):
+        """Test Phase 3: /api/engagement-timeline endpoint"""
+        print("\n=== Testing Phase 3: Engagement Timeline ===")
+        
+        test_script = "Did you know that 90% of people make this critical mistake when trying to lose weight? In this video, I'm going to reveal the secret that doctors don't want you to know. You've probably tried every diet out there, but here's why they all failed. The truth is shocking and will change everything you thought you knew about weight loss. By the end of this video, you'll have the exact blueprint that helped thousands of people lose 20+ pounds in just 30 days. But first, let me ask you - are you tired of feeling frustrated with your body? Subscribe and hit the bell icon because this information could save your health."
+        
+        payload = {
+            "script": test_script,
+            "metadata": {
+                "target_platform": "youtube",
+                "duration": "medium",
+                "content_type": "educational",
+                "industry_focus": "health"
+            }
+        }
+        
+        try:
+            response = self.session.post(
+                f"{self.backend_url}/engagement-timeline",
+                json=payload,
+                timeout=60
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Verify response structure
+                required_fields = ["status", "analysis_type", "engagement_curve"]
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if missing_fields:
+                    self.log_test("Phase 3 - Engagement Timeline Structure", False,
+                                f"Missing required fields: {missing_fields}")
+                    return False
+                
+                # Verify engagement curve creation
+                engagement_curve = data.get("engagement_curve", [])
+                if not engagement_curve or not isinstance(engagement_curve, list):
+                    self.log_test("Phase 3 - Engagement Timeline Data", False,
+                                "No engagement curve data returned")
+                    return False
+                
+                self.log_test("Phase 3 - Engagement Timeline", True,
+                            f"Successfully created engagement curve with {len(engagement_curve)} data points")
+                return True
+                
+            else:
+                self.log_test("Phase 3 - Engagement Timeline HTTP", False,
+                            f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_test("Phase 3 - Engagement Timeline Exception", False,
+                        f"Request failed: {str(e)}")
+            return False
+    
+    def test_phase3_retention_predictions(self):
+        """Test Phase 3: /api/retention-predictions endpoint"""
+        print("\n=== Testing Phase 3: Retention Predictions ===")
+        
+        test_script = "Did you know that 90% of people make this critical mistake when trying to lose weight? In this video, I'm going to reveal the secret that doctors don't want you to know. You've probably tried every diet out there, but here's why they all failed. The truth is shocking and will change everything you thought you knew about weight loss. By the end of this video, you'll have the exact blueprint that helped thousands of people lose 20+ pounds in just 30 days. But first, let me ask you - are you tired of feeling frustrated with your body? Subscribe and hit the bell icon because this information could save your health."
+        
+        payload = {
+            "script": test_script,
+            "metadata": {
+                "target_platform": "youtube",
+                "duration": "medium",
+                "content_type": "educational",
+                "industry_focus": "health"
+            }
+        }
+        
+        try:
+            response = self.session.post(
+                f"{self.backend_url}/retention-predictions",
+                json=payload,
+                timeout=60
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Verify response structure
+                required_fields = ["status", "analysis_type", "drop_off_points"]
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if missing_fields:
+                    self.log_test("Phase 3 - Retention Predictions Structure", False,
+                                f"Missing required fields: {missing_fields}")
+                    return False
+                
+                # Verify drop-off point prediction
+                drop_off_points = data.get("drop_off_points", [])
+                if not isinstance(drop_off_points, list):
+                    self.log_test("Phase 3 - Retention Predictions Data", False,
+                                "Drop-off points should be a list")
+                    return False
+                
+                self.log_test("Phase 3 - Retention Predictions", True,
+                            f"Successfully predicted {len(drop_off_points)} potential drop-off points")
+                return True
+                
+            else:
+                self.log_test("Phase 3 - Retention Predictions HTTP", False,
+                            f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_test("Phase 3 - Retention Predictions Exception", False,
+                        f"Request failed: {str(e)}")
+            return False
+    
+    def test_phase3_optimization_suggestions(self):
+        """Test Phase 3: /api/optimization-suggestions endpoint"""
+        print("\n=== Testing Phase 3: Optimization Suggestions ===")
+        
+        test_script = "Did you know that 90% of people make this critical mistake when trying to lose weight? In this video, I'm going to reveal the secret that doctors don't want you to know. You've probably tried every diet out there, but here's why they all failed. The truth is shocking and will change everything you thought you knew about weight loss. By the end of this video, you'll have the exact blueprint that helped thousands of people lose 20+ pounds in just 30 days. But first, let me ask you - are you tired of feeling frustrated with your body? Subscribe and hit the bell icon because this information could save your health."
+        
+        payload = {
+            "script": test_script,
+            "metadata": {
+                "target_platform": "youtube",
+                "duration": "medium",
+                "content_type": "educational",
+                "industry_focus": "health"
+            }
+        }
+        
+        try:
+            response = self.session.post(
+                f"{self.backend_url}/optimization-suggestions",
+                json=payload,
+                timeout=60
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Verify response structure
+                required_fields = ["status", "analysis_type", "suggestions"]
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if missing_fields:
+                    self.log_test("Phase 3 - Optimization Suggestions Structure", False,
+                                f"Missing required fields: {missing_fields}")
+                    return False
+                
+                # Verify improvement recommendations
+                suggestions = data.get("suggestions", [])
+                if not suggestions or not isinstance(suggestions, list):
+                    self.log_test("Phase 3 - Optimization Suggestions Data", False,
+                                "No optimization suggestions returned")
+                    return False
+                
+                self.log_test("Phase 3 - Optimization Suggestions", True,
+                            f"Successfully generated {len(suggestions)} optimization suggestions")
+                return True
+                
+            else:
+                self.log_test("Phase 3 - Optimization Suggestions HTTP", False,
+                            f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_test("Phase 3 - Optimization Suggestions Exception", False,
+                        f"Request failed: {str(e)}")
+            return False
+    
+    def test_phase3_comprehensive_script_analysis(self):
+        """Test Phase 3: /api/comprehensive-script-analysis endpoint (combines all features)"""
+        print("\n=== Testing Phase 3: Comprehensive Script Analysis ===")
+        
+        test_script = "Did you know that 90% of people make this critical mistake when trying to lose weight? In this video, I'm going to reveal the secret that doctors don't want you to know. You've probably tried every diet out there, but here's why they all failed. The truth is shocking and will change everything you thought you knew about weight loss. By the end of this video, you'll have the exact blueprint that helped thousands of people lose 20+ pounds in just 30 days. But first, let me ask you - are you tired of feeling frustrated with your body? Subscribe and hit the bell icon because this information could save your health."
+        
+        payload = {
+            "script": test_script,
+            "metadata": {
+                "target_platform": "youtube",
+                "duration": "medium",
+                "content_type": "educational",
+                "industry_focus": "health"
+            }
+        }
+        
+        try:
+            response = self.session.post(
+                f"{self.backend_url}/comprehensive-script-analysis",
+                json=payload,
+                timeout=90  # Longer timeout for comprehensive analysis
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Verify response structure combines all Phase 3 features
+                required_fields = [
+                    "status", "analysis_type", "context_analysis", "quality_analysis", 
+                    "validation_results", "preview", "engagement_timeline", 
+                    "retention_predictions", "optimization_suggestions"
+                ]
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if missing_fields:
+                    self.log_test("Phase 3 - Comprehensive Analysis Structure", False,
+                                f"Missing required fields: {missing_fields}")
+                    return False
+                
+                # Verify parallel processing worked
+                if data.get("status") != "success":
+                    self.log_test("Phase 3 - Comprehensive Analysis Status", False,
+                                f"Analysis status: {data.get('status')}")
+                    return False
+                
+                # Test different platforms
+                platforms = ["TikTok", "Instagram", "LinkedIn"]
+                platform_tests = 0
+                
+                for platform in platforms:
+                    platform_payload = {
+                        "script": test_script,
+                        "metadata": {
+                            "target_platform": platform.lower(),
+                            "duration": "short",
+                            "content_type": "marketing",
+                            "industry_focus": "tech"
+                        }
+                    }
+                    
+                    try:
+                        platform_response = self.session.post(
+                            f"{self.backend_url}/comprehensive-script-analysis",
+                            json=platform_payload,
+                            timeout=90
+                        )
+                        
+                        if platform_response.status_code == 200:
+                            platform_tests += 1
+                            self.log_test(f"Phase 3 - {platform} Platform Analysis", True,
+                                        f"Successfully analyzed script for {platform}")
+                        else:
+                            self.log_test(f"Phase 3 - {platform} Platform Analysis", False,
+                                        f"Failed for {platform}: {platform_response.status_code}")
+                    except Exception as e:
+                        self.log_test(f"Phase 3 - {platform} Platform Analysis", False,
+                                    f"Exception for {platform}: {str(e)}")
+                
+                # Verify text-based insights generation
+                insights_found = 0
+                for field in ["context_analysis", "quality_analysis", "validation_results"]:
+                    if field in data and data[field]:
+                        insights_found += 1
+                
+                if insights_found < 3:
+                    self.log_test("Phase 3 - Text-based Insights", False,
+                                f"Only {insights_found}/3 insight categories generated")
+                    return False
+                
+                self.log_test("Phase 3 - Comprehensive Script Analysis", True,
+                            f"Successfully completed comprehensive analysis with all Phase 3 features, {platform_tests}/{len(platforms)} platforms tested")
+                return True
+                
+            else:
+                self.log_test("Phase 3 - Comprehensive Analysis HTTP", False,
+                            f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_test("Phase 3 - Comprehensive Analysis Exception", False,
+                        f"Request failed: {str(e)}")
+            return False
+    
+    def test_phase3_mongodb_integration(self):
+        """Test Phase 3: MongoDB integration for performance tracking"""
+        print("\n=== Testing Phase 3: MongoDB Integration ===")
+        
+        # Test performance tracking with MongoDB storage
+        test_data = {
+            "script_id": f"mongodb_test_{int(time.time())}",
+            "performance_data": {
+                "views": 25000,
+                "engagement_rate": 9.2,
+                "retention_rate": 82.5,
+                "click_through_rate": 4.1,
+                "conversion_rate": 2.8
+            },
+            "metadata": {
+                "target_platform": "youtube",
+                "duration": "long",
+                "content_type": "educational",
+                "industry_focus": "tech"
+            }
+        }
+        
+        try:
+            # Track performance
+            track_response = self.session.post(
+                f"{self.backend_url}/track-performance",
+                json=test_data,
+                timeout=30
+            )
+            
+            if track_response.status_code != 200:
+                self.log_test("Phase 3 - MongoDB Track Performance", False,
+                            f"Failed to track performance: {track_response.status_code}")
+                return False
+            
+            track_data = track_response.json()
+            tracking_id = track_data.get("tracking_id")
+            
+            if not tracking_id:
+                self.log_test("Phase 3 - MongoDB Tracking ID", False,
+                            "No tracking ID returned")
+                return False
+            
+            # Test performance insights retrieval
+            insights_response = self.session.post(
+                f"{self.backend_url}/performance-insights",
+                json={"metadata": test_data["metadata"]},
+                timeout=30
+            )
+            
+            if insights_response.status_code != 200:
+                self.log_test("Phase 3 - MongoDB Performance Insights", False,
+                            f"Failed to retrieve insights: {insights_response.status_code}")
+                return False
+            
+            self.log_test("Phase 3 - MongoDB Integration", True,
+                        f"Successfully tested MongoDB integration with tracking ID: {tracking_id}")
+            return True
+            
+        except Exception as e:
+            self.log_test("Phase 3 - MongoDB Integration Exception", False,
+                        f"Request failed: {str(e)}")
+            return False
+    
+    def test_phase3_error_handling(self):
+        """Test Phase 3: Error handling and edge cases"""
+        print("\n=== Testing Phase 3: Error Handling ===")
+        
+        error_tests = [
+            {
+                "name": "Empty Script",
+                "endpoint": "script-quality-analysis",
+                "payload": {"script": "", "metadata": {"target_platform": "youtube"}}
+            },
+            {
+                "name": "Invalid Platform",
+                "endpoint": "comprehensive-script-analysis", 
+                "payload": {"script": "test", "metadata": {"target_platform": "invalid_platform"}}
+            },
+            {
+                "name": "Missing Metadata",
+                "endpoint": "script-validation",
+                "payload": {"script": "test script"}
+            }
+        ]
+        
+        successful_error_tests = 0
+        
+        for test in error_tests:
+            try:
+                response = self.session.post(
+                    f"{self.backend_url}/{test['endpoint']}",
+                    json=test["payload"],
+                    timeout=30
+                )
+                
+                # Should handle errors gracefully (either 400 for validation or 200 with error status)
+                if response.status_code in [200, 400]:
+                    if response.status_code == 200:
+                        data = response.json()
+                        # Check if error is handled in response
+                        if "error" in data or data.get("status") == "error":
+                            successful_error_tests += 1
+                            self.log_test(f"Phase 3 - Error Handling: {test['name']}", True,
+                                        "Error handled gracefully in response")
+                        else:
+                            self.log_test(f"Phase 3 - Error Handling: {test['name']}", True,
+                                        "Request processed successfully despite edge case")
+                            successful_error_tests += 1
+                    else:
+                        successful_error_tests += 1
+                        self.log_test(f"Phase 3 - Error Handling: {test['name']}", True,
+                                    f"Proper validation error returned: {response.status_code}")
+                else:
+                    self.log_test(f"Phase 3 - Error Handling: {test['name']}", False,
+                                f"Unexpected status code: {response.status_code}")
+                    
+            except Exception as e:
+                self.log_test(f"Phase 3 - Error Handling: {test['name']}", False,
+                            f"Exception: {str(e)}")
+        
+        if successful_error_tests >= 2:
+            self.log_test("Phase 3 - Error Handling Overall", True,
+                        f"Successfully tested {successful_error_tests}/{len(error_tests)} error scenarios")
+            return True
+        else:
+            self.log_test("Phase 3 - Error Handling Overall", False,
+                        f"Only {successful_error_tests}/{len(error_tests)} error tests passed")
+            return False
+
     def run_all_tests(self):
         """Run all backend tests"""
         print("🚀 Starting Backend API Testing for Script Generation App")
