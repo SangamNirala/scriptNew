@@ -135,8 +135,17 @@ const ScriptGenerator = () => {
     setEnhancementExplanation(`${variation.title} - Focus: ${variation.focus_strategy}. ${enhancementRecommendation}`);
   };
 
-  const handleGenerateScript = async (useEnhanced = false) => {
-    const finalPrompt = useEnhanced ? enhancedPrompt : prompt;
+  const handleGenerateScript = async (promptType = "original", variationIndex = null) => {
+    let finalPrompt = prompt;
+    let promptTypeLabel = "original";
+    
+    if (promptType === "enhanced" && variationIndex !== null && enhancementVariations[variationIndex]) {
+      finalPrompt = enhancementVariations[variationIndex].enhanced_prompt;
+      promptTypeLabel = `enhanced (${enhancementVariations[variationIndex].title})`;
+    } else if (promptType === "enhanced" && enhancedPrompt) {
+      finalPrompt = enhancedPrompt;
+      promptTypeLabel = "enhanced";
+    }
     const promptType = useEnhanced ? "enhanced" : "original";
     
     if (!finalPrompt.trim()) {
