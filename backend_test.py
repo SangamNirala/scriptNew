@@ -1032,6 +1032,487 @@ class LegalMateAPITester:
             print(f"❌ Failed - Error: {str(e)}")
             return False, {}
 
+    def test_execution_date_valid_iso_string(self):
+        """Test contract generation with valid ISO date string for execution_date"""
+        # Test with a specific ISO date string (simulating frontend date picker)
+        test_date = "2025-03-15T00:00:00.000Z"
+        expected_formatted_date = "March 15, 2025"
+        
+        contract_data = {
+            "contract_type": "NDA",
+            "jurisdiction": "US",
+            "parties": {
+                "party1_name": "DateTest Corp",
+                "party1_type": "corporation",
+                "party2_name": "Execution Date Tester",
+                "party2_type": "individual"
+            },
+            "terms": {
+                "purpose": "Testing execution date functionality with valid ISO date string",
+                "duration": "2_years"
+            },
+            "special_clauses": [],
+            "execution_date": test_date
+        }
+        
+        success, response = self.run_test(
+            "Contract Generation with Valid ISO Execution Date", 
+            "POST", 
+            "generate-contract", 
+            200, 
+            contract_data,
+            timeout=60
+        )
+        
+        if success and 'contract' in response:
+            contract = response['contract']
+            content = contract.get('content', '')
+            
+            print(f"   Testing execution date processing...")
+            print(f"   Input date: {test_date}")
+            print(f"   Expected formatted date: {expected_formatted_date}")
+            
+            # Check if the formatted date appears in the contract content
+            if expected_formatted_date in content:
+                print(f"   ✅ Execution date correctly formatted and replaced in contract")
+                print(f"   ✅ Found '{expected_formatted_date}' in contract content")
+            else:
+                print(f"   ❌ Expected formatted date '{expected_formatted_date}' not found in contract")
+                # Show what date-related content is in the contract
+                import re
+                date_patterns = re.findall(r'[A-Z][a-z]+ \d{1,2}, \d{4}', content)
+                if date_patterns:
+                    print(f"   Found date patterns: {date_patterns}")
+                else:
+                    print(f"   No date patterns found in contract content")
+            
+            # Check that [Date of Execution] placeholder was replaced
+            if '[Date of Execution]' not in content:
+                print(f"   ✅ [Date of Execution] placeholder successfully replaced")
+            else:
+                print(f"   ❌ [Date of Execution] placeholder still present in contract")
+            
+            # Show a snippet of content around the date
+            lines = content.split('\n')
+            for i, line in enumerate(lines):
+                if 'Date of Execution' in line or expected_formatted_date in line:
+                    print(f"   Date line found: '{line.strip()}'")
+                    break
+            
+        return success, response
+
+    def test_execution_date_null_empty(self):
+        """Test contract generation with null/empty execution_date (should default to current date)"""
+        from datetime import datetime
+        current_date = datetime.now()
+        expected_month = current_date.strftime('%B')
+        expected_day = current_date.strftime('%d').lstrip('0')  # Remove leading zero
+        expected_year = current_date.strftime('%Y')
+        expected_formatted_date = f"{expected_month} {expected_day}, {expected_year}"
+        
+        # Test with null execution_date
+        contract_data_null = {
+            "contract_type": "NDA",
+            "jurisdiction": "US",
+            "parties": {
+                "party1_name": "NullDateTest Corp",
+                "party1_type": "corporation",
+                "party2_name": "Current Date Tester",
+                "party2_type": "individual"
+            },
+            "terms": {
+                "purpose": "Testing execution date functionality with null date (should default to current)",
+                "duration": "1_year"
+            },
+            "special_clauses": [],
+            "execution_date": None
+        }
+        
+        success_null, response_null = self.run_test(
+            "Contract Generation with Null Execution Date", 
+            "POST", 
+            "generate-contract", 
+            200, 
+            contract_data_null,
+            timeout=60
+        )
+        
+        if success_null and 'contract' in response_null:
+            contract = response_null['contract']
+            content = contract.get('content', '')
+            
+            print(f"   Testing null execution date processing...")
+            print(f"   Expected current date: {expected_formatted_date}")
+            
+            # Check if current date appears in the contract content
+            if expected_formatted_date in content:
+                print(f"   ✅ Null execution date correctly defaulted to current date")
+            else:
+                print(f"   ❌ Expected current date '{expected_formatted_date}' not found")
+                # Look for any date patterns
+                import re
+                date_patterns = re.findall(r'[A-Z][a-z]+ \d{1,2}, \d{4}', content)
+                if date_patterns:
+                    print(f"   Found date patterns: {date_patterns}")
+        
+        # Test with empty string execution_date
+        contract_data_empty = contract_data_null.copy()
+        contract_data_empty["execution_date"] = ""
+        
+        success_empty, response_empty = self.run_test(
+            "Contract Generation with Empty Execution Date", 
+            "POST", 
+            "generate-contract", 
+            200, 
+            contract_data_empty,
+            timeout=60
+        )
+        
+        if success_empty and 'contract' in response_empty:
+            contract = response_empty['contract']
+            content = contract.get('content', '')
+            
+            print(f"   Testing empty execution date processing...")
+            
+            # Check if current date appears in the contract content
+            if expected_formatted_date in content:
+                print(f"   ✅ Empty execution date correctly defaulted to current date")
+            else:
+                print(f"   ❌ Expected current date '{expected_formatted_date}' not found")
+        
+        return success_null and success_empty, {"null_test": response_null, "empty_test": response_empty}
+
+    def test_execution_date_formatting_variations(self):
+        """Test execution date formatting with different date values"""
+        test_cases = [
+            {
+                "input_date": "2025-01-01T00:00:00.000Z",
+                "expected_format": "January 1, 2025",
+                "description": "New Year's Day"
+            },
+            {
+                "input_date": "2025-12-31T23:59:59.999Z",
+                "expected_format": "December 31, 2025",
+                "description": "New Year's Eve"
+            },
+            {
+                "input_date": "2025-07-04T12:00:00.000Z",
+                "expected_format": "July 4, 2025",
+                "description": "Independence Day"
+            },
+            {
+                "input_date": "2025-02-14T00:00:00Z",
+                "expected_format": "February 14, 2025",
+                "description": "Valentine's Day (no milliseconds)"
+            }
+        ]
+        
+        all_success = True
+        results = {}
+        
+        for i, test_case in enumerate(test_cases):
+            contract_data = {
+                "contract_type": "freelance_agreement",
+                "jurisdiction": "US",
+                "parties": {
+                    "party1_name": f"DateFormat Test {i+1} LLC",
+                    "party1_type": "llc",
+                    "party2_name": "Date Format Validator",
+                    "party2_type": "individual"
+                },
+                "terms": {
+                    "scope": f"Testing date formatting for {test_case['description']}",
+                    "payment_amount": "$1,500",
+                    "payment_terms": "milestone"
+                },
+                "special_clauses": [],
+                "execution_date": test_case["input_date"]
+            }
+            
+            success, response = self.run_test(
+                f"Date Formatting Test - {test_case['description']}", 
+                "POST", 
+                "generate-contract", 
+                200, 
+                contract_data,
+                timeout=60
+            )
+            
+            if success and 'contract' in response:
+                contract = response['contract']
+                content = contract.get('content', '')
+                
+                print(f"   Testing {test_case['description']}...")
+                print(f"   Input: {test_case['input_date']}")
+                print(f"   Expected: {test_case['expected_format']}")
+                
+                if test_case['expected_format'] in content:
+                    print(f"   ✅ Date correctly formatted as '{test_case['expected_format']}'")
+                else:
+                    print(f"   ❌ Expected format '{test_case['expected_format']}' not found")
+                    all_success = False
+                    # Show what date was actually used
+                    import re
+                    date_patterns = re.findall(r'[A-Z][a-z]+ \d{1,2}, \d{4}', content)
+                    if date_patterns:
+                        print(f"   Found instead: {date_patterns}")
+                
+                results[test_case['description']] = {
+                    "success": test_case['expected_format'] in content,
+                    "contract_id": contract.get('id'),
+                    "input_date": test_case['input_date'],
+                    "expected_format": test_case['expected_format']
+                }
+            else:
+                all_success = False
+                results[test_case['description']] = {"success": False, "error": "Contract generation failed"}
+        
+        return all_success, results
+
+    def test_execution_date_invalid_formats(self):
+        """Test execution date error handling with invalid date formats"""
+        from datetime import datetime
+        current_date = datetime.now()
+        expected_fallback_date = current_date.strftime('%B %d, %Y').replace(' 0', ' ')
+        
+        invalid_date_cases = [
+            {
+                "input_date": "invalid-date-string",
+                "description": "Invalid date string"
+            },
+            {
+                "input_date": "2025-13-45T25:70:80.000Z",
+                "description": "Invalid date components"
+            },
+            {
+                "input_date": "not-a-date",
+                "description": "Non-date string"
+            },
+            {
+                "input_date": "2025/03/15",
+                "description": "Wrong date format (slash separated)"
+            }
+        ]
+        
+        all_success = True
+        results = {}
+        
+        for i, test_case in enumerate(invalid_date_cases):
+            contract_data = {
+                "contract_type": "NDA",
+                "jurisdiction": "US",
+                "parties": {
+                    "party1_name": f"InvalidDate Test {i+1} Corp",
+                    "party1_type": "corporation",
+                    "party2_name": "Error Handling Tester",
+                    "party2_type": "individual"
+                },
+                "terms": {
+                    "purpose": f"Testing error handling for {test_case['description']}",
+                    "duration": "1_year"
+                },
+                "special_clauses": [],
+                "execution_date": test_case["input_date"]
+            }
+            
+            success, response = self.run_test(
+                f"Invalid Date Test - {test_case['description']}", 
+                "POST", 
+                "generate-contract", 
+                200,  # Should still succeed but fallback to current date
+                contract_data,
+                timeout=60
+            )
+            
+            if success and 'contract' in response:
+                contract = response['contract']
+                content = contract.get('content', '')
+                
+                print(f"   Testing {test_case['description']}...")
+                print(f"   Invalid input: {test_case['input_date']}")
+                print(f"   Expected fallback to current date: {expected_fallback_date}")
+                
+                # Check if it fell back to current date
+                current_month = current_date.strftime('%B')
+                current_year = current_date.strftime('%Y')
+                
+                if current_month in content and current_year in content:
+                    print(f"   ✅ Invalid date correctly fell back to current date")
+                else:
+                    print(f"   ❌ Fallback to current date may have failed")
+                    all_success = False
+                    # Show what date was actually used
+                    import re
+                    date_patterns = re.findall(r'[A-Z][a-z]+ \d{1,2}, \d{4}', content)
+                    if date_patterns:
+                        print(f"   Found date patterns: {date_patterns}")
+                
+                # Ensure [Date of Execution] placeholder was still replaced
+                if '[Date of Execution]' not in content:
+                    print(f"   ✅ [Date of Execution] placeholder was replaced despite invalid input")
+                else:
+                    print(f"   ❌ [Date of Execution] placeholder not replaced")
+                    all_success = False
+                
+                results[test_case['description']] = {
+                    "success": current_month in content and current_year in content,
+                    "contract_id": contract.get('id'),
+                    "input_date": test_case['input_date']
+                }
+            else:
+                print(f"   ❌ Contract generation failed for {test_case['description']}")
+                all_success = False
+                results[test_case['description']] = {"success": False, "error": "Contract generation failed"}
+        
+        return all_success, results
+
+    def test_execution_date_pdf_integration(self):
+        """Test that execution date appears correctly in generated PDFs"""
+        test_date = "2025-06-15T00:00:00.000Z"
+        expected_formatted_date = "June 15, 2025"
+        
+        # Generate contract with specific execution date
+        contract_data = {
+            "contract_type": "partnership_agreement",
+            "jurisdiction": "US",
+            "parties": {
+                "party1_name": "PDF Date Test Corp",
+                "party1_type": "corporation",
+                "party2_name": "Date Integration Partners LLC",
+                "party2_type": "llc"
+            },
+            "terms": {
+                "business_purpose": "Testing execution date integration in PDF generation",
+                "profit_split": "50/50",
+                "capital_contribution": "$25,000 each"
+            },
+            "special_clauses": ["Date verification clause"],
+            "execution_date": test_date
+        }
+        
+        # Generate contract
+        success, response = self.run_test(
+            "Contract Generation for PDF Date Integration", 
+            "POST", 
+            "generate-contract", 
+            200, 
+            contract_data,
+            timeout=60
+        )
+        
+        if not success or 'contract' not in response:
+            print("❌ Failed to generate contract for PDF date integration test")
+            return False, {}
+        
+        contract = response['contract']
+        contract_id = contract.get('id')
+        content = contract.get('content', '')
+        
+        print(f"   Generated contract with execution date: {test_date}")
+        print(f"   Expected formatted date in content: {expected_formatted_date}")
+        
+        # Verify date is in contract content
+        if expected_formatted_date in content:
+            print(f"   ✅ Execution date correctly formatted in contract content")
+        else:
+            print(f"   ❌ Expected date '{expected_formatted_date}' not found in contract content")
+        
+        # Test original PDF download
+        pdf_url = f"{self.api_url}/contracts/{contract_id}/download-pdf"
+        
+        self.tests_run += 1
+        print(f"\n🔍 Testing PDF Integration - Original PDF Download...")
+        
+        try:
+            pdf_response = requests.get(pdf_url, timeout=30)
+            
+            if pdf_response.status_code == 200:
+                print(f"   ✅ PDF download successful")
+                
+                # Check PDF content for the execution date
+                try:
+                    pdf_content_str = pdf_response.content.decode('latin-1', errors='ignore')
+                    
+                    if expected_formatted_date in pdf_content_str:
+                        print(f"   ✅ Execution date '{expected_formatted_date}' found in PDF content")
+                    else:
+                        print(f"   ❌ Execution date '{expected_formatted_date}' not found in PDF")
+                        # Look for any date patterns in PDF
+                        import re
+                        date_patterns = re.findall(r'[A-Z][a-z]+ \d{1,2}, \d{4}', pdf_content_str)
+                        if date_patterns:
+                            print(f"   Found date patterns in PDF: {date_patterns}")
+                    
+                    # Check that [Date of Execution] placeholder is not in PDF
+                    if '[Date of Execution]' not in pdf_content_str:
+                        print(f"   ✅ [Date of Execution] placeholder not present in PDF (correctly replaced)")
+                    else:
+                        print(f"   ❌ [Date of Execution] placeholder still present in PDF")
+                        
+                except Exception as e:
+                    print(f"   ⚠️  Could not analyze PDF content: {str(e)}")
+                
+                # Test edited PDF with same date
+                edited_contract = contract.copy()
+                edited_contract['content'] = edited_contract['content'].replace(
+                    "Testing execution date integration in PDF generation",
+                    "EDITED: Testing execution date integration in PDF generation with modified content"
+                )
+                
+                edited_pdf_data = {"contract": edited_contract}
+                edited_pdf_url = f"{self.api_url}/contracts/download-pdf-edited"
+                
+                print(f"\n   Testing Edited PDF with Execution Date...")
+                
+                try:
+                    edited_pdf_response = requests.post(
+                        edited_pdf_url, 
+                        json=edited_pdf_data, 
+                        headers={'Content-Type': 'application/json'}, 
+                        timeout=30
+                    )
+                    
+                    if edited_pdf_response.status_code == 200:
+                        print(f"   ✅ Edited PDF generation successful")
+                        
+                        # Check edited PDF content for the execution date
+                        try:
+                            edited_pdf_content_str = edited_pdf_response.content.decode('latin-1', errors='ignore')
+                            
+                            if expected_formatted_date in edited_pdf_content_str:
+                                print(f"   ✅ Execution date '{expected_formatted_date}' preserved in edited PDF")
+                                self.tests_passed += 1
+                            else:
+                                print(f"   ❌ Execution date '{expected_formatted_date}' not found in edited PDF")
+                            
+                            # Verify edited content is present
+                            if 'EDITED:' in edited_pdf_content_str:
+                                print(f"   ✅ Edited content found in edited PDF")
+                            else:
+                                print(f"   ⚠️  Could not verify edited content in PDF")
+                                
+                        except Exception as e:
+                            print(f"   ⚠️  Could not analyze edited PDF content: {str(e)}")
+                    else:
+                        print(f"   ❌ Edited PDF generation failed - Status: {edited_pdf_response.status_code}")
+                        
+                except Exception as e:
+                    print(f"   ❌ Edited PDF generation error: {str(e)}")
+                
+                return True, {
+                    "contract_id": contract_id,
+                    "input_date": test_date,
+                    "expected_format": expected_formatted_date,
+                    "pdf_size": len(pdf_response.content)
+                }
+            else:
+                print(f"   ❌ PDF download failed - Status: {pdf_response.status_code}")
+                return False, {}
+                
+        except Exception as e:
+            print(f"   ❌ PDF download error: {str(e)}")
+            return False, {}
+
 def main():
     print("🚀 Starting LegalMate AI Backend API Tests")
     print("=" * 60)
