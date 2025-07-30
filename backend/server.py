@@ -42,6 +42,13 @@ GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
 # Initialize Context Integration System for Phase 2
 context_system = ContextIntegrationSystem()
 
+# Phase 3: Initialize Advanced Analytics and Validation Systems
+advanced_context_engine = AdvancedContextEngine()
+script_quality_analyzer = ScriptQualityAnalyzer()
+script_validator = ScriptValidator()
+script_performance_tracker = ScriptPerformanceTracker(db)
+script_preview_generator = ScriptPreviewGenerator()
+
 # Create the main app without a prefix
 app = FastAPI()
 
