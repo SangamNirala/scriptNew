@@ -1948,7 +1948,10 @@ async def get_contract_analyses():
     """Get all contract analyses"""
     try:
         analyses = await db.contract_analyses.find().to_list(100)
-        return analyses
+        # Convert ObjectId to string for JSON serialization
+        for analysis in analyses:
+            analysis = convert_objectid_to_str(analysis)
+        return {"analyses": analyses, "count": len(analyses)}
     except Exception as e:
         logging.error(f"Error fetching analyses: {e}")
         raise HTTPException(status_code=500, detail=f"Error fetching analyses: {str(e)}")
@@ -1958,7 +1961,10 @@ async def get_contract_comparisons():
     """Get all contract comparisons"""
     try:
         comparisons = await db.contract_comparisons.find().to_list(100)
-        return comparisons
+        # Convert ObjectId to string for JSON serialization
+        for comparison in comparisons:
+            comparison = convert_objectid_to_str(comparison)
+        return {"comparisons": comparisons, "count": len(comparisons)}
     except Exception as e:
         logging.error(f"Error fetching comparisons: {e}")
         raise HTTPException(status_code=500, detail=f"Error fetching comparisons: {str(e)}")
