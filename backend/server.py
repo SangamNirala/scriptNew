@@ -366,54 +366,82 @@ class LegalMateAgents:
         return re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', text)
 
     @staticmethod
-    def process_signature_image_direct(signature_base64: str) -> io.BytesIO:
-        """Process base64 signature image directly without PIL processing for better PDF compatibility"""
+    def process_signature_image_robust(signature_base64: str) -> io.BytesIO:
+        """
+        Robust signature image processing that converts image to standardized base64 format
+        and creates reliable BytesIO buffer for reportlab PDF generation
+        """
         try:
             # Remove data URL prefix if present
             if signature_base64.startswith('data:image'):
                 signature_base64 = signature_base64.split(',')[1]
             
-            # Decode base64 data directly
+            # Decode the base64 data
             signature_data = base64.b64decode(signature_base64)
             
-            # Create BytesIO buffer directly from the decoded data
-            output_buffer = io.BytesIO(signature_data)
-            output_buffer.seek(0)
-            return output_buffer
+            # Open image with PIL for processing
+            input_buffer = io.BytesIO(signature_data)
+            
+            with PILImage.open(input_buffer) as original_image:
+                # Convert to RGB to ensure compatibility (removes alpha channel if present)
+                if original_image.mode in ('RGBA', 'LA', 'P'):
+                    # Create white background for transparent images
+                    rgb_image = PILImage.new('RGB', original_image.size, (255, 255, 255))
+                    if original_image.mode == 'P':
+                        original_image = original_image.convert('RGBA')
+                    rgb_image.paste(original_image, mask=original_image.split()[-1] if original_image.mode in ('RGBA', 'LA') else None)
+                    processed_image = rgb_image
+                elif original_image.mode != 'RGB':
+                    processed_image = original_image.convert('RGB')
+                else:
+                    processed_image = original_image.copy()
+                
+                # Resize if the image is too large (max 400x200 for signatures)
+                max_width, max_height = 400, 200
+                if processed_image.size[0] > max_width or processed_image.size[1] > max_height:
+                    processed_image.thumbnail((max_width, max_height), PILImage.Resampling.LANCZOS)
+                
+                # Save the processed image to a new buffer as PNG
+                processed_buffer = io.BytesIO()
+                processed_image.save(processed_buffer, format='PNG', optimize=True)
+                
+                # Convert processed image back to base64 for consistent handling
+                processed_buffer.seek(0)
+                processed_base64 = base64.b64encode(processed_buffer.getvalue()).decode('utf-8')
+                
+                # Create final BytesIO buffer from the processed base64
+                final_signature_data = base64.b64decode(processed_base64)
+                final_buffer = io.BytesIO(final_signature_data)
+                final_buffer.seek(0)
+                
+                logging.info(f"Successfully processed signature image: {processed_image.size} pixels, {len(final_signature_data)} bytes")
+                return final_buffer
                 
         except Exception as e:
-            logging.error(f"Error processing signature image directly: {e}")
-            raise Exception(f"Invalid signature image: {str(e)}")
+            logging.error(f"Error in robust signature processing: {str(e)}")
+            # Try fallback method - direct processing
+            try:
+                logging.info("Attempting fallback signature processing...")
+                if signature_base64.startswith('data:image'):
+                    signature_base64 = signature_base64.split(',')[1]
+                
+                signature_data = base64.b64decode(signature_base64)
+                fallback_buffer = io.BytesIO(signature_data)
+                fallback_buffer.seek(0)
+                return fallback_buffer
+            except Exception as fallback_error:
+                logging.error(f"Fallback signature processing also failed: {fallback_error}")
+                raise Exception(f"Unable to process signature image: {str(e)}")
     
     @staticmethod
     def process_signature_image(signature_base64: str) -> io.BytesIO:
-        """Process base64 signature image and return a BytesIO object for reportlab"""
-        try:
-            # Remove data URL prefix if present
-            if signature_base64.startswith('data:image'):
-                signature_base64 = signature_base64.split(',')[1]
-            
-            # Decode base64 data
-            signature_data = base64.b64decode(signature_base64)
-            
-            # Validate that this is actually a valid image by opening it with PIL
-            # Create a copy of the data for validation
-            validation_buffer = io.BytesIO(signature_data)
-            
-            with PILImage.open(validation_buffer) as test_image:
-                # Convert to RGB if necessary and ensure it's valid
-                if test_image.mode not in ('RGB', 'RGBA'):
-                    test_image = test_image.convert('RGB')
-                
-                # Create a new BytesIO buffer with processed image
-                output_buffer = io.BytesIO()
-                test_image.save(output_buffer, format='PNG')
-                output_buffer.seek(0)
-                return output_buffer
-                
-        except Exception as e:
-            logging.error(f"Error processing signature image: {e}")
-            raise Exception(f"Invalid signature image: {str(e)}")
+        """Legacy method - delegates to robust processing"""
+        return LegalMateAgents.process_signature_image_robust(signature_base64)
+    
+    @staticmethod
+    def process_signature_image_direct(signature_base64: str) -> io.BytesIO:
+        """Legacy method - delegates to robust processing"""  
+        return LegalMateAgents.process_signature_image_robust(signature_base64)
 
     @staticmethod
     def process_signature_content(content: str, first_party_signature: str = None, second_party_signature: str = None) -> tuple:
