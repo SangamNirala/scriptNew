@@ -3186,20 +3186,15 @@ class LegalMateAPITester:
             return False, {}
         
         # Test party1_name suggestion should use user profile name
-        suggestion_request = {
-            "contract_type": "freelance_agreement",
-            "field_name": "party1_name",
-            "user_id": self.user_profile_id,
-            "company_id": self.company_profile_id,
-            "context": {}
-        }
+        query_params = f"?contract_type=freelance_agreement&field_name=party1_name&user_id={self.user_profile_id}&company_id={self.company_profile_id}"
+        endpoint = f"contract-wizard/suggestions{query_params}"
         
         success, response = self.run_test(
             "Test Profile-Based Auto-Suggestions",
             "POST",
-            "contract-wizard/suggestions",
+            endpoint,
             200,
-            suggestion_request
+            None  # No JSON body needed
         )
         
         if success and response:
