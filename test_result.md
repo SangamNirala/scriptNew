@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Fixed PDF download functionality and improved contract formatting. Resolved issue where PDF section headings contained asterisks instead of proper bold formatting. The 'Download PDF' button was not working because it had no onClick handler and there was no backend endpoint for PDF generation. Added PDF generation using reportlab library and proper download functionality. Additionally improved contract formatting by: 1) Removing all asterisk (*) expressions, 2) Ensuring proper bold formatting for headings (converted **markdown** to <b>HTML</b> for PDF rendering), 3) Adding Date of Execution line before special clauses, 4) Applied these changes to all contract types (NDA, Freelance, Partnership). PDFs now display bold headings without any asterisk symbols."
+user_problem_statement: "Added contract editing functionality to the 'Contract Generated Successfully' page. Users can now edit contract content through an 'Edit' tab (positioned before Preview tab), make changes, and confirm them with a green 'Confirm' button that's initially disabled until edits are made. When confirmed, the app automatically switches to Preview tab showing the edited content. PDF downloads now use the edited content if available. The tab structure is now: Edit → Preview → Clauses. Added new backend endpoint '/api/contracts/download-pdf-edited' to handle PDF generation with edited content."
 
 backend:
   - task: "PDF generation endpoint and contract formatting improvements"
@@ -134,6 +134,21 @@ backend:
         -working: true
         -agent: "testing"
         -comment: "✅ PDF bold formatting functionality FULLY WORKING. Comprehensive testing completed: 1) ✅ Generated new contracts across all types (NDA, Freelance, Partnership) with proper **bold** formatting in contract content. 2) ✅ Downloaded PDFs for all contract types successfully with 200 status, correct Content-Type (application/pdf), and proper download headers. 3) ✅ CRITICAL REQUIREMENT MET: PDF files contain NO asterisk (*) symbols - all **markdown bold** formatting is correctly converted to proper HTML <b>bold</b> tags that reportlab renders as actual bold text. 4) ✅ Section headings appear in bold format WITHOUT asterisks (e.g., '1. Purpose' is bold, not '**1. Purpose**'). 5) ✅ Contract title and metadata remain properly formatted in PDFs. 6) ✅ All contract content formatting requirements met: asterisks only appear in **bold** patterns in source content (48 asterisks = 12 bold patterns × 4 asterisks each), Date of Execution placeholder present, clean professional formatting. The convert_markdown_to_html_bold() function is working perfectly to convert **text** to <b>text</b> for reportlab PDF generation. PDF bold formatting fix is completely successful."
+        -working: true
+        -agent: "main"
+        -comment: "Added new endpoint '/api/contracts/download-pdf-edited' to handle PDF generation for edited contract content. This endpoint accepts edited contract data via POST request and generates PDFs with the modified content, maintaining the same formatting and structure as the original PDF endpoint. The PDF includes an 'Edited' status indicator in the metadata section."
+
+  - task: "Edited PDF generation endpoint for modified contracts"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        -working: false
+        -agent: "main"
+        -comment: "Added new POST endpoint '/api/contracts/download-pdf-edited' that accepts edited contract content and generates PDF with the modified text. Includes EditedContractRequest model for proper request validation. The endpoint uses the same PDF generation logic as the original download endpoint but works with edited content."
 
 frontend:
   - task: "PDF download button functionality"
@@ -148,6 +163,18 @@ frontend:
         -agent: "main"
         -comment: "Added downloadPDF function and onClick handler to Download PDF button. Function uses axios to call the new backend endpoint and handles file download with proper blob handling and filename generation."
 
+  - task: "Contract editing functionality with Edit tab"
+    implemented: true
+    working: false
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        -working: false
+        -agent: "main"
+        -comment: "Added comprehensive contract editing functionality: 1) New 'Edit' tab positioned before Preview tab 2) Textarea for editing contract content with proper state management 3) 'Confirm' button that's initially disabled and turns green when edits are made 4) Automatic tab switching to Preview after confirming edits 5) Updated downloadPDF function to handle edited content via new backend endpoint 6) Tab structure now: Edit → Preview → Clauses 7) Preview tab shows edited content when available, original content otherwise"
+
 metadata:
   created_by: "main_agent"
   version: "1.0"
@@ -156,6 +183,8 @@ metadata:
 
 test_plan:
   current_focus:
+    - "Edited PDF generation endpoint for modified contracts"
+    - "Contract editing functionality with Edit tab"
     - "PDF download button functionality"
   stuck_tasks: []
   test_all: false
@@ -163,10 +192,4 @@ test_plan:
 
 agent_communication:
     -agent: "main"
-    -message: "Fixed PDF download functionality by: 1) Adding reportlab library for PDF generation, 2) Creating new backend endpoint /contracts/{contract_id}/download-pdf that generates formatted PDFs with contract metadata and content, 3) Adding downloadPDF function to frontend that calls the endpoint and handles file download. The Download PDF button now has proper onClick handler. Additionally improved contract formatting across all contract types by updating generation prompts to remove asterisk expressions, use proper bold formatting, and include Date of Execution placeholder. Added post-processing function to ensure formatting requirements are consistently applied. FINAL UPDATE: Fixed PDF bold formatting by adding convert_markdown_to_html_bold() function to convert **markdown** to <b>HTML</b> tags for proper reportlab rendering, ensuring PDFs display bold headings without asterisk symbols."
-    -agent: "testing"
-    -message: "✅ Backend PDF generation endpoint testing completed successfully. All PDF download functionality is working correctly: 1) Valid contracts generate proper PDFs with correct headers and content, 2) Invalid contract IDs return appropriate 404 errors, 3) PDF format is valid and includes all required metadata (contract ID, jurisdiction, compliance score, creation date) and full contract content. The endpoint /api/contracts/{contract_id}/download-pdf is fully functional. FINAL CONFIRMATION: PDF bold formatting fix is completely successful - PDFs now display bold headings without any asterisk symbols, meeting all formatting requirements."
-    -agent: "testing"
-    -message: "✅ Contract formatting improvements testing completed. Tested all contract types (NDA, Freelance, Partnership) with comprehensive formatting validation: 1) ✅ No asterisk (*) expressions found in any generated contracts - successfully removed. 2) ✅ [Date of Execution] placeholder properly placed in all contract types. 3) ✅ Clean, professional formatting with proper paragraph structure and spacing. 4) ✅ PDF download continues to work with newly formatted contracts. Minor issue: **bold** formatting for headings is missing - the format_contract_content() function appears to be removing all bold formatting instead of preserving proper **bold** syntax. Core functionality is working correctly, but bold formatting needs fine-tuning."
-    -agent: "testing"
-    -message: "✅ PDF BOLD FORMATTING TESTING COMPLETED SUCCESSFULLY. Comprehensive testing of the updated PDF generation functionality confirms the fix is working perfectly: 1) ✅ Generated new contracts across all types (NDA, Freelance, Partnership) with proper **bold** formatting preserved in contract content. 2) ✅ Downloaded PDFs successfully with correct headers and format validation. 3) ✅ CRITICAL REQUIREMENT FULLY MET: PDF files contain zero asterisk (*) symbols - the convert_markdown_to_html_bold() function successfully converts **markdown bold** to <b>HTML bold</b> tags that reportlab renders as actual bold text in PDFs. 4) ✅ Section headings appear in bold format WITHOUT asterisks (e.g., '1. Purpose' is bold, not '**1. Purpose**'). 5) ✅ Contract titles, metadata, and content are properly formatted in PDFs. 6) ✅ All formatting requirements met across all contract types. The PDF bold formatting fix is completely successful and working as intended. No further testing needed for this functionality."
+    -message: "Added complete contract editing functionality to the application. Users can now edit contract content through a dedicated 'Edit' tab, confirm changes with a green button, and download PDFs containing their edits. Backend now supports generating PDFs from edited content through new endpoint '/api/contracts/download-pdf-edited'. The interface provides seamless editing experience with automatic tab switching and proper state management for edited vs original content. Ready for testing to ensure all editing and PDF generation functionality works correctly."
