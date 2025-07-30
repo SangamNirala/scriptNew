@@ -482,41 +482,89 @@ Create educational enhancements that maximize learning outcomes in the {request.
             system_message=strategy["system_prompt"]
         ).with_model("gemini", "gemini-2.0-flash")
         
-        enhancement_prompt = f"""CHAIN-OF-THOUGHT ENHANCEMENT PROCESS:
+        enhancement_prompt = f"""COMPREHENSIVE SCRIPT FRAMEWORK CREATION:
 
-STEP 1 - ANALYZE THE ORIGINAL PROMPT:
-Original: "{request.original_prompt}"
+STEP 1 - DEEP ANALYSIS AND UNDERSTANDING:
+Original Prompt: "{request.original_prompt}"
 Video Type: {request.video_type}
 Industry: {request.industry_focus}
 Target Audience: {audience_analysis.recommended_tone} tone, {audience_analysis.complexity_level} complexity
+Cultural Context: {', '.join(audience_analysis.cultural_considerations)}
+Platform Optimizations: {', '.join(audience_analysis.platform_optimizations)}
 
-STEP 2 - IDENTIFY ENHANCEMENT OPPORTUNITIES:
-Think about what's missing from the original prompt in terms of:
-- Emotional engagement potential
-- Industry-specific elements  
-- Audience connection points
-- Technical execution details
-- Storytelling structure
+STEP 2 - STRATEGIC FRAMEWORK IDENTIFICATION:
+Based on your expertise in {strategy['focus']} optimization, identify:
+- Core psychological triggers to activate
+- Narrative structure most suitable for this content type
+- Industry-specific best practices to incorporate
+- Platform-specific optimization opportunities
+- Engagement mechanics to implement
 
-STEP 3 - APPLY {strategy['focus'].upper()} STRATEGY:
-Using your expertise in {strategy['focus']} enhancement, what specific elements should be added?
+STEP 3 - COMPREHENSIVE SCRIPT FRAMEWORK CREATION:
+Create a detailed, ready-to-use script framework that includes:
 
-STEP 4 - GENERATE ENHANCED PROMPT:
-Create a comprehensive enhanced prompt that incorporates all improvements.
+A) OPENING HOOK FRAMEWORK:
+- Attention-grabbing first 3 seconds
+- Pattern interrupt or curiosity gap
+- Audience identification statement
+- Promise/value proposition setup
 
-STEP 5 - EVALUATE TARGET ENGAGEMENT:
-What type of audience response and engagement should this enhanced prompt generate?
+B) NARRATIVE STRUCTURE TEMPLATE:
+- Act 1: Setup and problem identification [specific templates]
+- Act 2: Development and tension building [specific templates]
+- Act 3: Resolution and call-to-action [specific templates]
 
-Please provide your response in this EXACT format:
+C) DIALOGUE TEMPLATES AND TRANSITIONS:
+- Specific phrases optimized for {strategy['focus']} goals  
+- Smooth transition templates between sections
+- Placeholder templates: [PRODUCT_NAME], [PAIN_POINT], [BENEFIT], [SOCIAL_PROOF]
+- Voice and tone guidelines
 
-ENHANCED_PROMPT:
-[Your comprehensive enhanced prompt - minimum 300 words, incorporating all {strategy['focus']} enhancements]
+D) PRODUCTION GUIDELINES:
+- Pacing instructions (fast/medium/slow for each section)
+- Visual cue suggestions
+- Music/sound effect recommendations
+- Technical specifications for optimal delivery
+
+E) CALL-TO-ACTION FRAMEWORK:
+- Action-oriented language specific to content type
+- Urgency/scarcity elements where appropriate
+- Multiple CTA options based on audience readiness
+- Platform-specific optimization
+
+STEP 4 - INDUSTRY-SPECIFIC CUSTOMIZATION:
+Incorporate {request.industry_focus} industry elements:
+- Terminology and jargon appropriate for audience level
+- Industry best practices and standards
+- Relevant case studies or examples
+- Compliance considerations if applicable
+
+STEP 5 - PSYCHOLOGICAL ENGAGEMENT INTEGRATION:
+Embed {strategy['focus']}-optimized psychological elements:
+- Specific trigger points throughout the framework
+- Engagement maintenance strategies
+- Retention and recall optimization techniques
+- Social sharing psychological motivators
+
+Please provide your response in this EXACT structured format:
+
+SCRIPT_FRAMEWORK:
+[Comprehensive, ready-to-use script framework with all templates, placeholders, and specific instructions - minimum 500 words with detailed structure]
+
+PRODUCTION_GUIDELINES:
+[Specific production instructions including pacing, visual cues, technical requirements, and execution details]
 
 TARGET_ENGAGEMENT:
-[Specific description of expected audience response and engagement outcomes]
+[Detailed description of expected audience response, engagement patterns, and success metrics]
 
 INDUSTRY_ELEMENTS:
-[List 3-5 industry-specific elements you incorporated]"""
+[List of 5-7 specific industry elements, best practices, and customizations incorporated]
+
+PSYCHOLOGICAL_TRIGGERS:
+[List of 5-7 specific psychological triggers and engagement mechanics integrated into the framework]
+
+PLATFORM_ADAPTATIONS:
+[Specific modifications for different social media platforms and content distribution channels]"""
 
         response = await chat.send_message(UserMessage(text=enhancement_prompt))
         
