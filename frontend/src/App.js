@@ -171,7 +171,7 @@ function App() {
               id="party1_name"
               placeholder="Company or Individual Name"
               value={contractData.parties.party1_name || ''}
-              onChange={handleParty1NameChange}
+              onChange={(e) => updateParties('party1_name', e.target.value)}
             />
           </div>
           <div>
