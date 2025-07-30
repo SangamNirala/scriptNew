@@ -46,6 +46,7 @@ class ContractRequest(BaseModel):
     terms: Dict[str, Any] 
     jurisdiction: str = "US"
     special_clauses: Optional[List[str]] = []
+    execution_date: Optional[str] = None
 
 class GeneratedContract(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
