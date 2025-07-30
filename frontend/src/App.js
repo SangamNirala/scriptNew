@@ -113,7 +113,6 @@ const ScriptGenerator = () => {
         );
         
         setEnhancedPrompt(bestVariation.enhanced_prompt);
-        setSelectedVariation(bestVariation);
         
         // Use the recommendation as explanation
         setEnhancementExplanation(data.recommendation || `${bestVariation.title} - Focus: ${bestVariation.focus_strategy}`);
