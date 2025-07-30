@@ -3241,6 +3241,677 @@ KEY RETENTION ELEMENTS:
             self.log_test("Legacy Prompt - Exception", False, f"Request failed: {str(e)}")
             return False
 
+    def test_phase2_enhance_prompt_v2_endpoint(self):
+        """Test Phase 2: /api/enhance-prompt-v2 endpoint with Dynamic Context Integration"""
+        print("\n=== Testing Phase 2: Enhanced Prompt V2 with Context Integration ===")
+        
+        # Test Case 1: Basic Phase 2 functionality
+        test_prompt = "Create a video about healthy cooking tips"
+        payload = {
+            "original_prompt": test_prompt,
+            "video_type": "general",
+            "industry_focus": "health",
+            "enhancement_count": 3
+        }
+        
+        try:
+            response = self.session.post(
+                f"{self.backend_url}/enhance-prompt-v2",
+                json=payload,
+                timeout=90  # Longer timeout for context integration
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Verify Phase 2 response structure
+                required_fields = [
+                    "original_prompt", "audience_analysis", "enhancement_variations", 
+                    "quality_metrics", "recommendation", "industry_insights", "enhancement_methodology"
+                ]
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if missing_fields:
+                    self.log_test("Phase 2 Enhance V2 - Basic Structure", False,
+                                f"Missing required fields: {missing_fields}")
+                    return False
+                
+                self.log_test("Phase 2 Enhance V2 - Basic Structure", True,
+                            "All required Phase 2 fields present")
+                
+                # Test Case 2: Verify Phase 2 metadata and context integration
+                if 'phase' in data and data['phase'] == 'v2_context_integration':
+                    self.log_test("Phase 2 Enhance V2 - Phase Identification", True,
+                                "Phase 2 context integration properly identified")
+                else:
+                    self.log_test("Phase 2 Enhance V2 - Phase Identification", False,
+                                "Phase 2 identification missing or incorrect")
+                
+                # Test Case 3: Verify context metadata
+                if 'context_metadata' in data:
+                    context_metadata = data['context_metadata']
+                    if isinstance(context_metadata, dict) and context_metadata:
+                        self.log_test("Phase 2 Enhance V2 - Context Metadata", True,
+                                    f"Context metadata present with {len(context_metadata)} fields")
+                    else:
+                        self.log_test("Phase 2 Enhance V2 - Context Metadata", False,
+                                    "Context metadata empty or invalid")
+                else:
+                    self.log_test("Phase 2 Enhance V2 - Context Metadata", False,
+                                "Context metadata missing from response")
+                
+                # Test Case 4: Verify trend alignment score
+                if 'trend_alignment_score' in data:
+                    trend_score = data['trend_alignment_score']
+                    if isinstance(trend_score, (int, float)) and 0 <= trend_score <= 1:
+                        self.log_test("Phase 2 Enhance V2 - Trend Alignment Score", True,
+                                    f"Valid trend alignment score: {trend_score:.3f}")
+                    else:
+                        self.log_test("Phase 2 Enhance V2 - Trend Alignment Score", False,
+                                    f"Invalid trend alignment score: {trend_score}")
+                else:
+                    self.log_test("Phase 2 Enhance V2 - Trend Alignment Score", False,
+                                "Trend alignment score missing")
+                
+                # Test Case 5: Verify enhanced methodology mentions context integration
+                methodology = data.get("enhancement_methodology", "")
+                if "context integration" in methodology.lower() or "real-time" in methodology.lower():
+                    self.log_test("Phase 2 Enhance V2 - Enhanced Methodology", True,
+                                "Methodology properly describes Phase 2 context integration")
+                else:
+                    self.log_test("Phase 2 Enhance V2 - Enhanced Methodology", False,
+                                "Methodology doesn't mention Phase 2 context integration features")
+                
+                # Test Case 6: Verify enhancement quality (should be higher than Phase 1)
+                quality_metrics = data.get("quality_metrics", {})
+                overall_score = quality_metrics.get("overall_quality_score", 0)
+                improvement_ratio = quality_metrics.get("improvement_ratio", 0)
+                
+                if overall_score >= 7.0:  # Phase 2 should have high quality
+                    self.log_test("Phase 2 Enhance V2 - Quality Score", True,
+                                f"High Phase 2 quality score: {overall_score:.1f}/10")
+                else:
+                    self.log_test("Phase 2 Enhance V2 - Quality Score", False,
+                                f"Phase 2 quality score too low: {overall_score:.1f}/10")
+                
+                if improvement_ratio >= 50.0:  # Phase 2 should show significant improvement
+                    self.log_test("Phase 2 Enhance V2 - Improvement Ratio", True,
+                                f"Excellent Phase 2 improvement ratio: {improvement_ratio:.1f}x")
+                else:
+                    self.log_test("Phase 2 Enhance V2 - Improvement Ratio", False,
+                                f"Phase 2 improvement ratio too low: {improvement_ratio:.1f}x")
+                
+                return True
+                
+            else:
+                self.log_test("Phase 2 Enhance V2 - HTTP Response", False,
+                            f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_test("Phase 2 Enhance V2 - Exception", False, f"Request failed: {str(e)}")
+            return False
+
+    def test_phase2_context_integration_system(self):
+        """Test Phase 2: Context Integration System with all 6 context layers"""
+        print("\n=== Testing Phase 2: Context Integration System (6 Context Layers) ===")
+        
+        # Test different industry/platform combinations to verify context integration
+        test_scenarios = [
+            {
+                "name": "Health Industry - YouTube",
+                "payload": {
+                    "original_prompt": "Create a video about healthy cooking tips for busy professionals",
+                    "video_type": "educational",
+                    "industry_focus": "health",
+                    "target_platform": "youtube",
+                    "enhancement_count": 3
+                }
+            },
+            {
+                "name": "Tech Industry - TikTok", 
+                "payload": {
+                    "original_prompt": "Explain artificial intelligence basics in simple terms",
+                    "video_type": "educational",
+                    "industry_focus": "tech",
+                    "target_platform": "tiktok",
+                    "enhancement_count": 3
+                }
+            },
+            {
+                "name": "Marketing Industry - LinkedIn",
+                "payload": {
+                    "original_prompt": "Best social media marketing strategies for 2025",
+                    "video_type": "marketing",
+                    "industry_focus": "marketing", 
+                    "target_platform": "linkedin",
+                    "enhancement_count": 3
+                }
+            }
+        ]
+        
+        successful_scenarios = 0
+        context_layers_verified = set()
+        
+        for scenario in test_scenarios:
+            try:
+                response = self.session.post(
+                    f"{self.backend_url}/enhance-prompt-v2",
+                    json=scenario["payload"],
+                    timeout=120  # Extended timeout for context integration
+                )
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    
+                    # Verify context metadata contains the 6 context layers
+                    context_metadata = data.get("context_metadata", {})
+                    
+                    # Expected context layers from Phase 2 specification
+                    expected_layers = [
+                        "trend_analysis",      # SERP API integration
+                        "platform_algorithm",  # Platform-specific optimization
+                        "competitor_analysis", # Competitive intelligence
+                        "audience_psychology", # Audience profiling
+                        "seasonal_relevance",  # Cultural timing context
+                        "performance_history"  # Performance prediction
+                    ]
+                    
+                    layers_found = 0
+                    for layer in expected_layers:
+                        if layer in str(context_metadata).lower() or layer.replace('_', ' ') in str(data).lower():
+                            context_layers_verified.add(layer)
+                            layers_found += 1
+                    
+                    if layers_found >= 4:  # Should find most context layers
+                        self.log_test(f"Phase 2 Context - {scenario['name']}", True,
+                                    f"Context integration working: {layers_found}/6 layers detected")
+                        successful_scenarios += 1
+                    else:
+                        self.log_test(f"Phase 2 Context - {scenario['name']}", False,
+                                    f"Insufficient context integration: only {layers_found}/6 layers detected")
+                    
+                    # Verify platform-specific optimization
+                    target_platform = scenario["payload"].get("target_platform", "general")
+                    if target_platform.lower() in str(data).lower():
+                        self.log_test(f"Phase 2 Platform Optimization - {scenario['name']}", True,
+                                    f"Platform-specific optimization for {target_platform} detected")
+                    else:
+                        self.log_test(f"Phase 2 Platform Optimization - {scenario['name']}", False,
+                                    f"Platform-specific optimization for {target_platform} not detected")
+                    
+                    # Verify industry-specific context
+                    industry = scenario["payload"]["industry_focus"]
+                    industry_mentions = str(data).lower().count(industry.lower())
+                    if industry_mentions >= 3:  # Should mention industry multiple times
+                        self.log_test(f"Phase 2 Industry Context - {scenario['name']}", True,
+                                    f"Strong industry context integration: {industry_mentions} mentions")
+                    else:
+                        self.log_test(f"Phase 2 Industry Context - {scenario['name']}", False,
+                                    f"Weak industry context integration: only {industry_mentions} mentions")
+                
+                else:
+                    self.log_test(f"Phase 2 Context - {scenario['name']}", False,
+                                f"HTTP {response.status_code}")
+                    
+            except Exception as e:
+                self.log_test(f"Phase 2 Context - {scenario['name']}", False,
+                            f"Exception: {str(e)}")
+        
+        # Overall context integration assessment
+        total_layers = len(context_layers_verified)
+        if total_layers >= 4:
+            self.log_test("Phase 2 Context Integration - Overall", True,
+                        f"Successfully verified {total_layers}/6 context layers: {list(context_layers_verified)}")
+        else:
+            self.log_test("Phase 2 Context Integration - Overall", False,
+                        f"Only verified {total_layers}/6 context layers: {list(context_layers_verified)}")
+        
+        if successful_scenarios >= 2:
+            self.log_test("Phase 2 Context Scenarios - Overall", True,
+                        f"Successfully tested {successful_scenarios}/{len(test_scenarios)} scenarios")
+            return True
+        else:
+            self.log_test("Phase 2 Context Scenarios - Overall", False,
+                        f"Only {successful_scenarios}/{len(test_scenarios)} scenarios succeeded")
+            return False
+
+    def test_phase2_serp_api_integration(self):
+        """Test Phase 2: SERP API integration for real-time trend analysis"""
+        print("\n=== Testing Phase 2: SERP API Integration for Trend Analysis ===")
+        
+        # Test with prompts that should trigger SERP API calls
+        trend_test_cases = [
+            {
+                "name": "Current Trends Query",
+                "payload": {
+                    "original_prompt": "Latest social media trends for content creators in 2025",
+                    "video_type": "marketing",
+                    "industry_focus": "marketing",
+                    "enhancement_count": 3
+                }
+            },
+            {
+                "name": "Industry Trends Query",
+                "payload": {
+                    "original_prompt": "Emerging health and wellness trends for fitness enthusiasts",
+                    "video_type": "educational", 
+                    "industry_focus": "health",
+                    "enhancement_count": 3
+                }
+            },
+            {
+                "name": "Technology Trends Query",
+                "payload": {
+                    "original_prompt": "AI and machine learning developments changing business",
+                    "video_type": "educational",
+                    "industry_focus": "tech", 
+                    "enhancement_count": 3
+                }
+            }
+        ]
+        
+        successful_tests = 0
+        trend_indicators_found = set()
+        
+        for test_case in trend_test_cases:
+            try:
+                response = self.session.post(
+                    f"{self.backend_url}/enhance-prompt-v2",
+                    json=test_case["payload"],
+                    timeout=150  # Extended timeout for SERP API calls
+                )
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    response_text = str(data).lower()
+                    
+                    # Look for indicators of SERP API integration and trend analysis
+                    trend_indicators = [
+                        "trend", "trending", "current", "latest", "2025", 
+                        "popular", "viral", "emerging", "news", "recent",
+                        "algorithm", "platform", "optimization", "search"
+                    ]
+                    
+                    indicators_found = 0
+                    for indicator in trend_indicators:
+                        if indicator in response_text:
+                            trend_indicators_found.add(indicator)
+                            indicators_found += 1
+                    
+                    # Check for real-time context integration
+                    real_time_indicators = [
+                        "real-time", "current", "latest", "up-to-date", 
+                        "recent", "now", "today", "2025"
+                    ]
+                    
+                    real_time_found = sum(1 for indicator in real_time_indicators if indicator in response_text)
+                    
+                    if indicators_found >= 5 and real_time_found >= 2:
+                        self.log_test(f"Phase 2 SERP Integration - {test_case['name']}", True,
+                                    f"Strong trend analysis detected: {indicators_found} trend indicators, {real_time_found} real-time indicators")
+                        successful_tests += 1
+                    elif indicators_found >= 3:
+                        self.log_test(f"Phase 2 SERP Integration - {test_case['name']}", True,
+                                    f"Moderate trend analysis detected: {indicators_found} trend indicators")
+                        successful_tests += 1
+                    else:
+                        self.log_test(f"Phase 2 SERP Integration - {test_case['name']}", False,
+                                    f"Insufficient trend analysis: only {indicators_found} trend indicators")
+                    
+                    # Check for context quality score (should be higher with SERP integration)
+                    trend_score = data.get("trend_alignment_score", 0)
+                    if trend_score >= 0.6:
+                        self.log_test(f"Phase 2 Trend Score - {test_case['name']}", True,
+                                    f"High trend alignment score: {trend_score:.3f}")
+                    else:
+                        self.log_test(f"Phase 2 Trend Score - {test_case['name']}", False,
+                                    f"Low trend alignment score: {trend_score:.3f}")
+                    
+                    # Check for enhanced methodology mentioning trend analysis
+                    methodology = data.get("enhancement_methodology", "")
+                    if "trend" in methodology.lower() or "serp" in methodology.lower():
+                        self.log_test(f"Phase 2 Methodology - {test_case['name']}", True,
+                                    "Methodology mentions trend analysis integration")
+                    else:
+                        self.log_test(f"Phase 2 Methodology - {test_case['name']}", False,
+                                    "Methodology doesn't mention trend analysis")
+                
+                else:
+                    self.log_test(f"Phase 2 SERP Integration - {test_case['name']}", False,
+                                f"HTTP {response.status_code}: {response.text[:200]}")
+                    
+            except Exception as e:
+                self.log_test(f"Phase 2 SERP Integration - {test_case['name']}", False,
+                            f"Exception: {str(e)}")
+        
+        # Overall SERP API integration assessment
+        total_indicators = len(trend_indicators_found)
+        if total_indicators >= 8:
+            self.log_test("Phase 2 SERP API - Overall Integration", True,
+                        f"Excellent trend analysis integration: {total_indicators} unique indicators found")
+        elif total_indicators >= 5:
+            self.log_test("Phase 2 SERP API - Overall Integration", True,
+                        f"Good trend analysis integration: {total_indicators} unique indicators found")
+        else:
+            self.log_test("Phase 2 SERP API - Overall Integration", False,
+                        f"Limited trend analysis integration: only {total_indicators} unique indicators found")
+        
+        if successful_tests >= 2:
+            self.log_test("Phase 2 SERP API - Test Success", True,
+                        f"Successfully tested SERP integration: {successful_tests}/{len(trend_test_cases)} tests passed")
+            return True
+        else:
+            self.log_test("Phase 2 SERP API - Test Success", False,
+                        f"SERP integration tests failed: only {successful_tests}/{len(trend_test_cases)} tests passed")
+            return False
+
+    def test_phase2_generate_script_v2_endpoint(self):
+        """Test Phase 2: /api/generate-script-v2 endpoint with Master Prompt Template V2.0"""
+        print("\n=== Testing Phase 2: Generate Script V2 with Master Prompt Template V2.0 ===")
+        
+        # Test Case 1: Basic Master Prompt Template V2.0 functionality
+        test_prompt = "Create an engaging video about productivity tips for remote workers"
+        payload = {
+            "prompt": test_prompt,
+            "video_type": "educational",
+            "duration": "medium",
+            "visual_style": "professional",
+            "target_platform": "youtube",
+            "mood": "inspiring"
+        }
+        
+        try:
+            response = self.session.post(
+                f"{self.backend_url}/generate-script-v2",
+                json=payload,
+                timeout=90  # Extended timeout for advanced processing
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Verify Master Prompt Template V2.0 response structure
+                required_fields = [
+                    "id", "original_prompt", "generated_script", "video_type", 
+                    "duration", "visual_style", "target_platform", "mood", "created_at"
+                ]
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if missing_fields:
+                    self.log_test("Phase 2 Generate Script V2 - Structure", False,
+                                f"Missing required fields: {missing_fields}")
+                    return False
+                
+                self.log_test("Phase 2 Generate Script V2 - Structure", True,
+                            "All Master Prompt Template V2.0 fields present")
+                
+                # Test Case 2: Verify ELITE video script architect expertise
+                script = data["generated_script"]
+                script_lower = script.lower()
+                
+                # Look for ELITE expertise indicators
+                elite_indicators = [
+                    "hook", "setup", "content", "climax", "resolution",
+                    "psychological", "engagement", "retention", "viral",
+                    "platform", "algorithm", "optimization", "audience"
+                ]
+                
+                elite_found = sum(1 for indicator in elite_indicators if indicator in script_lower)
+                
+                if elite_found >= 6:
+                    self.log_test("Phase 2 Generate Script V2 - ELITE Expertise", True,
+                                f"Strong ELITE expertise indicators: {elite_found}/12 found")
+                else:
+                    self.log_test("Phase 2 Generate Script V2 - ELITE Expertise", False,
+                                f"Insufficient ELITE expertise indicators: only {elite_found}/12 found")
+                
+                # Test Case 3: Verify mandatory script architecture (Hook/Setup/Content/Climax/Resolution)
+                architecture_elements = ["hook", "setup", "content", "climax", "resolution"]
+                architecture_found = sum(1 for element in architecture_elements if element in script_lower)
+                
+                if architecture_found >= 4:
+                    self.log_test("Phase 2 Generate Script V2 - Script Architecture", True,
+                                f"Mandatory script architecture present: {architecture_found}/5 elements")
+                else:
+                    self.log_test("Phase 2 Generate Script V2 - Script Architecture", False,
+                                f"Incomplete script architecture: only {architecture_found}/5 elements")
+                
+                # Test Case 4: Verify psychological frameworks integration
+                psychological_frameworks = [
+                    "psychological", "emotion", "trigger", "engagement", 
+                    "retention", "attention", "motivation", "persuasion"
+                ]
+                
+                psych_found = sum(1 for framework in psychological_frameworks if framework in script_lower)
+                
+                if psych_found >= 4:
+                    self.log_test("Phase 2 Generate Script V2 - Psychological Frameworks", True,
+                                f"Strong psychological integration: {psych_found}/8 frameworks")
+                else:
+                    self.log_test("Phase 2 Generate Script V2 - Psychological Frameworks", False,
+                                f"Weak psychological integration: only {psych_found}/8 frameworks")
+                
+                # Test Case 5: Verify platform-specific optimization
+                target_platform = payload["target_platform"]
+                platform_indicators = [target_platform, "algorithm", "optimization", "platform"]
+                
+                platform_found = sum(1 for indicator in platform_indicators if indicator in script_lower)
+                
+                if platform_found >= 2:
+                    self.log_test("Phase 2 Generate Script V2 - Platform Optimization", True,
+                                f"Platform-specific optimization for {target_platform}: {platform_found} indicators")
+                else:
+                    self.log_test("Phase 2 Generate Script V2 - Platform Optimization", False,
+                                f"Limited platform optimization: only {platform_found} indicators")
+                
+                # Test Case 6: Verify script quality and length (should be comprehensive)
+                script_length = len(script)
+                word_count = len(script.split())
+                
+                if script_length >= 2000 and word_count >= 300:
+                    self.log_test("Phase 2 Generate Script V2 - Script Quality", True,
+                                f"High-quality comprehensive script: {script_length} chars, {word_count} words")
+                elif script_length >= 1000 and word_count >= 150:
+                    self.log_test("Phase 2 Generate Script V2 - Script Quality", True,
+                                f"Good quality script: {script_length} chars, {word_count} words")
+                else:
+                    self.log_test("Phase 2 Generate Script V2 - Script Quality", False,
+                                f"Script too short: {script_length} chars, {word_count} words")
+                
+                return True
+                
+            else:
+                self.log_test("Phase 2 Generate Script V2 - HTTP Response", False,
+                            f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_test("Phase 2 Generate Script V2 - Exception", False, f"Request failed: {str(e)}")
+            return False
+
+    def test_phase2_comprehensive_workflow(self):
+        """Test Phase 2: Complete workflow from prompt → context enrichment → enhancement → script generation"""
+        print("\n=== Testing Phase 2: Complete Workflow Integration ===")
+        
+        try:
+            # Step 1: Test enhance-prompt-v2 with context integration
+            original_prompt = "Create a video about sustainable living tips for millennials"
+            enhance_payload = {
+                "original_prompt": original_prompt,
+                "video_type": "educational",
+                "industry_focus": "health",
+                "target_platform": "instagram",
+                "enhancement_count": 3
+            }
+            
+            enhance_response = self.session.post(
+                f"{self.backend_url}/enhance-prompt-v2",
+                json=enhance_payload,
+                timeout=120
+            )
+            
+            if enhance_response.status_code != 200:
+                self.log_test("Phase 2 Workflow - Enhancement Step", False,
+                            f"Enhancement failed: {enhance_response.status_code}")
+                return False
+            
+            enhanced_data = enhance_response.json()
+            
+            # Verify Phase 2 enhancement worked
+            if 'phase' not in enhanced_data or enhanced_data['phase'] != 'v2_context_integration':
+                self.log_test("Phase 2 Workflow - Enhancement Verification", False,
+                            "Phase 2 enhancement not properly identified")
+                return False
+            
+            self.log_test("Phase 2 Workflow - Enhancement Step", True,
+                        "Phase 2 context-enhanced prompt generation successful")
+            
+            # Step 2: Use best enhanced prompt for script generation
+            variations = enhanced_data.get("enhancement_variations", [])
+            if not variations:
+                self.log_test("Phase 2 Workflow - Variation Selection", False,
+                            "No enhancement variations available")
+                return False
+            
+            # Select the highest scoring variation
+            best_variation = max(variations, key=lambda x: x.get("estimated_performance_score", 0))
+            enhanced_prompt = best_variation["enhanced_prompt"]
+            
+            # Step 3: Generate script using Master Prompt Template V2.0 (if available)
+            script_payload = {
+                "prompt": enhanced_prompt,
+                "video_type": "educational",
+                "duration": "medium",
+                "visual_style": "modern",
+                "target_platform": "instagram",
+                "mood": "inspiring"
+            }
+            
+            # Try generate-script-v2 first, fallback to generate-script
+            script_response = self.session.post(
+                f"{self.backend_url}/generate-script-v2",
+                json=script_payload,
+                timeout=90
+            )
+            
+            if script_response.status_code != 200:
+                # Fallback to regular generate-script
+                fallback_payload = {
+                    "prompt": enhanced_prompt,
+                    "video_type": "educational",
+                    "duration": "medium"
+                }
+                
+                script_response = self.session.post(
+                    f"{self.backend_url}/generate-script",
+                    json=fallback_payload,
+                    timeout=60
+                )
+            
+            if script_response.status_code != 200:
+                self.log_test("Phase 2 Workflow - Script Generation Step", False,
+                            f"Script generation failed: {script_response.status_code}")
+                return False
+            
+            script_data = script_response.json()
+            generated_script = script_data["generated_script"]
+            
+            self.log_test("Phase 2 Workflow - Script Generation Step", True,
+                        f"Script generated successfully: {len(generated_script)} characters")
+            
+            # Step 4: Verify workflow integration quality
+            # Check if the final script shows signs of Phase 2 enhancement
+            script_lower = generated_script.lower()
+            
+            # Look for Phase 2 integration indicators
+            phase2_indicators = [
+                "trend", "platform", "algorithm", "optimization", "engagement",
+                "psychological", "audience", "viral", "retention", "context"
+            ]
+            
+            indicators_found = sum(1 for indicator in phase2_indicators if indicator in script_lower)
+            
+            if indicators_found >= 5:
+                self.log_test("Phase 2 Workflow - Integration Quality", True,
+                            f"Strong Phase 2 integration in final script: {indicators_found}/10 indicators")
+            else:
+                self.log_test("Phase 2 Workflow - Integration Quality", False,
+                            f"Weak Phase 2 integration in final script: only {indicators_found}/10 indicators")
+            
+            # Step 5: Verify performance prediction and optimization
+            quality_metrics = enhanced_data.get("quality_metrics", {})
+            improvement_ratio = quality_metrics.get("improvement_ratio", 0)
+            trend_score = enhanced_data.get("trend_alignment_score", 0)
+            
+            if improvement_ratio >= 20.0 and trend_score >= 0.5:
+                self.log_test("Phase 2 Workflow - Performance Prediction", True,
+                            f"Excellent performance metrics: {improvement_ratio:.1f}x improvement, {trend_score:.3f} trend score")
+            elif improvement_ratio >= 10.0:
+                self.log_test("Phase 2 Workflow - Performance Prediction", True,
+                            f"Good performance metrics: {improvement_ratio:.1f}x improvement")
+            else:
+                self.log_test("Phase 2 Workflow - Performance Prediction", False,
+                            f"Low performance metrics: {improvement_ratio:.1f}x improvement")
+            
+            # Step 6: Test with different industries to verify versatility
+            industry_tests = [
+                {"industry": "marketing", "platform": "linkedin"},
+                {"industry": "tech", "platform": "youtube"},
+                {"industry": "finance", "platform": "tiktok"}
+            ]
+            
+            industry_success = 0
+            for industry_test in industry_tests:
+                try:
+                    industry_payload = {
+                        "original_prompt": f"Create content about {industry_test['industry']} best practices",
+                        "video_type": "educational",
+                        "industry_focus": industry_test["industry"],
+                        "target_platform": industry_test["platform"],
+                        "enhancement_count": 2
+                    }
+                    
+                    industry_response = self.session.post(
+                        f"{self.backend_url}/enhance-prompt-v2",
+                        json=industry_payload,
+                        timeout=90
+                    )
+                    
+                    if industry_response.status_code == 200:
+                        industry_data = industry_response.json()
+                        if 'phase' in industry_data and industry_data['phase'] == 'v2_context_integration':
+                            industry_success += 1
+                            self.log_test(f"Phase 2 Workflow - {industry_test['industry'].title()} Industry", True,
+                                        f"Successfully processed {industry_test['industry']} content for {industry_test['platform']}")
+                        else:
+                            self.log_test(f"Phase 2 Workflow - {industry_test['industry'].title()} Industry", False,
+                                        "Phase 2 not properly identified")
+                    else:
+                        self.log_test(f"Phase 2 Workflow - {industry_test['industry'].title()} Industry", False,
+                                    f"HTTP {industry_response.status_code}")
+                        
+                except Exception as e:
+                    self.log_test(f"Phase 2 Workflow - {industry_test['industry'].title()} Industry", False,
+                                f"Exception: {str(e)}")
+            
+            # Overall workflow assessment
+            if industry_success >= 2:
+                self.log_test("Phase 2 Workflow - Industry Versatility", True,
+                            f"Successfully tested {industry_success}/{len(industry_tests)} industries")
+            else:
+                self.log_test("Phase 2 Workflow - Industry Versatility", False,
+                            f"Only {industry_success}/{len(industry_tests)} industries succeeded")
+            
+            self.log_test("Phase 2 Workflow - Complete Integration", True,
+                        "Successfully completed Phase 2 workflow: prompt → context enrichment → enhancement → script generation")
+            
+            return True
+            
+        except Exception as e:
+            self.log_test("Phase 2 Workflow - Exception", False, f"Workflow test failed: {str(e)}")
+            return False
+
     def run_all_tests(self):
         """Run all backend tests"""
         print("🚀 Starting Backend API Testing for Script Generation App")
