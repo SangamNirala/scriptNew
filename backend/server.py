@@ -207,8 +207,9 @@ class LegalMateAgents:
     async def contract_generator(structured_requirements: Dict[str, Any], contract_type: str) -> str:
         """Generates the actual contract content"""
         
-        # Contract templates and prompts
+        # Contract templates and prompts - Expanded to 50+ types
         contract_prompts = {
+            # Business Contracts
             "NDA": """
             Generate a professional Non-Disclosure Agreement with these requirements:
             {requirements}
@@ -226,32 +227,26 @@ class LegalMateAgents:
             - Return of Materials
             - Remedies for Breach
             - Governing Law and Jurisdiction
-            
-            Format the document professionally with:
-            - **Bold headings** for major sections
-            - Clear paragraph structure
-            - [Date of Execution] placeholder for date entry
-            - No asterisk (*) notations anywhere in the document
-            
-            End the document with a signature section:
-            **SIGNATURES**
-            
-            IN WITNESS WHEREOF, the parties have executed this agreement as of the Effective Date.
-            
-            **FIRST PARTY:**
-            
-            [First Party Signature Placeholder]
-            _________________________________
-            {party1_name}
-            
-            **SECOND PARTY:**
-            
-            [Second Party Signature Placeholder] 
-            _________________________________
-            {party2_name}
-            
-            Make it legally sound and professionally formatted.
             """,
+            
+            "employment_agreement": """
+            Generate a comprehensive Employment Agreement including:
+            {requirements}
+            
+            FORMATTING REQUIREMENTS:
+            - Remove all instances of asterisk (*) expressions 
+            - Use proper bold formatting for headings and key sections using **text** format
+            - Include Date of Execution: [Date of Execution]
+            
+            Include essential clauses:
+            - Job Title and Description
+            - Compensation and Benefits
+            - Working Hours and Location
+            - Confidentiality and Non-Compete
+            - Termination Conditions
+            - Intellectual Property Rights
+            """,
+            
             "freelance_agreement": """
             Generate a comprehensive Freelance Service Agreement with:
             {requirements}
@@ -259,8 +254,7 @@ class LegalMateAgents:
             FORMATTING REQUIREMENTS:
             - Remove all instances of asterisk (*) expressions 
             - Use proper bold formatting for headings and key sections using **text** format
-            - Include a line for Date of Execution: [Date of Execution] before any special clauses section
-            - Use proper paragraph spacing and professional formatting
+            - Include Date of Execution: [Date of Execution]
             
             Include essential clauses:
             - Scope of Work
@@ -269,32 +263,8 @@ class LegalMateAgents:
             - Termination Conditions
             - Liability Limitations
             - Governing Law
-            
-            Format the document professionally with:
-            - **Bold headings** for major sections
-            - Clear paragraph structure
-            - [Date of Execution] placeholder for date entry
-            - No asterisk (*) notations anywhere in the document
-            
-            End the document with a signature section:
-            **SIGNATURES**
-            
-            IN WITNESS WHEREOF, the parties have executed this agreement as of the Effective Date.
-            
-            **FIRST PARTY:**
-            
-            [First Party Signature Placeholder]
-            _________________________________
-            {party1_name}
-            
-            **SECOND PARTY:**
-            
-            [Second Party Signature Placeholder] 
-            _________________________________
-            {party2_name}
-            
-            Ensure clarity and legal enforceability.
             """,
+            
             "partnership_agreement": """
             Generate a Business Partnership Agreement including:
             {requirements}
@@ -302,8 +272,7 @@ class LegalMateAgents:
             FORMATTING REQUIREMENTS:
             - Remove all instances of asterisk (*) expressions 
             - Use proper bold formatting for headings and key sections using **text** format
-            - Include a line for Date of Execution: [Date of Execution] before any special clauses section
-            - Use proper paragraph spacing and professional formatting
+            - Include Date of Execution: [Date of Execution]
             
             Cover key areas:
             - Partnership Structure
@@ -312,31 +281,365 @@ class LegalMateAgents:
             - Decision Making Process
             - Dissolution Procedures
             - Governing Law
+            """,
             
-            Format the document professionally with:
-            - **Bold headings** for major sections
-            - Clear paragraph structure
-            - [Date of Execution] placeholder for date entry
-            - No asterisk (*) notations anywhere in the document
+            "consulting_agreement": """
+            Generate a Professional Consulting Agreement with:
+            {requirements}
             
-            End the document with a signature section:
-            **SIGNATURES**
+            Include: Services Description, Payment Terms, Confidentiality, Deliverables, Timeline
+            """,
             
-            IN WITNESS WHEREOF, the parties have executed this agreement as of the Effective Date.
+            "software_license": """
+            Generate a Software License Agreement with:
+            {requirements}
             
-            **FIRST PARTY:**
+            Include: License Grant, Restrictions, Support Terms, Liability Limitations, Updates
+            """,
             
-            [First Party Signature Placeholder]
-            _________________________________
-            {party1_name}
+            "vendor_agreement": """
+            Generate a Vendor/Supplier Agreement with:
+            {requirements}
             
-            **SECOND PARTY:**
+            Include: Supply Terms, Quality Standards, Payment Terms, Delivery, Warranties
+            """,
             
-            [Second Party Signature Placeholder] 
-            _________________________________
-            {party2_name}
+            "distribution_agreement": """
+            Generate a Distribution Agreement with:
+            {requirements}
             
-            Make it comprehensive and legally binding.
+            Include: Territory Rights, Sales Targets, Marketing, Pricing, Termination
+            """,
+            
+            "franchise_agreement": """
+            Generate a Franchise Agreement with:
+            {requirements}
+            
+            Include: Franchise Rights, Fees, Territory, Standards, Training, Support
+            """,
+            
+            "joint_venture": """
+            Generate a Joint Venture Agreement with:
+            {requirements}
+            
+            Include: Venture Purpose, Contributions, Management, Profit Sharing, Exit Terms
+            """,
+            
+            "merger_acquisition": """
+            Generate a Merger & Acquisition Agreement with:
+            {requirements}
+            
+            Include: Purchase Price, Due Diligence, Representations, Closing Conditions
+            """,
+            
+            "shareholder_agreement": """
+            Generate a Shareholder Agreement with:
+            {requirements}
+            
+            Include: Share Rights, Transfer Restrictions, Board Composition, Dividends
+            """,
+            
+            "loan_agreement": """
+            Generate a Business Loan Agreement with:
+            {requirements}
+            
+            Include: Loan Amount, Interest Rate, Repayment Terms, Security, Default Provisions
+            """,
+            
+            "equipment_lease": """
+            Generate an Equipment Lease Agreement with:
+            {requirements}
+            
+            Include: Equipment Description, Lease Terms, Maintenance, Insurance, Return Conditions
+            """,
+            
+            "service_agreement": """
+            Generate a General Service Agreement with:
+            {requirements}
+            
+            Include: Service Description, Performance Standards, Payment, Liability, Termination
+            """,
+            
+            "licensing_agreement": """
+            Generate an Intellectual Property Licensing Agreement with:
+            {requirements}
+            
+            Include: Licensed Property, Royalties, Territory, Quality Control, Termination
+            """,
+            
+            "manufacturing_agreement": """
+            Generate a Manufacturing Agreement with:
+            {requirements}
+            
+            Include: Product Specifications, Quality Standards, Delivery, Payment, IP Rights
+            """,
+            
+            "marketing_agreement": """
+            Generate a Marketing Services Agreement with:
+            {requirements}
+            
+            Include: Marketing Services, Budget, Performance Metrics, IP Rights, Confidentiality
+            """,
+            
+            "research_agreement": """
+            Generate a Research & Development Agreement with:
+            {requirements}
+            
+            Include: Research Scope, Funding, IP Ownership, Publication Rights, Commercialization
+            """,
+            
+            "maintenance_agreement": """
+            Generate a Maintenance Service Agreement with:
+            {requirements}
+            
+            Include: Maintenance Scope, Response Times, Service Levels, Payment, Liability
+            """,
+            
+            "supply_agreement": """
+            Generate a Supply Agreement with:
+            {requirements}
+            
+            Include: Product Specifications, Quantities, Delivery Terms, Quality Standards, Payment
+            """,
+            
+            "technology_transfer": """
+            Generate a Technology Transfer Agreement with:
+            {requirements}
+            
+            Include: Technology Description, Transfer Terms, Royalties, Support, Restrictions
+            """,
+            
+            "indemnification_agreement": """
+            Generate an Indemnification Agreement with:
+            {requirements}
+            
+            Include: Indemnification Scope, Conditions, Procedures, Limitations, Defense Obligations
+            """,
+            
+            "non_compete": """
+            Generate a Non-Compete Agreement with:
+            {requirements}
+            
+            Include: Restricted Activities, Territory, Duration, Consideration, Remedies
+            """,
+            
+            "settlement_agreement": """
+            Generate a Settlement Agreement with:
+            {requirements}
+            
+            Include: Dispute Description, Settlement Terms, Release, Confidentiality, Enforcement
+            """,
+            
+            # Real Estate Contracts
+            "purchase_agreement": """
+            Generate a Real Estate Purchase Agreement with:
+            {requirements}
+            
+            Include: Property Description, Purchase Price, Financing Terms, Inspections, Closing
+            """,
+            
+            "lease_agreement": """
+            Generate a Real Estate Lease Agreement with:
+            {requirements}
+            
+            Include: Property Description, Rent Terms, Security Deposit, Maintenance, Utilities
+            """,
+            
+            "property_management": """
+            Generate a Property Management Agreement with:
+            {requirements}
+            
+            Include: Management Services, Fees, Tenant Relations, Maintenance, Financial Reporting
+            """,
+            
+            "construction_contract": """
+            Generate a Construction Contract with:
+            {requirements}
+            
+            Include: Work Description, Timeline, Payment Schedule, Materials, Change Orders
+            """,
+            
+            "commercial_lease": """
+            Generate a Commercial Lease Agreement with:
+            {requirements}
+            
+            Include: Premises, Rent, Operating Expenses, Use Restrictions, Improvements
+            """,
+            
+            "residential_lease": """
+            Generate a Residential Lease Agreement with:
+            {requirements}
+            
+            Include: Property Details, Rent, Security Deposit, Pet Policy, Maintenance
+            """,
+            
+            "deed_of_trust": """
+            Generate a Deed of Trust with:
+            {requirements}
+            
+            Include: Property Description, Loan Terms, Trustee Powers, Default Provisions
+            """,
+            
+            "easement_agreement": """
+            Generate an Easement Agreement with:
+            {requirements}
+            
+            Include: Easement Purpose, Location, Rights Granted, Maintenance, Compensation
+            """,
+            
+            "option_to_purchase": """
+            Generate an Option to Purchase Agreement with:
+            {requirements}
+            
+            Include: Property Description, Option Price, Exercise Terms, Conditions
+            """,
+            
+            "listing_agreement": """
+            Generate a Real Estate Listing Agreement with:
+            {requirements}
+            
+            Include: Property Details, Commission, Marketing, Exclusivity, Duration
+            """,
+            
+            "land_contract": """
+            Generate a Land Contract with:
+            {requirements}
+            
+            Include: Property Description, Purchase Terms, Payments, Title Transfer, Default
+            """,
+            
+            "development_agreement": """
+            Generate a Real Estate Development Agreement with:
+            {requirements}
+            
+            Include: Development Plan, Timeline, Approvals, Financing, Profit Sharing
+            """,
+            
+            "tenant_improvement": """
+            Generate a Tenant Improvement Agreement with:
+            {requirements}
+            
+            Include: Improvement Scope, Cost Allocation, Timeline, Approval Process
+            """,
+            
+            "property_sale": """
+            Generate a Property Sale Agreement with:
+            {requirements}
+            
+            Include: Sale Terms, Conditions, Warranties, Closing Requirements, Adjustments
+            """,
+            
+            "sublease_agreement": """
+            Generate a Sublease Agreement with:
+            {requirements}
+            
+            Include: Sublease Terms, Consent Requirements, Responsibilities, Rent, Duration
+            """,
+            
+            "ground_lease": """
+            Generate a Ground Lease Agreement with:
+            {requirements}
+            
+            Include: Land Description, Lease Term, Ground Rent, Improvements, Reversion
+            """,
+            
+            "mortgage_agreement": """
+            Generate a Mortgage Agreement with:
+            {requirements}
+            
+            Include: Loan Amount, Interest Rate, Payment Terms, Property Description, Default
+            """,
+            
+            "escrow_agreement": """
+            Generate an Escrow Agreement with:
+            {requirements}
+            
+            Include: Escrow Purpose, Conditions, Agent Duties, Release Terms, Fees
+            """,
+            
+            "brokerage_agreement": """
+            Generate a Real Estate Brokerage Agreement with:
+            {requirements}
+            
+            Include: Services, Commission Structure, Obligations, Duration, Termination
+            """,
+            
+            "right_of_first_refusal": """
+            Generate a Right of First Refusal Agreement with:
+            {requirements}
+            
+            Include: Property Description, Trigger Events, Exercise Terms, Valuation
+            """,
+            
+            # Additional Business Contracts
+            "confidentiality_agreement": """
+            Generate a Confidentiality Agreement with:
+            {requirements}
+            
+            Include: Confidential Information Definition, Use Restrictions, Duration, Remedies
+            """,
+            
+            "agency_agreement": """
+            Generate an Agency Agreement with:
+            {requirements}
+            
+            Include: Agency Scope, Authority, Compensation, Duration, Termination
+            """,
+            
+            "insurance_agreement": """
+            Generate an Insurance Service Agreement with:
+            {requirements}
+            
+            Include: Coverage Types, Premiums, Claims Process, Policy Terms, Renewal
+            """,
+            
+            "catering_agreement": """
+            Generate a Catering Services Agreement with:
+            {requirements}
+            
+            Include: Event Details, Menu, Pricing, Setup, Cancellation, Liability
+            """,
+            
+            "transportation_agreement": """
+            Generate a Transportation Services Agreement with:
+            {requirements}
+            
+            Include: Transport Services, Routes, Scheduling, Rates, Liability, Insurance
+            """,
+            
+            "security_agreement": """
+            Generate a Security Services Agreement with:
+            {requirements}
+            
+            Include: Security Services, Coverage Hours, Personnel, Equipment, Reporting
+            """,
+            
+            "cleaning_agreement": """
+            Generate a Cleaning Services Agreement with:
+            {requirements}
+            
+            Include: Cleaning Scope, Schedule, Supplies, Quality Standards, Pricing
+            """,
+            
+            "photography_agreement": """
+            Generate a Photography Services Agreement with:
+            {requirements}
+            
+            Include: Event Coverage, Deliverables, Usage Rights, Payment, Cancellation
+            """,
+            
+            "web_development": """
+            Generate a Web Development Agreement with:
+            {requirements}
+            
+            Include: Project Scope, Timeline, Deliverables, Hosting, Maintenance, IP Rights
+            """,
+            
+            "advertising_agreement": """
+            Generate an Advertising Services Agreement with:
+            {requirements}
+            
+            Include: Campaign Details, Media Placement, Budget, Performance Metrics, Rights
             """
         }
         
