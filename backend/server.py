@@ -57,6 +57,8 @@ class GeneratedContract(BaseModel):
     compliance_score: float
     created_at: datetime = Field(default_factory=datetime.utcnow)
     user_id: Optional[str] = None
+    first_party_signature: Optional[str] = None  # Base64 encoded signature image
+    second_party_signature: Optional[str] = None  # Base64 encoded signature image
 
 class ContractResponse(BaseModel):
     contract: GeneratedContract
