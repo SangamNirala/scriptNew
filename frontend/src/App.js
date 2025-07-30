@@ -156,7 +156,7 @@ function App() {
     </Card>
   );
 
-  const PartiesStep = () => (
+  const PartiesStep = memo(() => (
     <Card className="w-full max-w-2xl mx-auto">
       <CardHeader>
         <CardTitle className="text-2xl">Party Information</CardTitle>
@@ -232,7 +232,7 @@ function App() {
         </div>
       </CardContent>
     </Card>
-  );
+  ));
 
   const TermsStep = () => (
     <Card className="w-full max-w-2xl mx-auto">
