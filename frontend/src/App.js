@@ -11,6 +11,9 @@ const ScriptGenerator = () => {
   const [duration, setDuration] = useState("short");
   const [enhancedPrompt, setEnhancedPrompt] = useState("");
   const [enhancementExplanation, setEnhancementExplanation] = useState("");
+  const [enhancementVariations, setEnhancementVariations] = useState([]);
+  const [selectedVariation, setSelectedVariation] = useState(null);
+  const [enhancementRecommendation, setEnhancementRecommendation] = useState("");
   const [generatedScript, setGeneratedScript] = useState("");
   const [generatedWithPrompt, setGeneratedWithPrompt] = useState(""); // Track which prompt was used
   const [isEnhancing, setIsEnhancing] = useState(false);
