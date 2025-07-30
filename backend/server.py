@@ -1852,16 +1852,150 @@ async def get_contract_types():
         "total_count": 56
     }
 
+# Smart Contract Analysis Endpoints
+
+@api_router.post("/analyze-contract", response_model=ContractAnalysisResult)
+async def analyze_contract(request: ContractAnalysisRequest):
+    """AI-powered contract analysis and risk assessment"""
+    try:
+        analysis_result = await LegalMateAgents.contract_analyzer(
+            request.contract_content,
+            request.contract_type,
+            request.jurisdiction
+        )
+        
+        # Save analysis to database
+        await db.contract_analyses.insert_one(analysis_result.dict())
+        
+        return analysis_result
+        
+    except Exception as e:
+        logging.error(f"Contract analysis error: {e}")
+        raise HTTPException(status_code=500, detail=f"Error analyzing contract: {str(e)}")
+
+@api_router.get("/clause-recommendations/{contract_type}")
+async def get_clause_recommendations(contract_type: str, industry: str = None, jurisdiction: str = "US"):
+    """Get AI-powered clause recommendations for specific contract type"""
+    try:
+        recommendations = await LegalMateAgents.clause_recommender(
+            contract_type, industry, jurisdiction
+        )
+        return {"recommendations": recommendations}
+        
+    except Exception as e:
+        logging.error(f"Clause recommendation error: {e}")
+        raise HTTPException(status_code=500, detail=f"Error getting recommendations: {str(e)}")
+
+@api_router.post("/compare-contracts", response_model=ContractComparisonResult)
+async def compare_contracts(request: ContractComparisonRequest):
+    """AI-powered contract comparison with diff highlighting"""
+    try:
+        comparison_result = await LegalMateAgents.contract_comparator(
+            request.contract1_content,
+            request.contract2_content,
+            request.contract1_label,
+            request.contract2_label
+        )
+        
+        # Save comparison to database
+        await db.contract_comparisons.insert_one(comparison_result.dict())
+        
+        return comparison_result
+        
+    except Exception as e:
+        logging.error(f"Contract comparison error: {e}")
+        raise HTTPException(status_code=500, detail=f"Error comparing contracts: {str(e)}")
+
+@api_router.post("/compliance-check")
+async def enhanced_compliance_check(
+    contract_content: str,
+    jurisdictions: List[str] = ["US"]
+):
+    """Enhanced multi-jurisdiction compliance validation"""
+    try:
+        compliance_result = await LegalMateAgents.enhanced_compliance_checker(
+            contract_content, jurisdictions
+        )
+        return compliance_result
+        
+    except Exception as e:
+        logging.error(f"Compliance check error: {e}")
+        raise HTTPException(status_code=500, detail=f"Error checking compliance: {str(e)}")
+
+@api_router.get("/contract-analyses")
+async def get_contract_analyses():
+    """Get all contract analyses"""
+    try:
+        analyses = await db.contract_analyses.find().to_list(100)
+        return analyses
+    except Exception as e:
+        logging.error(f"Error fetching analyses: {e}")
+        raise HTTPException(status_code=500, detail=f"Error fetching analyses: {str(e)}")
+
+@api_router.get("/contract-comparisons")
+async def get_contract_comparisons():
+    """Get all contract comparisons"""
+    try:
+        comparisons = await db.contract_comparisons.find().to_list(100)
+        return comparisons
+    except Exception as e:
+        logging.error(f"Error fetching comparisons: {e}")
+        raise HTTPException(status_code=500, detail=f"Error fetching comparisons: {str(e)}")
+
+@api_router.get("/analysis-dashboard/{contract_id}")
+async def get_analysis_dashboard(contract_id: str):
+    """Get comprehensive dashboard data for a specific contract"""
+    try:
+        # Get the contract
+        contract = await db.contracts.find_one({"id": contract_id})
+        if not contract:
+            raise HTTPException(status_code=404, detail="Contract not found")
+        
+        # Get analysis if exists
+        analysis = await db.contract_analyses.find_one({"contract_content": contract["content"]})
+        
+        # Get clause recommendations
+        recommendations = await LegalMateAgents.clause_recommender(
+            contract["contract_type"], 
+            jurisdiction=contract["jurisdiction"]
+        )
+        
+        # Enhanced compliance check
+        compliance_result = await LegalMateAgents.enhanced_compliance_checker(
+            contract["content"], 
+            [contract["jurisdiction"]]
+        )
+        
+        return {
+            "contract": contract,
+            "analysis": analysis,
+            "recommendations": recommendations,
+            "compliance": compliance_result,
+            "dashboard_generated_at": datetime.utcnow()
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error generating analysis dashboard: {e}")
+        raise HTTPException(status_code=500, detail=f"Error generating dashboard: {str(e)}")
+
+# Enhanced jurisdiction endpoint with more jurisdictions
 @api_router.get("/jurisdictions")
 async def get_jurisdictions():
-    """Get supported jurisdictions"""
+    """Get supported jurisdictions for enhanced compliance checking"""
     return {
         "jurisdictions": [
             {"code": "US", "name": "United States", "supported": True},
             {"code": "UK", "name": "United Kingdom", "supported": True},
             {"code": "EU", "name": "European Union", "supported": True},
-            {"code": "CA", "name": "Canada", "supported": False},
-            {"code": "AU", "name": "Australia", "supported": False}
+            {"code": "CA", "name": "Canada", "supported": True},
+            {"code": "AU", "name": "Australia", "supported": True},
+            {"code": "DE", "name": "Germany", "supported": True},
+            {"code": "FR", "name": "France", "supported": True},
+            {"code": "JP", "name": "Japan", "supported": True},
+            {"code": "SG", "name": "Singapore", "supported": True},
+            {"code": "IN", "name": "India", "supported": True}
         ]
     }
 
