@@ -699,12 +699,13 @@ const ScriptGenerator = () => {
                   </div>
                 )}
 
-                {/* Dual Script Generation Buttons */}
-                <div className="grid grid-cols-2 gap-3">
+                {/* Multiple Script Generation Buttons */}
+                <div className="space-y-3">
+                  {/* Original Prompt Button */}
                   <button
-                    onClick={() => handleGenerateScript(false)}
+                    onClick={() => handleGenerateScript("original")}
                     disabled={isGenerating}
-                    className="py-3 px-4 bg-gradient-to-r from-gray-600 to-gray-700 text-white font-semibold rounded-lg shadow-lg hover:from-gray-700 hover:to-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 text-sm"
+                    className="w-full py-3 px-4 bg-gradient-to-r from-gray-600 to-gray-700 text-white font-semibold rounded-lg shadow-lg hover:from-gray-700 hover:to-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105"
                   >
                     {isGenerating ? (
                       <div className="flex items-center justify-center">
@@ -715,21 +716,31 @@ const ScriptGenerator = () => {
                       "🎬 Generate with Original"
                     )}
                   </button>
-                  
-                  <button
-                    onClick={() => handleGenerateScript(true)}
-                    disabled={isGenerating || !enhancedPrompt}
-                    className="py-3 px-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-lg shadow-lg hover:from-purple-700 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 text-sm"
-                  >
-                    {isGenerating ? (
-                      <div className="flex items-center justify-center">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                        Generating...
-                      </div>
-                    ) : (
-                      "✨ Generate with Enhanced"
-                    )}
-                  </button>
+
+                  {/* Enhanced Prompt Buttons */}
+                  {enhancementVariations.map((variation, index) => (
+                    <button
+                      key={variation.id}
+                      onClick={() => handleGenerateScript("enhanced", index)}
+                      disabled={isGenerating}
+                      className="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-lg shadow-lg hover:from-purple-700 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105"
+                    >
+                      {isGenerating ? (
+                        <div className="flex items-center justify-center">
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                          Generating...
+                        </div>
+                      ) : (
+                        <>
+                          ✨ Generate with {index + 1}{index === 0 ? 'st' : index === 1 ? 'nd' : 'rd'} Enhanced Prompt
+                          <div className="text-xs opacity-75 mt-1">
+                            {variation.title} ({variation.focus_strategy})
+                          </div>
+                        </>
+                      )}
+                    </button>
+                  ))}
+                </div>
                 </div>
               </div>
             )}
