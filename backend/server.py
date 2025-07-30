@@ -23,6 +23,22 @@ from reportlab.lib.units import inch
 from PIL import Image as PILImage
 import httpx
 import difflib
+from bson import ObjectId
+
+# Helper function to handle MongoDB ObjectId serialization
+def convert_objectid_to_str(doc):
+    """Convert MongoDB ObjectId to string for JSON serialization"""
+    if isinstance(doc, dict):
+        for key, value in doc.items():
+            if isinstance(value, ObjectId):
+                doc[key] = str(value)
+            elif isinstance(value, dict):
+                doc[key] = convert_objectid_to_str(value)
+            elif isinstance(value, list):
+                doc[key] = [convert_objectid_to_str(item) if isinstance(item, dict) else item for item in value]
+    elif isinstance(doc, list):
+        return [convert_objectid_to_str(item) if isinstance(item, dict) else item for item in doc]
+    return doc
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
