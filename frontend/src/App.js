@@ -374,7 +374,9 @@ function App() {
         // Create a temporary contract with the edited content for download
         const editedContractData = {
           ...generatedContract.contract,
-          content: contentToDownload
+          content: contentToDownload,
+          first_party_signature: firstPartySignature ? firstPartySignature.split(',')[1] : null,
+          second_party_signature: secondPartySignature ? secondPartySignature.split(',')[1] : null
         };
         
         const response = await axios.post(`${API}/contracts/download-pdf-edited`, {
