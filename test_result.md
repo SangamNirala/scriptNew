@@ -106,6 +106,18 @@ user_problem_statement: "You are an expert in text-to-speech (TTS) systems and u
 
 **CONTINUATION REQUEST:** When the "Enhance Prompt" button is clicked, the system should continue to generate the three categorized enhanced prompts: Emotional Engagement Focus, Technical Excellence Focus, Viral Potential Focus. However, each enhanced prompt should be significantly upgraded in depth, clarity, and structure — making them fully optimized for generating high-quality, ready-to-use scripts. The enhancements should go beyond surface-level rewording and incorporate advanced prompt engineering techniques tailored to each focus area.
 
+  - task: "Phase 2: Master Prompt Template V2.0 & Dynamic Context Integration"
+    implemented: false
+    working: false
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: false
+          agent: "main"
+          comment: "PHASE 2 IMPLEMENTATION STARTED: Beginning implementation of advanced Master Prompt Template V2.0 with ELITE video script architect expertise and Dynamic Context Integration System with real-time context enrichment using SERP API and other free APIs. Will implement comprehensive context layers: trend analysis, platform algorithms, competitor analysis, audience psychology, seasonal relevance, and performance history."
+
 backend:
   - task: "Advanced Comprehensive Script Framework Enhancement System"
     implemented: true
