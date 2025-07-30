@@ -104,6 +104,8 @@
 
 user_problem_statement: "You are an expert in text-to-speech (TTS) systems and user interface design. I want to improve the current audio generation feature by allowing users to choose from different voice options before generating speech audio from the script. After the script is generated, and before generating the audio, the system should prompt the user to select from multiple voice options (e.g., male, female, robotic, various accents). The selection should be presented through a dropdown menu or modal interface with clear labels (e.g., \"Male – US\", \"Female – UK\"). Once a voice is selected, the system should generate the audio using that specific voice model. Replace the current default male voice setup with a flexible voice engine that supports multiple voices. Use a free TTS engine with voice support like Edge-TTS."
 
+**CONTINUATION REQUEST:** When the "Enhance Prompt" button is clicked, the system should continue to generate the three categorized enhanced prompts: Emotional Engagement Focus, Technical Excellence Focus, Viral Potential Focus. However, each enhanced prompt should be significantly upgraded in depth, clarity, and structure — making them fully optimized for generating high-quality, ready-to-use scripts. The enhancements should go beyond surface-level rewording and incorporate advanced prompt engineering techniques tailored to each focus area.
+
 backend:
   - task: "Enhanced Prompt Enhancement System"
     implemented: true
