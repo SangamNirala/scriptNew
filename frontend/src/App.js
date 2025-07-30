@@ -167,6 +167,7 @@ function App() {
           <div>
             <Label htmlFor="party1_name">Party 1 Name</Label>
             <Input 
+              key="party1_name"
               id="party1_name"
               placeholder="Company or Individual Name"
               value={contractData.parties.party1_name || ''}
@@ -192,6 +193,7 @@ function App() {
           <div>
             <Label htmlFor="party2_name">Party 2 Name</Label>
             <Input 
+              key="party2_name"
               id="party2_name"
               placeholder="Company or Individual Name"
               value={contractData.parties.party2_name || ''}
