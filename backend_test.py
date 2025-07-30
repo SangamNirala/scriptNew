@@ -2870,6 +2870,319 @@ KEY RETENTION ELEMENTS:
         
         return True
     
+    def test_phase_1_enhanced_prompt_compliance(self):
+        """Test Phase 1 Enhanced Prompt System compliance with exact section headers and requirements"""
+        print("\n=== Testing Phase 1 Enhanced Prompt Compliance ===")
+        
+        # Test scenarios for Phase 1 compliance validation
+        test_scenarios = [
+            {
+                "name": "Educational Content",
+                "payload": {
+                    "original_prompt": "Create a video about healthy cooking tips",
+                    "video_type": "educational",
+                    "industry_focus": "health",
+                    "enhancement_count": 3
+                }
+            },
+            {
+                "name": "Marketing Content",
+                "payload": {
+                    "original_prompt": "Promote our new fitness app to busy professionals",
+                    "video_type": "marketing",
+                    "industry_focus": "health",
+                    "enhancement_count": 3
+                }
+            },
+            {
+                "name": "Entertainment Content",
+                "payload": {
+                    "original_prompt": "Create an engaging video about productivity tips for remote workers",
+                    "video_type": "entertainment",
+                    "industry_focus": "tech",
+                    "enhancement_count": 3
+                }
+            }
+        ]
+        
+        successful_compliance_tests = 0
+        
+        for scenario in test_scenarios:
+            try:
+                response = self.session.post(
+                    f"{self.backend_url}/enhance-prompt",
+                    json=scenario["payload"],
+                    timeout=120  # Longer timeout for comprehensive processing
+                )
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    
+                    # Phase 1 Compliance Test 1: Verify exact section headers with word counts
+                    required_section_headers = [
+                        "🎣 HOOK SECTION",
+                        "🎬 SETUP SECTION", 
+                        "📚 CONTENT CORE",
+                        "🏆 CLIMAX MOMENT",
+                        "✨ RESOLUTION"
+                    ]
+                    
+                    # Phase 1 Compliance Test 2: Verify additional required sections
+                    additional_required_sections = [
+                        "🧠 PSYCHOLOGICAL TRIGGERS",
+                        "📲 2025 TRENDS & PLATFORM OPTIMIZATION",
+                        "⚡ RETENTION ENGINEERING ELEMENTS"
+                    ]
+                    
+                    variations = data.get("enhancement_variations", [])
+                    if len(variations) < 3:
+                        self.log_test(f"Phase 1 Compliance - {scenario['name']} Variations", False,
+                                    f"Expected 3 variations, got {len(variations)}")
+                        continue
+                    
+                    # Test each variation for Phase 1 compliance
+                    compliant_variations = 0
+                    
+                    for i, variation in enumerate(variations):
+                        enhanced_prompt = variation.get("enhanced_prompt", "")
+                        
+                        # Check for exact section headers
+                        section_headers_found = 0
+                        for header in required_section_headers:
+                            if header in enhanced_prompt:
+                                section_headers_found += 1
+                        
+                        # Check for additional required sections
+                        additional_sections_found = 0
+                        for section in additional_required_sections:
+                            if section in enhanced_prompt:
+                                additional_sections_found += 1
+                        
+                        # Check for psychological triggers integration
+                        psychological_triggers = [
+                            "FOMO", "Social Proof", "Authority", "Reciprocity", "Commitment"
+                        ]
+                        triggers_found = sum(1 for trigger in psychological_triggers if trigger in enhanced_prompt)
+                        
+                        # Check for 2025 trends integration
+                        trends_indicators = [
+                            "2025", "trending", "current", "latest", "algorithm", "platform"
+                        ]
+                        trends_found = sum(1 for indicator in trends_indicators if indicator.lower() in enhanced_prompt.lower())
+                        
+                        # Check for retention engineering elements
+                        retention_elements = [
+                            "engagement question", "emotional peak", "pattern interrupt", 
+                            "retention", "cliffhanger", "hook"
+                        ]
+                        retention_found = sum(1 for element in retention_elements if element.lower() in enhanced_prompt.lower())
+                        
+                        # Check word count compliance (should be substantial - 500+ words)
+                        word_count = len(enhanced_prompt.split())
+                        
+                        # Phase 1 compliance scoring
+                        compliance_score = 0
+                        max_score = 6
+                        
+                        if section_headers_found >= 4:  # At least 4/5 exact headers
+                            compliance_score += 1
+                            
+                        if additional_sections_found >= 2:  # At least 2/3 additional sections
+                            compliance_score += 1
+                            
+                        if triggers_found >= 3:  # At least 3/5 psychological triggers
+                            compliance_score += 1
+                            
+                        if trends_found >= 2:  # At least 2 trend indicators
+                            compliance_score += 1
+                            
+                        if retention_found >= 2:  # At least 2 retention elements
+                            compliance_score += 1
+                            
+                        if word_count >= 500:  # Substantial content
+                            compliance_score += 1
+                        
+                        compliance_percentage = (compliance_score / max_score) * 100
+                        
+                        if compliance_percentage >= 80:  # 80% compliance threshold
+                            compliant_variations += 1
+                            self.log_test(f"Phase 1 Compliance - {scenario['name']} Variation {i+1}", True,
+                                        f"Phase 1 compliant: {compliance_percentage:.1f}% ({compliance_score}/{max_score}), {word_count} words, {section_headers_found}/5 headers, {triggers_found}/5 triggers")
+                        else:
+                            self.log_test(f"Phase 1 Compliance - {scenario['name']} Variation {i+1}", False,
+                                        f"Phase 1 non-compliant: {compliance_percentage:.1f}% ({compliance_score}/{max_score}), missing elements")
+                    
+                    # Overall scenario compliance
+                    if compliant_variations >= 2:  # At least 2/3 variations must be compliant
+                        successful_compliance_tests += 1
+                        self.log_test(f"Phase 1 Compliance - {scenario['name']} Overall", True,
+                                    f"Scenario compliant: {compliant_variations}/3 variations meet Phase 1 requirements")
+                    else:
+                        self.log_test(f"Phase 1 Compliance - {scenario['name']} Overall", False,
+                                    f"Scenario non-compliant: only {compliant_variations}/3 variations meet Phase 1 requirements")
+                
+                else:
+                    self.log_test(f"Phase 1 Compliance - {scenario['name']} HTTP", False,
+                                f"HTTP {response.status_code}: {response.text[:200]}")
+                    
+            except Exception as e:
+                self.log_test(f"Phase 1 Compliance - {scenario['name']} Exception", False,
+                            f"Exception: {str(e)}")
+        
+        # Phase 1 Compliance Test 3: Test specific psychological triggers
+        try:
+            psychological_test_payload = {
+                "original_prompt": "Create a video about overcoming procrastination and achieving goals",
+                "video_type": "educational",
+                "industry_focus": "general",
+                "enhancement_count": 3
+            }
+            
+            psych_response = self.session.post(
+                f"{self.backend_url}/enhance-prompt",
+                json=psychological_test_payload,
+                timeout=120
+            )
+            
+            if psych_response.status_code == 200:
+                psych_data = psych_response.json()
+                psych_variations = psych_data.get("enhancement_variations", [])
+                
+                # Check for specific psychological triggers across all variations
+                all_triggers_text = " ".join([var.get("enhanced_prompt", "") for var in psych_variations])
+                
+                required_psychological_triggers = {
+                    "FOMO": "Fear of Missing Out implementation",
+                    "Social Proof": "Social validation and peer influence",
+                    "Authority": "Expert credibility and positioning", 
+                    "Reciprocity": "Value-first approach and giving",
+                    "Commitment": "Engagement and participation hooks"
+                }
+                
+                triggers_implemented = 0
+                for trigger, description in required_psychological_triggers.items():
+                    if trigger in all_triggers_text:
+                        triggers_implemented += 1
+                        self.log_test(f"Phase 1 Compliance - {trigger} Trigger", True,
+                                    f"{trigger} psychological trigger successfully integrated")
+                    else:
+                        self.log_test(f"Phase 1 Compliance - {trigger} Trigger", False,
+                                    f"{trigger} psychological trigger missing from enhanced prompts")
+                
+                if triggers_implemented >= 4:  # At least 4/5 triggers should be present
+                    self.log_test("Phase 1 Compliance - Psychological Triggers Integration", True,
+                                f"Successfully integrated {triggers_implemented}/5 required psychological triggers")
+                else:
+                    self.log_test("Phase 1 Compliance - Psychological Triggers Integration", False,
+                                f"Only {triggers_implemented}/5 psychological triggers integrated")
+                    
+            else:
+                self.log_test("Phase 1 Compliance - Psychological Triggers Test", False,
+                            f"HTTP {psych_response.status_code}")
+                
+        except Exception as e:
+            self.log_test("Phase 1 Compliance - Psychological Triggers Test", False,
+                        f"Exception: {str(e)}")
+        
+        # Phase 1 Compliance Test 4: Test 2025 trends and platform optimization
+        try:
+            trends_test_payload = {
+                "original_prompt": "Create a video about social media marketing strategies",
+                "video_type": "marketing",
+                "industry_focus": "marketing",
+                "enhancement_count": 3
+            }
+            
+            trends_response = self.session.post(
+                f"{self.backend_url}/enhance-prompt",
+                json=trends_test_payload,
+                timeout=120
+            )
+            
+            if trends_response.status_code == 200:
+                trends_data = trends_response.json()
+                trends_variations = trends_data.get("enhancement_variations", [])
+                
+                # Check for 2025 trends and platform optimization
+                all_trends_text = " ".join([var.get("enhanced_prompt", "") for var in trends_variations])
+                
+                trends_indicators = [
+                    "2025", "algorithm", "platform optimization", "trending", 
+                    "TikTok", "YouTube", "Instagram", "engagement velocity"
+                ]
+                
+                trends_found = sum(1 for indicator in trends_indicators if indicator.lower() in all_trends_text.lower())
+                
+                if trends_found >= 4:  # At least 4 trend indicators
+                    self.log_test("Phase 1 Compliance - 2025 Trends Integration", True,
+                                f"Successfully integrated {trends_found}/8 trend indicators")
+                else:
+                    self.log_test("Phase 1 Compliance - 2025 Trends Integration", False,
+                                f"Only {trends_found}/8 trend indicators found")
+                    
+            else:
+                self.log_test("Phase 1 Compliance - 2025 Trends Test", False,
+                            f"HTTP {trends_response.status_code}")
+                
+        except Exception as e:
+            self.log_test("Phase 1 Compliance - 2025 Trends Test", False,
+                        f"Exception: {str(e)}")
+        
+        # Phase 1 Compliance Test 5: Test retention engineering elements
+        try:
+            retention_test_payload = {
+                "original_prompt": "Create a video about learning new skills effectively",
+                "video_type": "educational", 
+                "industry_focus": "education",
+                "enhancement_count": 3
+            }
+            
+            retention_response = self.session.post(
+                f"{self.backend_url}/enhance-prompt",
+                json=retention_test_payload,
+                timeout=120
+            )
+            
+            if retention_response.status_code == 200:
+                retention_data = retention_response.json()
+                retention_variations = retention_data.get("enhancement_variations", [])
+                
+                # Check for retention engineering elements
+                all_retention_text = " ".join([var.get("enhanced_prompt", "") for var in retention_variations])
+                
+                retention_elements = [
+                    "engagement question", "emotional peak", "pattern interrupt",
+                    "retention hook", "cliffhanger", "15-20 seconds",
+                    "attention reset", "completion trigger"
+                ]
+                
+                retention_found = sum(1 for element in retention_elements if element.lower() in all_retention_text.lower())
+                
+                if retention_found >= 3:  # At least 3 retention elements
+                    self.log_test("Phase 1 Compliance - Retention Engineering", True,
+                                f"Successfully integrated {retention_found}/8 retention engineering elements")
+                else:
+                    self.log_test("Phase 1 Compliance - Retention Engineering", False,
+                                f"Only {retention_found}/8 retention engineering elements found")
+                    
+            else:
+                self.log_test("Phase 1 Compliance - Retention Engineering Test", False,
+                            f"HTTP {retention_response.status_code}")
+                
+        except Exception as e:
+            self.log_test("Phase 1 Compliance - Retention Engineering Test", False,
+                        f"Exception: {str(e)}")
+        
+        # Overall Phase 1 compliance assessment
+        if successful_compliance_tests >= 2:  # At least 2/3 scenarios must pass
+            self.log_test("Phase 1 Enhanced Prompt System - Overall Compliance", True,
+                        f"Phase 1 compliance achieved: {successful_compliance_tests}/3 scenarios passed all requirements")
+            return True
+        else:
+            self.log_test("Phase 1 Enhanced Prompt System - Overall Compliance", False,
+                        f"Phase 1 compliance failed: only {successful_compliance_tests}/3 scenarios passed requirements")
+            return False
+
     def test_legacy_prompt_endpoint_compatibility(self):
         """Test backward compatibility with legacy endpoint"""
         print("\n=== Testing Legacy Prompt Enhancement Compatibility ===")
