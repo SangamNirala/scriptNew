@@ -129,6 +129,12 @@ const ScriptGenerator = () => {
     }
   };
 
+  const handleVariationSelect = (variation) => {
+    setSelectedVariation(variation);
+    setEnhancedPrompt(variation.enhanced_prompt);
+    setEnhancementExplanation(`${variation.title} - Focus: ${variation.focus_strategy}. ${enhancementRecommendation}`);
+  };
+
   const handleGenerateScript = async (useEnhanced = false) => {
     const finalPrompt = useEnhanced ? enhancedPrompt : prompt;
     const promptType = useEnhanced ? "enhanced" : "original";
