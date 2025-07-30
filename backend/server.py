@@ -741,9 +741,9 @@ async def download_contract_pdf(contract_id: str):
                 
                 if first_party_info.get('signature'):
                     try:
-                        # Decode base64 image and add to PDF
-                        signature_data = base64.b64decode(first_party_info['signature'])
-                        signature_image = Image(io.BytesIO(signature_data), width=200, height=50)
+                        # Process signature image using new helper method
+                        signature_buffer = LegalMateAgents.process_signature_image(first_party_info['signature'])
+                        signature_image = Image(signature_buffer, width=200, height=50)
                         content.append(signature_image)
                     except Exception as e:
                         logging.warning(f"Error processing first party signature: {e}")
