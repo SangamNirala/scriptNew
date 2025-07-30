@@ -366,6 +366,36 @@ class LegalMateAgents:
         return re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', text)
 
     @staticmethod
+    def process_signature_image(signature_base64: str) -> io.BytesIO:
+        """Process base64 signature image and return a BytesIO object for reportlab"""
+        try:
+            # Remove data URL prefix if present
+            if signature_base64.startswith('data:image'):
+                signature_base64 = signature_base64.split(',')[1]
+            
+            # Decode base64 data
+            signature_data = base64.b64decode(signature_base64)
+            
+            # Open image with PIL to validate and process
+            with PILImage.open(io.BytesIO(signature_data)) as pil_image:
+                # Convert to RGB if necessary (reportlab works better with RGB)
+                if pil_image.mode not in ('RGB', 'L'):
+                    pil_image = pil_image.convert('RGB')
+                
+                # Create a new BytesIO buffer for the processed image
+                processed_buffer = io.BytesIO()
+                
+                # Save as PNG (reportlab handles PNG well)
+                pil_image.save(processed_buffer, format='PNG')
+                processed_buffer.seek(0)
+                
+                return processed_buffer
+                
+        except Exception as e:
+            logging.error(f"Error processing signature image: {e}")
+            raise Exception(f"Invalid signature image: {str(e)}")
+
+    @staticmethod
     def process_signature_content(content: str, first_party_signature: str = None, second_party_signature: str = None) -> tuple:
         """Process contract content and return content with signature elements separated"""
         
