@@ -14,6 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './components/ui/tabs';
 import { Calendar as CalendarComponent } from './components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from './components/ui/popover';
 import EnhancedContractWizard from './components/EnhancedContractWizard';
+import ResizeObserverErrorBoundary from './components/ResizeObserverErrorBoundary';
 import { FileText, Zap, Shield, Users, CheckCircle, AlertTriangle, Download, Eye, Calendar, Sparkles, Wand2, Clock } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
