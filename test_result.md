@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Fixed PDF download functionality and improved contract formatting. The 'Download PDF' button was not working because it had no onClick handler and there was no backend endpoint for PDF generation. Added PDF generation using reportlab library and proper download functionality. Additionally improved contract formatting by: 1) Removing all asterisk (*) expressions, 2) Ensuring proper bold formatting for headings, 3) Adding Date of Execution line before special clauses, 4) Applied these changes to all contract types (NDA, Freelance, Partnership)."
+user_problem_statement: "Fixed PDF download functionality and improved contract formatting. Resolved issue where PDF section headings contained asterisks instead of proper bold formatting. The 'Download PDF' button was not working because it had no onClick handler and there was no backend endpoint for PDF generation. Added PDF generation using reportlab library and proper download functionality. Additionally improved contract formatting by: 1) Removing all asterisk (*) expressions, 2) Ensuring proper bold formatting for headings (converted **markdown** to <b>HTML</b> for PDF rendering), 3) Adding Date of Execution line before special clauses, 4) Applied these changes to all contract types (NDA, Freelance, Partnership). PDFs now display bold headings without any asterisk symbols."
 
 backend:
   - task: "PDF generation endpoint and contract formatting improvements"
