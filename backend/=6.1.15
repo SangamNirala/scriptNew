@@ -23,7 +23,7 @@ Downloading tabulate-0.9.0-py3-none-any.whl (35 kB)
 Building wheels for collected packages: srt
   Building wheel for srt (setup.py): started
   Building wheel for srt (setup.py): finished with status 'done'
-  Created wheel for srt: filename=srt-3.5.3-py3-none-any.whl size=22426 sha256=3d39f88d4a0e9dcce63b364593a70430db0575232c3fe1ca737cc17f50f66fd5
+  Created wheel for srt: filename=srt-3.5.3-py3-none-any.whl size=22426 sha256=ad048ac07e5bf733057976d5373c7927efc1dedd1ea118eb0edee28995d53532
   Stored in directory: /root/.cache/pip/wheels/1f/43/f1/23ee9119497fcb57d9f7046fbf34c6d9027c46a1fa7824cf08
 Successfully built srt
 Installing collected packages: tabulate, srt, edge-tts
