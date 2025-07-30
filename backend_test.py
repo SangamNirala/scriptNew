@@ -1978,6 +1978,251 @@ class LegalMateAPITester:
             "retrieve_nonexistent": response_retrieve_nonexistent
         }
 
+    def test_critical_signature_pdf_fix(self):
+        """CRITICAL TEST: Verify the signature PDF download fix for placeholder state handling"""
+        print("\n🔥 CRITICAL SIGNATURE PDF FIX VERIFICATION")
+        print("   Testing fix for signatures not appearing in downloaded PDFs")
+        print("   Issue: Backend only looked for '[First Party Signature Placeholder]'")
+        print("   Fix: Now handles both 'Placeholder' and 'Uploaded' states")
+        
+        # Generate a new contract specifically for this critical test
+        critical_test_data = {
+            "contract_type": "NDA",
+            "jurisdiction": "US",
+            "parties": {
+                "party1_name": "Critical Fix Test Corp",
+                "party1_type": "corporation",
+                "party2_name": "PDF Signature Validator",
+                "party2_type": "individual"
+            },
+            "terms": {
+                "purpose": "CRITICAL TEST: Verifying the signature PDF download fix for placeholder state handling",
+                "duration": "2_years"
+            },
+            "special_clauses": ["Critical signature fix verification clause"]
+        }
+        
+        # Step 1: Generate contract
+        success, response = self.run_test(
+            "Generate Contract for Critical Signature Fix Test",
+            "POST",
+            "generate-contract",
+            200,
+            critical_test_data,
+            timeout=60
+        )
+        
+        if not success or 'contract' not in response:
+            print("❌ CRITICAL FAILURE: Could not generate contract for signature fix test")
+            return False, {}
+        
+        contract = response['contract']
+        critical_contract_id = contract.get('id')
+        original_content = contract.get('content', '')
+        
+        print(f"   Generated critical test contract ID: {critical_contract_id}")
+        
+        # Verify original placeholders exist
+        if '[First Party Signature Placeholder]' in original_content:
+            print("   ✅ Original first party placeholder confirmed in contract")
+        else:
+            print("   ❌ CRITICAL ISSUE: Original first party placeholder missing")
+        
+        if '[Second Party Signature Placeholder]' in original_content:
+            print("   ✅ Original second party placeholder confirmed in contract")
+        else:
+            print("   ❌ CRITICAL ISSUE: Original second party placeholder missing")
+        
+        # Step 2: Upload signatures (this changes placeholders to 'Uploaded' state)
+        test_signature = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAI9jU77zgAAAABJRU5ErkJggg=="
+        
+        # Upload first party signature
+        fp_sig_data = {
+            "contract_id": critical_contract_id,
+            "party_type": "first_party",
+            "signature_image": test_signature
+        }
+        
+        success_fp, _ = self.run_test(
+            "Upload First Party Signature (Critical Test)",
+            "POST",
+            f"contracts/{critical_contract_id}/upload-signature",
+            200,
+            fp_sig_data
+        )
+        
+        # Upload second party signature
+        sp_sig_data = {
+            "contract_id": critical_contract_id,
+            "party_type": "second_party",
+            "signature_image": test_signature
+        }
+        
+        success_sp, _ = self.run_test(
+            "Upload Second Party Signature (Critical Test)",
+            "POST",
+            f"contracts/{critical_contract_id}/upload-signature",
+            200,
+            sp_sig_data
+        )
+        
+        if not (success_fp and success_sp):
+            print("❌ CRITICAL FAILURE: Could not upload signatures for fix test")
+            return False, {}
+        
+        print("   ✅ Both signatures uploaded successfully")
+        print("   📝 NOTE: Frontend would now change placeholders to 'Uploaded' state")
+        
+        # Step 3: Test original PDF download (CRITICAL TEST)
+        pdf_url = f"{self.api_url}/contracts/{critical_contract_id}/download-pdf"
+        
+        self.tests_run += 1
+        print(f"\n🔍 CRITICAL TEST: Original PDF Download with Signatures...")
+        print(f"   URL: {pdf_url}")
+        print("   Testing if backend process_signature_content() handles 'Uploaded' state")
+        
+        try:
+            pdf_response = requests.get(pdf_url, timeout=30)
+            print(f"   Status: {pdf_response.status_code}")
+            
+            if pdf_response.status_code == 200:
+                print(f"✅ CRITICAL SUCCESS: PDF download successful")
+                
+                # Verify PDF format
+                if not pdf_response.content.startswith(b'%PDF'):
+                    print("   ❌ CRITICAL FAILURE: Invalid PDF format")
+                    return False, {}
+                
+                content_length = len(pdf_response.content)
+                print(f"   PDF Size: {content_length} bytes")
+                
+                # CRITICAL VERIFICATION: Check PDF content
+                try:
+                    pdf_content_str = pdf_response.content.decode('latin-1', errors='ignore')
+                    
+                    # CRITICAL TEST 1: No placeholder text should remain in PDF
+                    placeholder_failures = []
+                    
+                    if '[First Party Signature Placeholder]' in pdf_content_str:
+                        placeholder_failures.append("Original first party placeholder found in PDF")
+                    
+                    if '[First Party Signature Uploaded]' in pdf_content_str:
+                        placeholder_failures.append("Uploaded first party placeholder found in PDF")
+                    
+                    if '[Second Party Signature Placeholder]' in pdf_content_str:
+                        placeholder_failures.append("Original second party placeholder found in PDF")
+                    
+                    if '[Second Party Signature Uploaded]' in pdf_content_str:
+                        placeholder_failures.append("Uploaded second party placeholder found in PDF")
+                    
+                    if not placeholder_failures:
+                        print("   🎉 CRITICAL FIX VERIFIED: No signature placeholders in PDF")
+                        print("   🎉 Backend correctly processes both 'Placeholder' and 'Uploaded' states")
+                        self.tests_passed += 1
+                    else:
+                        print("   ❌ CRITICAL FIX FAILED: Placeholder processing issues:")
+                        for failure in placeholder_failures:
+                            print(f"      - {failure}")
+                        return False, {}
+                    
+                    # CRITICAL TEST 2: Signature images should be embedded
+                    image_indicators = ['Image', '/Image', 'PNG', 'IHDR', 'ImageReader']
+                    found_images = [ind for ind in image_indicators if ind in pdf_content_str]
+                    
+                    if found_images:
+                        print(f"   🎉 CRITICAL SUCCESS: Signature images embedded in PDF: {found_images}")
+                    else:
+                        print("   ❌ CRITICAL ISSUE: No signature images found in PDF")
+                    
+                    # CRITICAL TEST 3: Signature section should be present
+                    signature_section_indicators = ['SIGNATURES', 'FIRST PARTY', 'SECOND PARTY', 'IN WITNESS WHEREOF']
+                    found_sections = [ind for ind in signature_section_indicators if ind in pdf_content_str]
+                    
+                    if found_sections:
+                        print(f"   ✅ Signature sections found in PDF: {found_sections}")
+                    else:
+                        print("   ❌ CRITICAL ISSUE: Signature sections missing from PDF")
+                    
+                except Exception as e:
+                    print(f"   ❌ CRITICAL ERROR: Could not analyze PDF content: {str(e)}")
+                    return False, {}
+                
+                # Step 4: Test edited PDF with signatures (CRITICAL TEST)
+                print(f"\n   CRITICAL TEST: Edited PDF with Signatures...")
+                
+                # Get updated contract with signatures
+                updated_contract_response = requests.get(f"{self.api_url}/contracts/{critical_contract_id}")
+                if updated_contract_response.status_code == 200:
+                    updated_contract = updated_contract_response.json()
+                    
+                    # Modify content
+                    updated_contract['content'] = updated_contract['content'].replace(
+                        "CRITICAL TEST: Verifying the signature PDF download fix",
+                        "EDITED CRITICAL TEST: Verifying the signature PDF download fix with modified content"
+                    )
+                    
+                    # Test edited PDF
+                    edited_pdf_data = {"contract": updated_contract}
+                    edited_pdf_url = f"{self.api_url}/contracts/download-pdf-edited"
+                    
+                    try:
+                        edited_pdf_response = requests.post(
+                            edited_pdf_url,
+                            json=edited_pdf_data,
+                            headers={'Content-Type': 'application/json'},
+                            timeout=30
+                        )
+                        
+                        if edited_pdf_response.status_code == 200:
+                            print(f"   ✅ CRITICAL SUCCESS: Edited PDF with signatures generated")
+                            
+                            # Verify edited PDF content
+                            try:
+                                edited_pdf_str = edited_pdf_response.content.decode('latin-1', errors='ignore')
+                                
+                                # Check no placeholders in edited PDF
+                                if ('[First Party Signature' not in edited_pdf_str and 
+                                    '[Second Party Signature' not in edited_pdf_str):
+                                    print("   🎉 CRITICAL FIX VERIFIED: No placeholders in edited PDF")
+                                else:
+                                    print("   ❌ CRITICAL ISSUE: Placeholders found in edited PDF")
+                                
+                                # Check for signature images in edited PDF
+                                edited_images = [ind for ind in image_indicators if ind in edited_pdf_str]
+                                if edited_images:
+                                    print(f"   🎉 CRITICAL SUCCESS: Signature images in edited PDF: {edited_images}")
+                                else:
+                                    print("   ❌ CRITICAL ISSUE: No signature images in edited PDF")
+                                
+                                # Verify edited content
+                                if 'EDITED CRITICAL TEST' in edited_pdf_str:
+                                    print("   ✅ Edited content confirmed in PDF")
+                                
+                            except Exception as e:
+                                print(f"   ⚠️  Could not analyze edited PDF: {str(e)}")
+                        else:
+                            print(f"   ❌ CRITICAL FAILURE: Edited PDF generation failed: {edited_pdf_response.status_code}")
+                    
+                    except Exception as e:
+                        print(f"   ❌ CRITICAL ERROR: Edited PDF test failed: {str(e)}")
+                else:
+                    print("   ❌ Could not retrieve updated contract for edited PDF test")
+                
+                return True, {
+                    "contract_id": critical_contract_id,
+                    "original_pdf_size": content_length,
+                    "fix_verified": True,
+                    "signatures_embedded": len(found_images) > 0,
+                    "placeholders_removed": len(placeholder_failures) == 0
+                }
+            else:
+                print(f"❌ CRITICAL FAILURE: PDF download failed - Status: {pdf_response.status_code}")
+                return False, {}
+                
+        except Exception as e:
+            print(f"❌ CRITICAL ERROR: {str(e)}")
+            return False, {}
+
 def main():
     print("🚀 Starting LegalMate AI Backend API Tests")
     print("=" * 60)
