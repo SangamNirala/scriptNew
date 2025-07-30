@@ -11,6 +11,8 @@ import { Badge } from './components/ui/badge';
 import { Progress } from './components/ui/progress';
 import { Alert, AlertDescription } from './components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './components/ui/tabs';
+import { Calendar as CalendarComponent } from './components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from './components/ui/popover';
 import { FileText, Zap, Shield, Users, CheckCircle, AlertTriangle, Download, Eye, Calendar } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
