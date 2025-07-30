@@ -1085,6 +1085,15 @@ def main():
     
     test_results.append(tester.test_pdf_bold_formatting_specific())
     
+    # NEW: Edited PDF Generation Tests
+    print("\n" + "="*50)
+    print("📝 Testing Edited PDF Generation Functionality")
+    print("="*50)
+    
+    test_results.append(tester.test_edited_pdf_generation_valid_data())
+    test_results.append(tester.test_edited_pdf_generation_invalid_data())
+    test_results.append(tester.test_edited_pdf_content_verification())
+    
     # Print final results
     print("\n" + "="*60)
     print("📊 TEST RESULTS SUMMARY")
