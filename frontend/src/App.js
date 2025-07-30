@@ -20,11 +20,13 @@ function App() {
   const [contractTypes, setContractTypes] = useState([]);
   const [jurisdictions, setJurisdictions] = useState([]);
   const [currentStep, setCurrentStep] = useState(1);
-  const [parties, setParties] = useState({});
-  const [terms, setTerms] = useState({});
-  const [contractType, setContractType] = useState('');
-  const [jurisdiction, setJurisdiction] = useState('US');
-  const [specialClauses, setSpecialClauses] = useState([]);
+  const [contractData, setContractData] = useState({
+    contract_type: '',
+    jurisdiction: 'US',
+    parties: {},
+    terms: {},
+    special_clauses: []
+  });
   const [generatedContract, setGeneratedContract] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [contracts, setContracts] = useState([]);
