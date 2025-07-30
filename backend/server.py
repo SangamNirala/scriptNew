@@ -244,6 +244,59 @@ async def enhance_prompt(request: PromptEnhancementRequest):
         logger.error(f"Error in advanced prompt enhancement: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error enhancing prompt: {str(e)}")
 
+@api_router.post("/enhance-prompt-v2", response_model=PromptEnhancementResponse)
+async def enhance_prompt_v2(request: PromptEnhancementRequest):
+    """
+    Phase 2: Enhanced Prompt Optimization with Dynamic Context Integration
+    Advanced multi-step prompt enhancement with real-time context intelligence
+    """
+    try:
+        # Phase 2: Get comprehensive context using Context Integration System
+        enhanced_context = await context_system.get_enhanced_context(
+            prompt=request.original_prompt,
+            industry=request.industry_focus,
+            platform=getattr(request, 'target_platform', 'general')
+        )
+        
+        # Step 1: Enhanced Audience Analysis with Context Integration
+        audience_analysis = await _analyze_target_audience(request)
+        
+        # Step 2: Dynamic Industry Context with Real-time Trends
+        industry_context = await _gather_industry_context(request.industry_focus, request.video_type)
+        
+        # Step 3: Generate Context-Enhanced Multiple Variations
+        enhancement_variations = await _generate_enhancement_variations(request, audience_analysis, industry_context)
+        
+        # Step 4: Advanced Quality Evaluation with Performance Prediction
+        quality_metrics = await _evaluate_enhancement_quality(request.original_prompt, enhancement_variations)
+        
+        # Step 5: Comprehensive Industry Insights with Trend Analysis
+        industry_insights = await _generate_industry_insights(request.industry_focus, request.video_type, enhancement_variations)
+        recommendation = await _generate_recommendation(enhancement_variations, quality_metrics, audience_analysis)
+        
+        # Phase 2: Enhanced Response with Context Intelligence
+        response = PromptEnhancementResponse(
+            original_prompt=request.original_prompt,
+            audience_analysis=audience_analysis,
+            enhancement_variations=enhancement_variations,
+            quality_metrics=quality_metrics,
+            recommendation=recommendation,
+            industry_insights=industry_insights,
+            enhancement_methodology="Phase 2: Dynamic Context Integration with real-time trend analysis, platform optimization, competitor intelligence, audience psychology, cultural timing, and performance prediction"
+        )
+        
+        # Add Phase 2 metadata to response
+        response_dict = response.dict()
+        response_dict['phase'] = 'v2_context_integration'
+        response_dict['context_metadata'] = enhanced_context.get('metadata', {})
+        response_dict['trend_alignment_score'] = enhanced_context.get('metadata', {}).get('context_quality_score', 0.5)
+        
+        return response
+        
+    except Exception as e:
+        logger.error(f"Error in Phase 2 prompt enhancement: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error in Phase 2 enhancement: {str(e)}")
+
 # Advanced Enhancement Helper Functions
 
 async def _analyze_target_audience(request: PromptEnhancementRequest) -> AudienceAnalysis:
