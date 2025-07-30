@@ -441,10 +441,13 @@ async def _get_trend_alignment_data(industry_focus: str, video_type: str) -> dic
     return trend_data
 
 async def _generate_enhancement_variations(request: PromptEnhancementRequest, audience_analysis: AudienceAnalysis, industry_context: dict) -> List[EnhancementVariation]:
-    """Generate comprehensive script framework variations using advanced prompt engineering"""
+    """Generate comprehensive script framework variations using advanced prompt engineering with recursive self-improvement"""
     
     # Get few-shot examples for each strategy
     few_shot_examples = await _get_few_shot_examples(request.industry_focus, request.video_type)
+    
+    # Get real-time trend data for enhanced viral optimization
+    trend_data = await _get_trend_alignment_data(request.industry_focus, request.video_type)
     
     strategies = [
         {
