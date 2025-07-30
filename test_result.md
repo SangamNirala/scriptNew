@@ -141,7 +141,6 @@ metadata:
 
 test_plan:
   current_focus:
-    - "PDF generation endpoint"
     - "PDF download button functionality"
   stuck_tasks: []
   test_all: false
