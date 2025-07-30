@@ -687,13 +687,24 @@ const ScriptGenerator = () => {
                   dangerouslySetInnerHTML={{ __html: formatScript(generatedScript) }}
                 />
                 
-                <div className="mt-4 pt-4 border-t border-white/20 flex space-x-3">
+                <div className="mt-4 pt-4 border-t border-white/20 flex flex-wrap gap-3">
                   <button
                     onClick={() => navigator.clipboard.writeText(generatedScript)}
-                    className="px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors"
+                    className="px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors flex items-center space-x-2"
                   >
-                    📋 Copy Script
+                    <span>📋</span>
+                    <span>Copy Script</span>
                   </button>
+                  
+                  {lastGeneratedAudio && selectedVoice && (
+                    <button
+                      onClick={handleDownloadAudio}
+                      className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 flex items-center space-x-2"
+                    >
+                      <span>💾</span>
+                      <span>Download Audio</span>
+                    </button>
+                  )}
                   
                   {lastGeneratedAudio && (
                     <button
