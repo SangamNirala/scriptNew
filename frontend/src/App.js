@@ -1044,17 +1044,19 @@ function App() {
         <div className="max-w-6xl mx-auto">
           {/* Enhanced Contract Wizard */}
           {useEnhancedWizard && (
-            <EnhancedContractWizard
-              contractTypes={contractTypes}
-              jurisdictions={jurisdictions}
-              onContractGenerated={(contract) => {
-                setGeneratedContract(contract);
-                setCurrentStep(4);
-                setUseEnhancedWizard(false);
-                loadContracts();
-              }}
-              onBack={() => setUseEnhancedWizard(false)}
-            />
+            <ResizeObserverErrorBoundary>
+              <EnhancedContractWizard
+                contractTypes={contractTypes}
+                jurisdictions={jurisdictions}
+                onContractGenerated={(contract) => {
+                  setGeneratedContract(contract);
+                  setCurrentStep(4);
+                  setUseEnhancedWizard(false);
+                  loadContracts();
+                }}
+                onBack={() => setUseEnhancedWizard(false)}
+              />
+            </ResizeObserverErrorBoundary>
           )}
           
           {/* Classic Mode */}
