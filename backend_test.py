@@ -2943,6 +2943,7 @@ KEY RETENTION ELEMENTS:
         test_methods = [
             # NEW ENHANCED PROMPT SYSTEM TESTS (Review Request Focus)
             self.test_enhance_prompt_endpoint,  # Updated with new enhanced structure
+            self.test_comprehensive_script_framework_system,  # NEW: Comprehensive script framework testing
             self.test_enhanced_prompt_different_scenarios,  # New comprehensive scenarios test
             # Core functionality tests
             self.test_generate_script_endpoint,
