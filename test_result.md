@@ -137,7 +137,9 @@ metadata:
   run_ui: true
 
 test_plan:
-  current_focus: []
+  current_focus:
+    - "PDF generation endpoint"
+    - "PDF download button functionality"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
