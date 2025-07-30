@@ -503,6 +503,7 @@ async def generate_contract(request: ContractRequest):
     try:
         # Step 1: Intake Analysis
         structured_requirements = await LegalMateAgents.intake_agent(request)
+        logging.info(f"Structured requirements type: {type(structured_requirements)}")
         
         # Step 2: Generate Contract
         contract_content = await LegalMateAgents.contract_generator(
@@ -513,6 +514,7 @@ async def generate_contract(request: ContractRequest):
         compliance_result = await LegalMateAgents.compliance_validator(
             contract_content, request.jurisdiction
         )
+        logging.info(f"Compliance result type: {type(compliance_result)}")
         
         # Step 4: Extract Clauses
         clauses = LegalMateAgents.extract_clauses(contract_content)
@@ -554,6 +556,8 @@ async def generate_contract(request: ContractRequest):
         
     except Exception as e:
         logging.error(f"Contract generation error: {e}")
+        import traceback
+        logging.error(f"Traceback: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=f"Error generating contract: {str(e)}")
 
 @api_router.get("/contracts", response_model=List[GeneratedContract])
