@@ -590,6 +590,15 @@ def main():
     test_results.append(tester.test_freelance_generation())
     test_results.append(tester.test_partnership_generation())
     
+    # Contract formatting requirements tests
+    print("\n" + "="*50)
+    print("📝 Testing Contract Formatting Requirements")
+    print("="*50)
+    
+    test_results.append(tester.test_nda_formatting_requirements())
+    test_results.append(tester.test_freelance_formatting_requirements())
+    test_results.append(tester.test_partnership_formatting_requirements())
+    
     # Additional tests
     test_results.append(tester.test_get_specific_contract())
     test_results.append(tester.test_invalid_contract_generation())
