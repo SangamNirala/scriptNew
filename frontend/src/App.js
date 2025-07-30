@@ -731,12 +731,12 @@ const ScriptGenerator = () => {
                           Generating...
                         </div>
                       ) : (
-                        <>
-                          ✨ Generate with {index + 1}{index === 0 ? 'st' : index === 1 ? 'nd' : 'rd'} Enhanced Prompt
+                        <div className="text-center">
+                          <div>✨ Generate with {index + 1}{index === 0 ? 'st' : index === 1 ? 'nd' : 'rd'} Enhanced Prompt</div>
                           <div className="text-xs opacity-75 mt-1">
                             {variation.title} ({variation.focus_strategy})
                           </div>
-                        </>
+                        </div>
                       )}
                     </button>
                   ))}
