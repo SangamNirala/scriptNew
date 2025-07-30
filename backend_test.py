@@ -3254,7 +3254,8 @@ KEY RETENTION ELEMENTS:
         
         # Run all test suites
         test_methods = [
-            # NEW ENHANCED PROMPT SYSTEM TESTS (Review Request Focus)
+            # PHASE 1 ENHANCED PROMPT SYSTEM TESTS (Review Request Priority)
+            self.test_phase_1_enhanced_prompt_compliance,  # NEW: Phase 1 compliance validation
             self.test_enhance_prompt_endpoint,  # Updated with new enhanced structure
             self.test_comprehensive_script_framework_system,  # NEW: Comprehensive script framework testing
             self.test_enhanced_prompt_different_scenarios,  # New comprehensive scenarios test
