@@ -327,6 +327,18 @@ backend:
         -agent: "testing"
         -comment: "✅ Smart Contract Wizard FULLY WORKING: Successfully tested comprehensive wizard functionality with 100% success rate. 1) ✅ POST /api/contract-wizard/initialize - Initializes wizard with smart suggestions, returns proper ContractWizardResponse structure (current_step, next_step, suggestions, progress 20%, estimated_completion_time 8 minutes), generates 3 AI-powered suggestions with 70% confidence using Gemini 2) ✅ POST /api/contract-wizard/suggestions - Field-specific suggestions working perfectly: party1_name returns 'John Doe' (95% confidence, user_profile source) and 'TechCorp Inc' (95% confidence, company_profile source), party1_email returns user email (95% confidence), company_name returns company name (95% confidence) 3) ✅ Profile-based auto-suggestions working excellently with high confidence scores (≥90%) 4) ✅ AI-powered suggestions using Gemini generating relevant contract recommendations 5) ✅ All suggestion structures include required fields (field_name, suggested_value, confidence, reasoning, source) 6) ✅ MongoDB profile integration working correctly. Smart Contract Wizard ready for production use with excellent profile-based auto-fill capabilities."
 
+  - task: "Smart Contract Wizard - Input Field Typing Issues and 404 API Errors"
+    implemented: true
+    working: false
+    file: "/app/frontend/src/components/EnhancedContractWizard.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        -working: false
+        -agent: "testing"
+        -comment: "❌ CRITICAL SMART CONTRACT WIZARD ISSUES CONFIRMED: Comprehensive testing identified both reported problems. 1) INPUT FIELD TYPING ISSUES: Found character scrambling in payment_terms field during character-by-character typing - 'completion' becomes 'complenoit' when users click before each character. This confirms the reported issue where users need repeated clicks to type continuously. Step 2 fields (party1_name, party1_email, party2_name, party2_email) work correctly. 2) 404 ERRORS ON GENERATE CONTRACT: Critical API endpoint errors found - POST /generate-contract returns 404 (missing /api prefix), multiple /contract-wizard/initialize 404 errors throughout wizard navigation. ROOT CAUSE: EnhancedContractWizard component uses incorrect API base URL (process.env.REACT_APP_BACKEND_URL) instead of adding '/api' prefix like main App.js. This causes all Smart Contract Wizard API calls to hit wrong endpoints. IMPACT: Smart Contract Wizard completely non-functional for contract generation. Both reported issues confirmed and require immediate fixes."
+
 frontend:
   - task: "PDF download button functionality"
     implemented: true
