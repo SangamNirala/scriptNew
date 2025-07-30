@@ -599,7 +599,7 @@ function App() {
           )}
 
           {currentStep === 1 && <ContractTypeStep />}
-          {currentStep === 2 && <PartiesStep />}
+          {currentStep === 2 && <PartiesStep contractData={contractData} updateParties={updateParties} setCurrentStep={setCurrentStep} />}
           {currentStep === 3 && <TermsStep />}
           {currentStep === 4 && <ContractResult />}
 
