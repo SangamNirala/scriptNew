@@ -103,6 +103,61 @@ class ContractResponse(BaseModel):
     warnings: List[str] = []
     suggestions: List[str] = []
 
+# Enhanced User Experience Models
+class UserProfile(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    email: str
+    phone: Optional[str] = None
+    role: str  # "business_owner", "freelancer", "legal_professional", "other"
+    industry: Optional[str] = None
+    preferences: Dict[str, Any] = Field(default_factory=dict)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+class CompanyProfile(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    industry: str
+    size: str  # "startup", "small", "medium", "large", "enterprise"
+    legal_structure: str  # "sole_proprietorship", "partnership", "llc", "corporation", "other"
+    address: Dict[str, str] = Field(default_factory=dict)  # street, city, state, country, zip
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    website: Optional[str] = None
+    tax_id: Optional[str] = None
+    user_id: str  # Reference to the user who owns this company
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+class SmartSuggestion(BaseModel):
+    field_name: str
+    suggested_value: str
+    confidence: float = Field(ge=0, le=1)
+    reasoning: str
+    source: str  # "user_profile", "company_profile", "industry_standard", "ai_generated"
+
+class WizardStep(BaseModel):
+    step_number: int
+    title: str
+    description: str
+    fields: List[Dict[str, Any]]
+    suggestions: List[SmartSuggestion] = Field(default_factory=list)
+
+class ContractWizardRequest(BaseModel):
+    user_id: Optional[str] = None
+    company_id: Optional[str] = None
+    contract_type: str
+    current_step: int = 1
+    partial_data: Dict[str, Any] = Field(default_factory=dict)
+
+class ContractWizardResponse(BaseModel):
+    current_step: WizardStep
+    next_step: Optional[WizardStep] = None  
+    suggestions: List[SmartSuggestion] = Field(default_factory=list)
+    progress: float  # 0.0 to 1.0
+    estimated_completion_time: str
+
 # New models for Smart Contract Analysis
 class ContractAnalysisRequest(BaseModel):
     contract_content: str
