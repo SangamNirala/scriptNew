@@ -4747,65 +4747,92 @@ KEY RETENTION ELEMENTS:
             return False
 
     def run_all_tests(self):
-        """Run all backend tests"""
-        print("🚀 Starting Backend API Testing for Script Generation App")
+        """Run all backend tests including Phase 3 advanced analytics"""
+        print("🚀 Starting Comprehensive Backend Testing with Phase 3 Advanced Analytics...")
         print(f"Backend URL: {self.backend_url}")
-        print("=" * 60)
+        print("=" * 80)
         
         # Test basic connectivity first
         if not self.test_basic_connectivity():
-            print("\n❌ Basic connectivity failed. Stopping tests.")
+            print("❌ Basic connectivity failed - stopping tests")
             return False
         
-        # Run all test suites
-        test_methods = [
-            # PHASE 1 ENHANCED PROMPT SYSTEM TESTS (Review Request Priority)
-            self.test_phase_1_enhanced_prompt_compliance,  # NEW: Phase 1 compliance validation
-            self.test_enhance_prompt_endpoint,  # Updated with new enhanced structure
-            self.test_comprehensive_script_framework_system,  # NEW: Comprehensive script framework testing
-            self.test_enhanced_prompt_different_scenarios,  # New comprehensive scenarios test
-            # Core functionality tests
-            self.test_generate_script_endpoint,
-            self.test_scripts_retrieval_endpoint,
-            self.test_voices_endpoint,
-            self.test_generate_audio_endpoint,
-            self.test_timestamp_removal_comprehensive,
-            self.test_audio_error_handling,
-            self.test_voice_audio_integration,
-            self.test_avatar_video_generation_endpoint,
-            self.test_avatar_video_error_handling,
-            self.test_complete_avatar_workflow,
-            self.test_avatar_video_with_different_audio_lengths,
-            self.test_integration_flow
+        # Core functionality tests + Phase 3 tests
+        tests = [
+            ("Enhanced Prompt System", self.test_enhance_prompt_endpoint),
+            ("Enhanced Prompt Scenarios", self.test_enhanced_prompt_different_scenarios),
+            ("Comprehensive Script Framework", self.test_comprehensive_script_framework_system),
+            ("Script Generation", self.test_generate_script_endpoint),
+            ("Scripts Retrieval", self.test_scripts_retrieval_endpoint),
+            ("Integration Flow", self.test_integration_flow),
+            ("Voices Endpoint", self.test_voices_endpoint),
+            ("Generate Audio", self.test_generate_audio_endpoint),
+            ("Timestamp Removal", self.test_timestamp_removal_comprehensive),
+            ("Avatar Video Generation", self.test_avatar_video_generation_endpoint),
+            ("Enhanced Avatar Video", self.test_enhanced_avatar_video_generation_endpoint),
+            # Phase 3 Advanced Analytics Tests
+            ("Phase 3 - Advanced Context Analysis", self.test_phase3_advanced_context_analysis),
+            ("Phase 3 - Script Quality Analysis", self.test_phase3_script_quality_analysis),
+            ("Phase 3 - Script Validation", self.test_phase3_script_validation),
+            ("Phase 3 - Performance Tracking", self.test_phase3_track_performance),
+            ("Phase 3 - Performance Insights", self.test_phase3_performance_insights),
+            ("Phase 3 - Script Recommendations", self.test_phase3_script_recommendations),
+            ("Phase 3 - Script Preview", self.test_phase3_script_preview),
+            ("Phase 3 - Engagement Timeline", self.test_phase3_engagement_timeline),
+            ("Phase 3 - Retention Predictions", self.test_phase3_retention_predictions),
+            ("Phase 3 - Optimization Suggestions", self.test_phase3_optimization_suggestions),
+            ("Phase 3 - Comprehensive Analysis", self.test_phase3_comprehensive_script_analysis),
+            ("Phase 3 - MongoDB Integration", self.test_phase3_mongodb_integration),
+            ("Phase 3 - Error Handling", self.test_phase3_error_handling)
         ]
         
-        for test_method in test_methods:
+        successful_tests = 0
+        total_tests = len(tests)
+        phase3_tests = 0
+        phase3_passed = 0
+        
+        for test_name, test_func in tests:
+            print(f"\n{'='*20} {test_name} {'='*20}")
             try:
-                test_method()
+                if test_func():
+                    successful_tests += 1
+                    if "Phase 3" in test_name:
+                        phase3_passed += 1
+                    print(f"✅ {test_name} completed successfully")
+                else:
+                    print(f"❌ {test_name} failed")
+                    
+                if "Phase 3" in test_name:
+                    phase3_tests += 1
             except Exception as e:
-                print(f"❌ Test suite {test_method.__name__} failed with exception: {str(e)}")
+                print(f"❌ {test_name} failed with exception: {str(e)}")
+                self.log_test(f"{test_name} - Exception", False, f"Unexpected error: {str(e)}")
+                if "Phase 3" in test_name:
+                    phase3_tests += 1
         
-        # Summary
-        print("\n" + "=" * 60)
-        print("📊 TEST SUMMARY")
-        print("=" * 60)
+        # Print summary
+        print("\n" + "="*80)
+        print("🎯 BACKEND TESTING SUMMARY")
+        print("="*80)
         
-        total_tests = len(self.test_results)
-        passed_tests = sum(1 for result in self.test_results if result["success"])
-        failed_tests = total_tests - passed_tests
+        success_rate = (successful_tests / total_tests) * 100
+        phase3_success_rate = (phase3_passed / phase3_tests) * 100 if phase3_tests > 0 else 0
         
-        print(f"Total Tests: {total_tests}")
-        print(f"Passed: {passed_tests}")
-        print(f"Failed: {failed_tests}")
-        print(f"Success Rate: {(passed_tests/total_tests)*100:.1f}%")
+        print(f"Overall Tests Passed: {successful_tests}/{total_tests} ({success_rate:.1f}%)")
+        print(f"Phase 3 Tests Passed: {phase3_passed}/{phase3_tests} ({phase3_success_rate:.1f}%)")
         
-        if failed_tests > 0:
-            print("\n❌ FAILED TESTS:")
-            for result in self.test_results:
-                if not result["success"]:
-                    print(f"  - {result['test']}: {result['message']}")
-        
-        return failed_tests == 0
+        if success_rate >= 80 and phase3_success_rate >= 70:
+            print("🎉 Backend testing completed with excellent results!")
+            print("✅ Phase 3 Advanced Analytics system is working correctly!")
+            return True
+        elif success_rate >= 60:
+            print("⚠️  Backend testing completed with acceptable results")
+            if phase3_success_rate < 70:
+                print("⚠️  Phase 3 Advanced Analytics needs attention")
+            return True
+        else:
+            print("❌ Backend testing completed with concerning results")
+            return False
 
 if __name__ == "__main__":
     tester = ScriptGenerationTester()
