@@ -512,7 +512,10 @@ function App() {
               >
                 Create New Contract
               </Button>
-              <Button className="flex-1 bg-green-600 hover:bg-green-700">
+              <Button 
+                onClick={downloadPDF}
+                className="flex-1 bg-green-600 hover:bg-green-700"
+              >
                 <Download className="mr-2 h-4 w-4" />
                 Download PDF
               </Button>
