@@ -985,6 +985,376 @@ class LegalMateAgents:
         
         return clauses
 
+    # NEW: Smart Contract Analysis Methods
+    @staticmethod
+    async def contract_analyzer(contract_content: str, contract_type: str = None, jurisdiction: str = "US") -> ContractAnalysisResult:
+        """Comprehensive AI-powered contract analysis and risk assessment"""
+        
+        analysis_prompt = f"""
+        As an expert legal analyst, perform a comprehensive analysis of this contract:
+        
+        CONTRACT TYPE: {contract_type or "Unknown"}
+        JURISDICTION: {jurisdiction}
+        
+        CONTRACT CONTENT:
+        {contract_content}
+        
+        Provide a detailed analysis in JSON format with:
+        
+        1. "risk_assessment": {{
+            "risk_score": (0-100 numeric score),
+            "risk_level": ("LOW"|"MEDIUM"|"HIGH"|"CRITICAL"),
+            "risk_factors": [
+                {{
+                    "factor": "Risk description",
+                    "severity": ("LOW"|"MEDIUM"|"HIGH"|"CRITICAL"),
+                    "likelihood": ("LOW"|"MEDIUM"|"HIGH"),
+                    "impact": "Description of potential impact",
+                    "mitigation": "Suggested mitigation strategy"
+                }}
+            ],
+            "recommendations": ["List of actionable recommendations"]
+        }}
+        
+        2. "clause_recommendations": [
+            {{
+                "clause_type": "Type of clause (e.g., 'Termination', 'Liability')",
+                "title": "Recommended clause title",
+                "content": "Specific clause text recommendation",
+                "priority": ("HIGH"|"MEDIUM"|"LOW"),
+                "reasoning": "Why this clause is recommended",
+                "industry_specific": (true|false)
+            }}
+        ]
+        
+        3. "compliance_issues": [
+            {{
+                "issue": "Description of compliance issue",
+                "jurisdiction": "{jurisdiction}",
+                "severity": ("HIGH"|"MEDIUM"|"LOW"),
+                "regulation": "Relevant regulation/law",
+                "solution": "How to address this issue"
+            }}
+        ]
+        
+        4. "readability_score": (0-100 numeric score for contract clarity)
+        5. "completeness_score": (0-100 numeric score for contract completeness)
+        
+        Focus on identifying missing clauses, ambiguous terms, potential legal risks, and compliance issues specific to {jurisdiction} jurisdiction.
+        """
+        
+        try:
+            # Use Gemini for comprehensive analysis
+            model = genai.GenerativeModel('gemini-1.5-pro')
+            response = model.generate_content(
+                analysis_prompt,
+                generation_config=genai.types.GenerationConfig(
+                    max_output_tokens=4000,
+                    temperature=0.1,
+                )
+            )
+            
+            # Extract JSON from response
+            json_match = re.search(r'\{.*\}', response.text, re.DOTALL)
+            if json_match:
+                analysis_data = json.loads(json_match.group())
+                
+                # Create structured result
+                risk_assessment = RiskAssessment(
+                    risk_score=analysis_data.get('risk_assessment', {}).get('risk_score', 50.0),
+                    risk_level=analysis_data.get('risk_assessment', {}).get('risk_level', 'MEDIUM'),
+                    risk_factors=analysis_data.get('risk_assessment', {}).get('risk_factors', []),
+                    recommendations=analysis_data.get('risk_assessment', {}).get('recommendations', [])
+                )
+                
+                clause_recommendations = [
+                    ClauseRecommendation(**clause) 
+                    for clause in analysis_data.get('clause_recommendations', [])
+                ]
+                
+                return ContractAnalysisResult(
+                    contract_content=contract_content,
+                    contract_type=contract_type,
+                    jurisdiction=jurisdiction,
+                    risk_assessment=risk_assessment,
+                    clause_recommendations=clause_recommendations,
+                    compliance_issues=analysis_data.get('compliance_issues', []),
+                    readability_score=analysis_data.get('readability_score', 75.0),
+                    completeness_score=analysis_data.get('completeness_score', 75.0)
+                )
+            
+        except Exception as e:
+            logging.error(f"Contract analysis error: {e}")
+        
+        # Fallback analysis if AI fails
+        return ContractAnalysisResult(
+            contract_content=contract_content,
+            contract_type=contract_type,
+            jurisdiction=jurisdiction,
+            risk_assessment=RiskAssessment(
+                risk_score=50.0,
+                risk_level="MEDIUM",
+                risk_factors=[{
+                    "factor": "Analysis unavailable",
+                    "severity": "MEDIUM",
+                    "likelihood": "MEDIUM",
+                    "impact": "Unable to perform automated analysis",
+                    "mitigation": "Manual legal review recommended"
+                }],
+                recommendations=["Manual legal review recommended"]
+            ),
+            clause_recommendations=[],
+            compliance_issues=[{
+                "issue": "Analysis unavailable",
+                "jurisdiction": jurisdiction,
+                "severity": "MEDIUM",
+                "regulation": "N/A",
+                "solution": "Manual compliance review recommended"
+            }],
+            readability_score=50.0,
+            completeness_score=50.0
+        )
+
+    @staticmethod
+    async def clause_recommender(contract_type: str, industry: str = None, jurisdiction: str = "US") -> List[ClauseRecommendation]:
+        """AI-powered clause recommendation engine"""
+        
+        recommendation_prompt = f"""
+        As a legal expert specializing in contract optimization, recommend essential clauses for:
+        
+        CONTRACT TYPE: {contract_type}
+        INDUSTRY: {industry or "General Business"}
+        JURISDICTION: {jurisdiction}
+        
+        Provide clause recommendations in JSON format:
+        [
+            {{
+                "clause_type": "Type of clause",
+                "title": "Clause title",
+                "content": "Specific recommended clause text",
+                "priority": ("HIGH"|"MEDIUM"|"LOW"),
+                "reasoning": "Legal reasoning for this recommendation",
+                "industry_specific": (true|false)
+            }}
+        ]
+        
+        Focus on:
+        - Essential missing clauses
+        - Industry-specific protections
+        - Jurisdiction-specific requirements
+        - Risk mitigation clauses
+        - Performance and liability terms
+        
+        Recommend 5-10 most important clauses.
+        """
+        
+        try:
+            # Use Groq for structured recommendations
+            chat_completion = groq_client.chat.completions.create(
+                messages=[{"role": "user", "content": recommendation_prompt}],
+                model="llama-3.3-70b-versatile",
+                temperature=0.1,
+                max_tokens=2000
+            )
+            
+            response_text = chat_completion.choices[0].message.content
+            json_match = re.search(r'\[.*\]', response_text, re.DOTALL)
+            
+            if json_match:
+                recommendations_data = json.loads(json_match.group())
+                return [ClauseRecommendation(**rec) for rec in recommendations_data]
+                
+        except Exception as e:
+            logging.error(f"Clause recommendation error: {e}")
+        
+        # Fallback recommendations
+        return [
+            ClauseRecommendation(
+                clause_type="Termination",
+                title="Termination Clause",
+                content="Either party may terminate this agreement with 30 days written notice.",
+                priority="HIGH",
+                reasoning="Essential for defining how the contract can be ended",
+                industry_specific=False
+            ),
+            ClauseRecommendation(
+                clause_type="Governing Law",
+                title="Governing Law",
+                content=f"This agreement shall be governed by the laws of {jurisdiction}.",
+                priority="HIGH",
+                reasoning="Required to establish legal jurisdiction for disputes",
+                industry_specific=False
+            )
+        ]
+
+    @staticmethod
+    async def contract_comparator(contract1: str, contract2: str, label1: str = "Contract A", label2: str = "Contract B") -> ContractComparisonResult:
+        """AI-powered contract comparison with diff highlighting"""
+        
+        # Use difflib for technical comparison
+        lines1 = contract1.splitlines()
+        lines2 = contract2.splitlines()
+        
+        diff = list(difflib.unified_diff(lines1, lines2, lineterm=''))
+        
+        # Calculate similarity
+        similarity = difflib.SequenceMatcher(None, contract1, contract2).ratio() * 100
+        
+        # AI analysis of differences
+        comparison_prompt = f"""
+        As a legal expert, analyze the differences between these two contracts:
+        
+        CONTRACT A ({label1}):
+        {contract1[:2000]}...
+        
+        CONTRACT B ({label2}):
+        {contract2[:2000]}...
+        
+        TECHNICAL DIFF:
+        {chr(10).join(diff[:50])}
+        
+        Provide analysis in JSON format:
+        {{
+            "differences": [
+                {{
+                    "type": ("addition"|"deletion"|"modification"),
+                    "section": "Section name/description",
+                    "contract1_text": "Text from contract 1 (if applicable)",
+                    "contract2_text": "Text from contract 2 (if applicable)", 
+                    "significance": ("HIGH"|"MEDIUM"|"LOW"),
+                    "description": "Explanation of the difference and its implications"
+                }}
+            ],
+            "summary": "Overall summary of key differences and their legal implications"
+        }}
+        
+        Focus on legally significant differences, not minor formatting changes.
+        """
+        
+        try:
+            # Use OpenRouter free model for comparison
+            async with openrouter_client as client:
+                response = await client.post("/chat/completions", json={
+                    "model": "qwen/qwen-2.5-72b-instruct:free",
+                    "messages": [{"role": "user", "content": comparison_prompt}],
+                    "temperature": 0.1,
+                    "max_tokens": 2000
+                })
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    content = result["choices"][0]["message"]["content"]
+                    
+                    json_match = re.search(r'\{.*\}', content, re.DOTALL)
+                    if json_match:
+                        comparison_data = json.loads(json_match.group())
+                        
+                        differences = [
+                            ContractDifference(**diff_item) 
+                            for diff_item in comparison_data.get('differences', [])
+                        ]
+                        
+                        return ContractComparisonResult(
+                            contract1_label=label1,
+                            contract2_label=label2,
+                            differences=differences,
+                            similarity_score=similarity,
+                            summary=comparison_data.get('summary', 'Comparison analysis completed')
+                        )
+                        
+        except Exception as e:
+            logging.error(f"Contract comparison error: {e}")
+        
+        # Fallback comparison
+        return ContractComparisonResult(
+            contract1_label=label1,
+            contract2_label=label2,
+            differences=[
+                ContractDifference(
+                    type="modification",
+                    section="General",
+                    contract1_text=contract1[:100] + "...",
+                    contract2_text=contract2[:100] + "...",
+                    significance="MEDIUM",
+                    description="Manual comparison required - automated analysis unavailable"
+                )
+            ],
+            similarity_score=similarity,
+            summary=f"Contracts are {similarity:.1f}% similar. Manual review recommended for detailed analysis."
+        )
+
+    @staticmethod
+    async def enhanced_compliance_checker(contract_content: str, jurisdictions: List[str]) -> Dict[str, Any]:
+        """Enhanced multi-jurisdiction compliance validation"""
+        
+        compliance_prompt = f"""
+        As a compliance expert, analyze this contract for legal compliance across multiple jurisdictions:
+        
+        JURISDICTIONS: {', '.join(jurisdictions)}
+        
+        CONTRACT:
+        {contract_content}
+        
+        Provide compliance analysis in JSON format:
+        {{
+            "overall_compliance_score": (0-100),
+            "jurisdiction_scores": {{
+                "{jurisdictions[0]}": (0-100),
+                {'"' + '": (0-100), "'.join(jurisdictions[1:]) + '": (0-100)' if len(jurisdictions) > 1 else ''}
+            }},
+            "compliance_issues": [
+                {{
+                    "jurisdiction": "Jurisdiction code",
+                    "issue": "Description of compliance issue",
+                    "severity": ("CRITICAL"|"HIGH"|"MEDIUM"|"LOW"),
+                    "regulation": "Relevant law/regulation",
+                    "consequence": "Potential legal consequence",
+                    "solution": "How to fix this issue",
+                    "required_clause": "Suggested clause text (if applicable)"
+                }}
+            ],
+            "recommendations": [
+                "List of actionable compliance recommendations"
+            ]
+        }}
+        
+        Focus on enforceable contracts, required disclosures, consumer protection laws, and jurisdiction-specific requirements.
+        """
+        
+        try:
+            # Use Gemini for comprehensive compliance analysis
+            model = genai.GenerativeModel('gemini-1.5-pro')
+            response = model.generate_content(
+                compliance_prompt,
+                generation_config=genai.types.GenerationConfig(
+                    max_output_tokens=3000,
+                    temperature=0.1,
+                )
+            )
+            
+            json_match = re.search(r'\{.*\}', response.text, re.DOTALL)
+            if json_match:
+                return json.loads(json_match.group())
+                
+        except Exception as e:
+            logging.error(f"Enhanced compliance check error: {e}")
+        
+        # Fallback compliance result
+        return {
+            "overall_compliance_score": 75.0,
+            "jurisdiction_scores": {jurisdiction: 75.0 for jurisdiction in jurisdictions},
+            "compliance_issues": [{
+                "jurisdiction": jurisdictions[0] if jurisdictions else "US",
+                "issue": "Automated compliance analysis unavailable",
+                "severity": "MEDIUM",
+                "regulation": "General Contract Law",
+                "consequence": "May require manual legal review",
+                "solution": "Consult with legal counsel",
+                "required_clause": None
+            }],
+            "recommendations": ["Manual legal review recommended for compliance verification"]
+        }
+
 
 # API Endpoints
 @api_router.get("/")
