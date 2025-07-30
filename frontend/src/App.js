@@ -11,7 +11,7 @@ import { Badge } from './components/ui/badge';
 import { Progress } from './components/ui/progress';
 import { Alert, AlertDescription } from './components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './components/ui/tabs';
-import { FileText, Zap, Shield, Users, CheckCircle, AlertTriangle, Download, Eye } from 'lucide-react';
+import { FileText, Zap, Shield, Users, CheckCircle, AlertTriangle, Download, Eye, Calendar } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
