@@ -522,6 +522,15 @@ async def generate_contract(request: ContractRequest):
             contract_content, request.execution_date
         )
         
+        # Ensure compliance_result is a dictionary
+        if not isinstance(compliance_result, dict):
+            logging.warning(f"Compliance result is not a dict: {type(compliance_result)}, value: {compliance_result}")
+            compliance_result = {
+                "compliance_score": 75.0,
+                "risk_warnings": ["Compliance validation returned unexpected format"],
+                "suggestions": ["Manual review recommended"]
+            }
+        
         # Create contract object
         generated_contract = GeneratedContract(
             contract_type=request.contract_type,
