@@ -900,6 +900,163 @@ This is a scientifically engineered viral framework optimized through recursive 
     )
 
 
+async def _generate_advanced_framework(request: PromptEnhancementRequest, audience_analysis: AudienceAnalysis, industry_context: dict, strategy: dict, index: int) -> EnhancementVariation:
+    """Generate advanced framework for emotional and technical categories with enhanced features"""
+    
+    chat = LlmChat(
+        api_key=GEMINI_API_KEY,
+        session_id=f"enhance-advanced-{strategy['focus']}-{str(uuid.uuid4())[:8]}",
+        system_message=strategy["system_prompt"]
+    ).with_model("gemini", "gemini-2.0-flash")
+    
+    enhancement_prompt = f"""ADVANCED FRAMEWORK CREATION WITH ENHANCED FEATURES:
+
+STEP 1 - DEEP ANALYSIS AND UNDERSTANDING:
+Original Prompt: "{request.original_prompt}"
+Video Type: {request.video_type}
+Industry: {request.industry_focus}
+Target Audience: {audience_analysis.recommended_tone} tone, {audience_analysis.complexity_level} complexity
+Cultural Context: {', '.join(audience_analysis.cultural_considerations)}
+Platform Optimizations: {', '.join(audience_analysis.platform_optimizations)}
+
+STEP 2 - ADVANCED STRATEGIC FRAMEWORK IDENTIFICATION:
+Based on your expertise in {strategy['focus']} optimization with advanced features, identify:
+- Advanced psychological triggers and emotional engineering techniques
+- Multi-layered narrative structures with sophisticated frameworks
+- Industry-specific best practices with cutting-edge methodologies
+- Platform-specific optimization with algorithm mastery
+- Advanced engagement mechanics and retention strategies
+
+STEP 3 - COMPREHENSIVE ADVANCED FRAMEWORK CREATION:
+Create a detailed, production-ready advanced framework that includes:
+
+A) ADVANCED OPENING HOOK FRAMEWORK:
+- Multi-layered attention-grabbing sequences (0-5 seconds)
+- Sophisticated pattern interrupts and curiosity gaps
+- Advanced audience identification and segmentation
+- Complex value proposition and promise architecture
+
+B) ADVANCED NARRATIVE STRUCTURE TEMPLATE:
+- Act 1: Advanced setup with psychological profiling [detailed templates]
+- Act 2: Complex development with emotional engineering [detailed templates]  
+- Act 3: Sophisticated resolution with advanced CTAs [detailed templates]
+- Meta-layer: Advanced psychological frameworks woven throughout
+
+C) ADVANCED DIALOGUE TEMPLATES AND TRANSITIONS:
+- Sophisticated phrases optimized for {strategy['focus']} with advanced psychology
+- Complex transition templates with emotional bridges
+- Advanced placeholder templates with psychological triggers
+- Sophisticated voice and tone guidelines with micro-adjustments
+
+D) ADVANCED PRODUCTION GUIDELINES:
+- Precise pacing instructions with psychological timing
+- Advanced visual cue suggestions with emotional mapping
+- Sophisticated music/sound effect recommendations
+- Advanced technical specifications for optimal psychological impact
+
+E) ADVANCED CALL-TO-ACTION FRAMEWORK:
+- Multi-layered action-oriented language with psychological triggers
+- Advanced urgency/scarcity elements with emotional amplification
+- Sophisticated CTA options based on psychological readiness stages
+- Advanced platform-specific optimization with algorithm mastery
+
+STEP 4 - ADVANCED INDUSTRY-SPECIFIC CUSTOMIZATION:
+Incorporate advanced {request.industry_focus} industry elements:
+- Sophisticated terminology and advanced jargon usage
+- Cutting-edge industry best practices and methodologies
+- Advanced case studies and expert-level examples
+- Complex compliance considerations and risk management
+
+STEP 5 - ADVANCED PSYCHOLOGICAL ENGAGEMENT INTEGRATION:
+Embed {strategy['focus']}-optimized advanced psychological elements:
+- Sophisticated trigger points with precise timing
+- Advanced engagement maintenance with psychological loops
+- Complex retention and recall optimization techniques
+- Advanced social sharing psychological motivators with viral mechanics
+
+Please provide your response in this EXACT structured format:
+
+ADVANCED_FRAMEWORK:
+[Comprehensive, production-ready advanced framework with all templates, placeholders, and specific instructions - minimum 750 words with sophisticated structure]
+
+ADVANCED_PRODUCTION_GUIDELINES:
+[Sophisticated production instructions including precise psychological timing, advanced visual cues, complex technical requirements, and expert execution details]
+
+ADVANCED_TARGET_ENGAGEMENT:
+[Detailed description of expected advanced audience response, sophisticated engagement patterns, and complex success metrics]
+
+ADVANCED_INDUSTRY_ELEMENTS:
+[List of 7-10 specific advanced industry elements, cutting-edge best practices, and sophisticated customizations incorporated]
+
+ADVANCED_PSYCHOLOGICAL_TRIGGERS:
+[List of 7-10 specific advanced psychological triggers and sophisticated engagement mechanics integrated into the framework]
+
+ADVANCED_PLATFORM_ADAPTATIONS:
+[Sophisticated modifications for different social media platforms with algorithm mastery and advanced content distribution strategies]"""
+
+    response = await chat.send_message(UserMessage(text=enhancement_prompt))
+    
+    # Parse the comprehensive response structure
+    sections = {}
+    current_section = None
+    current_content = []
+    
+    for line in response.split('\n'):
+        if line.strip().endswith(':') and any(key in line.strip().upper() for key in ['ADVANCED_FRAMEWORK:', 'ADVANCED_PRODUCTION_GUIDELINES:', 'ADVANCED_TARGET_ENGAGEMENT:', 'ADVANCED_INDUSTRY_ELEMENTS:', 'ADVANCED_PSYCHOLOGICAL_TRIGGERS:', 'ADVANCED_PLATFORM_ADAPTATIONS:']):
+            if current_section:
+                sections[current_section] = '\n'.join(current_content).strip()
+            current_section = line.strip().replace(':', '').lower().replace('_', '_')
+            current_content = []
+        else:
+            current_content.append(line)
+    
+    if current_section:
+        sections[current_section] = '\n'.join(current_content).strip()
+    
+    # Create comprehensive enhanced prompt from advanced framework
+    advanced_framework = sections.get('advanced_framework', sections.get('enhanced_prompt', f"Advanced {strategy['focus']} framework for {request.original_prompt}"))
+    production_guidelines = sections.get('advanced_production_guidelines', 'Advanced production standards applied')
+    psychological_triggers = sections.get('advanced_psychological_triggers', 'Sophisticated engagement techniques integrated')
+    platform_adaptations = sections.get('advanced_platform_adaptations', 'Advanced multi-platform optimization included')
+    
+    # Combine all elements into a comprehensive enhanced prompt
+    comprehensive_prompt = f"""🚀 ADVANCED FRAMEWORK - {strategy['title'].upper()} WITH ENHANCED FEATURES
+
+📋 ADVANCED FRAMEWORK:
+{advanced_framework}
+
+🎯 ADVANCED PRODUCTION GUIDELINES:
+{production_guidelines}
+
+🧠 ADVANCED PSYCHOLOGICAL TRIGGERS INTEGRATED:
+{psychological_triggers}
+
+📱 ADVANCED PLATFORM ADAPTATIONS:
+{platform_adaptations}
+
+This advanced framework serves as a sophisticated blueprint for generating high-quality, {strategy['focus']}-optimized video content with enhanced features that maximizes engagement through advanced psychological techniques and achieves professional results with cutting-edge methodologies."""
+    
+    # Calculate enhanced performance score based on advanced framework comprehensiveness  
+    framework_length = len(comprehensive_prompt)
+    original_length = len(request.original_prompt)
+    advanced_bonus = len(sections) * 0.8  # Higher bonus for advanced structure
+    performance_score = min(10.0, (framework_length / max(original_length, 100)) * 2.0 + advanced_bonus + (index + 1) * 0.5)
+    
+    # Parse industry elements from response
+    industry_elements_text = sections.get('advanced_industry_elements', 'Advanced industry best practices applied')
+    industry_elements = [elem.strip() for elem in industry_elements_text.split('\n') if elem.strip() and not elem.strip().startswith('[')][:10]
+    
+    return EnhancementVariation(
+        id=f"var_{index+1}_{strategy['focus']}_advanced_framework",
+        title=f"{strategy['title']} - Advanced Enhanced Framework",
+        enhanced_prompt=comprehensive_prompt,
+        focus_strategy=f"{strategy['focus']}_advanced_framework",
+        target_engagement=sections.get('advanced_target_engagement', f'High-impact advanced {strategy["focus"]} engagement with sophisticated framework structure and enhanced features'),
+        industry_specific_elements=industry_elements or [f"Advanced {request.industry_focus} optimization", "Sophisticated framework structure", "Cutting-edge industry best practices integration"],
+        estimated_performance_score=performance_score
+    )
+
+
 async def _generate_standard_framework(request: PromptEnhancementRequest, audience_analysis: AudienceAnalysis, strategy: dict, index: int) -> EnhancementVariation:
     """Generate standard framework for non-viral categories"""
     
