@@ -4,7 +4,7 @@ import json
 from datetime import datetime
 
 class LegalMateAPITester:
-    def __init__(self, base_url="https://dcef3f77-45a6-472e-8909-c0c5dded1887.preview.emergentagent.com"):
+    def __init__(self, base_url="https://04d9b58e-8f97-4faa-9616-739b49081c1e.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.tests_run = 0
