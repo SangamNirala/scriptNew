@@ -621,7 +621,7 @@ const ScriptGenerator = () => {
                   <p className="text-gray-400 bg-white/5 p-3 rounded-lg">{prompt}</p>
                 </div>
 
-                {/* Multiple Enhancement Variations */}
+                {/* Enhancement Variations Preview */}
                 {enhancementVariations.length > 0 && (
                   <div className="mb-6">
                     <h4 className="text-sm font-medium text-gray-300 mb-3">Enhancement Variations:</h4>
@@ -629,16 +629,11 @@ const ScriptGenerator = () => {
                       {enhancementVariations.map((variation, index) => (
                         <div 
                           key={variation.id} 
-                          className={`p-4 rounded-lg border transition-all duration-200 cursor-pointer ${
-                            selectedVariation?.id === variation.id 
-                              ? 'bg-purple-500/20 border-purple-400/50' 
-                              : 'bg-white/5 border-white/20 hover:bg-white/10 hover:border-white/30'
-                          }`}
-                          onClick={() => handleVariationSelect(variation)}
+                          className="p-4 rounded-lg border bg-white/5 border-white/20"
                         >
                           <div className="flex justify-between items-start mb-2">
                             <div className="flex items-center space-x-2">
-                              <span className="text-white font-medium">{variation.title}</span>
+                              <span className="text-white font-medium">{index + 1}. {variation.title}</span>
                               <span className="text-xs px-2 py-1 bg-blue-500/20 text-blue-300 rounded-full">
                                 {variation.focus_strategy}
                               </span>
@@ -646,9 +641,6 @@ const ScriptGenerator = () => {
                                 Score: {Math.round(variation.estimated_performance_score)}/10
                               </span>
                             </div>
-                            {selectedVariation?.id === variation.id && (
-                              <span className="text-purple-400 text-xs">✓ Selected</span>
-                            )}
                           </div>
                           <div 
                             className="text-gray-300 text-sm leading-relaxed"
