@@ -64,21 +64,21 @@ function App() {
     }
   };
 
-  const updateParties = useCallback((field, value) => {
+  const updateParties = (field, value) => {
     setContractData(prev => ({
       ...prev,
       parties: { ...prev.parties, [field]: value }
     }));
-  }, []);
+  };
 
-  const updateTerms = useCallback((field, value) => {
+  const updateTerms = (field, value) => {
     setContractData(prev => ({
       ...prev,
       terms: { ...prev.terms, [field]: value }
     }));
-  }, []);
+  };
 
-  const generateContract = useCallback(async () => {
+  const generateContract = async () => {
     setIsGenerating(true);
     try {
       const response = await axios.post(`${API}/generate-contract`, contractData);
@@ -91,15 +91,7 @@ function App() {
     } finally {
       setIsGenerating(false);
     }
-  }, [contractData]);
-
-  const handleParty1NameChange = useCallback((e) => {
-    updateParties('party1_name', e.target.value);
-  }, [updateParties]);
-
-  const handleParty2NameChange = useCallback((e) => {
-    updateParties('party2_name', e.target.value);
-  }, [updateParties]);
+  };
 
   const ContractTypeStep = () => (
     <Card className="w-full max-w-2xl mx-auto">
