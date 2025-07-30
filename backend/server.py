@@ -133,6 +133,12 @@ class LegalMateAgents:
             Generate a professional Non-Disclosure Agreement with these requirements:
             {requirements}
             
+            FORMATTING REQUIREMENTS:
+            - Remove all instances of asterisk (*) expressions 
+            - Use proper bold formatting for headings and key sections using **text** format
+            - Include a line for Date of Execution: [Date of Execution] before any special clauses section
+            - Use proper paragraph spacing and professional formatting
+            
             Include standard clauses:
             - Definition of Confidential Information
             - Permitted Uses and Restrictions
@@ -141,11 +147,23 @@ class LegalMateAgents:
             - Remedies for Breach
             - Governing Law and Jurisdiction
             
+            Format the document professionally with:
+            - **Bold headings** for major sections
+            - Clear paragraph structure
+            - [Date of Execution] placeholder for date entry
+            - No asterisk (*) notations anywhere in the document
+            
             Make it legally sound and professionally formatted.
             """,
             "freelance_agreement": """
             Generate a comprehensive Freelance Service Agreement with:
             {requirements}
+            
+            FORMATTING REQUIREMENTS:
+            - Remove all instances of asterisk (*) expressions 
+            - Use proper bold formatting for headings and key sections using **text** format
+            - Include a line for Date of Execution: [Date of Execution] before any special clauses section
+            - Use proper paragraph spacing and professional formatting
             
             Include essential clauses:
             - Scope of Work
@@ -155,11 +173,23 @@ class LegalMateAgents:
             - Liability Limitations
             - Governing Law
             
+            Format the document professionally with:
+            - **Bold headings** for major sections
+            - Clear paragraph structure
+            - [Date of Execution] placeholder for date entry
+            - No asterisk (*) notations anywhere in the document
+            
             Ensure clarity and legal enforceability.
             """,
             "partnership_agreement": """
             Generate a Business Partnership Agreement including:
             {requirements}
+            
+            FORMATTING REQUIREMENTS:
+            - Remove all instances of asterisk (*) expressions 
+            - Use proper bold formatting for headings and key sections using **text** format
+            - Include a line for Date of Execution: [Date of Execution] before any special clauses section
+            - Use proper paragraph spacing and professional formatting
             
             Cover key areas:
             - Partnership Structure
@@ -168,6 +198,12 @@ class LegalMateAgents:
             - Decision Making Process
             - Dissolution Procedures
             - Governing Law
+            
+            Format the document professionally with:
+            - **Bold headings** for major sections
+            - Clear paragraph structure
+            - [Date of Execution] placeholder for date entry
+            - No asterisk (*) notations anywhere in the document
             
             Make it comprehensive and legally binding.
             """
