@@ -11,7 +11,7 @@ import re
 from datetime import datetime
 
 class PDFBoldFormattingTester:
-    def __init__(self, base_url="https://8a519dcc-a80d-4e00-b1f5-25e1a5d8b4a9.preview.emergentagent.com"):
+    def __init__(self, base_url="https://9d83ef7f-d516-415d-bb71-935c4ad43737.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.tests_run = 0
