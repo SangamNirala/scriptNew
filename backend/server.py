@@ -929,13 +929,14 @@ async def download_edited_contract_pdf(request: EditedContractRequest):
                 
                 if first_party_info.get('signature'):
                     try:
-                        # Use direct base64 processing for better PDF compatibility
-                        signature_buffer = LegalMateAgents.process_signature_image_direct(first_party_info['signature'])
-                        # Use direct Image creation without ImageReader for simpler processing
-                        signature_image = Image(signature_buffer, width=200, height=50)
+                        # Use robust base64 processing with PIL standardization
+                        signature_buffer = LegalMateAgents.process_signature_image_robust(first_party_info['signature'])
+                        # Create reportlab Image with better error handling
+                        signature_image = Image(signature_buffer, width=2*inch, height=0.8*inch)
                         content.append(signature_image)
+                        logging.info("Successfully added first party signature to PDF")
                     except Exception as e:
-                        logging.warning(f"Error processing first party signature: {e}")
+                        logging.error(f"Error processing first party signature for PDF: {e}")
                         content.append(Paragraph("[Signature Image Error]", styles['Normal']))
                 else:
                     content.append(Spacer(1, 30))  # Space for manual signature
