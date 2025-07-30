@@ -79,19 +79,19 @@ function App() {
     }
   };
 
-  const updateParties = (field, value) => {
+  const updateParties = useCallback((field, value) => {
     setContractData(prev => ({
       ...prev,
       parties: { ...prev.parties, [field]: value }
     }));
-  };
+  }, []);
 
-  const updateTerms = (field, value) => {
+  const updateTerms = useCallback((field, value) => {
     setContractData(prev => ({
       ...prev,
       terms: { ...prev.terms, [field]: value }
     }));
-  };
+  }, []);
 
   const ContractTypeStep = () => (
     <Card className="w-full max-w-2xl mx-auto">
