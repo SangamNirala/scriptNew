@@ -351,9 +351,40 @@ class LegalMateAgents:
 
     @staticmethod
     def convert_markdown_to_html_bold(text: str) -> str:
-        """Convert **bold** markdown formatting to <b>bold</b> HTML tags for reportlab"""
-        # Convert **text** to <b>text</b>
-        return re.sub(r'\*\*([^*]+)\*\*', r'<b>\1</b>', text)
+        """Convert **markdown bold** to <b>HTML bold</b> for reportlab"""
+        return re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', text)
+
+    @staticmethod
+    def process_signature_content(content: str, first_party_signature: str = None, second_party_signature: str = None) -> tuple:
+        """Process contract content and return content with signature elements separated"""
+        
+        # Split content into main content and signature section
+        signature_section_start = content.find("**SIGNATURES**")
+        
+        if signature_section_start == -1:
+            # No signature section found, return content as is
+            return content, [], []
+        
+        main_content = content[:signature_section_start]
+        signature_content = content[signature_section_start:]
+        
+        # Extract signature placeholders and party names
+        first_party_info = {}
+        second_party_info = {}
+        
+        # Look for First Party signature placeholder
+        first_match = re.search(r'\[First Party Signature Placeholder\]\s*\n_+\s*\n(.+)', signature_content)
+        if first_match:
+            first_party_info['name'] = first_match.group(1).strip()
+            first_party_info['signature'] = first_party_signature
+        
+        # Look for Second Party signature placeholder  
+        second_match = re.search(r'\[Second Party Signature Placeholder\]\s*\n_+\s*\n(.+)', signature_content)
+        if second_match:
+            second_party_info['name'] = second_match.group(1).strip()
+            second_party_info['signature'] = second_party_signature
+        
+        return main_content, first_party_info, second_party_info
 
     @staticmethod
     def replace_execution_date(content: str, execution_date: str = None) -> str:
