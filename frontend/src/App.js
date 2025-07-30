@@ -16,6 +16,83 @@ import { FileText, Zap, Shield, Users, CheckCircle, AlertTriangle, Download, Eye
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
+// Move PartiesStep outside the App component to prevent re-creation
+const PartiesStep = ({ contractData, updateParties, setCurrentStep }) => (
+  <Card className="w-full max-w-2xl mx-auto">
+    <CardHeader>
+      <CardTitle className="text-2xl">Party Information</CardTitle>
+      <CardDescription>Enter details about the parties involved</CardDescription>
+    </CardHeader>
+    <CardContent className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="party1_name">Party 1 Name</Label>
+          <Input 
+            id="party1_name"
+            placeholder="Company or Individual Name"
+            value={contractData.parties.party1_name || ''}
+            onChange={(e) => updateParties('party1_name', e.target.value)}
+          />
+        </div>
+        <div>
+          <Label htmlFor="party1_type">Party 1 Type</Label>
+          <Select value={contractData.parties.party1_type || ''} onValueChange={(value) => 
+            updateParties('party1_type', value)
+          }>
+            <SelectTrigger>
+              <SelectValue placeholder="Select type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="individual">Individual</SelectItem>
+              <SelectItem value="company">Company</SelectItem>
+              <SelectItem value="llc">LLC</SelectItem>
+              <SelectItem value="corporation">Corporation</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label htmlFor="party2_name">Party 2 Name</Label>
+          <Input 
+            id="party2_name"
+            placeholder="Company or Individual Name"
+            value={contractData.parties.party2_name || ''}
+            onChange={(e) => updateParties('party2_name', e.target.value)}
+          />
+        </div>
+        <div>
+          <Label htmlFor="party2_type">Party 2 Type</Label>
+          <Select value={contractData.parties.party2_type || ''} onValueChange={(value) => 
+            updateParties('party2_type', value)
+          }>
+            <SelectTrigger>
+              <SelectValue placeholder="Select type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="individual">Individual</SelectItem>
+              <SelectItem value="company">Company</SelectItem>
+              <SelectItem value="llc">LLC</SelectItem>
+              <SelectItem value="corporation">Corporation</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="flex gap-4 mt-6">
+        <Button variant="outline" onClick={() => setCurrentStep(1)}>
+          Back
+        </Button>
+        <Button 
+          onClick={() => setCurrentStep(3)} 
+          disabled={!contractData.parties.party1_name || !contractData.parties.party2_name}
+          className="flex-1"
+        >
+          Next: Terms & Conditions
+        </Button>
+      </div>
+    </CardContent>
+  </Card>
+);
+
 function App() {
   const [contractTypes, setContractTypes] = useState([]);
   const [jurisdictions, setJurisdictions] = useState([]);
