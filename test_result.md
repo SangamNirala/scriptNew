@@ -107,20 +107,17 @@ user_problem_statement: "You are an expert in text-to-speech (TTS) systems and u
 **CONTINUATION REQUEST:** When the "Enhance Prompt" button is clicked, the system should continue to generate the three categorized enhanced prompts: Emotional Engagement Focus, Technical Excellence Focus, Viral Potential Focus. However, each enhanced prompt should be significantly upgraded in depth, clarity, and structure — making them fully optimized for generating high-quality, ready-to-use scripts. The enhancements should go beyond surface-level rewording and incorporate advanced prompt engineering techniques tailored to each focus area.
 
 backend:
-  - task: "Enhanced Prompt Enhancement System"
+  - task: "Advanced Comprehensive Script Framework Enhancement System"
     implemented: true
-    working: true
+    working: false
     file: "server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
-        - working: true
-          agent: "testing"
-          comment: "✅ COMPREHENSIVE ENHANCED PROMPT SYSTEM TESTING COMPLETED: Successfully tested the new enhanced /api/enhance-prompt endpoint with 100% success rate. The new system provides substantially higher quality results than the previous simple system. Key features verified: 1) Multiple enhancement variations (3 different strategies: emotional, technical, viral) working correctly ✅, 2) Context-aware enhancements based on video type and industry focus functioning perfectly ✅, 3) Target audience analysis with tone and complexity recommendations implemented ✅, 4) Quality metrics and scoring system operational with improvement ratios of 116x+ ✅, 5) Industry-specific insights and recommendations generated correctly ✅, 6) Chain-of-thought reasoning and multi-step enhancement process working ✅, 7) Custom enhancement counts (tested with 4 variations) working ✅, 8) Educational strategy inclusion verified ✅, 9) Quality scores within valid range (0-10) ✅, 10) Comprehensive recommendation system generating detailed guidance ✅. Backward compatibility maintained with /api/enhance-prompt-legacy endpoint returning proper legacy structure. The enhanced prompt system is production-ready and delivers significantly higher quality enhancements compared to the previous system."
-        - working: true
-          agent: "testing"
-          comment: "🎯 REVIEW REQUEST VERIFICATION COMPLETED: Successfully tested the /api/enhance-prompt endpoint with the exact sample prompt 'Create a video about healthy cooking tips' as requested in the review. CONFIRMED: 1) NEW ENHANCED RESPONSE STRUCTURE ✅ - All required fields present: original_prompt, audience_analysis, enhancement_variations, quality_metrics, recommendation, industry_insights, enhancement_methodology, 2) ENHANCEMENT VARIATIONS STRUCTURE ✅ - Generated 3 variations with all required fields: id, title, enhanced_prompt, focus_strategy, target_engagement, industry_specific_elements, estimated_performance_score (all scores 10.0/10), 3) QUALITY METRICS VERIFIED ✅ - All scoring fields present with valid ranges (0-10), improvement ratio of 92.78x indicating substantial enhancement, 4) AUDIENCE ANALYSIS COMPLETE ✅ - Recommended tone, complexity level, cultural considerations, platform optimizations, and engagement triggers all properly generated, 5) INDUSTRY INSIGHTS & RECOMMENDATIONS ✅ - Health-specific insights provided with comprehensive recommendation system identifying best variation, 6) MULTIPLE STRATEGIES CONFIRMED ✅ - Three distinct enhancement strategies (emotional, technical, viral) each producing different approaches and focus areas. The enhanced prompt endpoint is working correctly with the new enhanced response structure and ready for frontend integration."
+        - working: false
+          agent: "main"
+          comment: "MAJOR SYSTEM UPGRADE COMPLETED: Completely redesigned the enhance-prompt system to generate comprehensive script frameworks instead of simple enhanced prompts. New system features: 1) Few-shot learning examples for each strategy type, 2) Advanced system prompts with detailed expertise areas and framework creation protocols, 3) Comprehensive script framework generation including opening hooks, narrative structure templates, dialogue templates with placeholders, production guidelines, and call-to-action frameworks, 4) Industry-specific customization with terminology and best practices, 5) Psychological engagement integration with specific trigger points, 6) Platform-specific adaptations for different social media channels. Each enhanced prompt is now a complete ready-to-use script framework with professional production guidelines and advanced prompt engineering techniques. The system transforms basic video ideas into sophisticated, structured script blueprints that serve as comprehensive generation templates."
 
   - task: "Edge-TTS Integration"
     implemented: true
