@@ -407,14 +407,14 @@ class LegalMateAgents:
         first_party_info = {}
         second_party_info = {}
         
-        # Look for First Party signature placeholder
-        first_match = re.search(r'\[First Party Signature Placeholder\]\s*\n_+\s*\n(.+)', signature_content)
+        # Look for First Party signature placeholder (both original and uploaded versions)
+        first_match = re.search(r'\[First Party Signature (?:Placeholder|Uploaded)\]\s*\n_+\s*\n(.+)', signature_content)
         if first_match:
             first_party_info['name'] = first_match.group(1).strip()
             first_party_info['signature'] = first_party_signature
         
-        # Look for Second Party signature placeholder  
-        second_match = re.search(r'\[Second Party Signature Placeholder\]\s*\n_+\s*\n(.+)', signature_content)
+        # Look for Second Party signature placeholder (both original and uploaded versions)  
+        second_match = re.search(r'\[Second Party Signature (?:Placeholder|Uploaded)\]\s*\n_+\s*\n(.+)', signature_content)
         if second_match:
             second_party_info['name'] = second_match.group(1).strip()
             second_party_info['signature'] = second_party_signature
