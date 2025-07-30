@@ -101,3 +101,50 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: "Fixed input field focus issue for 'Purpose of Disclosure' and 'Agreement Duration' fields. These fields were losing focus after each keystroke, requiring users to click repeatedly to continue typing."
+
+backend:
+  - task: "Backend functionality unchanged"
+    implemented: true
+    working: true
+    file: "N/A"
+    stuck_count: 0
+    priority: "low"
+    needs_retesting: false
+    status_history:
+        -working: true
+        -agent: "main"
+        -comment: "No backend changes required for this UI fix"
+
+frontend:
+  - task: "Fix input field focus issue in TermsStep component"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        -working: true
+        -agent: "main"
+        -comment: "Applied same fix as PartiesStep - moved TermsStep component outside App component to prevent recreation on every render. This maintains input focus during typing."
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 1
+  run_ui: true
+
+test_plan:
+  current_focus:
+    - "Test Purpose of Disclosure textarea continuous typing"
+    - "Test Agreement Duration select functionality"
+    - "Test other input fields in TermsStep (Business Purpose, Scope of Work, etc.)"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+    -agent: "main"
+    -message: "Fixed the input field focus issue by moving TermsStep component outside App component. The root cause was component recreation on every state change, causing input fields to lose focus after each keystroke. Applied same solution that was previously used for PartiesStep component. Ready for testing to verify all input fields maintain focus during continuous typing."
