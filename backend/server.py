@@ -535,11 +535,14 @@ async def download_contract_pdf(contract_id: str):
         
         # Contract content
         contract_content = contract['content']
-        # Split content into paragraphs and add to PDF
+        
+        # Split content into paragraphs and add to PDF with proper bold formatting
         paragraphs = contract_content.split('\n\n')
         for paragraph in paragraphs:
             if paragraph.strip():
-                content.append(Paragraph(paragraph.strip(), styles['Normal']))
+                # Process bold formatting - convert **text** to <b>text</b> for reportlab
+                formatted_paragraph = LegalMateAgents.convert_markdown_to_html_bold(paragraph.strip())
+                content.append(Paragraph(formatted_paragraph, styles['Normal']))
                 content.append(Spacer(1, 12))
         
         # Build PDF
