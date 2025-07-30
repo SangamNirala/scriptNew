@@ -27,3 +27,5 @@ google-generativeai>=0.8.0
 groq>=0.11.0
 openai>=1.58.0
 reportlab>=4.0.0
+google-ai-generativelanguage
+Pillow
