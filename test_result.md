@@ -105,17 +105,17 @@
 user_problem_statement: "Fixed PDF download functionality. The 'Download PDF' button was not working because it had no onClick handler and there was no backend endpoint for PDF generation. Added PDF generation using reportlab library and proper download functionality."
 
 backend:
-  - task: "Backend functionality unchanged"
+  - task: "PDF generation endpoint"
     implemented: true
-    working: true
-    file: "N/A"
+    working: false
+    file: "/app/backend/server.py"
     stuck_count: 0
-    priority: "low"
-    needs_retesting: false
+    priority: "high"
+    needs_retesting: true
     status_history:
-        -working: true
+        -working: false
         -agent: "main"
-        -comment: "No backend changes required for this UI fix"
+        -comment: "Added new endpoint /contracts/{contract_id}/download-pdf using reportlab library for PDF generation. Added necessary imports and PDF generation logic. Installed reportlab>=4.0.0 in requirements.txt."
 
 frontend:
   - task: "Fix input field focus issue in TermsStep component"
