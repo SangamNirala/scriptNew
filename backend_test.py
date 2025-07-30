@@ -2224,6 +2224,231 @@ class LegalMateAPITester:
             print(f"❌ CRITICAL ERROR: {str(e)}")
             return False, {}
 
+    def test_real_signature_images(self):
+        """Test signature functionality with real signature images provided by user"""
+        print("\n🖼️  TESTING WITH REAL SIGNATURE IMAGES")
+        print("   Using provided test images: sign1.jpeg and sign2.png")
+        
+        # Load the real signature images
+        try:
+            with open('/app/sign1.jpeg', 'rb') as f:
+                sign1_data = f.read()
+                sign1_base64 = base64.b64encode(sign1_data).decode('utf-8')
+            
+            with open('/app/sign2.png', 'rb') as f:
+                sign2_data = f.read()
+                sign2_base64 = base64.b64encode(sign2_data).decode('utf-8')
+            
+            print(f"   ✅ Loaded sign1.jpeg: {len(sign1_data)} bytes")
+            print(f"   ✅ Loaded sign2.png: {len(sign2_data)} bytes")
+            
+        except Exception as e:
+            print(f"   ❌ Failed to load signature images: {str(e)}")
+            return False, {}
+        
+        # Generate a new contract for real signature testing
+        real_sig_data = {
+            "contract_type": "NDA",
+            "jurisdiction": "US",
+            "parties": {
+                "party1_name": "Real Signature Test Corp",
+                "party1_type": "corporation",
+                "party2_name": "Signature Image Validator",
+                "party2_type": "individual"
+            },
+            "terms": {
+                "purpose": "Testing with real signature images (sign1.jpeg and sign2.png) to verify PDF generation without '[Signature Image Error]'",
+                "duration": "2_years"
+            },
+            "special_clauses": ["Real signature image verification clause"]
+        }
+        
+        # Generate contract
+        success, response = self.run_test(
+            "Generate Contract for Real Signature Testing",
+            "POST",
+            "generate-contract",
+            200,
+            real_sig_data,
+            timeout=60
+        )
+        
+        if not success or 'contract' not in response:
+            print("❌ Failed to generate contract for real signature testing")
+            return False, {}
+        
+        contract = response['contract']
+        real_sig_contract_id = contract.get('id')
+        print(f"   Generated contract ID: {real_sig_contract_id}")
+        
+        # Upload real signature images
+        # Upload sign1.jpeg as first party signature
+        fp_real_sig_data = {
+            "contract_id": real_sig_contract_id,
+            "party_type": "first_party",
+            "signature_image": sign1_base64
+        }
+        
+        success_fp_real, response_fp_real = self.run_test(
+            "Upload Real First Party Signature (sign1.jpeg)",
+            "POST",
+            f"contracts/{real_sig_contract_id}/upload-signature",
+            200,
+            fp_real_sig_data
+        )
+        
+        # Upload sign2.png as second party signature
+        sp_real_sig_data = {
+            "contract_id": real_sig_contract_id,
+            "party_type": "second_party",
+            "signature_image": sign2_base64
+        }
+        
+        success_sp_real, response_sp_real = self.run_test(
+            "Upload Real Second Party Signature (sign2.png)",
+            "POST",
+            f"contracts/{real_sig_contract_id}/upload-signature",
+            200,
+            sp_real_sig_data
+        )
+        
+        if not (success_fp_real and success_sp_real):
+            print("❌ Failed to upload real signature images")
+            return False, {}
+        
+        print("   ✅ Both real signature images uploaded successfully")
+        
+        # Test PDF generation with real signatures
+        pdf_url = f"{self.api_url}/contracts/{real_sig_contract_id}/download-pdf"
+        
+        self.tests_run += 1
+        print(f"\n🔍 CRITICAL TEST: PDF Generation with Real Signature Images...")
+        print(f"   URL: {pdf_url}")
+        print("   🎯 MAIN OBJECTIVE: Verify NO '[Signature Image Error]' messages appear")
+        
+        try:
+            pdf_response = requests.get(pdf_url, timeout=30)
+            print(f"   Status: {pdf_response.status_code}")
+            
+            if pdf_response.status_code == 200:
+                print(f"✅ PDF download successful")
+                
+                # Verify PDF format
+                if not pdf_response.content.startswith(b'%PDF'):
+                    print("   ❌ Invalid PDF format")
+                    return False, {}
+                
+                content_length = len(pdf_response.content)
+                print(f"   PDF Size: {content_length} bytes")
+                
+                # CRITICAL VERIFICATION: Check for signature image errors
+                try:
+                    pdf_content_str = pdf_response.content.decode('latin-1', errors='ignore')
+                    
+                    # MAIN TEST: Check for '[Signature Image Error]' messages
+                    if '[Signature Image Error]' in pdf_content_str:
+                        print("   ❌ CRITICAL FAILURE: '[Signature Image Error]' found in PDF!")
+                        print("   ❌ The signature processing fix did NOT work")
+                        return False, {}
+                    else:
+                        print("   🎉 CRITICAL SUCCESS: NO '[Signature Image Error]' messages found!")
+                        print("   🎉 Signature processing fix is working correctly")
+                        self.tests_passed += 1
+                    
+                    # Additional verification: Look for signature images
+                    image_indicators = ['Image', '/Image', 'PNG', 'JPEG', 'IHDR', 'ImageReader']
+                    found_images = [ind for ind in image_indicators if ind in pdf_content_str]
+                    
+                    if found_images:
+                        print(f"   ✅ Signature images embedded in PDF: {found_images}")
+                    else:
+                        print("   ⚠️  Could not detect signature images in PDF structure")
+                    
+                    # Check signature sections
+                    signature_indicators = ['SIGNATURES', 'FIRST PARTY', 'SECOND PARTY']
+                    found_sections = [ind for ind in signature_indicators if ind in pdf_content_str]
+                    
+                    if found_sections:
+                        print(f"   ✅ Signature sections found: {found_sections}")
+                    else:
+                        print("   ❌ Signature sections missing from PDF")
+                    
+                    # Test edited PDF with real signatures
+                    print(f"\n   Testing Edited PDF with Real Signatures...")
+                    
+                    # Get contract with signatures
+                    contract_response = requests.get(f"{self.api_url}/contracts/{real_sig_contract_id}")
+                    if contract_response.status_code == 200:
+                        updated_contract = contract_response.json()
+                        
+                        # Modify content
+                        updated_contract['content'] = updated_contract['content'].replace(
+                            "Testing with real signature images",
+                            "EDITED: Testing with real signature images - content modified to verify edited PDF generation"
+                        )
+                        
+                        # Generate edited PDF
+                        edited_pdf_data = {"contract": updated_contract}
+                        edited_pdf_url = f"{self.api_url}/contracts/download-pdf-edited"
+                        
+                        try:
+                            edited_pdf_response = requests.post(
+                                edited_pdf_url,
+                                json=edited_pdf_data,
+                                headers={'Content-Type': 'application/json'},
+                                timeout=30
+                            )
+                            
+                            if edited_pdf_response.status_code == 200:
+                                print(f"   ✅ Edited PDF with real signatures generated successfully")
+                                
+                                # Check edited PDF for signature errors
+                                try:
+                                    edited_pdf_str = edited_pdf_response.content.decode('latin-1', errors='ignore')
+                                    
+                                    if '[Signature Image Error]' in edited_pdf_str:
+                                        print("   ❌ CRITICAL FAILURE: '[Signature Image Error]' found in edited PDF!")
+                                        return False, {}
+                                    else:
+                                        print("   🎉 SUCCESS: NO '[Signature Image Error]' in edited PDF!")
+                                    
+                                    # Check for signature images in edited PDF
+                                    edited_images = [ind for ind in image_indicators if ind in edited_pdf_str]
+                                    if edited_images:
+                                        print(f"   ✅ Real signature images in edited PDF: {edited_images}")
+                                    
+                                    # Verify edited content
+                                    if 'EDITED:' in edited_pdf_str:
+                                        print("   ✅ Edited content confirmed in PDF")
+                                    
+                                except Exception as e:
+                                    print(f"   ⚠️  Could not analyze edited PDF: {str(e)}")
+                            else:
+                                print(f"   ❌ Edited PDF generation failed: {edited_pdf_response.status_code}")
+                        
+                        except Exception as e:
+                            print(f"   ❌ Edited PDF test error: {str(e)}")
+                    
+                except Exception as e:
+                    print(f"   ❌ Could not analyze PDF content: {str(e)}")
+                    return False, {}
+                
+                return True, {
+                    "contract_id": real_sig_contract_id,
+                    "pdf_size": content_length,
+                    "no_signature_errors": '[Signature Image Error]' not in pdf_content_str,
+                    "images_embedded": len(found_images) > 0,
+                    "sign1_size": len(sign1_data),
+                    "sign2_size": len(sign2_data)
+                }
+            else:
+                print(f"❌ PDF download failed - Status: {pdf_response.status_code}")
+                return False, {}
+                
+        except Exception as e:
+            print(f"❌ PDF generation error: {str(e)}")
+            return False, {}
+
 def main():
     print("🚀 Starting LegalMate AI Backend API Tests")
     print("=" * 60)
