@@ -37,4 +37,3 @@ httplib2
 google-api-python-client
 Pillow
 httpx>=0.24.0
-difflib2>=0.1.0
