@@ -790,17 +790,74 @@ async def download_edited_contract_pdf(request: EditedContractRequest):
         content.append(Paragraph("<b>Status:</b> Edited", metadata_style))
         content.append(Spacer(1, 20))
         
-        # Contract content (edited)
+        # Contract content (edited) with signature processing
         contract_content = contract['content']
+        first_party_signature = contract.get('first_party_signature')
+        second_party_signature = contract.get('second_party_signature')
         
-        # Split content into paragraphs and add to PDF with proper bold formatting
-        paragraphs = contract_content.split('\n\n')
+        # Process content and extract signature information
+        main_content, first_party_info, second_party_info = LegalMateAgents.process_signature_content(
+            contract_content, first_party_signature, second_party_signature
+        )
+        
+        # Split main content into paragraphs and add to PDF with proper bold formatting
+        paragraphs = main_content.split('\n\n')
         for paragraph in paragraphs:
             if paragraph.strip():
                 # Process bold formatting - convert **text** to <b>text</b> for reportlab
                 formatted_paragraph = LegalMateAgents.convert_markdown_to_html_bold(paragraph.strip())
                 content.append(Paragraph(formatted_paragraph, styles['Normal']))
                 content.append(Spacer(1, 12))
+        
+        # Add signature section if present
+        if first_party_info or second_party_info:
+            content.append(Spacer(1, 20))
+            content.append(Paragraph("<b>SIGNATURES</b>", styles['Heading2']))
+            content.append(Spacer(1, 12))
+            content.append(Paragraph("IN WITNESS WHEREOF, the parties have executed this agreement as of the Effective Date.", styles['Normal']))
+            content.append(Spacer(1, 20))
+            
+            # First Party signature
+            if first_party_info:
+                content.append(Paragraph("<b>FIRST PARTY:</b>", styles['Normal']))
+                content.append(Spacer(1, 12))
+                
+                if first_party_info.get('signature'):
+                    try:
+                        # Decode base64 image and add to PDF
+                        signature_data = base64.b64decode(first_party_info['signature'])
+                        signature_image = Image(io.BytesIO(signature_data), width=200, height=50)
+                        content.append(signature_image)
+                    except Exception as e:
+                        logging.warning(f"Error processing first party signature: {e}")
+                        content.append(Paragraph("[Signature Image Error]", styles['Normal']))
+                else:
+                    content.append(Spacer(1, 30))  # Space for manual signature
+                
+                content.append(Paragraph("_" * 50, styles['Normal']))
+                content.append(Paragraph(first_party_info.get('name', 'First Party'), styles['Normal']))
+                content.append(Spacer(1, 20))
+            
+            # Second Party signature
+            if second_party_info:
+                content.append(Paragraph("<b>SECOND PARTY:</b>", styles['Normal']))
+                content.append(Spacer(1, 12))
+                
+                if second_party_info.get('signature'):
+                    try:
+                        # Decode base64 image and add to PDF
+                        signature_data = base64.b64decode(second_party_info['signature'])
+                        signature_image = Image(io.BytesIO(signature_data), width=200, height=50)
+                        content.append(signature_image)
+                    except Exception as e:
+                        logging.warning(f"Error processing second party signature: {e}")
+                        content.append(Paragraph("[Signature Image Error]", styles['Normal']))
+                else:
+                    content.append(Spacer(1, 30))  # Space for manual signature
+                
+                content.append(Paragraph("_" * 50, styles['Normal']))
+                content.append(Paragraph(second_party_info.get('name', 'Second Party'), styles['Normal']))
+                content.append(Spacer(1, 20))
         
         # Build PDF
         doc.build(content)
