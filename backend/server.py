@@ -36,6 +36,24 @@ db = client[os.environ['DB_NAME']]
 genai.configure(api_key=os.environ['GEMINI_API_KEY'])
 groq_client = Groq(api_key=os.environ['GROQ_API_KEY'])
 
+# OpenRouter client setup
+openrouter_client = httpx.AsyncClient(
+    base_url="https://openrouter.ai/api/v1",
+    headers={
+        "Authorization": f"Bearer {os.environ['OPENROUTER_API_KEY']}",
+        "HTTP-Referer": "http://localhost:3000",
+        "X-Title": "LegalMate AI"
+    }
+)
+
+# Hugging Face client setup
+huggingface_client = httpx.AsyncClient(
+    base_url="https://api-inference.huggingface.co/models",
+    headers={
+        "Authorization": f"Bearer {os.environ['HUGGINGFACE_API_KEY']}"
+    }
+)
+
 # Create the main app without a prefix
 app = FastAPI()
 
