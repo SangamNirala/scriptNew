@@ -900,11 +900,10 @@ async def download_edited_contract_pdf(request: EditedContractRequest):
                 
                 if first_party_info.get('signature'):
                     try:
-                        # Process signature image using new helper method
-                        signature_buffer = LegalMateAgents.process_signature_image(first_party_info['signature'])
-                        # Use the reportlab ImageReader class for better compatibility
-                        from reportlab.lib.utils import ImageReader
-                        signature_image = Image(ImageReader(signature_buffer), width=200, height=50)
+                        # Use direct base64 processing for better PDF compatibility
+                        signature_buffer = LegalMateAgents.process_signature_image_direct(first_party_info['signature'])
+                        # Use direct Image creation without ImageReader for simpler processing
+                        signature_image = Image(signature_buffer, width=200, height=50)
                         content.append(signature_image)
                     except Exception as e:
                         logging.warning(f"Error processing first party signature: {e}")
