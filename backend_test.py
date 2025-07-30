@@ -2051,6 +2051,20 @@ def main():
     test_results.append(tester.test_execution_date_invalid_formats())
     test_results.append(tester.test_execution_date_pdf_integration())
     
+    # NEW: Digital Signature Functionality Tests
+    print("\n" + "="*50)
+    print("🖋️  Testing Digital Signature Functionality")
+    print("="*50)
+    
+    test_results.append(tester.test_contract_generation_with_signatures())
+    test_results.append(tester.test_signature_upload_valid_data())
+    test_results.append(tester.test_signature_upload_invalid_data())
+    test_results.append(tester.test_signature_retrieval())
+    test_results.append(tester.test_signature_retrieval_invalid_contract())
+    test_results.append(tester.test_pdf_generation_with_signatures())
+    test_results.append(tester.test_edited_pdf_with_signatures())
+    test_results.append(tester.test_signature_error_handling())
+    
     # Print final results
     print("\n" + "="*60)
     print("📊 TEST RESULTS SUMMARY")
