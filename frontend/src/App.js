@@ -93,6 +93,159 @@ const PartiesStep = ({ contractData, updateParties, setCurrentStep }) => (
   </Card>
 );
 
+// Move TermsStep outside the App component to prevent re-creation
+const TermsStep = ({ contractData, contractTypes, updateTerms, setContractData, generateContract, isGenerating, setCurrentStep }) => (
+  <Card className="w-full max-w-2xl mx-auto">
+    <CardHeader>
+      <CardTitle className="text-2xl">Terms & Conditions</CardTitle>
+      <CardDescription>Specify the key terms of your contract</CardDescription>
+    </CardHeader>
+    <CardContent className="space-y-4">
+      {contractData.contract_type === 'NDA' && (
+        <>
+          <div>
+            <Label htmlFor="purpose">Purpose of Disclosure</Label>
+            <Textarea
+              id="purpose"
+              placeholder="Describe why confidential information will be shared..."
+              value={contractData.terms.purpose || ''}
+              onChange={(e) => updateTerms('purpose', e.target.value)}
+            />
+          </div>
+          <div>
+            <Label htmlFor="duration">Agreement Duration</Label>
+            <Select value={contractData.terms.duration || ''} onValueChange={(value) => 
+              updateTerms('duration', value)
+            }>
+              <SelectTrigger>
+                <SelectValue placeholder="Select duration" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1_year">1 Year</SelectItem>
+                <SelectItem value="2_years">2 Years</SelectItem>
+                <SelectItem value="3_years">3 Years</SelectItem>
+                <SelectItem value="5_years">5 Years</SelectItem>
+                <SelectItem value="indefinite">Indefinite</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </>
+      )}
+
+      {contractData.contract_type === 'freelance_agreement' && (
+        <>
+          <div>
+            <Label htmlFor="scope">Scope of Work</Label>
+            <Textarea
+              id="scope"
+              placeholder="Describe the services to be provided..."
+              value={contractData.terms.scope || ''}
+              onChange={(e) => updateTerms('scope', e.target.value)}
+            />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="payment_amount">Payment Amount</Label>
+              <Input
+                id="payment_amount"
+                placeholder="$5,000"
+                value={contractData.terms.payment_amount || ''}
+                onChange={(e) => updateTerms('payment_amount', e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="payment_terms">Payment Terms</Label>
+              <Select value={contractData.terms.payment_terms || ''} onValueChange={(value) => 
+                updateTerms('payment_terms', value)
+              }>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select terms" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="upfront">100% Upfront</SelectItem>
+                  <SelectItem value="milestone">Milestone-based</SelectItem>
+                  <SelectItem value="net30">Net 30 Days</SelectItem>
+                  <SelectItem value="net15">Net 15 Days</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </>
+      )}
+
+      {contractData.contract_type === 'partnership_agreement' && (
+        <>
+          <div>
+            <Label htmlFor="business_purpose">Business Purpose</Label>
+            <Textarea
+              id="business_purpose"
+              placeholder="Describe the purpose of the partnership..."
+              value={contractData.terms.business_purpose || ''}
+              onChange={(e) => updateTerms('business_purpose', e.target.value)}
+            />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="profit_split">Profit Split (%)</Label>
+              <Input
+                id="profit_split"
+                placeholder="50/50"
+                value={contractData.terms.profit_split || ''}
+                onChange={(e) => updateTerms('profit_split', e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="capital_contribution">Capital Contribution</Label>
+              <Input
+                id="capital_contribution"
+                placeholder="$10,000 each"
+                value={contractData.terms.capital_contribution || ''}
+                onChange={(e) => updateTerms('capital_contribution', e.target.value)}
+              />
+            </div>
+          </div>
+        </>
+      )}
+
+      <div>
+        <Label htmlFor="special_clauses">Special Clauses (Optional)</Label>
+        <Textarea
+          id="special_clauses"
+          placeholder="Any additional clauses or terms..."
+          value={contractData.special_clauses.join('\n')}
+          onChange={(e) => setContractData(prev => ({ 
+            ...prev, 
+            special_clauses: e.target.value.split('\n').filter(c => c.trim())
+          }))}
+        />
+      </div>
+
+      <div className="flex gap-4 mt-6">
+        <Button variant="outline" onClick={() => setCurrentStep(2)}>
+          Back
+        </Button>
+        <Button 
+          onClick={generateContract} 
+          disabled={isGenerating}
+          className="flex-1 bg-blue-600 hover:bg-blue-700"
+        >
+          {isGenerating ? (
+            <>
+              <Zap className="mr-2 h-4 w-4 animate-spin" />
+              Generating Contract...
+            </>
+          ) : (
+            <>
+              <FileText className="mr-2 h-4 w-4" />
+              Generate Contract
+            </>
+          )}
+        </Button>
+      </div>
+    </CardContent>
+  </Card>
+);
+
 function App() {
   const [contractTypes, setContractTypes] = useState([]);
   const [jurisdictions, setJurisdictions] = useState([]);
