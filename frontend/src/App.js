@@ -741,7 +741,6 @@ const ScriptGenerator = () => {
                     </button>
                   ))}
                 </div>
-                </div>
               </div>
             )}
           </div>
