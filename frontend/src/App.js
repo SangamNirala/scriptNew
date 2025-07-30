@@ -249,6 +249,47 @@ const ScriptGenerator = () => {
     }
   };
 
+  const handleDownloadAudio = () => {
+    if (!lastGeneratedAudio || !selectedVoice) {
+      setError("No audio available to download.");
+      return;
+    }
+
+    try {
+      // Convert base64 to audio blob
+      const audioBytes = atob(lastGeneratedAudio);
+      const audioArray = new Uint8Array(audioBytes.length);
+      
+      for (let i = 0; i < audioBytes.length; i++) {
+        audioArray[i] = audioBytes.charCodeAt(i);
+      }
+      
+      const audioBlob = new Blob([audioArray], { type: 'audio/mp3' });
+      
+      // Create download link
+      const downloadUrl = URL.createObjectURL(audioBlob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      
+      // Generate filename with voice name and timestamp
+      const timestamp = new Date().toISOString().split('T')[0];
+      const voiceName = selectedVoice.display_name.replace(/\s+/g, '_');
+      link.download = `script_audio_${voiceName}_${timestamp}.mp3`;
+      
+      // Trigger download
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Clean up URL
+      URL.revokeObjectURL(downloadUrl);
+      
+    } catch (err) {
+      console.error("Error downloading audio:", err);
+      setError("Error downloading audio. Please try again.");
+    }
+  };
+
   const handleGenerateAvatarVideo = async () => {
     if (!lastGeneratedAudio) {
       setError("Please generate audio first before creating avatar video.");
