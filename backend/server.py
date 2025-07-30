@@ -33,6 +33,9 @@ db = client[os.environ['DB_NAME']]
 # Gemini configuration
 GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
 
+# Initialize Context Integration System for Phase 2
+context_system = ContextIntegrationSystem()
+
 # Create the main app without a prefix
 app = FastAPI()
 
