@@ -2847,6 +2847,12 @@ def main():
     test_results.append(tester.test_jurisdictions())
     test_results.append(tester.test_contracts_list())
     
+    # NEW: Smart Contract Analysis Tests
+    print("\n" + "🧠"*30)
+    print("🧠 SMART CONTRACT ANALYSIS TESTING - NEW FEATURES")
+    print("🧠"*30)
+    tester.test_smart_contract_analysis_endpoints()
+    
     # Contract generation tests (main functionality)
     print("\n" + "="*40)
     print("🤖 Testing AI Contract Generation")
