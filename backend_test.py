@@ -2310,6 +2310,13 @@ def main():
     test_results.append(tester.test_edited_pdf_with_signatures())
     test_results.append(tester.test_signature_error_handling())
     
+    # CRITICAL SIGNATURE FIX TEST
+    print("\n" + "🔥"*60)
+    print("🔥 CRITICAL SIGNATURE PDF FIX VERIFICATION - HIGH PRIORITY")
+    print("🔥"*60)
+    test_results.append(tester.test_critical_signature_pdf_fix())
+    print("🔥"*60)
+    
     # Print final results
     print("\n" + "="*60)
     print("📊 TEST RESULTS SUMMARY")
