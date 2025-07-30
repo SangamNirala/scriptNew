@@ -331,13 +331,16 @@ backend:
     implemented: true
     working: false
     file: "/app/frontend/src/components/EnhancedContractWizard.js"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
     needs_retesting: false
     status_history:
         -working: false
         -agent: "testing"
         -comment: "❌ CRITICAL SMART CONTRACT WIZARD ISSUES CONFIRMED: Comprehensive testing identified both reported problems. 1) INPUT FIELD TYPING ISSUES: Found character scrambling in payment_terms field during character-by-character typing - 'completion' becomes 'complenoit' when users click before each character. This confirms the reported issue where users need repeated clicks to type continuously. Step 2 fields (party1_name, party1_email, party2_name, party2_email) work correctly. 2) 404 ERRORS ON GENERATE CONTRACT: Critical API endpoint errors found - POST /generate-contract returns 404 (missing /api prefix), multiple /contract-wizard/initialize 404 errors throughout wizard navigation. ROOT CAUSE: EnhancedContractWizard component uses incorrect API base URL (process.env.REACT_APP_BACKEND_URL) instead of adding '/api' prefix like main App.js. This causes all Smart Contract Wizard API calls to hit wrong endpoints. IMPACT: Smart Contract Wizard completely non-functional for contract generation. Both reported issues confirmed and require immediate fixes."
+        -working: false
+        -agent: "testing"
+        -comment: "❌ VERIFICATION OF FIXES FAILED - ONLY PARTIAL SUCCESS: Comprehensive re-testing of Smart Contract Wizard fixes shows mixed results. 1) ✅ API ENDPOINT FIX VERIFIED: No 404 errors detected on API endpoints during testing. The API prefix issue appears to be resolved - all API calls now use correct '/api' prefix structure. 2) ❌ INPUT FIELD TYPING ISSUE PERSISTS: Critical character scrambling issue still exists in Step 3 payment_terms field. Testing confirmed: 'completion' typed character-by-character becomes 'noitepmocl' (completely scrambled). Step 2 fields work correctly with fill() method but Step 3 fields still have the typing issue. 3) ADDITIONAL FINDINGS: Generate Contract button remains disabled even after completing all required fields and checking review checkbox, preventing full contract generation testing. CONCLUSION: API endpoint fix is working, but the core input field typing issue that affects user experience remains unresolved. Users still cannot type continuously in Step 3 fields without character scrambling."
 
 frontend:
   - task: "PDF download button functionality"
