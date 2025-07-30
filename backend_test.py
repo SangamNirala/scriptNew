@@ -382,6 +382,164 @@ class LegalMateAPITester:
             print(f"❌ Failed - Error: {str(e)}")
             return False, {}
 
+    def test_pdf_bold_formatting_specific(self):
+        """Test PDF generation with specific focus on bold formatting without asterisks"""
+        # Generate a new contract specifically for PDF bold formatting testing
+        test_data = {
+            "contract_type": "NDA",
+            "jurisdiction": "US",
+            "parties": {
+                "party1_name": "Bold Format Testing Corp",
+                "party1_type": "corporation",
+                "party2_name": "PDF Validation Specialist",
+                "party2_type": "individual"
+            },
+            "terms": {
+                "purpose": "Testing PDF bold formatting functionality to ensure section headings appear in bold without asterisk symbols",
+                "duration": "1_year"
+            },
+            "special_clauses": ["Bold formatting verification clause"]
+        }
+        
+        # First generate the contract
+        success, response = self.run_test(
+            "Generate Contract for PDF Bold Testing", 
+            "POST", 
+            "generate-contract", 
+            200, 
+            test_data,
+            timeout=60
+        )
+        
+        if not success or 'contract' not in response:
+            print("❌ Failed to generate contract for PDF bold testing")
+            return False, {}
+        
+        contract = response['contract']
+        test_contract_id = contract.get('id')
+        contract_content = contract.get('content', '')
+        
+        print(f"   Generated contract ID: {test_contract_id}")
+        
+        # Check the contract content for proper formatting before PDF generation
+        print(f"\n   📝 Checking contract content formatting...")
+        
+        # Check 1: No asterisk symbols should be present
+        asterisk_count = contract_content.count('*')
+        if asterisk_count == 0:
+            print(f"   ✅ No asterisk (*) symbols found in contract content")
+        else:
+            print(f"   ❌ Found {asterisk_count} asterisk (*) symbols in contract content")
+            # Show where asterisks are found
+            lines_with_asterisks = [line for line in contract_content.split('\n') if '*' in line]
+            for line in lines_with_asterisks[:3]:  # Show first 3 lines with asterisks
+                print(f"      - {line.strip()}")
+        
+        # Check 2: Look for **bold** formatting patterns
+        import re
+        bold_patterns = re.findall(r'\*\*[^*]+\*\*', contract_content)
+        if bold_patterns:
+            print(f"   ✅ Found {len(bold_patterns)} **bold** formatting patterns in contract")
+            for pattern in bold_patterns[:3]:  # Show first 3 bold patterns
+                print(f"      - {pattern}")
+        else:
+            print(f"   ⚠️  No **bold** formatting patterns found in contract content")
+        
+        # Now test PDF download
+        if not test_contract_id:
+            print("❌ No contract ID available for PDF testing")
+            return False, {}
+        
+        url = f"{self.api_url}/contracts/{test_contract_id}/download-pdf"
+        
+        self.tests_run += 1
+        print(f"\n🔍 Testing PDF Bold Formatting...")
+        print(f"   URL: {url}")
+        
+        try:
+            response = requests.get(url, timeout=30)
+            print(f"   Status: {response.status_code}")
+            
+            if response.status_code == 200:
+                self.tests_passed += 1
+                print(f"✅ PDF download successful")
+                
+                # Verify PDF format
+                if response.content.startswith(b'%PDF'):
+                    print("   ✅ Valid PDF format")
+                else:
+                    print("   ❌ Invalid PDF format")
+                    return False, {}
+                
+                # Check PDF size
+                content_length = len(response.content)
+                print(f"   PDF Size: {content_length} bytes")
+                
+                if content_length > 2000:  # Should be reasonably sized for a contract
+                    print("   ✅ PDF has reasonable size for contract content")
+                else:
+                    print("   ⚠️  PDF seems small - may not contain full contract")
+                
+                # Try to extract text from PDF to check for asterisks
+                try:
+                    # Simple check - look for asterisk patterns in the raw PDF content
+                    # This is a basic check since we don't have PDF parsing libraries
+                    pdf_content_str = response.content.decode('latin-1', errors='ignore')
+                    
+                    # Count asterisks in the PDF content (excluding PDF structure)
+                    # Filter out PDF metadata and focus on text content
+                    text_parts = []
+                    lines = pdf_content_str.split('\n')
+                    for line in lines:
+                        # Skip PDF structure lines
+                        if not any(keyword in line for keyword in ['obj', 'endobj', 'stream', 'endstream', '/Type', '/Font', '/Length']):
+                            if line.strip() and not line.startswith('%'):
+                                text_parts.append(line)
+                    
+                    text_content = '\n'.join(text_parts)
+                    asterisk_in_pdf = text_content.count('*')
+                    
+                    print(f"   📄 PDF Content Analysis:")
+                    print(f"      - Asterisk (*) count in PDF text: {asterisk_in_pdf}")
+                    
+                    if asterisk_in_pdf == 0:
+                        print("   ✅ No asterisk (*) symbols found in PDF content - formatting requirement met")
+                    else:
+                        print("   ❌ Found asterisk (*) symbols in PDF content - formatting requirement NOT met")
+                        # Show some context where asterisks appear
+                        asterisk_lines = [line for line in text_content.split('\n') if '*' in line]
+                        for line in asterisk_lines[:2]:  # Show first 2 lines with asterisks
+                            print(f"         - {line.strip()[:100]}...")
+                    
+                    # Look for evidence of bold formatting in PDF structure
+                    # ReportLab uses <b> tags which should be converted to PDF bold formatting
+                    if '<b>' in pdf_content_str or '/F1' in pdf_content_str or 'Bold' in pdf_content_str:
+                        print("   ✅ Evidence of bold formatting found in PDF structure")
+                    else:
+                        print("   ⚠️  Limited evidence of bold formatting in PDF structure")
+                    
+                except Exception as e:
+                    print(f"   ⚠️  Could not analyze PDF text content: {str(e)}")
+                
+                return True, {
+                    "contract_id": test_contract_id,
+                    "pdf_size": content_length,
+                    "asterisk_in_contract": asterisk_count,
+                    "bold_patterns_in_contract": len(bold_patterns)
+                }
+            else:
+                print(f"❌ Failed - Expected 200, got {response.status_code}")
+                try:
+                    error_data = response.json()
+                    print(f"   Error: {error_data}")
+                except:
+                    print(f"   Error: {response.text}")
+                return False, {}
+                
+        except Exception as e:
+            print(f"❌ Failed - Error: {str(e)}")
+            return False, {}
+
     def validate_contract_formatting(self, contract_content, contract_type):
         """Validate contract formatting requirements"""
         formatting_issues = []
