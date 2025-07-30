@@ -377,21 +377,27 @@ class LegalMateAgents:
             signature_data = base64.b64decode(signature_base64)
             
             # Open image with PIL to validate and process
-            pil_image = PILImage.open(io.BytesIO(signature_data))
+            original_image = PILImage.open(io.BytesIO(signature_data))
             
             # Convert to RGB if necessary (reportlab works better with RGB)
-            if pil_image.mode not in ('RGB', 'L'):
-                pil_image = pil_image.convert('RGB')
+            if original_image.mode not in ('RGB', 'L'):
+                # Create a new RGB image
+                rgb_image = PILImage.new('RGB', original_image.size, (255, 255, 255))
+                rgb_image.paste(original_image, mask=original_image.split()[-1] if original_image.mode == 'RGBA' else None)
+                processed_image = rgb_image
+                original_image.close()
+            else:
+                processed_image = original_image
             
             # Create a new BytesIO buffer for the processed image
             processed_buffer = io.BytesIO()
             
             # Save as PNG (reportlab handles PNG well)
-            pil_image.save(processed_buffer, format='PNG')
+            processed_image.save(processed_buffer, format='PNG')
             processed_buffer.seek(0)
             
             # Close the PIL image to free memory
-            pil_image.close()
+            processed_image.close()
             
             return processed_buffer
                 
