@@ -257,7 +257,8 @@ function App() {
     jurisdiction: 'US',
     parties: {},
     terms: {},
-    special_clauses: []
+    special_clauses: [],
+    execution_date: null
   });
   const [generatedContract, setGeneratedContract] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
