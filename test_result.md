@@ -105,7 +105,7 @@
 user_problem_statement: "Fixed PDF download functionality and improved contract formatting. The 'Download PDF' button was not working because it had no onClick handler and there was no backend endpoint for PDF generation. Added PDF generation using reportlab library and proper download functionality. Additionally improved contract formatting by: 1) Removing all asterisk (*) expressions, 2) Ensuring proper bold formatting for headings, 3) Adding Date of Execution line before special clauses, 4) Applied these changes to all contract types (NDA, Freelance, Partnership)."
 
 backend:
-  - task: "PDF generation endpoint"
+  - task: "PDF generation endpoint and contract formatting improvements"
     implemented: true
     working: true
     file: "/app/backend/server.py"
@@ -119,6 +119,9 @@ backend:
         -working: true
         -agent: "testing"
         -comment: "✅ PDF generation endpoint is working correctly. Successfully tested: 1) Valid contract PDF download returns 200 status with proper PDF content (5514 bytes), correct Content-Type (application/pdf), and proper Content-Disposition headers. 2) Invalid contract IDs return 404 with proper error message. 3) Non-existent but valid UUID format contracts return 404. 4) Generated PDF has valid PDF format (starts with %PDF header). 5) PDF includes contract metadata (ID, jurisdiction, compliance score, creation date) and full contract content properly formatted using reportlab. All PDF download functionality tests passed."
+        -working: true
+        -agent: "main"
+        -comment: "Enhanced contract formatting by updating all contract generation prompts (NDA, Freelance, Partnership) to: 1) Remove all asterisk (*) expressions 2) Use proper **bold** formatting for headings 3) Include [Date of Execution] placeholder before special clauses 4) Added format_contract_content() function to post-process generated content and ensure formatting requirements are met. All contract types now generate with improved formatting."
 
 frontend:
   - task: "PDF download button functionality"
