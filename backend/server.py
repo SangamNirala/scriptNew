@@ -1575,6 +1575,186 @@ async def get_scripts():
         logger.error(f"Error fetching scripts: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error fetching scripts: {str(e)}")
 
+@api_router.post("/generate-script-v2", response_model=ScriptResponse)
+async def generate_script_v2(request: ScriptRequest):
+    """
+    Phase 2: Master Prompt Template V2.0 - ELITE Video Script Generation
+    Advanced script generation with dynamic context integration and viral optimization
+    """
+    try:
+        # Phase 2: Get enhanced context using Context Integration System
+        enhanced_context = await context_system.get_enhanced_context(
+            prompt=request.prompt,
+            industry=getattr(request, 'industry_focus', 'general'),
+            platform=getattr(request, 'target_platform', 'general')
+        )
+        
+        # Phase 2: Master Prompt Template V2.0 - ELITE Video Script Architect
+        SYSTEM_PROMPT_V2 = f"""
+You are an ELITE video script architect with proven track record of creating viral content across all platforms. Your expertise combines:
+
+🎬 STRUCTURAL MASTERY:
+- 15+ years in video production and storytelling
+- Deep understanding of viewer psychology and retention curves  
+- Platform-specific algorithm optimization expertise
+
+📊 DATA-DRIVEN APPROACH:
+- Analysis of 10,000+ high-performing videos
+- Real-time trend integration and cultural awareness
+- Audience behavior prediction and engagement optimization
+
+🧠 PSYCHOLOGICAL FRAMEWORKS:
+- Advanced persuasion psychology (Cialdini's 6 principles)
+- Emotional arc engineering for maximum impact
+- Cognitive load optimization for information retention
+
+MANDATORY SCRIPT ARCHITECTURE:
+┌─ HOOK SECTION (0-3 seconds): 
+│  ├── Pattern Interrupt: Unexpected statement/visual
+│  ├── Relevance Bridge: Direct audience connection
+│  └── Promise Setup: Clear value proposition preview
+│
+├─ SETUP SECTION (3-15 seconds):
+│  ├── Context Establishment: Scene/problem setting
+│  ├── Stakes Definition: Why this matters now
+│  └── Journey Preview: What audience will discover
+│
+├─ CONTENT DELIVERY (Core 60-80%):
+│  ├── Primary Message: Core value/information
+│  ├── Supporting Evidence: Proof points/examples  
+│  ├── Engagement Hooks: Questions/surprises every 15-20 seconds
+│  └── Retention Anchors: Callbacks and progression markers
+│
+├─ CLIMAX MOMENT (80-90%):
+│  ├── Peak Revelation: Most impactful information
+│  ├── Emotional Crescendo: Maximum engagement point
+│  └── Transformation Preview: Clear before/after vision
+│
+└─ RESOLUTION (90-100%):
+   ├── Key Takeaway Summary: Memorable conclusion
+   ├── Call-to-Action: Specific next step
+   └── Community Engagement: Like/comment/share prompt
+
+QUALITY VALIDATION CHECKLIST:
+□ Retention hook every 15-20 seconds
+□ Emotional arc with clear peaks and valleys  
+□ Platform-optimized pacing and format
+□ Clear value proposition maintained throughout
+□ Compelling call-to-action with specific benefit
+□ Cultural relevance and trend alignment
+□ Algorithm-friendly engagement triggers
+
+CURRENT CONTEXT INTEGRATION:
+- Duration: {request.duration} 
+- Video Type: {request.video_type}
+- Platform Algorithm Insights: {enhanced_context.get('platform_algorithm', {}).get('priority_factors', [])}
+- Trending Topics: {[trend.get('title', '') for trend in enhanced_context.get('trend_analysis', {}).get('trending_topics', [])[:3]]}
+- Audience Psychology: {enhanced_context.get('audience_psychology', {}).get('psychological_profile', {}).get('cognitive_style', 'mixed')}
+- Cultural Moment: {enhanced_context.get('seasonal_relevance', {}).get('digital_culture', {}).get('current_trends', [])}
+- Performance Optimization: {enhanced_context.get('performance_history', {}).get('optimization_opportunities', [])}
+
+ADVANCED PRODUCTION SPECIFICATIONS:
+🎥 VISUAL STORYTELLING (Every 2-3 seconds):
+   - Exact camera specifications: angles, movements, framing
+   - Detailed environment descriptions: lighting, setting, atmosphere
+   - Character positioning and expressions
+   - Color psychology and mood enhancement
+   - Transition techniques and flow
+
+🎯 ENGAGEMENT ENGINEERING:
+   - Dopamine triggers and reward loops
+   - Social proof integration points
+   - Curiosity gaps and pattern interrupts
+   - Interactive elements and participation cues
+   - Emotional peak orchestration
+
+🚀 VIRAL MECHANICS INTEGRATION:
+   - Shareability triggers and moments
+   - Meme potential and cultural references
+   - Controversy balance and discussion starters
+   - Trend participation opportunities
+   - Community building elements
+
+📱 PLATFORM OPTIMIZATION ({getattr(request, 'target_platform', 'general')}):
+   - Algorithm-friendly structure and pacing
+   - Format-specific engagement patterns
+   - Optimal length and retention strategies
+   - Hashtag and discoverability integration
+   - Cross-platform adaptation potential
+
+Create a script that follows this ELITE architecture with integrated context insights for maximum viral potential and audience engagement.
+"""
+        
+        # Create enhanced chat instance with Master Prompt Template V2.0
+        chat = LlmChat(
+            api_key=GEMINI_API_KEY,
+            session_id=f"script-v2-{str(uuid.uuid4())[:8]}",
+            system_message=SYSTEM_PROMPT_V2
+        ).with_model("gemini", "gemini-2.0-flash")
+
+        # Enhanced script generation message with context integration
+        script_message = UserMessage(
+            text=f"""Using the Master Prompt Template V2.0 architecture, create an ELITE viral-optimized script:
+
+PROMPT: "{request.prompt}"
+
+CONTEXT INTELLIGENCE INTEGRATION:
+🔥 TRENDING INSIGHTS: {enhanced_context.get('trend_analysis', {}).get('trend_insights', [])}
+🎯 PLATFORM STRATEGIES: {enhanced_context.get('platform_algorithm', {}).get('optimization_strategies', [])}
+👥 AUDIENCE PSYCHOLOGY: {enhanced_context.get('audience_psychology', {}).get('content_optimization', [])}
+📅 CULTURAL TIMING: {enhanced_context.get('seasonal_relevance', {}).get('content_calendar_suggestions', [])}
+⚡ PERFORMANCE PREDICTORS: {enhanced_context.get('performance_history', {}).get('success_factors', [])}
+
+SPECIFICATIONS:
+- Duration: {request.duration}
+- Video Type: {request.video_type}
+- Context Quality Score: {enhanced_context.get('metadata', {}).get('context_quality_score', 0.5)}
+
+MANDATORY ARCHITECTURE IMPLEMENTATION:
+1. HOOK SECTION (0-3s): Pattern interrupt + Relevance bridge + Promise setup
+2. SETUP SECTION (3-15s): Context establishment + Stakes definition + Journey preview  
+3. CONTENT DELIVERY (60-80%): Primary message + Evidence + Engagement hooks + Retention anchors
+4. CLIMAX MOMENT (80-90%): Peak revelation + Emotional crescendo + Transformation preview
+5. RESOLUTION (90-100%): Key takeaway + Call-to-action + Community engagement
+
+ENHANCED REQUIREMENTS:
+✅ Include retention hooks every 15-20 seconds
+✅ Implement emotional arc with clear peaks and valleys
+✅ Integrate trending insights and cultural relevance
+✅ Apply platform-specific optimization strategies
+✅ Include viral mechanics and shareability triggers
+✅ Add detailed visual storytelling specifications
+✅ Ensure quality validation checklist compliance
+
+Generate a professional, production-ready script that maximizes viral potential and audience engagement using advanced context intelligence."""
+        )
+
+        generated_script = await chat.send_message(script_message)
+        
+        # Store the enhanced script in database with context metadata
+        script_data = ScriptResponse(
+            original_prompt=request.prompt,
+            generated_script=generated_script,
+            video_type=request.video_type or "general",
+            duration=request.duration or "short"
+        )
+        
+        # Add Phase 2 metadata
+        script_dict = script_data.dict()
+        script_dict['phase'] = 'v2_master_template'
+        script_dict['context_quality_score'] = enhanced_context.get('metadata', {}).get('context_quality_score', 0.5)
+        script_dict['trend_alignment'] = len([t for t in enhanced_context.get('trend_analysis', {}).get('trending_topics', []) if t.get('relevance_score', 0) > 0.5])
+        script_dict['platform_optimization'] = enhanced_context.get('platform_algorithm', {}).get('platform', 'general')
+        
+        await db.scripts.insert_one(script_dict)
+        
+        return script_data
+        
+    except Exception as e:
+        logger.error(f"Error in Phase 2 script generation: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error generating Phase 2 script: {str(e)}")
+
+
 @api_router.post("/generate-ai-video-script", response_model=AIVideoScriptResponse)
 async def generate_ai_video_script(request: AIVideoScriptRequest):
     """Generate a comprehensive, AI-video-generator-optimized script with maximum visual detail"""
