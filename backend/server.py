@@ -376,7 +376,13 @@ class LegalMateAgents:
             # Decode base64 data
             signature_data = base64.b64decode(signature_base64)
             
-            # Return the raw image data as BytesIO - reportlab can handle PNG/JPEG directly
+            # Validate that this is actually a valid image by opening it with PIL
+            # but then return the original data for reportlab
+            with PILImage.open(io.BytesIO(signature_data)) as test_image:
+                # Just ensure it's a valid image - if this succeeds, the data is good
+                test_image.load()
+            
+            # Return the original image data as BytesIO - reportlab can handle it
             return io.BytesIO(signature_data)
                 
         except Exception as e:
