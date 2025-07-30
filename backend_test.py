@@ -3405,6 +3405,38 @@ def main():
     test_results.append(tester.test_real_signature_images())
     print("🔥"*60)
     
+    # NEW: Enhanced User Experience Tests - Phase 1: Contract Wizard + Smart Form Fields
+    print("\n" + "🚀"*60)
+    print("🚀 ENHANCED USER EXPERIENCE TESTING - PHASE 1: CONTRACT WIZARD + SMART FORM FIELDS")
+    print("🚀"*60)
+    
+    # User Profile Management Tests
+    print("\n" + "👤"*30)
+    print("👤 USER PROFILE MANAGEMENT TESTING")
+    print("👤"*30)
+    test_results.append(tester.test_user_profile_creation())
+    test_results.append(tester.test_user_profile_retrieval())
+    test_results.append(tester.test_user_profile_update())
+    
+    # Company Profile Management Tests
+    print("\n" + "🏢"*30)
+    print("🏢 COMPANY PROFILE MANAGEMENT TESTING")
+    print("🏢"*30)
+    test_results.append(tester.test_company_profile_creation())
+    test_results.append(tester.test_company_profile_retrieval())
+    test_results.append(tester.test_user_companies_list())
+    
+    # Smart Contract Wizard Tests
+    print("\n" + "🧙"*30)
+    print("🧙 SMART CONTRACT WIZARD TESTING")
+    print("🧙"*30)
+    test_results.append(tester.test_contract_wizard_initialization())
+    test_results.append(tester.test_contract_wizard_field_suggestions())
+    test_results.append(tester.test_profile_based_auto_suggestions())
+    test_results.append(tester.test_ai_powered_suggestions())
+    
+    print("🚀"*60)
+    
     # Print final results
     print("\n" + "="*60)
     print("📊 TEST RESULTS SUMMARY")
