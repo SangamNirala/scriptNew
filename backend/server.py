@@ -567,13 +567,299 @@ Create educational enhancements that maximize learning outcomes in the {request.
     variations = []
     
     for i, strategy in enumerate(strategies[:request.enhancement_count]):
-        chat = LlmChat(
-            api_key=GEMINI_API_KEY,
-            session_id=f"enhance-{strategy['focus']}-{str(uuid.uuid4())[:8]}",
-            system_message=strategy["system_prompt"]
-        ).with_model("gemini", "gemini-2.0-flash")
+        # Check if this strategy uses recursive improvement
+        if strategy.get("use_recursive_improvement", False):
+            # Use recursive self-improvement for viral category
+            variation = await _generate_recursive_viral_framework(request, audience_analysis, industry_context, strategy, trend_data, i)
+        else:
+            # Use standard generation for other categories
+            variation = await _generate_standard_framework(request, audience_analysis, strategy, i)
         
-        enhancement_prompt = f"""COMPREHENSIVE SCRIPT FRAMEWORK CREATION:
+        variations.append(variation)
+    
+    return variations
+
+async def _generate_recursive_viral_framework(request: PromptEnhancementRequest, audience_analysis: AudienceAnalysis, industry_context: dict, strategy: dict, trend_data: dict, index: int) -> EnhancementVariation:
+    """Generate viral framework using recursive self-improvement with 3 refinement loops"""
+    
+    # Initial framework generation
+    chat = LlmChat(
+        api_key=GEMINI_API_KEY,
+        session_id=f"viral-recursive-{str(uuid.uuid4())[:8]}",
+        system_message=strategy["system_prompt"]
+    ).with_model("gemini", "gemini-2.0-flash")
+    
+    # Loop 1: Initial viral framework creation
+    initial_prompt = f"""🚀 RECURSIVE VIRAL FRAMEWORK CREATION - LOOP 1/3: FOUNDATION
+
+MISSION: Create the foundational viral framework that will be iteratively improved through 3 refinement loops.
+
+📊 CONTEXT ANALYSIS:
+Original Prompt: "{request.original_prompt}"
+Video Type: {request.video_type}
+Industry: {request.industry_focus}
+Target Audience: {audience_analysis.recommended_tone} tone, {audience_analysis.complexity_level} complexity
+Platform Optimizations: {', '.join(audience_analysis.platform_optimizations)}
+
+🎯 TREND INTEGRATION:
+- Trending Topics: {trend_data.get('trending_topics', 'General trends')}
+- Platform Signals: {trend_data.get('platform_signals', 'Engagement patterns')}
+- Cultural Context: {trend_data.get('cultural_context', 'Current zeitgeist')}
+- Industry Trends: {trend_data.get('industry_trends', 'Sector-specific trends')}
+
+🧠 CHAIN-OF-THOUGHT VIRAL REASONING:
+
+STEP 1 - TREND ANALYSIS → CONTENT GAP IDENTIFICATION:
+Analyze current trends and identify the unique angle that hasn't been saturated yet.
+
+STEP 2 - AUDIENCE PSYCHOLOGY → TRIGGER SELECTION:
+Map audience psychology to specific viral triggers that create sharing impulses.
+
+STEP 3 - PLATFORM ALGORITHM → FORMAT ADAPTATION:
+Optimize for each platform's specific algorithm preferences and engagement patterns.
+
+STEP 4 - MULTI-LAYERED NARRATIVE STRUCTURE:
+
+🎣 HOOK LAYER (0-3 seconds):
+- Pattern interrupt + curiosity gap + immediate value promise
+- AIDA: Attention grab with platform-specific hooks
+- PAS: Problem identification that resonates instantly
+
+🎬 BODY LAYER (3-25 seconds):
+- Tension building + revelation + social proof integration  
+- AIDA: Interest maintenance → Desire creation
+- PAS: Agitation through relatable pain points
+
+🎯 CLOSE LAYER (25-30 seconds):
+- Call-to-action + shareability trigger + community invitation
+- AIDA: Action trigger with viral amplification
+- PAS: Solution delivery with sharing motivation
+
+🌐 META LAYER (Throughout):
+- Viral mechanics woven into every element
+- Platform-specific optimization embedded
+- Psychological triggers activated at precise moments
+
+DELIVERABLE FOR LOOP 1:
+Create the foundational viral framework with all elements listed above. This will be refined in subsequent loops.
+
+Response Format:
+VIRAL_FRAMEWORK_V1:
+[Comprehensive framework with multi-layered structure]
+
+ALGORITHM_OPTIMIZATION:
+[Platform-specific optimizations for TikTok, YouTube, Instagram]
+
+PSYCHOLOGICAL_TRIGGERS:
+[AIDA and PAS integration with viral amplification]
+
+TREND_INTEGRATION:
+[How current trends are woven into the framework]
+
+VIRAL_PREDICTION_SCORE:
+[Estimated viral potential: X/10 with reasoning]"""
+
+    framework_v1 = await chat.send_message(UserMessage(text=initial_prompt))
+    
+    # Loop 2: Quality scoring and targeted improvements
+    improvement_prompt = f"""🔄 RECURSIVE VIRAL FRAMEWORK CREATION - LOOP 2/3: QUALITY ENHANCEMENT
+
+MISSION: Analyze the V1 framework and create an improved V2 with enhanced viral potential.
+
+📋 V1 FRAMEWORK TO IMPROVE:
+{framework_v1}
+
+🔍 QUALITY SCORING ANALYSIS:
+Rate the V1 framework on these criteria (1-10):
+
+1. HOOK EFFECTIVENESS: How well does it grab attention in first 3 seconds?
+2. VIRAL MECHANICS: Are psychological triggers optimally placed?
+3. PLATFORM OPTIMIZATION: Does it leverage 2025 algorithm preferences?
+4. TREND ALIGNMENT: How well does it integrate current trends?
+5. SHAREABILITY FACTOR: What drives people to share this content?
+6. EMOTIONAL RESONANCE: Does it create strong emotional responses?
+7. SOCIAL CURRENCY: Does sharing this elevate viewer status?
+
+🎯 TARGETED IMPROVEMENTS FOR V2:
+
+ENHANCEMENT AREAS (Focus on lowest-scoring areas):
+- Strengthen weak psychological triggers
+- Improve platform-specific optimizations
+- Better trend integration
+- Enhanced shareability mechanisms
+- Stronger emotional hooks
+- More compelling social currency elements
+
+ADVANCED VIRAL MECHANICS TO ADD:
+- Dopamine engineering: Reward prediction and surprise elements
+- Community building: Tribal identity and collective participation
+- Controversy balance: Engaging without alienating
+- Pattern interrupts: Cognitive dissonance creation
+- Completion loops: Satisfying narrative closure
+
+Response Format:
+QUALITY_SCORES_V1:
+[Detailed scoring of each criteria with reasoning]
+
+VIRAL_FRAMEWORK_V2:
+[Enhanced framework addressing weaknesses from V1]
+
+IMPROVEMENT_RATIONALE:
+[Specific improvements made and why]
+
+VIRAL_PREDICTION_SCORE_V2:
+[Updated viral potential: X/10 with comparison to V1]"""
+
+    framework_v2 = await chat.send_message(UserMessage(text=improvement_prompt))
+    
+    # Loop 3: Final optimization and platform-specific refinement
+    final_prompt = f"""🏆 RECURSIVE VIRAL FRAMEWORK CREATION - LOOP 3/3: FINAL OPTIMIZATION
+
+MISSION: Create the ultimate V3 framework optimized for maximum viral potential across all platforms.
+
+📋 V2 FRAMEWORK TO OPTIMIZE:
+{framework_v2}
+
+🚀 FINAL OPTIMIZATION FOCUS:
+
+1. PLATFORM-SPECIFIC ADAPTATIONS:
+   - TikTok: Trend-riding, authentic moments, quick engagement
+   - YouTube Shorts: Retention optimization, clear value delivery
+   - Instagram Reels: Visual aesthetics, story-driven content
+   - Cross-platform: Unified viral story with platform variations
+
+2. 2025 ALGORITHM MASTERY:
+   - Engagement velocity optimization
+   - Completion rate maximization
+   - Comment quality enhancement
+   - Save/share trigger optimization
+   - Interest signal amplification
+
+3. ADVANCED PSYCHOLOGICAL OPTIMIZATION:
+   - Micro-emotional targeting throughout framework
+   - Cognitive bias exploitation (confirmation, availability, bandwagon)
+   - Social proof integration at multiple touchpoints
+   - FOMO and urgency psychological triggers
+   - Parasocial relationship building elements
+
+4. VIRAL AMPLIFICATION MECHANISMS:
+   - Built-in participation hooks (challenges, responses, duets)
+   - Conversation starters and debate triggers
+   - Educational value that demands sharing
+   - Status elevation through knowledge sharing
+   - Community building and tribal identity
+
+FINAL DELIVERABLE - PRODUCTION-READY FRAMEWORK:
+
+Response Format:
+VIRAL_FRAMEWORK_V3_FINAL:
+[Ultimate optimized framework with all enhancements]
+
+PLATFORM_SPECIFIC_ADAPTATIONS:
+[Detailed variations for TikTok, YouTube, Instagram]
+
+VIRAL_AMPLIFICATION_STRATEGY:
+[Specific mechanisms that drive sharing and engagement]
+
+PSYCHOLOGICAL_TRIGGER_MAP:
+[Precise timing and placement of psychological elements]
+
+QUALITY_EVOLUTION:
+[V1→V2→V3 improvement summary]
+
+FINAL_VIRAL_PREDICTION:
+[Ultimate viral potential score: X/10 with confidence level]"""
+
+    framework_v3 = await chat.send_message(UserMessage(text=final_prompt))
+    
+    # Parse the final comprehensive response
+    sections = {}
+    current_section = None
+    current_content = []
+    
+    for line in framework_v3.split('\n'):
+        if line.strip().endswith(':') and any(key in line.strip().upper() for key in ['VIRAL_FRAMEWORK_V3_FINAL:', 'PLATFORM_SPECIFIC_ADAPTATIONS:', 'VIRAL_AMPLIFICATION_STRATEGY:', 'PSYCHOLOGICAL_TRIGGER_MAP:', 'FINAL_VIRAL_PREDICTION:']):
+            if current_section:
+                sections[current_section] = '\n'.join(current_content).strip()
+            current_section = line.strip().replace(':', '').lower().replace('_', '_')
+            current_content = []
+        else:
+            current_content.append(line)
+    
+    if current_section:
+        sections[current_section] = '\n'.join(current_content).strip()
+    
+    # Create comprehensive enhanced prompt from final framework
+    final_framework = sections.get('viral_framework_v3_final', sections.get('viral_framework_v2', framework_v3))
+    platform_adaptations = sections.get('platform_specific_adaptations', 'Multi-platform optimization included')
+    amplification_strategy = sections.get('viral_amplification_strategy', 'Advanced viral mechanics integrated')
+    psychological_triggers = sections.get('psychological_trigger_map', 'Precision psychological targeting')
+    
+    # Combine all elements into a comprehensive enhanced prompt
+    comprehensive_prompt = f"""🚀 ADVANCED RECURSIVE VIRAL FRAMEWORK - ALGORITHM OPTIMIZED 2025
+
+This framework was created through 3 recursive improvement loops with quality scoring and trend integration.
+
+🎯 VIRAL FRAMEWORK V3 (FINAL):
+{final_framework}
+
+📱 PLATFORM-SPECIFIC ADAPTATIONS:
+{platform_adaptations}
+
+🔥 VIRAL AMPLIFICATION STRATEGY:
+{amplification_strategy}
+
+🧠 PSYCHOLOGICAL TRIGGER MAP:
+{psychological_triggers}
+
+🌊 TREND INTEGRATION ACTIVE:
+- Trending Topics: {trend_data.get('trending_topics', 'Current trends')}
+- Platform Signals: {trend_data.get('platform_signals', 'Algorithm preferences')}
+- Cultural Context: {trend_data.get('cultural_context', 'Zeitgeist alignment')}
+
+This is a scientifically engineered viral framework optimized through recursive self-improvement for maximum shareability and engagement across all major 2025 social media platforms."""
+    
+    # Calculate enhanced performance score based on recursive improvement
+    framework_length = len(comprehensive_prompt)
+    original_length = len(request.original_prompt)
+    recursive_bonus = 3.0  # Bonus for recursive improvement process
+    trend_bonus = 1.5     # Bonus for trend integration
+    platform_bonus = 1.0  # Bonus for platform optimization
+    
+    performance_score = min(10.0, (framework_length / max(original_length, 100)) * 0.8 + recursive_bonus + trend_bonus + platform_bonus)
+    
+    # Extract industry elements from the comprehensive framework
+    industry_elements = [
+        f"Advanced {request.industry_focus} viral optimization",
+        "2025 algorithm mastery integration", 
+        "Recursive self-improvement methodology",
+        "Real-time trend alignment",
+        "Multi-platform viral mechanics",
+        "AIDA/PAS psychological framework integration",
+        "Chain-of-thought viral reasoning"
+    ]
+    
+    return EnhancementVariation(
+        id=f"var_{index+1}_viral_recursive_v3",
+        title="🚀 Viral Potential Focus - Recursive AI Optimization V3",
+        enhanced_prompt=comprehensive_prompt,
+        focus_strategy="viral_recursive_optimization",
+        target_engagement=f'Maximum viral potential through 3-loop recursive improvement with {performance_score:.1f}/10 viral prediction score',
+        industry_specific_elements=industry_elements,
+        estimated_performance_score=performance_score
+    )
+
+
+async def _generate_standard_framework(request: PromptEnhancementRequest, audience_analysis: AudienceAnalysis, strategy: dict, index: int) -> EnhancementVariation:
+    """Generate standard framework for non-viral categories"""
+    
+    chat = LlmChat(
+        api_key=GEMINI_API_KEY,
+        session_id=f"enhance-{strategy['focus']}-{str(uuid.uuid4())[:8]}",
+        system_message=strategy["system_prompt"]
+    ).with_model("gemini", "gemini-2.0-flash")
+    
+    enhancement_prompt = f"""COMPREHENSIVE SCRIPT FRAMEWORK CREATION:
 
 STEP 1 - DEEP ANALYSIS AND UNDERSTANDING:
 Original Prompt: "{request.original_prompt}"
@@ -657,33 +943,33 @@ PSYCHOLOGICAL_TRIGGERS:
 PLATFORM_ADAPTATIONS:
 [Specific modifications for different social media platforms and content distribution channels]"""
 
-        response = await chat.send_message(UserMessage(text=enhancement_prompt))
-        
-        # Parse the comprehensive response structure
-        sections = {}
-        current_section = None
-        current_content = []
-        
-        for line in response.split('\n'):
-            if line.strip().endswith(':') and any(key in line.strip().upper() for key in ['SCRIPT_FRAMEWORK:', 'PRODUCTION_GUIDELINES:', 'TARGET_ENGAGEMENT:', 'INDUSTRY_ELEMENTS:', 'PSYCHOLOGICAL_TRIGGERS:', 'PLATFORM_ADAPTATIONS:']):
-                if current_section:
-                    sections[current_section] = '\n'.join(current_content).strip()
-                current_section = line.strip().replace(':', '').lower().replace('_', '_')
-                current_content = []
-            else:
-                current_content.append(line)
-        
-        if current_section:
-            sections[current_section] = '\n'.join(current_content).strip()
-        
-        # Create comprehensive enhanced prompt from script framework
-        script_framework = sections.get('script_framework', sections.get('enhanced_prompt', f"Enhanced {strategy['focus']} framework for {request.original_prompt}"))
-        production_guidelines = sections.get('production_guidelines', 'Professional production standards applied')
-        psychological_triggers = sections.get('psychological_triggers', 'Advanced engagement techniques integrated')
-        platform_adaptations = sections.get('platform_adaptations', 'Multi-platform optimization included')
-        
-        # Combine all elements into a comprehensive enhanced prompt
-        comprehensive_prompt = f"""🎬 COMPREHENSIVE SCRIPT FRAMEWORK - {strategy['title'].upper()}
+    response = await chat.send_message(UserMessage(text=enhancement_prompt))
+    
+    # Parse the comprehensive response structure
+    sections = {}
+    current_section = None
+    current_content = []
+    
+    for line in response.split('\n'):
+        if line.strip().endswith(':') and any(key in line.strip().upper() for key in ['SCRIPT_FRAMEWORK:', 'PRODUCTION_GUIDELINES:', 'TARGET_ENGAGEMENT:', 'INDUSTRY_ELEMENTS:', 'PSYCHOLOGICAL_TRIGGERS:', 'PLATFORM_ADAPTATIONS:']):
+            if current_section:
+                sections[current_section] = '\n'.join(current_content).strip()
+            current_section = line.strip().replace(':', '').lower().replace('_', '_')
+            current_content = []
+        else:
+            current_content.append(line)
+    
+    if current_section:
+        sections[current_section] = '\n'.join(current_content).strip()
+    
+    # Create comprehensive enhanced prompt from script framework
+    script_framework = sections.get('script_framework', sections.get('enhanced_prompt', f"Enhanced {strategy['focus']} framework for {request.original_prompt}"))
+    production_guidelines = sections.get('production_guidelines', 'Professional production standards applied')
+    psychological_triggers = sections.get('psychological_triggers', 'Advanced engagement techniques integrated')
+    platform_adaptations = sections.get('platform_adaptations', 'Multi-platform optimization included')
+    
+    # Combine all elements into a comprehensive enhanced prompt
+    comprehensive_prompt = f"""🎬 COMPREHENSIVE SCRIPT FRAMEWORK - {strategy['title'].upper()}
 
 📋 SCRIPT FRAMEWORK:
 {script_framework}
@@ -698,28 +984,26 @@ PLATFORM_ADAPTATIONS:
 {platform_adaptations}
 
 This framework serves as a complete blueprint for generating high-quality, {strategy['focus']}-optimized video content that maximizes engagement and achieves professional results."""
-        
-        # Calculate enhanced performance score based on framework comprehensiveness  
-        framework_length = len(comprehensive_prompt)
-        original_length = len(request.original_prompt)
-        complexity_bonus = len(sections) * 0.5  # Bonus for comprehensive structure
-        performance_score = min(10.0, (framework_length / max(original_length, 100)) * 1.5 + complexity_bonus + (i + 1) * 0.3)
-        
-        # Parse industry elements from response
-        industry_elements_text = sections.get('industry_elements', 'Industry best practices applied')
-        industry_elements = [elem.strip() for elem in industry_elements_text.split('\n') if elem.strip() and not elem.strip().startswith('[')][:7]
-        
-        variations.append(EnhancementVariation(
-            id=f"var_{i+1}_{strategy['focus']}_framework",
-            title=f"{strategy['title']} - Advanced Framework",
-            enhanced_prompt=comprehensive_prompt,
-            focus_strategy=f"{strategy['focus']}_framework",
-            target_engagement=sections.get('target_engagement', f'High-impact {strategy["focus"]} engagement with comprehensive framework structure'),
-            industry_specific_elements=industry_elements or [f"Advanced {request.industry_focus} optimization", "Professional framework structure", "Industry best practices integration"],
-            estimated_performance_score=performance_score
-        ))
     
-    return variations
+    # Calculate enhanced performance score based on framework comprehensiveness  
+    framework_length = len(comprehensive_prompt)
+    original_length = len(request.original_prompt)
+    complexity_bonus = len(sections) * 0.5  # Bonus for comprehensive structure
+    performance_score = min(10.0, (framework_length / max(original_length, 100)) * 1.5 + complexity_bonus + (index + 1) * 0.3)
+    
+    # Parse industry elements from response
+    industry_elements_text = sections.get('industry_elements', 'Industry best practices applied')
+    industry_elements = [elem.strip() for elem in industry_elements_text.split('\n') if elem.strip() and not elem.strip().startswith('[')][:7]
+    
+    return EnhancementVariation(
+        id=f"var_{index+1}_{strategy['focus']}_framework",
+        title=f"{strategy['title']} - Advanced Framework",
+        enhanced_prompt=comprehensive_prompt,
+        focus_strategy=f"{strategy['focus']}_framework",
+        target_engagement=sections.get('target_engagement', f'High-impact {strategy["focus"]} engagement with comprehensive framework structure'),
+        industry_specific_elements=industry_elements or [f"Advanced {request.industry_focus} optimization", "Professional framework structure", "Industry best practices integration"],
+        estimated_performance_score=performance_score
+    )
 
 async def _evaluate_enhancement_quality(original_prompt: str, variations: List[EnhancementVariation]) -> QualityMetrics:
     """Evaluate the quality of enhancements using multiple metrics"""
