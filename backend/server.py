@@ -492,8 +492,21 @@ AUDIENCE PROFILE: {audience_analysis.dict()}
 FEW-SHOT LEARNING EXAMPLES:
 {few_shot_examples['emotional']}
 
+PHASE 1 COMPLIANCE REQUIREMENTS:
+You MUST include these EXACT section headers with specified word counts:
+
+🎣 HOOK SECTION (0-3 seconds) - WORD COUNT: 25
+🎬 SETUP SECTION (3-15 seconds) - WORD COUNT: 50
+📚 CONTENT CORE (15-80% duration) - WORD COUNT: 250
+🏆 CLIMAX MOMENT (80-90% duration) - WORD COUNT: 35
+✨ RESOLUTION (90-100% duration) - WORD COUNT: 40
+
+🧠 PSYCHOLOGICAL TRIGGERS INTEGRATED:
+📲 2025 TRENDS & PLATFORM OPTIMIZATION:
+⚡ RETENTION ENGINEERING ELEMENTS:
+
 ADVANCED FRAMEWORK CREATION PROTOCOL:
-Create a comprehensive emotional engagement framework using advanced psychological principles, multi-layered narrative structure, and platform-specific optimization for maximum emotional impact.""",
+Create a comprehensive emotional engagement framework using advanced psychological principles, multi-layered narrative structure, and platform-specific optimization for maximum emotional impact. ALWAYS include the exact Phase 1 compliance sections above.""",
             "use_advanced_features": True
         },
         {
