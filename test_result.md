@@ -306,9 +306,7 @@ metadata:
   signature_functionality: "completed"
 
 test_plan:
-  current_focus:
-    - "Smart Contract Analysis - Multi-Jurisdiction Compliance Check Endpoint"
-    - "Smart Contract Analysis - Database Operations for Analyses and Comparisons"
+  current_focus: []
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
