@@ -591,6 +591,42 @@ IMPLEMENTATION TIPS:
     
     return recommendation
 
+# Legacy endpoint for backward compatibility with existing frontend
+class LegacyPromptEnhancementResponse(BaseModel):
+    original_prompt: str
+    enhanced_prompt: str
+    enhancement_explanation: str
+
+@api_router.post("/enhance-prompt-legacy", response_model=LegacyPromptEnhancementResponse)
+async def enhance_prompt_legacy(request: PromptEnhancementRequest):
+    """Legacy endpoint that maintains backward compatibility with existing frontend"""
+    try:
+        # Use the new advanced system but return only the first variation in legacy format
+        full_response = await enhance_prompt(request)
+        
+        # Get the best variation
+        best_variation = max(full_response.enhancement_variations, key=lambda x: x.estimated_performance_score)
+        
+        # Create legacy-compatible explanation
+        explanation = f"""Enhanced using {best_variation.focus_strategy} strategy.
+
+{full_response.recommendation[:200]}...
+
+Industry insights applied: {', '.join(full_response.industry_insights[:2])}
+
+Quality Score: {full_response.quality_metrics.overall_quality_score:.1f}/10.0
+Improvement Ratio: {full_response.quality_metrics.improvement_ratio:.1f}x"""
+        
+        return LegacyPromptEnhancementResponse(
+            original_prompt=request.original_prompt,
+            enhanced_prompt=best_variation.enhanced_prompt,
+            enhancement_explanation=explanation
+        )
+        
+    except Exception as e:
+        logger.error(f"Error in legacy prompt enhancement: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error enhancing prompt: {str(e)}")
+
 @api_router.post("/generate-script", response_model=ScriptResponse)
 async def generate_script(request: ScriptRequest):
     """Generate an engaging video script based on the prompt"""
