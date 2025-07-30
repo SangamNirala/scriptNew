@@ -152,6 +152,9 @@ backend:
         -working: true
         -agent: "main"
         -comment: "FIXED: Implemented proper signature image processing using PIL (Python Imaging Library). Added process_signature_image() helper method that validates and processes base64 signature images, converts them to RGB format, and saves as PNG for reportlab compatibility. Updated all PDF generation endpoints to use the new helper method. All signature functionality now working correctly - signature upload, retrieval, and PDF generation with embedded signature images."
+        -working: true
+        -agent: "main"
+        -comment: "CRITICAL FIX - Signature PDF Download Issue: Fixed the bug where signatures weren't appearing in downloaded PDFs despite showing in preview. The issue was that the frontend changes placeholder text from '[First Party Signature Placeholder]' to '[First Party Signature Uploaded]' after upload, but the backend process_signature_content() function only looked for the original placeholder. Updated the regex patterns in process_signature_content() to recognize both '[First Party Signature Placeholder]' AND '[First Party Signature Uploaded]' patterns using regex pattern '(?:Placeholder|Uploaded)'. This fix applies to both original and edited PDF generation endpoints. Signatures should now appear correctly in all downloaded PDFs."
 
 frontend:
   - task: "PDF download button functionality"
