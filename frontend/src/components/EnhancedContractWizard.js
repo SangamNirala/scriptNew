@@ -87,8 +87,18 @@ const EnhancedContractWizard = ({
       setProgress(response.data.progress * 100);
       setEstimatedTime(response.data.estimated_completion_time);
       
-      // Apply suggestions to form data
+      // Apply suggestions to form data only if fields are empty
       applySuggestions(response.data.suggestions);
+      
+      // Mark this step as initialized
+      const currentStepKey = `step${currentStep}`;
+      setStepData(prev => ({
+        ...prev,
+        [currentStepKey]: {
+          ...prev[currentStepKey],
+          initialized: true
+        }
+      }));
     } catch (error) {
       console.error('Error initializing wizard:', error);
     } finally {
