@@ -2541,6 +2541,12 @@ def main():
     print("🔥 CRITICAL SIGNATURE PDF FIX VERIFICATION - HIGH PRIORITY")
     print("🔥"*60)
     test_results.append(tester.test_critical_signature_pdf_fix())
+    
+    # REAL SIGNATURE IMAGES TEST
+    print("\n" + "🖼️ "*30)
+    print("🖼️  REAL SIGNATURE IMAGES TEST - USER PROVIDED IMAGES")
+    print("🖼️ "*30)
+    test_results.append(tester.test_real_signature_images())
     print("🔥"*60)
     
     # Print final results
