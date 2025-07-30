@@ -11,7 +11,7 @@ import time
 from datetime import datetime
 
 # Get backend URL from frontend .env
-BACKEND_URL = "https://7e5ca847-9b0c-4608-91a6-4ae54b8c2d18.preview.emergentagent.com/api"
+BACKEND_URL = "https://125a97e4-0907-44df-b9b3-c760af3fdac4.preview.emergentagent.com/api"
 
 class AudioDownloadTester:
     def __init__(self):
