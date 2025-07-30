@@ -418,113 +418,169 @@ function App() {
 
   // Remove the old TermsStep definition - it's now defined outside App component
 
-  const ContractResult = () => (
-    <div className="w-full max-w-4xl mx-auto space-y-6">
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-2xl">Contract Generated Successfully</CardTitle>
-              <CardDescription>
-                Your {contractTypes.find(t => t.id === generatedContract.contract.contract_type)?.name} is ready
-              </CardDescription>
+  const ContractResult = () => {
+    const [editedContent, setEditedContent] = useState('');
+    const [hasEdits, setHasEdits] = useState(false);
+    const [activeTab, setActiveTab] = useState('edit');
+
+    // Initialize edited content when component mounts
+    useEffect(() => {
+      if (generatedContract?.contract?.content && !editedContent) {
+        setEditedContent(generatedContract.contract.content);
+      }
+    }, [generatedContract, editedContent]);
+
+    const handleContentChange = (value) => {
+      setEditedContent(value);
+      setHasEdits(value !== generatedContract.contract.content);
+    };
+
+    const handleConfirmEdit = () => {
+      setActiveTab('preview');
+    };
+
+    const currentContent = editedContent || generatedContract.contract.content;
+
+    return (
+      <div className="w-full max-w-4xl mx-auto space-y-6">
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-2xl">Contract Generated Successfully</CardTitle>
+                <CardDescription>
+                  Your {contractTypes.find(t => t.id === generatedContract.contract.contract_type)?.name} is ready
+                </CardDescription>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Badge variant={generatedContract.contract.compliance_score > 80 ? 'default' : 'secondary'}>
+                  {generatedContract.contract.compliance_score.toFixed(0)}% Compliance
+                </Badge>
+              </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <Badge variant={generatedContract.contract.compliance_score > 80 ? 'default' : 'secondary'}>
-                {generatedContract.contract.compliance_score.toFixed(0)}% Compliance
-              </Badge>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <Progress value={generatedContract.contract.compliance_score} className="w-full" />
-            
-            {generatedContract.warnings?.length > 0 && (
-              <Alert>
-                <AlertTriangle className="h-4 w-4" />
-                <AlertDescription>
-                  <strong>Warnings:</strong> {generatedContract.warnings.join(', ')}
-                </AlertDescription>
-              </Alert>
-            )}
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <Progress value={generatedContract.contract.compliance_score} className="w-full" />
+              
+              {generatedContract.warnings?.length > 0 && (
+                <Alert>
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription>
+                    <strong>Warnings:</strong> {generatedContract.warnings.join(', ')}
+                  </AlertDescription>
+                </Alert>
+              )}
 
-            <Tabs defaultValue="preview" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="preview">
-                  <Eye className="mr-2 h-4 w-4" />
-                  Preview
-                </TabsTrigger>
-                <TabsTrigger value="clauses">
-                  <FileText className="mr-2 h-4 w-4" />
-                  Clauses ({generatedContract.contract.clauses.length})
-                </TabsTrigger>
-              </TabsList>
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="edit">
+                    <FileText className="mr-2 h-4 w-4" />
+                    Edit
+                  </TabsTrigger>
+                  <TabsTrigger value="preview">
+                    <Eye className="mr-2 h-4 w-4" />
+                    Preview
+                  </TabsTrigger>
+                  <TabsTrigger value="clauses">
+                    <FileText className="mr-2 h-4 w-4" />
+                    Clauses ({generatedContract.contract.clauses.length})
+                  </TabsTrigger>
+                </TabsList>
 
-              <TabsContent value="preview" className="mt-4">
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="max-h-96 overflow-y-auto bg-gray-50 p-4 rounded border">
-                      <pre className="whitespace-pre-wrap text-sm font-mono">
-                        {generatedContract.contract.content}
-                      </pre>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="clauses" className="mt-4">
-                <div className="space-y-3">
-                  {generatedContract.contract.clauses.map((clause, index) => (
-                    <Card key={index}>
-                      <CardContent className="p-4">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <h4 className="font-semibold text-sm">{clause.title}</h4>
-                            <p className="text-sm text-gray-600 mt-1">{clause.content}</p>
-                          </div>
-                          <Badge variant="outline" className="ml-2">
-                            {clause.type}
-                          </Badge>
+                <TabsContent value="edit" className="mt-4">
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="space-y-4">
+                        <Textarea
+                          value={editedContent}
+                          onChange={(e) => handleContentChange(e.target.value)}
+                          className="min-h-96 font-mono text-sm"
+                          placeholder="Edit your contract content here..."
+                        />
+                        <div className="flex justify-end">
+                          <Button
+                            onClick={handleConfirmEdit}
+                            disabled={!hasEdits}
+                            className={`${
+                              hasEdits 
+                                ? 'bg-green-600 hover:bg-green-700 text-white' 
+                                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                            }`}
+                          >
+                            Confirm
+                          </Button>
                         </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </TabsContent>
-            </Tabs>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
 
-            <div className="flex gap-4 mt-6">
-              <Button 
-                onClick={() => {
-                  setCurrentStep(1);
-                  setGeneratedContract(null);
-                  setContractData({
-                    contract_type: '',
-                    jurisdiction: 'US',
-                    parties: {},
-                    terms: {},
-                    special_clauses: []
-                  });
-                }}
-                variant="outline"
-                className="flex-1"
-              >
-                Create New Contract
-              </Button>
-              <Button 
-                onClick={downloadPDF}
-                className="flex-1 bg-green-600 hover:bg-green-700"
-              >
-                <Download className="mr-2 h-4 w-4" />
-                Download PDF
-              </Button>
+                <TabsContent value="preview" className="mt-4">
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="max-h-96 overflow-y-auto bg-gray-50 p-4 rounded border">
+                        <pre className="whitespace-pre-wrap text-sm font-mono">
+                          {currentContent}
+                        </pre>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="clauses" className="mt-4">
+                  <div className="space-y-3">
+                    {generatedContract.contract.clauses.map((clause, index) => (
+                      <Card key={index}>
+                        <CardContent className="p-4">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <h4 className="font-semibold text-sm">{clause.title}</h4>
+                              <p className="text-sm text-gray-600 mt-1">{clause.content}</p>
+                            </div>
+                            <Badge variant="outline" className="ml-2">
+                              {clause.type}
+                            </Badge>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </TabsContent>
+              </Tabs>
+
+              <div className="flex gap-4 mt-6">
+                <Button 
+                  onClick={() => {
+                    setCurrentStep(1);
+                    setGeneratedContract(null);
+                    setContractData({
+                      contract_type: '',
+                      jurisdiction: 'US',
+                      parties: {},
+                      terms: {},
+                      special_clauses: []
+                    });
+                  }}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  Create New Contract
+                </Button>
+                <Button 
+                  onClick={() => downloadPDF(currentContent)}
+                  className="flex-1 bg-green-600 hover:bg-green-700"
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  Download PDF
+                </Button>
+              </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
+          </CardContent>
+        </Card>
+      </div>
+    );
+  };
 
   const Hero = () => (
     <div className="relative bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 text-white py-16 px-6">
