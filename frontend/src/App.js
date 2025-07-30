@@ -308,6 +308,35 @@ function App() {
     loadContracts();
   }, []);
 
+  // Add ResizeObserver error handler to suppress common Radix UI warnings
+  useEffect(() => {
+    const handleError = (e) => {
+      if (e.message === 'ResizeObserver loop completed with undelivered notifications.') {
+        // This is a common Radix UI issue and doesn't affect functionality
+        // Suppress this specific error to avoid console noise
+        e.stopImmediatePropagation();
+        return false;
+      }
+    };
+
+    const handleUnhandledRejection = (e) => {
+      if (e.reason?.message?.includes('ResizeObserver loop')) {
+        // Also catch it if it comes as an unhandled promise rejection
+        e.preventDefault();
+        return false;
+      }
+    };
+
+    // Add both error and unhandledrejection listeners
+    window.addEventListener('error', handleError);
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+
+    return () => {
+      window.removeEventListener('error', handleError);
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+    };
+  }, []);
+
   const loadContractTypes = async () => {
     try {
       const response = await axios.get(`${API}/contract-types`);
