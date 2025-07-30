@@ -2213,6 +2213,323 @@ KEY RETENTION ELEMENTS:
         except Exception as e:
             self.log_test("Error Handling - Invalid Script Request", False, f"Exception: {str(e)}")
     
+    def test_new_enhanced_prompt_endpoint(self):
+        """Test the new enhanced /api/enhance-prompt endpoint with multiple variations"""
+        print("\n=== Testing NEW Enhanced Prompt Enhancement System ===")
+        
+        # Test Case 1: Basic enhancement with minimal input
+        try:
+            basic_payload = {
+                "original_prompt": "Create a video about productivity tips"
+            }
+            
+            response = self.session.post(
+                f"{self.backend_url}/enhance-prompt",
+                json=basic_payload,
+                timeout=60
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Verify new response structure
+                required_fields = [
+                    "original_prompt", "audience_analysis", "enhancement_variations", 
+                    "quality_metrics", "recommendation", "industry_insights", "enhancement_methodology"
+                ]
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if missing_fields:
+                    self.log_test("Enhanced Prompt - New Structure", False,
+                                f"Missing fields: {missing_fields}")
+                    return False
+                
+                # Verify audience analysis structure
+                audience_analysis = data["audience_analysis"]
+                audience_fields = ["recommended_tone", "complexity_level", "cultural_considerations", "platform_optimizations", "engagement_triggers"]
+                missing_audience_fields = [field for field in audience_fields if field not in audience_analysis]
+                
+                if missing_audience_fields:
+                    self.log_test("Enhanced Prompt - Audience Analysis", False,
+                                f"Missing audience analysis fields: {missing_audience_fields}")
+                    return False
+                
+                # Verify enhancement variations (should be 3 by default)
+                variations = data["enhancement_variations"]
+                if not isinstance(variations, list) or len(variations) != 3:
+                    self.log_test("Enhanced Prompt - Variations Count", False,
+                                f"Expected 3 variations, got {len(variations) if isinstance(variations, list) else 'not a list'}")
+                    return False
+                
+                # Verify each variation has required fields
+                variation_fields = ["id", "title", "enhanced_prompt", "focus_strategy", "target_engagement", "industry_specific_elements", "estimated_performance_score"]
+                for i, variation in enumerate(variations):
+                    missing_var_fields = [field for field in variation_fields if field not in variation]
+                    if missing_var_fields:
+                        self.log_test(f"Enhanced Prompt - Variation {i+1} Structure", False,
+                                    f"Missing variation fields: {missing_var_fields}")
+                        return False
+                
+                # Verify different strategies
+                strategies = [var["focus_strategy"] for var in variations]
+                expected_strategies = ["emotional", "technical", "viral"]
+                if not all(strategy in strategies for strategy in expected_strategies):
+                    self.log_test("Enhanced Prompt - Strategy Variety", False,
+                                f"Expected strategies {expected_strategies}, got {strategies}")
+                    return False
+                
+                # Verify quality metrics structure
+                quality_metrics = data["quality_metrics"]
+                metrics_fields = ["emotional_engagement_score", "technical_clarity_score", "industry_relevance_score", "storytelling_strength_score", "overall_quality_score", "improvement_ratio"]
+                missing_metrics_fields = [field for field in metrics_fields if field not in quality_metrics]
+                
+                if missing_metrics_fields:
+                    self.log_test("Enhanced Prompt - Quality Metrics", False,
+                                f"Missing quality metrics fields: {missing_metrics_fields}")
+                    return False
+                
+                # Verify enhancement quality (should be substantially longer)
+                original_length = len(data["original_prompt"])
+                avg_enhanced_length = sum(len(var["enhanced_prompt"]) for var in variations) / len(variations)
+                improvement_ratio = avg_enhanced_length / original_length
+                
+                if improvement_ratio < 5:  # Should be at least 5x longer
+                    self.log_test("Enhanced Prompt - Enhancement Quality", False,
+                                f"Enhancement ratio too low: {improvement_ratio:.1f}x (expected >5x)")
+                    return False
+                
+                self.log_test("Enhanced Prompt - Basic Functionality", True,
+                            f"Successfully enhanced prompt with {improvement_ratio:.1f}x improvement ratio")
+                
+            else:
+                self.log_test("Enhanced Prompt - HTTP Response", False,
+                            f"HTTP {response.status_code}: {response.text[:500]}")
+                return False
+                
+        except Exception as e:
+            self.log_test("Enhanced Prompt - Basic Test", False, f"Request failed: {str(e)}")
+            return False
+        
+        # Test Case 2: Different video types
+        video_types = ["marketing", "education", "entertainment", "tech"]
+        for video_type in video_types:
+            try:
+                type_payload = {
+                    "original_prompt": "Promote our new fitness app to busy professionals",
+                    "video_type": video_type,
+                    "industry_focus": video_type
+                }
+                
+                type_response = self.session.post(
+                    f"{self.backend_url}/enhance-prompt",
+                    json=type_payload,
+                    timeout=60
+                )
+                
+                if type_response.status_code == 200:
+                    type_data = type_response.json()
+                    
+                    # Verify industry-specific insights
+                    industry_insights = type_data.get("industry_insights", [])
+                    if not industry_insights or len(industry_insights) < 2:
+                        self.log_test(f"Enhanced Prompt - {video_type.title()} Industry Insights", False,
+                                    f"Expected industry insights, got {len(industry_insights)}")
+                    else:
+                        self.log_test(f"Enhanced Prompt - {video_type.title()} Type", True,
+                                    f"Successfully processed {video_type} with {len(industry_insights)} industry insights")
+                else:
+                    self.log_test(f"Enhanced Prompt - {video_type.title()} Type", False,
+                                f"Failed for {video_type}: {type_response.status_code}")
+                    
+            except Exception as e:
+                self.log_test(f"Enhanced Prompt - {video_type.title()} Type", False,
+                            f"Exception: {str(e)}")
+        
+        # Test Case 3: Multiple enhancement variations
+        try:
+            variations_payload = {
+                "original_prompt": "Explain machine learning concepts for beginners",
+                "video_type": "education",
+                "industry_focus": "education",
+                "enhancement_count": 4,
+                "enhancement_style": "educational"
+            }
+            
+            variations_response = self.session.post(
+                f"{self.backend_url}/enhance-prompt",
+                json=variations_payload,
+                timeout=90
+            )
+            
+            if variations_response.status_code == 200:
+                variations_data = variations_response.json()
+                variations = variations_data["enhancement_variations"]
+                
+                if len(variations) == 4:
+                    self.log_test("Enhanced Prompt - Custom Variation Count", True,
+                                f"Successfully generated {len(variations)} variations as requested")
+                    
+                    # Verify educational strategy is included
+                    strategies = [var["focus_strategy"] for var in variations]
+                    if "educational" in strategies:
+                        self.log_test("Enhanced Prompt - Educational Strategy", True,
+                                    "Educational strategy included in variations")
+                    else:
+                        self.log_test("Enhanced Prompt - Educational Strategy", False,
+                                    f"Educational strategy not found in: {strategies}")
+                else:
+                    self.log_test("Enhanced Prompt - Custom Variation Count", False,
+                                f"Expected 4 variations, got {len(variations)}")
+            else:
+                self.log_test("Enhanced Prompt - Custom Variation Count", False,
+                            f"Failed: {variations_response.status_code}")
+                
+        except Exception as e:
+            self.log_test("Enhanced Prompt - Custom Variation Count", False, f"Exception: {str(e)}")
+        
+        # Test Case 4: Quality metrics calculation
+        try:
+            quality_payload = {
+                "original_prompt": "Demonstrate our new API integration features",
+                "video_type": "tech",
+                "industry_focus": "tech"
+            }
+            
+            quality_response = self.session.post(
+                f"{self.backend_url}/enhance-prompt",
+                json=quality_payload,
+                timeout=60
+            )
+            
+            if quality_response.status_code == 200:
+                quality_data = quality_response.json()
+                quality_metrics = quality_data["quality_metrics"]
+                
+                # Verify all scores are within valid range (0-10)
+                score_fields = ["emotional_engagement_score", "technical_clarity_score", "industry_relevance_score", "storytelling_strength_score", "overall_quality_score"]
+                valid_scores = True
+                
+                for field in score_fields:
+                    score = quality_metrics.get(field, -1)
+                    if not (0 <= score <= 10):
+                        valid_scores = False
+                        break
+                
+                if valid_scores:
+                    self.log_test("Enhanced Prompt - Quality Metrics Range", True,
+                                "All quality scores within valid range (0-10)")
+                else:
+                    self.log_test("Enhanced Prompt - Quality Metrics Range", False,
+                                "Some quality scores outside valid range")
+                
+                # Verify improvement ratio is reasonable
+                improvement_ratio = quality_metrics.get("improvement_ratio", 0)
+                if improvement_ratio > 1:
+                    self.log_test("Enhanced Prompt - Improvement Ratio", True,
+                                f"Good improvement ratio: {improvement_ratio:.1f}x")
+                else:
+                    self.log_test("Enhanced Prompt - Improvement Ratio", False,
+                                f"Poor improvement ratio: {improvement_ratio:.1f}x")
+                    
+            else:
+                self.log_test("Enhanced Prompt - Quality Metrics", False,
+                            f"Failed: {quality_response.status_code}")
+                
+        except Exception as e:
+            self.log_test("Enhanced Prompt - Quality Metrics", False, f"Exception: {str(e)}")
+        
+        # Test Case 5: Recommendation system
+        try:
+            recommendation_payload = {
+                "original_prompt": "Create engaging content about technology",
+                "video_type": "general",
+                "industry_focus": "tech"
+            }
+            
+            rec_response = self.session.post(
+                f"{self.backend_url}/enhance-prompt",
+                json=recommendation_payload,
+                timeout=60
+            )
+            
+            if rec_response.status_code == 200:
+                rec_data = rec_response.json()
+                recommendation = rec_data.get("recommendation", "")
+                
+                if len(recommendation) > 100 and "RECOMMENDED VARIATION" in recommendation:
+                    self.log_test("Enhanced Prompt - Recommendation System", True,
+                                f"Generated comprehensive recommendation ({len(recommendation)} chars)")
+                else:
+                    self.log_test("Enhanced Prompt - Recommendation System", False,
+                                f"Recommendation too short or missing key elements: {len(recommendation)} chars")
+                    
+            else:
+                self.log_test("Enhanced Prompt - Recommendation System", False,
+                            f"Failed: {rec_response.status_code}")
+                
+        except Exception as e:
+            self.log_test("Enhanced Prompt - Recommendation System", False, f"Exception: {str(e)}")
+        
+        return True
+    
+    def test_legacy_prompt_endpoint_compatibility(self):
+        """Test backward compatibility with legacy endpoint"""
+        print("\n=== Testing Legacy Prompt Enhancement Compatibility ===")
+        
+        try:
+            legacy_payload = {
+                "original_prompt": "Create a motivational video about success",
+                "video_type": "general"
+            }
+            
+            legacy_response = self.session.post(
+                f"{self.backend_url}/enhance-prompt-legacy",
+                json=legacy_payload,
+                timeout=60
+            )
+            
+            if legacy_response.status_code == 200:
+                legacy_data = legacy_response.json()
+                
+                # Verify legacy response structure
+                legacy_fields = ["original_prompt", "enhanced_prompt", "enhancement_explanation"]
+                missing_legacy_fields = [field for field in legacy_fields if field not in legacy_data]
+                
+                if missing_legacy_fields:
+                    self.log_test("Legacy Prompt - Structure", False,
+                                f"Missing legacy fields: {missing_legacy_fields}")
+                    return False
+                
+                # Verify enhancement quality
+                original = legacy_data["original_prompt"]
+                enhanced = legacy_data["enhanced_prompt"]
+                explanation = legacy_data["enhancement_explanation"]
+                
+                if len(enhanced) > len(original) * 3:  # Should be at least 3x longer
+                    self.log_test("Legacy Prompt - Enhancement Quality", True,
+                                f"Legacy enhancement successful: {len(original)} → {len(enhanced)} chars")
+                else:
+                    self.log_test("Legacy Prompt - Enhancement Quality", False,
+                                f"Legacy enhancement insufficient: {len(original)} → {len(enhanced)} chars")
+                
+                if len(explanation) > 50:
+                    self.log_test("Legacy Prompt - Explanation Quality", True,
+                                f"Legacy explanation adequate: {len(explanation)} chars")
+                else:
+                    self.log_test("Legacy Prompt - Explanation Quality", False,
+                                f"Legacy explanation too short: {len(explanation)} chars")
+                
+                return True
+                
+            else:
+                self.log_test("Legacy Prompt - HTTP Response", False,
+                            f"HTTP {legacy_response.status_code}: {legacy_response.text[:500]}")
+                return False
+                
+        except Exception as e:
+            self.log_test("Legacy Prompt - Exception", False, f"Request failed: {str(e)}")
+            return False
+
     def run_all_tests(self):
         """Run all backend tests"""
         print("🚀 Starting Backend API Testing for Script Generation App")
