@@ -2428,6 +2428,482 @@ async def get_contract_signatures(contract_id: str):
         logging.error(f"Error getting signatures: {e}")
         raise HTTPException(status_code=500, detail=f"Error getting signatures: {str(e)}")
 
+# Enhanced User Experience - Profile Management Endpoints
+
+@api_router.post("/users/profile", response_model=UserProfile)
+async def create_user_profile(profile: UserProfile):
+    """Create a new user profile"""
+    try:
+        profile_dict = profile.dict()
+        await db.user_profiles.insert_one(profile_dict)
+        return profile
+    except Exception as e:
+        logging.error(f"Error creating user profile: {e}")
+        raise HTTPException(status_code=500, detail="Error creating user profile")
+
+@api_router.get("/users/profile/{user_id}", response_model=UserProfile)
+async def get_user_profile(user_id: str):
+    """Get user profile by ID"""
+    try:
+        profile = await db.user_profiles.find_one({"id": user_id})
+        if not profile:
+            raise HTTPException(status_code=404, detail="User profile not found")
+        
+        profile = convert_objectid_to_str(profile)
+        return UserProfile(**profile)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error getting user profile: {e}")
+        raise HTTPException(status_code=500, detail="Error getting user profile")
+
+@api_router.put("/users/profile/{user_id}", response_model=UserProfile)
+async def update_user_profile(user_id: str, profile_update: dict):
+    """Update user profile"""
+    try:
+        profile_update["updated_at"] = datetime.utcnow()
+        result = await db.user_profiles.update_one(
+            {"id": user_id}, 
+            {"$set": profile_update}
+        )
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="User profile not found")
+        
+        updated_profile = await db.user_profiles.find_one({"id": user_id})
+        updated_profile = convert_objectid_to_str(updated_profile)
+        return UserProfile(**updated_profile)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error updating user profile: {e}")
+        raise HTTPException(status_code=500, detail="Error updating user profile")
+
+@api_router.post("/companies/profile", response_model=CompanyProfile)
+async def create_company_profile(profile: CompanyProfile):
+    """Create a new company profile"""
+    try:
+        profile_dict = profile.dict()
+        await db.company_profiles.insert_one(profile_dict)
+        return profile
+    except Exception as e:
+        logging.error(f"Error creating company profile: {e}")
+        raise HTTPException(status_code=500, detail="Error creating company profile")
+
+@api_router.get("/companies/profile/{company_id}", response_model=CompanyProfile)
+async def get_company_profile(company_id: str):
+    """Get company profile by ID"""
+    try:
+        profile = await db.company_profiles.find_one({"id": company_id})
+        if not profile:
+            raise HTTPException(status_code=404, detail="Company profile not found")
+        
+        profile = convert_objectid_to_str(profile)
+        return CompanyProfile(**profile)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error getting company profile: {e}")
+        raise HTTPException(status_code=500, detail="Error getting company profile")
+
+@api_router.get("/users/{user_id}/companies", response_model=List[CompanyProfile])
+async def get_user_companies(user_id: str):
+    """Get all companies for a user"""
+    try:
+        companies = await db.company_profiles.find({"user_id": user_id}).to_list(None)
+        companies = [convert_objectid_to_str(company) for company in companies]
+        return [CompanyProfile(**company) for company in companies]
+    except Exception as e:
+        logging.error(f"Error getting user companies: {e}")
+        raise HTTPException(status_code=500, detail="Error getting user companies")
+
+# Enhanced Contract Wizard Endpoints
+
+@api_router.post("/contract-wizard/initialize", response_model=ContractWizardResponse)
+async def initialize_contract_wizard(request: ContractWizardRequest):
+    """Initialize the contract wizard with smart suggestions"""
+    try:
+        # Get user and company profiles if provided
+        user_profile = None
+        company_profile = None
+        
+        if request.user_id:
+            user_data = await db.user_profiles.find_one({"id": request.user_id})
+            if user_data:
+                user_profile = UserProfile(**convert_objectid_to_str(user_data))
+        
+        if request.company_id:
+            company_data = await db.company_profiles.find_one({"id": request.company_id})
+            if company_data:
+                company_profile = CompanyProfile(**convert_objectid_to_str(company_data))
+        
+        # Generate smart suggestions based on profiles and contract type
+        suggestions = await generate_smart_suggestions(
+            contract_type=request.contract_type,
+            user_profile=user_profile,
+            company_profile=company_profile,
+            current_step=request.current_step
+        )
+        
+        # Define wizard steps
+        current_step = generate_wizard_step(
+            step_number=request.current_step,
+            contract_type=request.contract_type,
+            user_profile=user_profile,
+            company_profile=company_profile
+        )
+        
+        next_step = None
+        if request.current_step < 5:  # Assuming 5 steps in total
+            next_step = generate_wizard_step(
+                step_number=request.current_step + 1,
+                contract_type=request.contract_type,
+                user_profile=user_profile,
+                company_profile=company_profile
+            )
+        
+        return ContractWizardResponse(
+            current_step=current_step,
+            next_step=next_step,
+            suggestions=suggestions,
+            progress=request.current_step / 5.0,
+            estimated_completion_time=f"{(5 - request.current_step) * 2} minutes"
+        )
+        
+    except Exception as e:
+        logging.error(f"Error initializing contract wizard: {e}")
+        raise HTTPException(status_code=500, detail="Error initializing contract wizard")
+
+@api_router.post("/contract-wizard/suggestions")
+async def get_field_suggestions(
+    contract_type: str, 
+    field_name: str,
+    user_id: Optional[str] = None,
+    company_id: Optional[str] = None,
+    context: Dict[str, Any] = {}
+):
+    """Get smart suggestions for a specific field"""
+    try:
+        # Get profiles
+        user_profile = None
+        company_profile = None
+        
+        if user_id:
+            user_data = await db.user_profiles.find_one({"id": user_id})
+            if user_data:
+                user_profile = UserProfile(**convert_objectid_to_str(user_data))
+        
+        if company_id:
+            company_data = await db.company_profiles.find_one({"id": company_id})
+            if company_data:
+                company_profile = CompanyProfile(**convert_objectid_to_str(company_data))
+        
+        suggestions = await generate_field_suggestions(
+            contract_type=contract_type,
+            field_name=field_name,
+            user_profile=user_profile,
+            company_profile=company_profile,
+            context=context
+        )
+        
+        return {"suggestions": suggestions}
+        
+    except Exception as e:
+        logging.error(f"Error getting field suggestions: {e}")
+        raise HTTPException(status_code=500, detail="Error getting field suggestions")
+
+@api_router.get("/contracts/{contract_id}/signatures")
+async def get_contract_signatures(contract_id: str):
+    """Get signatures for a contract"""
+    try:
+        contract = await db.contracts.find_one({"id": contract_id})
+        if not contract:
+            raise HTTPException(status_code=404, detail="Contract not found")
+        
+        return {
+            "contract_id": contract_id,
+            "first_party_signature": contract.get("first_party_signature"),
+            "second_party_signature": contract.get("second_party_signature")
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error getting signatures: {e}")
+        raise HTTPException(status_code=500, detail=f"Error getting signatures: {str(e)}")
+
+# Smart Suggestion Generation Functions
+
+async def generate_smart_suggestions(
+    contract_type: str,
+    user_profile: Optional[UserProfile] = None,
+    company_profile: Optional[CompanyProfile] = None,
+    current_step: int = 1
+) -> List[SmartSuggestion]:
+    """Generate smart suggestions based on profiles and contract type"""
+    suggestions = []
+    
+    try:
+        # Profile-based suggestions
+        if user_profile:
+            if current_step == 2:  # Parties step
+                suggestions.append(SmartSuggestion(
+                    field_name="party1_name",
+                    suggested_value=user_profile.name,
+                    confidence=0.95,
+                    reasoning="Using your profile name",
+                    source="user_profile"
+                ))
+                
+                if user_profile.email:
+                    suggestions.append(SmartSuggestion(
+                        field_name="party1_email",
+                        suggested_value=user_profile.email,
+                        confidence=0.95,
+                        reasoning="Using your profile email",
+                        source="user_profile"
+                    ))
+        
+        if company_profile:
+            if current_step == 2:  # Parties step
+                suggestions.append(SmartSuggestion(
+                    field_name="company_name",
+                    suggested_value=company_profile.name,
+                    confidence=0.95,
+                    reasoning="Using your company profile",
+                    source="company_profile"
+                ))
+                
+                if company_profile.address:
+                    address_str = f"{company_profile.address.get('street', '')}, {company_profile.address.get('city', '')}, {company_profile.address.get('state', '')} {company_profile.address.get('zip', '')}"
+                    suggestions.append(SmartSuggestion(
+                        field_name="company_address",
+                        suggested_value=address_str.strip(', '),
+                        confidence=0.9,
+                        reasoning="Using your company address",
+                        source="company_profile"
+                    ))
+        
+        # Industry-specific suggestions
+        if user_profile and user_profile.industry:
+            industry_suggestions = await get_industry_specific_suggestions(
+                contract_type, user_profile.industry, current_step
+            )
+            suggestions.extend(industry_suggestions)
+        
+        # AI-generated suggestions based on contract type
+        ai_suggestions = await generate_ai_suggestions(contract_type, current_step)
+        suggestions.extend(ai_suggestions)
+        
+    except Exception as e:
+        logging.error(f"Error generating suggestions: {e}")
+    
+    return suggestions
+
+async def get_industry_specific_suggestions(
+    contract_type: str, 
+    industry: str, 
+    current_step: int
+) -> List[SmartSuggestion]:
+    """Get industry-specific suggestions"""
+    suggestions = []
+    
+    industry_defaults = {
+        "technology": {
+            "payment_terms": "Net 30",
+            "warranty_period": "90 days",
+            "liability_cap": "Project value"
+        },
+        "healthcare": {
+            "payment_terms": "Net 15",
+            "compliance_requirements": "HIPAA compliance required",
+            "liability_cap": "2x project value"
+        },
+        "finance": {
+            "payment_terms": "Net 15", 
+            "confidentiality_period": "5 years",
+            "compliance_requirements": "SOX compliance required"
+        },
+        "marketing": {
+            "payment_terms": "50% upfront, 50% on completion",
+            "revision_rounds": "3 revision rounds included",
+            "usage_rights": "Exclusive usage rights"
+        }
+    }
+    
+    if industry.lower() in industry_defaults:
+        defaults = industry_defaults[industry.lower()]
+        
+        if current_step == 3:  # Terms step
+            for field, value in defaults.items():
+                suggestions.append(SmartSuggestion(
+                    field_name=field,
+                    suggested_value=value,
+                    confidence=0.8,
+                    reasoning=f"Industry standard for {industry}",
+                    source="industry_standard"
+                ))
+    
+    return suggestions
+
+async def generate_ai_suggestions(contract_type: str, current_step: int) -> List[SmartSuggestion]:
+    """Generate AI-powered suggestions"""
+    suggestions = []
+    
+    try:
+        prompt = f"""
+        Generate smart suggestions for a {contract_type} contract at step {current_step}.
+        
+        Step Context:
+        - Step 1: Contract type selection
+        - Step 2: Party information
+        - Step 3: Terms and conditions
+        - Step 4: Special clauses
+        - Step 5: Review and finalize
+        
+        Provide 2-3 practical suggestions for common fields in this contract type and step.
+        Return in JSON format with field_name, suggested_value, and reasoning.
+        """
+        
+        model = genai.GenerativeModel('gemini-1.5-pro')
+        response = model.generate_content(
+            prompt,
+            generation_config=genai.types.GenerationConfig(
+                max_output_tokens=1000,
+                temperature=0.3
+            )
+        )
+        
+        # Extract JSON from response
+        json_match = re.search(r'\[.*\]', response.text, re.DOTALL)
+        if json_match:
+            ai_suggestions_data = json.loads(json_match.group())
+            
+            for suggestion_data in ai_suggestions_data:
+                suggestions.append(SmartSuggestion(
+                    field_name=suggestion_data.get("field_name", ""),
+                    suggested_value=suggestion_data.get("suggested_value", ""),
+                    confidence=0.7,
+                    reasoning=suggestion_data.get("reasoning", "AI-generated suggestion"),
+                    source="ai_generated"
+                ))
+                
+    except Exception as e:
+        logging.error(f"Error generating AI suggestions: {e}")
+    
+    return suggestions
+
+def generate_wizard_step(
+    step_number: int,
+    contract_type: str,
+    user_profile: Optional[UserProfile] = None,
+    company_profile: Optional[CompanyProfile] = None
+) -> WizardStep:
+    """Generate wizard step configuration"""
+    
+    step_configs = {
+        1: {
+            "title": "Contract Type & Industry",
+            "description": "Select your contract type and specify industry requirements",
+            "fields": [
+                {"name": "contract_type", "type": "select", "required": True, "label": "Contract Type"},
+                {"name": "industry", "type": "select", "required": False, "label": "Industry"},
+                {"name": "jurisdiction", "type": "select", "required": True, "label": "Jurisdiction"}
+            ]
+        },
+        2: {
+            "title": "Party Information",
+            "description": "Enter details for all parties involved in the contract",
+            "fields": [
+                {"name": "party1_name", "type": "text", "required": True, "label": "Your Name/Company"},
+                {"name": "party1_email", "type": "email", "required": False, "label": "Your Email"},
+                {"name": "party1_address", "type": "textarea", "required": False, "label": "Your Address"},
+                {"name": "party2_name", "type": "text", "required": True, "label": "Other Party Name"},
+                {"name": "party2_email", "type": "email", "required": False, "label": "Other Party Email"},
+                {"name": "party2_address", "type": "textarea", "required": False, "label": "Other Party Address"}
+            ]
+        },
+        3: {
+            "title": "Terms & Conditions",
+            "description": "Define the key terms and conditions for your contract",
+            "fields": [
+                {"name": "payment_terms", "type": "text", "required": True, "label": "Payment Terms"},
+                {"name": "project_duration", "type": "text", "required": False, "label": "Project Duration"},
+                {"name": "deliverables", "type": "textarea", "required": False, "label": "Deliverables"},
+                {"name": "liability_cap", "type": "text", "required": False, "label": "Liability Cap"}
+            ]
+        },
+        4: {
+            "title": "Special Clauses",
+            "description": "Add any special clauses or requirements",
+            "fields": [
+                {"name": "confidentiality", "type": "boolean", "required": False, "label": "Include Confidentiality Clause"},
+                {"name": "non_compete", "type": "boolean", "required": False, "label": "Include Non-Compete Clause"},
+                {"name": "special_terms", "type": "textarea", "required": False, "label": "Additional Terms"},
+                {"name": "execution_date", "type": "date", "required": False, "label": "Execution Date"}
+            ]
+        },
+        5: {
+            "title": "Review & Generate",
+            "description": "Review your contract details and generate the final document",
+            "fields": [
+                {"name": "review_complete", "type": "boolean", "required": True, "label": "I have reviewed all details"},
+                {"name": "legal_review", "type": "boolean", "required": False, "label": "This will be reviewed by legal counsel"}
+            ]
+        }
+    }
+    
+    config = step_configs.get(step_number, step_configs[1])
+    
+    return WizardStep(
+        step_number=step_number,
+        title=config["title"],
+        description=config["description"],
+        fields=config["fields"]
+    )
+
+async def generate_field_suggestions(
+    contract_type: str,
+    field_name: str,
+    user_profile: Optional[UserProfile] = None,
+    company_profile: Optional[CompanyProfile] = None,
+    context: Dict[str, Any] = {}
+) -> List[SmartSuggestion]:
+    """Generate suggestions for a specific field"""
+    suggestions = []
+    
+    # Profile-based suggestions
+    if user_profile:
+        if field_name in ["party1_name", "client_name", "contractor_name"]:
+            suggestions.append(SmartSuggestion(
+                field_name=field_name,
+                suggested_value=user_profile.name,
+                confidence=0.95,
+                reasoning="From your user profile",
+                source="user_profile"
+            ))
+        
+        if field_name in ["party1_email", "client_email", "contractor_email"]:
+            if user_profile.email:
+                suggestions.append(SmartSuggestion(
+                    field_name=field_name,
+                    suggested_value=user_profile.email,
+                    confidence=0.95,
+                    reasoning="From your user profile",
+                    source="user_profile"
+                ))
+    
+    if company_profile:
+        if field_name in ["company_name", "party1_name"] and company_profile.name:
+            suggestions.append(SmartSuggestion(
+                field_name=field_name,
+                suggested_value=company_profile.name,
+                confidence=0.95,
+                reasoning="From your company profile",
+                source="company_profile"
+            ))
+    
+    return suggestions
+
 # Include the router in the main app
 app.include_router(api_router)
 
