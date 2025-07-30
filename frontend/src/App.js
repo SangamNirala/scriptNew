@@ -210,6 +210,42 @@ const TermsStep = ({ contractData, contractTypes, updateTerms, setContractData, 
       )}
 
       <div>
+        <Label htmlFor="execution_date">Select Date of Execution:</Label>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className={`w-full justify-start text-left font-normal ${
+                !contractData.execution_date && "text-muted-foreground"
+              }`}
+            >
+              <Calendar className="mr-2 h-4 w-4" />
+              {contractData.execution_date ? (
+                new Date(contractData.execution_date).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })
+              ) : (
+                <span>Pick a date</span>
+              )}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0">
+            <CalendarComponent
+              mode="single"
+              selected={contractData.execution_date ? new Date(contractData.execution_date) : undefined}
+              onSelect={(date) => setContractData(prev => ({ 
+                ...prev, 
+                execution_date: date ? date.toISOString() : null
+              }))}
+              initialFocus
+            />
+          </PopoverContent>
+        </Popover>
+      </div>
+
+      <div>
         <Label htmlFor="special_clauses">Special Clauses (Optional)</Label>
         <Textarea
           id="special_clauses"
