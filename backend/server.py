@@ -154,6 +154,23 @@ class LegalMateAgents:
             - [Date of Execution] placeholder for date entry
             - No asterisk (*) notations anywhere in the document
             
+            End the document with a signature section:
+            **SIGNATURES**
+            
+            IN WITNESS WHEREOF, the parties have executed this agreement as of the Effective Date.
+            
+            **FIRST PARTY:**
+            
+            [First Party Signature Placeholder]
+            _________________________________
+            {party1_name}
+            
+            **SECOND PARTY:**
+            
+            [Second Party Signature Placeholder] 
+            _________________________________
+            {party2_name}
+            
             Make it legally sound and professionally formatted.
             """,
             "freelance_agreement": """
