@@ -87,6 +87,61 @@ class ContractResponse(BaseModel):
     warnings: List[str] = []
     suggestions: List[str] = []
 
+# New models for Smart Contract Analysis
+class ContractAnalysisRequest(BaseModel):
+    contract_content: str
+    contract_type: Optional[str] = None
+    jurisdiction: str = "US"
+
+class RiskAssessment(BaseModel):
+    risk_score: float = Field(ge=0, le=100)
+    risk_level: str  # "LOW", "MEDIUM", "HIGH", "CRITICAL"
+    risk_factors: List[Dict[str, Any]]
+    recommendations: List[str]
+
+class ClauseRecommendation(BaseModel):
+    clause_type: str
+    title: str
+    content: str
+    priority: str  # "HIGH", "MEDIUM", "LOW"
+    reasoning: str
+    industry_specific: bool = False
+
+class ContractAnalysisResult(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    contract_content: str
+    contract_type: Optional[str]
+    jurisdiction: str
+    risk_assessment: RiskAssessment
+    clause_recommendations: List[ClauseRecommendation]
+    compliance_issues: List[Dict[str, Any]]
+    readability_score: float
+    completeness_score: float
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class ContractComparisonRequest(BaseModel):
+    contract1_content: str
+    contract2_content: str
+    contract1_label: str = "Contract A"
+    contract2_label: str = "Contract B"
+
+class ContractDifference(BaseModel):
+    type: str  # "addition", "deletion", "modification"
+    section: str
+    contract1_text: Optional[str]
+    contract2_text: Optional[str]
+    significance: str  # "HIGH", "MEDIUM", "LOW"
+    description: str
+
+class ContractComparisonResult(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    contract1_label: str
+    contract2_label: str
+    differences: List[ContractDifference]
+    similarity_score: float
+    summary: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
 
 # Multi-Agent System
 class LegalMateAgents:
