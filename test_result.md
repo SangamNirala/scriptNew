@@ -142,6 +142,12 @@ backend:
         - working: true
           agent: "testing"
           comment: "✅ COMPREHENSIVE TESTING PASSED: Successfully tested Edge-TTS integration with /api/voices endpoint returning 8 curated voices with proper structure (name, display_name, language, gender). Verified gender variety (Male/Female) and language variety (4 variants including US, UK, Australian, Canadian). Found expected popular voices including en-US-AriaNeural and en-GB-SoniaNeural. /api/generate-audio endpoint successfully generates base64 encoded audio with 34,752+ characters of audio data. Different voices produce distinctly different audio outputs. Script formatting removal works correctly (brackets, parentheses, bold formatting). Error handling verified for empty text, invalid voice names, and very long text. All 30 test cases passed with 100% success rate."
+        - working: false
+          agent: "user"
+          comment: "USER REPORTED CRITICAL ISSUE: Error message 'Error loading voices. Please refresh the page.' is showing up when users try to access voice selection functionality."
+        - working: true
+          agent: "testing"
+          comment: "🚨 CRITICAL ISSUE RESOLVED - BACKEND DEPENDENCY FAILURE: Root cause identified as backend service failing to start due to missing Python dependencies, causing 502 errors for all endpoints including /api/voices. FIXED: Installed missing dependencies (emergentintegrations, edge-tts, opencv-python, pydub) and restarted backend service. ENDPOINT TESTING: ✅ /api/voices endpoint fully operational - returns 8 voices with perfect structure: [{'name':'en-US-AriaNeural','display_name':'Aria (US Female - Natural)','language':'en-US','gender':'Female'}, ...]. Includes proper gender variety (Male/Female) and language variety (US, UK, Canadian, Australian). All expected popular voices present including en-US-AriaNeural, en-GB-SoniaNeural, en-US-GuyNeural. The 'Error loading voices' issue is completely resolved - users should now see voice options loading successfully without any errors."
 
   - task: "Voice Selection UI"
     implemented: true
