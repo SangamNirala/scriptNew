@@ -2537,18 +2537,16 @@ class LegalMateAPITester:
         Either party may terminate with 2 weeks notice.
         """
         
-        # Test single jurisdiction
-        single_jurisdiction_data = {
-            "contract_content": sample_contract,
-            "jurisdictions": ["US"]
-        }
+        # Test single jurisdiction - using query parameters
+        import urllib.parse
+        encoded_contract = urllib.parse.quote(sample_contract)
+        single_jurisdiction_url = f"compliance-check?contract_content={encoded_contract}&jurisdictions=US"
         
         success1, response1 = self.run_test(
             "Compliance Check - Single Jurisdiction (US)", 
             "POST", 
-            "compliance-check", 
-            200, 
-            single_jurisdiction_data,
+            single_jurisdiction_url, 
+            200,
             timeout=45
         )
         
@@ -2564,17 +2562,13 @@ class LegalMateAPITester:
             print(f"   Recommendations: {len(recommendations)}")
         
         # Test multiple jurisdictions
-        multi_jurisdiction_data = {
-            "contract_content": sample_contract,
-            "jurisdictions": ["US", "UK", "CA"]
-        }
+        multi_jurisdiction_url = f"compliance-check?contract_content={encoded_contract}&jurisdictions=US&jurisdictions=UK&jurisdictions=CA"
         
         success2, response2 = self.run_test(
             "Compliance Check - Multiple Jurisdictions", 
             "POST", 
-            "compliance-check", 
-            200, 
-            multi_jurisdiction_data,
+            multi_jurisdiction_url, 
+            200,
             timeout=60
         )
         
@@ -2588,7 +2582,7 @@ class LegalMateAPITester:
             print(f"   Multi-jurisdiction Issues: {len(compliance_issues)}")
             
             # Verify all requested jurisdictions are covered
-            requested_jurisdictions = set(multi_jurisdiction_data['jurisdictions'])
+            requested_jurisdictions = {"US", "UK", "CA"}
             returned_jurisdictions = set(jurisdiction_scores.keys())
             
             if requested_jurisdictions.issubset(returned_jurisdictions):
