@@ -300,6 +300,27 @@ class LegalMateAgents:
         return re.sub(r'\*\*([^*]+)\*\*', r'<b>\1</b>', text)
 
     @staticmethod
+    def replace_execution_date(content: str, execution_date: str = None) -> str:
+        """Replace [Date of Execution] placeholder with actual date"""
+        if execution_date:
+            try:
+                # Parse the ISO date string and format it nicely
+                date_obj = datetime.fromisoformat(execution_date.replace('Z', '+00:00'))
+                formatted_date = date_obj.strftime('%B %d, %Y')
+                content = content.replace('[Date of Execution]', formatted_date)
+            except Exception as e:
+                logging.warning(f"Error parsing execution date {execution_date}: {e}")
+                # Fallback to current date if parsing fails
+                current_date = datetime.now().strftime('%B %d, %Y')
+                content = content.replace('[Date of Execution]', current_date)
+        else:
+            # If no date provided, use current date
+            current_date = datetime.now().strftime('%B %d, %Y')
+            content = content.replace('[Date of Execution]', current_date)
+        
+        return content
+
+    @staticmethod
     async def compliance_validator(contract_content: str, jurisdiction: str) -> Dict[str, Any]:
         """Validates contract compliance and assigns score"""
         
