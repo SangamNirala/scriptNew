@@ -888,6 +888,32 @@ function App() {
           Generate professional, jurisdiction-specific legal contracts in minutes using advanced AI. 
           Perfect for freelancers, agencies, and small businesses.
         </p>
+        
+        {/* New: Contract Creation Options */}
+        <div className="mb-8 flex flex-col sm:flex-row gap-4 justify-center max-w-2xl mx-auto">
+          <Button
+            onClick={() => setUseEnhancedWizard(true)}
+            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-4 text-lg font-semibold rounded-lg transition-all duration-300 transform hover:scale-105"
+          >
+            <Sparkles className="h-5 w-5 mr-2" />
+            Smart Contract Wizard
+            <Badge variant="secondary" className="ml-2 bg-yellow-400 text-yellow-900 text-xs">
+              NEW
+            </Badge>
+          </Button>
+          <Button
+            onClick={() => {
+              setUseEnhancedWizard(false);
+              setCurrentStep(1);
+            }}
+            variant="outline"
+            className="border-white/30 text-white hover:bg-white/10 px-8 py-4 text-lg font-semibold rounded-lg"
+          >
+            <FileText className="h-5 w-5 mr-2" />
+            Classic Mode
+          </Button>
+        </div>
+        
         <div className="flex flex-wrap justify-center gap-4 text-sm">
           <div className="flex items-center space-x-2">
             <Shield className="h-5 w-5 text-green-400" />
@@ -901,7 +927,39 @@ function App() {
             <Users className="h-5 w-5 text-blue-400" />
             <span>Multi-Jurisdiction</span>
           </div>
+          <div className="flex items-center space-x-2">
+            <Sparkles className="h-5 w-5 text-purple-400" />
+            <span>Smart Suggestions</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Clock className="h-5 w-5 text-orange-400" />
+            <span>Quick Setup</span>
+          </div>
         </div>
+        
+        {/* Feature highlights for Enhanced Wizard */}
+        {useEnhancedWizard && (
+          <div className="mt-8 bg-white/10 backdrop-blur-sm rounded-lg p-6 max-w-3xl mx-auto">
+            <h3 className="text-lg font-semibold mb-4 text-center">Enhanced Features</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+              <div className="text-center">
+                <Wand2 className="h-8 w-8 mx-auto mb-2 text-purple-300" />
+                <div className="font-medium">Smart Auto-Fill</div>
+                <div className="text-blue-200 text-xs">Profile-based suggestions</div>
+              </div>
+              <div className="text-center">
+                <Clock className="h-8 w-8 mx-auto mb-2 text-orange-300" />
+                <div className="font-medium">Time Estimate</div>
+                <div className="text-blue-200 text-xs">Know exactly how long it takes</div>
+              </div>
+              <div className="text-center">
+                <Sparkles className="h-8 w-8 mx-auto mb-2 text-yellow-300" />
+                <div className="font-medium">Industry Specific</div>
+                <div className="text-blue-200 text-xs">Tailored recommendations</div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
