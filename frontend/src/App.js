@@ -511,6 +511,91 @@ function App() {
       setActiveTab('preview');
     };
 
+    // Signature upload handlers
+    const handleSignatureUpload = async (partyType, file) => {
+      try {
+        setUploadingSignature(partyType);
+        
+        // Validate file type
+        if (!['image/png', 'image/jpg', 'image/jpeg'].includes(file.type)) {
+          alert('Please upload a PNG, JPG, or JPEG image file.');
+          return;
+        }
+        
+        // Validate file size (1MB limit)
+        if (file.size > 1024 * 1024) {
+          alert('File size must be less than 1MB.');
+          return;
+        }
+        
+        // Convert to base64
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          const base64Data = e.target.result.split(',')[1]; // Remove data URL prefix
+          
+          try {
+            // Upload signature to backend
+            const response = await axios.post(`${API}/contracts/${generatedContract.contract.id}/upload-signature`, {
+              contract_id: generatedContract.contract.id,
+              party_type: partyType,
+              signature_image: base64Data
+            });
+            
+            // Update local state
+            if (partyType === 'first_party') {
+              setFirstPartySignature(e.target.result);
+            } else {
+              setSecondPartySignature(e.target.result);
+            }
+            
+            // Update contract content with signature
+            updateContractWithSignature(partyType, e.target.result);
+            
+            alert(`${partyType === 'first_party' ? 'First' : 'Second'} party signature uploaded successfully!`);
+          } catch (error) {
+            console.error('Error uploading signature:', error);
+            alert('Error uploading signature. Please try again.');
+          } finally {
+            setUploadingSignature(null);
+          }
+        };
+        
+        reader.readAsDataURL(file);
+      } catch (error) {
+        console.error('Error processing signature:', error);
+        alert('Error processing signature. Please try again.');
+        setUploadingSignature(null);
+      }
+    };
+
+    const updateContractWithSignature = (partyType, signatureDataUrl) => {
+      const placeholder = partyType === 'first_party' 
+        ? '[First Party Signature Placeholder]' 
+        : '[Second Party Signature Placeholder]';
+      
+      // Replace placeholder with signature indicator in content
+      const updatedContent = editedContent.replace(
+        placeholder,
+        `[${partyType === 'first_party' ? 'First' : 'Second'} Party Signature Uploaded]`
+      );
+      
+      setEditedContent(updatedContent);
+      setHasEdits(true);
+    };
+
+    const triggerFileUpload = (partyType) => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/png,image/jpg,image/jpeg';
+      input.onchange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          handleSignatureUpload(partyType, file);
+        }
+      };
+      input.click();
+    };
+
     const currentContent = editedContent || generatedContract.contract.content;
 
     return (
