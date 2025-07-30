@@ -343,6 +343,43 @@ async def _gather_industry_context(industry_focus: str, video_type: str) -> dict
     
     return industry_knowledge.get(industry_focus, industry_knowledge["marketing"])
 
+async def _get_few_shot_examples(industry_focus: str, video_type: str) -> dict:
+    """Generate few-shot learning examples for each enhancement strategy"""
+    
+    examples = {
+        "emotional": f"""
+EXAMPLE 1 - {industry_focus.title()} Emotional Enhancement:
+Original: "Create a video about our new product features"
+Enhanced: "Imagine the frustration of losing precious family memories because your current solution failed you at the worst possible moment. Our breakthrough technology doesn't just offer features—it offers peace of mind, ensuring your most treasured moments are protected forever. This isn't just about specs; it's about the relief you'll feel knowing you'll never lose what matters most."
+
+EXAMPLE 2 - {industry_focus.title()} Emotional Transformation:
+Original: "Explain the benefits of our service"
+Enhanced: "Picture this: It's 3 AM, you're stressed, overwhelmed, and facing a deadline that could make or break your career. While others panic, you remain calm because you have a secret weapon that transforms chaos into clarity, fear into confidence, and obstacles into opportunities. This is your moment to rise above the competition."
+""",
+        
+        "technical": f"""
+EXAMPLE 1 - {industry_focus.title()} Technical Excellence:
+Original: "Show how our software works"
+Enhanced: "TECHNICAL DEMONSTRATION FRAMEWORK: Begin with system architecture overview (0:00-0:15), demonstrate core functionality with specific use cases (0:15-0:45), showcase integration capabilities with real-world scenarios (0:45-1:15), present performance metrics and benchmarks (1:15-1:30), conclude with implementation roadmap and support resources (1:30-1:45). Include technical specifications, API documentation references, and scalability considerations throughout."
+
+EXAMPLE 2 - {industry_focus.title()} Technical Deep-dive:
+Original: "Explain our methodology"
+Enhanced: "SYSTEMATIC METHODOLOGY BREAKDOWN: Phase 1 - Requirements Analysis using industry-standard frameworks (SMART criteria, stakeholder mapping, risk assessment matrices). Phase 2 - Implementation Protocol with detailed workflows, quality checkpoints, and performance indicators. Phase 3 - Validation Process including testing procedures, compliance verification, and success metrics. Each phase includes specific deliverables, timelines, and resource allocation guidelines."
+""",
+        
+        "viral": f"""
+EXAMPLE 1 - {industry_focus.title()} Viral Optimization:
+Original: "Promote our latest update"
+Enhanced: "🚨 BREAKING: The update everyone's been secretly waiting for just dropped and it's causing chaos in the {industry_focus} world! Industry leaders are calling it 'game-changing' but here's what they're NOT telling you... [HOOK] This 60-second reveal will show you exactly why competitors are scrambling to catch up and how you can get ahead before everyone else figures it out. Ready for the insider secret? 👀 #GameChanger #{industry_focus.title()}Revolution"
+
+EXAMPLE 2 - {industry_focus.title()} Viral Storytelling:
+Original: "Share customer success story"
+Enhanced: "POV: You're told you'll 'never make it' in {industry_focus}... 6 months later, you're the success story everyone's talking about 💪 This isn't just another transformation story—it's proof that the 'impossible' is just another Tuesday when you have the right strategy. Watch what happens when someone refuses to accept limitations... The ending will give you chills! 🔥 Who else needs to see this?"
+"""
+    }
+    
+    return examples
+
 async def _generate_enhancement_variations(request: PromptEnhancementRequest, audience_analysis: AudienceAnalysis, industry_context: dict) -> List[EnhancementVariation]:
     """Generate multiple enhancement variations using different strategies"""
     
