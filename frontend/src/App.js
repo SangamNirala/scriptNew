@@ -628,7 +628,8 @@ function App() {
                       jurisdiction: 'US',
                       parties: {},
                       terms: {},
-                      special_clauses: []
+                      special_clauses: [],
+                      execution_date: null
                     });
                   }}
                   variant="outline"
