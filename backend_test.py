@@ -309,6 +309,230 @@ class ScriptGenerationTester:
                         f"Only {successful_tests}/{len(test_scenarios)} scenarios succeeded")
             return False
     
+    def test_comprehensive_script_framework_system(self):
+        """Test the completely redesigned /api/enhance-prompt endpoint for comprehensive script frameworks"""
+        print("\n=== Testing Comprehensive Script Framework Enhancement System ===")
+        
+        # Test Case 1: Sample from review request - "Create a video about productivity tips for remote workers"
+        test_prompt = "Create a video about productivity tips for remote workers"
+        payload = {
+            "original_prompt": test_prompt,
+            "video_type": "educational",
+            "industry_focus": "tech",
+            "enhancement_count": 3
+        }
+        
+        try:
+            response = self.session.post(
+                f"{self.backend_url}/enhance-prompt",
+                json=payload,
+                timeout=90  # Increased timeout for comprehensive processing
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Test Case 1.1: Verify comprehensive response structure with all required sections
+                required_sections = [
+                    "original_prompt", "audience_analysis", "enhancement_variations", 
+                    "quality_metrics", "recommendation", "industry_insights", "enhancement_methodology"
+                ]
+                missing_sections = [section for section in required_sections if section not in data]
+                
+                if missing_sections:
+                    self.log_test("Script Framework - Response Structure", False,
+                                f"Missing required sections: {missing_sections}")
+                    return False
+                
+                self.log_test("Script Framework - Response Structure", True,
+                            "All required sections present in comprehensive response structure")
+                
+                # Test Case 1.2: Verify enhancement variations are comprehensive script frameworks
+                variations = data["enhancement_variations"]
+                if len(variations) < 3:
+                    self.log_test("Script Framework - Variation Count", False,
+                                f"Expected at least 3 variations, got {len(variations)}")
+                    return False
+                
+                framework_quality_tests = 0
+                
+                for i, variation in enumerate(variations):
+                    enhanced_prompt = variation.get("enhanced_prompt", "")
+                    
+                    # Test framework comprehensiveness (should be 500+ words)
+                    word_count = len(enhanced_prompt.split())
+                    if word_count >= 500:
+                        self.log_test(f"Script Framework - Variation {i+1} Length", True,
+                                    f"Framework has {word_count} words (meets 500+ requirement)")
+                        framework_quality_tests += 1
+                    else:
+                        self.log_test(f"Script Framework - Variation {i+1} Length", False,
+                                    f"Framework only has {word_count} words (needs 500+)")
+                    
+                    # Test for comprehensive framework elements
+                    framework_elements = {
+                        "SCRIPT_FRAMEWORK": "opening hooks, narrative structure templates, dialogue placeholders",
+                        "PRODUCTION_GUIDELINES": "production guidelines and call-to-action frameworks", 
+                        "PSYCHOLOGICAL_TRIGGERS": "psychological triggers and engagement mechanics",
+                        "PLATFORM_ADAPTATIONS": "platform adaptations for different social media channels",
+                        "TARGET_ENGAGEMENT": "target engagement patterns and success metrics",
+                        "INDUSTRY_ELEMENTS": "industry-specific customization and best practices"
+                    }
+                    
+                    elements_found = 0
+                    for element, description in framework_elements.items():
+                        if element in enhanced_prompt.upper():
+                            elements_found += 1
+                    
+                    if elements_found >= 4:  # Should have most framework elements
+                        self.log_test(f"Script Framework - Variation {i+1} Elements", True,
+                                    f"Framework contains {elements_found}/6 required elements")
+                        framework_quality_tests += 1
+                    else:
+                        self.log_test(f"Script Framework - Variation {i+1} Elements", False,
+                                    f"Framework only contains {elements_found}/6 required elements")
+                
+                # Test Case 1.3: Verify three advanced categories (Emotional, Technical, Viral)
+                strategies_found = set()
+                for variation in variations:
+                    focus_strategy = variation.get("focus_strategy", "").lower()
+                    if "emotional" in focus_strategy:
+                        strategies_found.add("emotional")
+                    elif "technical" in focus_strategy:
+                        strategies_found.add("technical") 
+                    elif "viral" in focus_strategy:
+                        strategies_found.add("viral")
+                
+                expected_strategies = {"emotional", "technical", "viral"}
+                if len(strategies_found.intersection(expected_strategies)) >= 2:
+                    self.log_test("Script Framework - Strategy Categories", True,
+                                f"Found advanced categories: {strategies_found}")
+                else:
+                    self.log_test("Script Framework - Strategy Categories", False,
+                                f"Missing expected categories. Found: {strategies_found}")
+                
+                # Test Case 1.4: Verify industry-specific customization
+                industry_elements_count = 0
+                for variation in variations:
+                    industry_elements = variation.get("industry_specific_elements", [])
+                    if isinstance(industry_elements, list) and len(industry_elements) >= 3:
+                        industry_elements_count += 1
+                
+                if industry_elements_count >= 2:
+                    self.log_test("Script Framework - Industry Customization", True,
+                                f"{industry_elements_count} variations have comprehensive industry elements")
+                else:
+                    self.log_test("Script Framework - Industry Customization", False,
+                                f"Only {industry_elements_count} variations have adequate industry elements")
+                
+                # Test Case 1.5: Verify quality metrics show substantial improvement
+                quality_metrics = data["quality_metrics"]
+                improvement_ratio = quality_metrics.get("improvement_ratio", 0)
+                overall_score = quality_metrics.get("overall_quality_score", 0)
+                
+                if improvement_ratio >= 10.0:  # Should show significant improvement
+                    self.log_test("Script Framework - Quality Improvement", True,
+                                f"Substantial improvement ratio: {improvement_ratio:.1f}x")
+                else:
+                    self.log_test("Script Framework - Quality Improvement", False,
+                                f"Improvement ratio too low: {improvement_ratio:.1f}x")
+                
+                if overall_score >= 8.0:  # Should have high quality score
+                    self.log_test("Script Framework - Overall Quality", True,
+                                f"High quality score: {overall_score:.1f}/10")
+                else:
+                    self.log_test("Script Framework - Overall Quality", False,
+                                f"Quality score too low: {overall_score:.1f}/10")
+                
+                # Test Case 1.6: Test different video types and industries
+                additional_tests = [
+                    {
+                        "prompt": "Create a video about healthy cooking tips",
+                        "video_type": "marketing",
+                        "industry_focus": "health"
+                    },
+                    {
+                        "prompt": "Explain blockchain technology basics", 
+                        "video_type": "educational",
+                        "industry_focus": "tech"
+                    }
+                ]
+                
+                additional_success = 0
+                for test_case in additional_tests:
+                    try:
+                        test_payload = {
+                            "original_prompt": test_case["prompt"],
+                            "video_type": test_case["video_type"],
+                            "industry_focus": test_case["industry_focus"],
+                            "enhancement_count": 3
+                        }
+                        
+                        test_response = self.session.post(
+                            f"{self.backend_url}/enhance-prompt",
+                            json=test_payload,
+                            timeout=90
+                        )
+                        
+                        if test_response.status_code == 200:
+                            test_data = test_response.json()
+                            test_variations = test_data.get("enhancement_variations", [])
+                            
+                            if len(test_variations) >= 3:
+                                # Check if at least one variation is comprehensive
+                                comprehensive_found = False
+                                for var in test_variations:
+                                    if len(var.get("enhanced_prompt", "").split()) >= 400:
+                                        comprehensive_found = True
+                                        break
+                                
+                                if comprehensive_found:
+                                    additional_success += 1
+                                    self.log_test(f"Script Framework - {test_case['industry_focus'].title()} Industry", True,
+                                                f"Successfully generated comprehensive frameworks for {test_case['industry_focus']} industry")
+                                else:
+                                    self.log_test(f"Script Framework - {test_case['industry_focus'].title()} Industry", False,
+                                                "Generated frameworks not comprehensive enough")
+                            else:
+                                self.log_test(f"Script Framework - {test_case['industry_focus'].title()} Industry", False,
+                                            f"Only generated {len(test_variations)} variations")
+                        else:
+                            self.log_test(f"Script Framework - {test_case['industry_focus'].title()} Industry", False,
+                                        f"HTTP {test_response.status_code}")
+                    except Exception as e:
+                        self.log_test(f"Script Framework - {test_case['industry_focus'].title()} Industry", False,
+                                    f"Exception: {str(e)}")
+                
+                # Overall assessment
+                total_tests = 7  # Main test categories
+                passed_tests = (
+                    1 +  # Response structure
+                    (1 if framework_quality_tests >= 4 else 0) +  # Framework quality
+                    (1 if len(strategies_found.intersection(expected_strategies)) >= 2 else 0) +  # Strategy categories
+                    (1 if industry_elements_count >= 2 else 0) +  # Industry customization
+                    (1 if improvement_ratio >= 10.0 else 0) +  # Quality improvement
+                    (1 if overall_score >= 8.0 else 0) +  # Overall quality
+                    additional_success  # Additional industry tests
+                )
+                
+                if passed_tests >= 6:
+                    self.log_test("Script Framework System - Comprehensive Test", True,
+                                f"Advanced script framework system working excellently: {passed_tests}/{total_tests + len(additional_tests)} tests passed")
+                    return True
+                else:
+                    self.log_test("Script Framework System - Comprehensive Test", False,
+                                f"Script framework system needs improvement: only {passed_tests}/{total_tests + len(additional_tests)} tests passed")
+                    return False
+                
+            else:
+                self.log_test("Script Framework System - HTTP Response", False,
+                            f"HTTP {response.status_code}: {response.text[:500]}")
+                return False
+                
+        except Exception as e:
+            self.log_test("Script Framework System - Exception", False, f"Comprehensive test failed: {str(e)}")
+            return False
+    
     def test_generate_script_endpoint(self):
         """Test the /api/generate-script endpoint"""
         print("\n=== Testing Script Generation Endpoint ===")
