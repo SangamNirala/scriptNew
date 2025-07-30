@@ -64,7 +64,7 @@ function App() {
     }
   };
 
-  const generateContract = async () => {
+  const generateContract = useCallback(async () => {
     setIsGenerating(true);
     try {
       const response = await axios.post(`${API}/generate-contract`, contractData);
@@ -77,7 +77,7 @@ function App() {
     } finally {
       setIsGenerating(false);
     }
-  };
+  }, [contractData]);
 
   const updateParties = useCallback((field, value) => {
     setContractData(prev => ({
