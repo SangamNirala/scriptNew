@@ -568,16 +568,16 @@ PLATFORM_ADAPTATIONS:
 
         response = await chat.send_message(UserMessage(text=enhancement_prompt))
         
-        # Parse the response
+        # Parse the comprehensive response structure
         sections = {}
         current_section = None
         current_content = []
         
         for line in response.split('\n'):
-            if line.strip().endswith(':') and line.strip().replace(':', '').replace('_', '').isalpha():
+            if line.strip().endswith(':') and any(key in line.strip().upper() for key in ['SCRIPT_FRAMEWORK:', 'PRODUCTION_GUIDELINES:', 'TARGET_ENGAGEMENT:', 'INDUSTRY_ELEMENTS:', 'PSYCHOLOGICAL_TRIGGERS:', 'PLATFORM_ADAPTATIONS:']):
                 if current_section:
                     sections[current_section] = '\n'.join(current_content).strip()
-                current_section = line.strip().replace(':', '').lower()
+                current_section = line.strip().replace(':', '').lower().replace('_', '_')
                 current_content = []
             else:
                 current_content.append(line)
@@ -585,18 +585,46 @@ PLATFORM_ADAPTATIONS:
         if current_section:
             sections[current_section] = '\n'.join(current_content).strip()
         
-        # Calculate performance score (simplified algorithm)
-        enhanced_length = len(sections.get('enhanced_prompt', ''))
+        # Create comprehensive enhanced prompt from script framework
+        script_framework = sections.get('script_framework', sections.get('enhanced_prompt', f"Enhanced {strategy['focus']} framework for {request.original_prompt}"))
+        production_guidelines = sections.get('production_guidelines', 'Professional production standards applied')
+        psychological_triggers = sections.get('psychological_triggers', 'Advanced engagement techniques integrated')
+        platform_adaptations = sections.get('platform_adaptations', 'Multi-platform optimization included')
+        
+        # Combine all elements into a comprehensive enhanced prompt
+        comprehensive_prompt = f"""🎬 COMPREHENSIVE SCRIPT FRAMEWORK - {strategy['title'].upper()}
+
+📋 SCRIPT FRAMEWORK:
+{script_framework}
+
+🎯 PRODUCTION GUIDELINES:
+{production_guidelines}
+
+🧠 PSYCHOLOGICAL TRIGGERS INTEGRATED:
+{psychological_triggers}
+
+📱 PLATFORM ADAPTATIONS:
+{platform_adaptations}
+
+This framework serves as a complete blueprint for generating high-quality, {strategy['focus']}-optimized video content that maximizes engagement and achieves professional results."""
+        
+        # Calculate enhanced performance score based on framework comprehensiveness  
+        framework_length = len(comprehensive_prompt)
         original_length = len(request.original_prompt)
-        performance_score = min(10.0, (enhanced_length / max(original_length, 1)) * 2.5 + (i + 1) * 0.5)
+        complexity_bonus = len(sections) * 0.5  # Bonus for comprehensive structure
+        performance_score = min(10.0, (framework_length / max(original_length, 100)) * 1.5 + complexity_bonus + (i + 1) * 0.3)
+        
+        # Parse industry elements from response
+        industry_elements_text = sections.get('industry_elements', 'Industry best practices applied')
+        industry_elements = [elem.strip() for elem in industry_elements_text.split('\n') if elem.strip() and not elem.strip().startswith('[')][:7]
         
         variations.append(EnhancementVariation(
-            id=f"var_{i+1}_{strategy['focus']}",
-            title=strategy["title"],
-            enhanced_prompt=sections.get('enhanced_prompt', f"Enhanced version focused on {strategy['focus']} elements."),
-            focus_strategy=strategy["focus"],
-            target_engagement=sections.get('target_engagement', 'High audience engagement expected'),
-            industry_specific_elements=sections.get('industry_elements', 'Industry expertise applied').split('\n')[:5],
+            id=f"var_{i+1}_{strategy['focus']}_framework",
+            title=f"{strategy['title']} - Advanced Framework",
+            enhanced_prompt=comprehensive_prompt,
+            focus_strategy=f"{strategy['focus']}_framework",
+            target_engagement=sections.get('target_engagement', f'High-impact {strategy["focus"]} engagement with comprehensive framework structure'),
+            industry_specific_elements=industry_elements or [f"Advanced {request.industry_focus} optimization", "Professional framework structure", "Industry best practices integration"],
             estimated_performance_score=performance_score
         ))
     
