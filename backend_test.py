@@ -2543,6 +2543,10 @@ KEY RETENTION ELEMENTS:
         
         # Run all test suites
         test_methods = [
+            # NEW ENHANCED PROMPT SYSTEM TESTS (Review Request Focus)
+            self.test_new_enhanced_prompt_endpoint,
+            self.test_legacy_prompt_endpoint_compatibility,
+            # Original tests
             self.test_enhance_prompt_endpoint,
             self.test_generate_script_endpoint,
             self.test_scripts_retrieval_endpoint,
