@@ -29,4 +29,10 @@ openai>=1.58.0
 reportlab>=4.0.0
 google-ai-generativelanguage
 google-api-core>=2.11.0
+googleapis-common-protos
+grpcio
+google-auth
+proto-plus
+httplib2
+google-api-python-client
 Pillow
