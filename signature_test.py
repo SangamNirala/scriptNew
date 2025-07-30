@@ -6,7 +6,7 @@ import json
 from datetime import datetime
 
 class SignatureAPITester:
-    def __init__(self, base_url="https://469733a1-663c-4bc7-a896-e34ebf54e7ef.preview.emergentagent.com"):
+    def __init__(self, base_url="https://d461d984-a0fc-465e-83c2-201964206d88.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.tests_run = 0
