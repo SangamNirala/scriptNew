@@ -51,3 +51,8 @@ transformers
 diffusers
 accelerate
 xformers
+google-search-results
+feedparser
+beautifulsoup4
+newspaper3k
+textstat
