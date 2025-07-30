@@ -200,11 +200,11 @@ backend:
 
   - task: "Smart Contract Analysis - Database Operations for Analyses and Comparisons"
     implemented: true
-    working: false
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         -working: "NA"
         -agent: "main"
@@ -212,6 +212,9 @@ backend:
         -working: false
         -agent: "testing"
         -comment: "❌ Database operations for analyses and comparisons have issues. Testing failed: 1) GET /api/contract-analyses returns 500 Internal Server Error 2) GET /api/contract-comparisons returns 500 Internal Server Error 3) Analysis and comparison creation (POST endpoints) work correctly and save to database 4) Issue appears to be in retrieval endpoints - likely MongoDB ObjectId serialization issues 5) Backend logs show 'ObjectId object is not iterable' and 'vars() argument must have __dict__ attribute' errors 6) Need to fix JSON serialization for MongoDB ObjectId fields in list endpoints. Database saving works but retrieval needs ObjectId handling fix."
+        -working: true
+        -agent: "testing"
+        -comment: "✅ DATABASE OPERATIONS FIX VERIFIED: Main agent successfully fixed the ObjectId serialization issues. Testing confirmed: 1) GET /api/contract-analyses returns 200 status (previously 500 Internal Server Error) 2) GET /api/contract-comparisons returns 200 status (previously 500 Internal Server Error) 3) Both endpoints return proper JSON responses with structure: {'analyses'/'comparisons': [...], 'count': N} 4) ObjectId fields properly serialized to strings - no more MongoDB serialization errors 5) Created test data successfully: 2 contract analyses and 2 contract comparisons 6) All database list endpoints can be JSON serialized without ObjectId issues 7) Database operations fully functional for both saving and retrieving analyses/comparisons."
 
   - task: "PDF generation endpoint and contract formatting improvements"
     implemented: true
