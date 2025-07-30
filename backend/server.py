@@ -430,6 +430,11 @@ async def generate_contract(request: ContractRequest):
         # Step 4: Extract Clauses
         clauses = LegalMateAgents.extract_clauses(contract_content)
         
+        # Step 5: Replace execution date placeholder with actual date
+        contract_content = LegalMateAgents.replace_execution_date(
+            contract_content, request.execution_date
+        )
+        
         # Create contract object
         generated_contract = GeneratedContract(
             contract_type=request.contract_type,
