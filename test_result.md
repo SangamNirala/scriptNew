@@ -140,10 +140,7 @@ metadata:
   run_ui: true
 
 test_plan:
-  current_focus:
-    - "Test Purpose of Disclosure textarea continuous typing"
-    - "Test Agreement Duration select functionality"
-    - "Test other input fields in TermsStep (Business Purpose, Scope of Work, etc.)"
+  current_focus: []
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
