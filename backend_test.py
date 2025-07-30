@@ -770,6 +770,13 @@ def main():
     test_results.append(tester.test_pdf_download_invalid_contract())
     test_results.append(tester.test_pdf_download_nonexistent_contract())
     
+    # Specific PDF Bold Formatting Test
+    print("\n" + "="*50)
+    print("🔍 Testing PDF Bold Formatting (No Asterisks)")
+    print("="*50)
+    
+    test_results.append(tester.test_pdf_bold_formatting_specific())
+    
     # Print final results
     print("\n" + "="*60)
     print("📊 TEST RESULTS SUMMARY")
