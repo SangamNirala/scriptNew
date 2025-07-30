@@ -83,14 +83,53 @@ class AIVideoScriptResponse(BaseModel):
     ai_generation_tips: str
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
+# Enhanced Data Models for Advanced Prompt Enhancement
+class AudienceProfile(BaseModel):
+    demographic: str  # "teenagers", "young_adults", "professionals", "seniors", "general"
+    expertise_level: str  # "beginner", "intermediate", "expert", "mixed"
+    cultural_context: str  # "global", "us", "uk", "casual", "formal"
+    primary_platform: str  # "tiktok", "youtube", "instagram", "linkedin", "general"
+
+class EnhancementVariation(BaseModel):
+    id: str
+    title: str
+    enhanced_prompt: str
+    focus_strategy: str  # "emotional", "technical", "storytelling", "viral", "educational"
+    target_engagement: str
+    industry_specific_elements: List[str]
+    estimated_performance_score: float
+
+class QualityMetrics(BaseModel):
+    emotional_engagement_score: float
+    technical_clarity_score: float
+    industry_relevance_score: float
+    storytelling_strength_score: float
+    overall_quality_score: float
+    improvement_ratio: float
+
+class AudienceAnalysis(BaseModel):
+    recommended_tone: str
+    complexity_level: str
+    cultural_considerations: List[str]
+    platform_optimizations: List[str]
+    engagement_triggers: List[str]
+
 class PromptEnhancementRequest(BaseModel):
     original_prompt: str
     video_type: Optional[str] = "general"
+    industry_focus: Optional[str] = "general"  # "marketing", "education", "entertainment", "tech", "health", "finance"
+    audience_profile: Optional[AudienceProfile] = None
+    enhancement_count: Optional[int] = 3  # Number of variations to generate
+    enhancement_style: Optional[str] = "balanced"  # "creative", "professional", "viral", "educational", "balanced"
 
 class PromptEnhancementResponse(BaseModel):
     original_prompt: str
-    enhanced_prompt: str
-    enhancement_explanation: str
+    audience_analysis: AudienceAnalysis
+    enhancement_variations: List[EnhancementVariation]
+    quality_metrics: QualityMetrics
+    recommendation: str  # Which variation is recommended and why
+    industry_insights: List[str]
+    enhancement_methodology: str
 
 class TextToSpeechRequest(BaseModel):
     text: str
