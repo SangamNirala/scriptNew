@@ -222,25 +222,62 @@ class LegalMateAgents:
                     temperature=0.1,
                 )
             )
-            return response.text
+            
+            # Post-process the generated content to ensure formatting requirements
+            formatted_content = LegalMateAgents.format_contract_content(response.text)
+            return formatted_content
+            
         except Exception as e:
             logging.error(f"Contract generator error: {e}")
             # Fallback simple contract
-            return f"""
-            {contract_type.upper()} AGREEMENT
+            fallback_content = f"""
+            **{contract_type.upper()} AGREEMENT**
+
+            **Date of Execution:** [Date of Execution]
 
             This agreement is entered into between the parties as specified.
 
-            WHEREAS, the parties wish to enter into this {contract_type} agreement;
+            **WHEREAS**, the parties wish to enter into this {contract_type} agreement;
 
-            NOW, THEREFORE, the parties agree as follows:
+            **NOW, THEREFORE**, the parties agree as follows:
 
-            1. SCOPE: As defined in the attached terms.
-            2. TERMS: {structured_requirements.get('essential_terms', {})}
-            3. GOVERNING LAW: This agreement shall be governed by the laws of {structured_requirements.get('jurisdiction_requirements', ['US'])[0]}.
+            **1. SCOPE:** As defined in the attached terms.
+            **2. TERMS:** {structured_requirements.get('essential_terms', {})}
+            **3. GOVERNING LAW:** This agreement shall be governed by the laws of {structured_requirements.get('jurisdiction_requirements', ['US'])[0]}.
 
             [This is a simplified fallback contract. Please review with legal counsel.]
             """
+            return LegalMateAgents.format_contract_content(fallback_content)
+
+    @staticmethod
+    def format_contract_content(content: str) -> str:
+        """Post-process contract content to ensure formatting requirements are met"""
+        
+        # Remove all asterisk (*) expressions
+        content = re.sub(r'\*+[^*]*\*+', '', content)
+        content = re.sub(r'\*', '', content)
+        
+        # Ensure Date of Execution line exists if not already present
+        if '[Date of Execution]' not in content and 'Date of Execution' not in content:
+            # Insert Date of Execution line after the title but before main content
+            lines = content.split('\n')
+            title_found = False
+            for i, line in enumerate(lines):
+                if ('AGREEMENT' in line.upper() or 'CONTRACT' in line.upper()) and not title_found:
+                    title_found = True
+                    continue
+                elif title_found and line.strip() and not line.strip().startswith('**Date'):
+                    lines.insert(i, '')
+                    lines.insert(i+1, '**Date of Execution:** [Date of Execution]')
+                    lines.insert(i+2, '')
+                    break
+            content = '\n'.join(lines)
+        
+        # Clean up excessive whitespace while preserving paragraph structure
+        content = re.sub(r'\n{3,}', '\n\n', content)
+        content = content.strip()
+        
+        return content
 
     @staticmethod
     async def compliance_validator(contract_content: str, jurisdiction: str) -> Dict[str, Any]:
