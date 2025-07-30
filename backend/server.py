@@ -617,10 +617,14 @@ Create educational enhancements that maximize learning outcomes in the {request.
     variations = []
     
     for i, strategy in enumerate(strategies[:request.enhancement_count]):
-        # Check if this strategy uses recursive improvement
+        # Check if this strategy uses recursive improvement (viral category)
         if strategy.get("use_recursive_improvement", False):
             # Use recursive self-improvement for viral category
             variation = await _generate_recursive_viral_framework(request, audience_analysis, industry_context, strategy, trend_data, i)
+        # Check if this strategy uses advanced features (emotional/technical categories)
+        elif strategy.get("use_advanced_features", False):
+            # Use advanced framework generation for emotional and technical categories
+            variation = await _generate_advanced_framework(request, audience_analysis, industry_context, strategy, i)
         else:
             # Use standard generation for other categories
             variation = await _generate_standard_framework(request, audience_analysis, strategy, i)
