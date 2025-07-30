@@ -2800,9 +2800,7 @@ def _generate_comprehensive_summary(analyses: Dict[str, Any]) -> Dict[str, Any]:
 # END PHASE 3 ENDPOINTS
 # =============================================================================
 
-# Include the router in the main app
-app.include_router(api_router)
-
+# Add CORS middleware BEFORE including router
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
@@ -2810,6 +2808,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include the router in the main app
+app.include_router(api_router)
 
 # Configure logging
 logging.basicConfig(
