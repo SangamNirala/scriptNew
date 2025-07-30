@@ -300,6 +300,7 @@ function App() {
   const [generatedContract, setGeneratedContract] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [contracts, setContracts] = useState([]);
+  const [useEnhancedWizard, setUseEnhancedWizard] = useState(false);
 
   useEffect(() => {
     loadContractTypes();
