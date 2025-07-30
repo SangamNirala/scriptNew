@@ -100,8 +100,26 @@ const ScriptGenerator = () => {
         video_type: videoType
       });
 
-      setEnhancedPrompt(response.data.enhanced_prompt);
-      setEnhancementExplanation(response.data.enhancement_explanation);
+      // Handle new response structure
+      const data = response.data;
+      
+      // Set the enhancement variations
+      setEnhancementVariations(data.enhancement_variations || []);
+      setEnhancementRecommendation(data.recommendation || "");
+      
+      // Find the recommended/best variation (highest score) for backward compatibility
+      if (data.enhancement_variations && data.enhancement_variations.length > 0) {
+        const bestVariation = data.enhancement_variations.reduce((best, current) => 
+          current.estimated_performance_score > best.estimated_performance_score ? current : best
+        );
+        
+        setEnhancedPrompt(bestVariation.enhanced_prompt);
+        setSelectedVariation(bestVariation);
+        
+        // Use the recommendation as explanation
+        setEnhancementExplanation(data.recommendation || `${bestVariation.title} - Focus: ${bestVariation.focus_strategy}`);
+      }
+      
       setShowEnhanced(true);
     } catch (err) {
       setError("Error enhancing prompt. Please try again.");
