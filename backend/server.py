@@ -612,8 +612,21 @@ VIRAL TREND DATA: {trend_data}
 FEW-SHOT LEARNING EXAMPLES:
 {few_shot_examples['viral']}
 
+PHASE 1 COMPLIANCE REQUIREMENTS:
+You MUST include these EXACT section headers with specified word counts:
+
+🎣 HOOK SECTION (0-3 seconds) - WORD COUNT: 25
+🎬 SETUP SECTION (3-15 seconds) - WORD COUNT: 50
+📚 CONTENT CORE (15-80% duration) - WORD COUNT: 250
+🏆 CLIMAX MOMENT (80-90% duration) - WORD COUNT: 35
+✨ RESOLUTION (90-100% duration) - WORD COUNT: 40
+
+🧠 PSYCHOLOGICAL TRIGGERS INTEGRATED:
+📲 2025 TRENDS & PLATFORM OPTIMIZATION:
+⚡ RETENTION ENGINEERING ELEMENTS:
+
 ADVANCED FRAMEWORK CREATION PROTOCOL:
-You will create a viral-optimized script framework through RECURSIVE SELF-IMPROVEMENT with 3 refinement loops, each building upon the previous version with enhanced viral potential.""",
+You will create a viral-optimized script framework through RECURSIVE SELF-IMPROVEMENT with 3 refinement loops, each building upon the previous version with enhanced viral potential. ALWAYS include the exact Phase 1 compliance sections above.""",
             "use_recursive_improvement": True,
             "refinement_loops": 3
         }
