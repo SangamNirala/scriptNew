@@ -381,56 +381,74 @@ Enhanced: "POV: You're told you'll 'never make it' in {industry_focus}... 6 mont
     return examples
 
 async def _generate_enhancement_variations(request: PromptEnhancementRequest, audience_analysis: AudienceAnalysis, industry_context: dict) -> List[EnhancementVariation]:
-    """Generate multiple enhancement variations using different strategies"""
+    """Generate comprehensive script framework variations using advanced prompt engineering"""
+    
+    # Get few-shot examples for each strategy
+    few_shot_examples = await _get_few_shot_examples(request.industry_focus, request.video_type)
     
     strategies = [
         {
             "focus": "emotional",
             "title": "Emotional Engagement Focus",
-            "system_prompt": f"""You are an expert in emotional storytelling and psychological engagement. You specialize in creating content that creates deep emotional connections with audiences through:
+            "system_prompt": f"""You are a master storyteller and emotional engagement specialist who creates comprehensive script frameworks that generate deep audience connections. You excel at transforming basic video ideas into emotionally compelling narrative structures.
 
-1. EMOTIONAL TRIGGERS: Fear, joy, surprise, anticipation, curiosity, empathy
-2. PSYCHOLOGICAL HOOKS: Social proof, scarcity, authority, reciprocity, commitment
-3. STORYTELLING ARCHETYPES: Hero's journey, transformation, conflict resolution
-4. SENSORY ENGAGEMENT: Visual, auditory, kinesthetic elements
-5. EMOTIONAL PEAKS AND VALLEYS: Creating compelling narrative arcs
+EXPERTISE AREAS:
+🎭 EMOTIONAL ARCHITECTURE: Fear, joy, surprise, anticipation, curiosity, empathy, nostalgia, hope, urgency
+🧠 PSYCHOLOGICAL TRIGGERS: Social proof, scarcity, authority, reciprocity, commitment, consistency, liking
+📚 NARRATIVE FRAMEWORKS: Hero's journey, transformation arc, problem-agitation-solution, before-after-bridge
+🎬 CINEMATIC TECHNIQUES: Visual metaphors, sensory details, emotional peaks/valleys, cliffhangers
+💫 ENGAGEMENT MECHANICS: Pattern interrupts, cognitive dissonance, emotional contrasts, relatability anchors
 
-Industry Context: {industry_context}
-Audience Profile: {audience_analysis.dict()}
+INDUSTRY CONTEXT: {industry_context}
+AUDIENCE PROFILE: {audience_analysis.dict()}
 
-Focus on creating maximum emotional impact while maintaining authenticity and relevance to the {request.industry_focus} industry."""
+FEW-SHOT LEARNING EXAMPLES:
+{few_shot_examples['emotional']}
+
+FRAMEWORK CREATION PROTOCOL:
+Create a comprehensive script framework that serves as a ready-to-use blueprint for generating emotionally engaging {request.industry_focus} content. Your framework should be so detailed that any AI can use it to generate a compelling script."""
         },
         {
             "focus": "technical",
             "title": "Technical Excellence Focus", 
-            "system_prompt": f"""You are a technical content strategist who excels at creating detailed, precise, and professionally crafted video briefs. You specialize in:
+            "system_prompt": f"""You are a technical content architect and production specialist who creates detailed, systematic script frameworks optimized for professional execution and maximum clarity. You transform basic concepts into comprehensive production-ready blueprints.
 
-1. TECHNICAL SPECIFICATIONS: Detailed shot requirements, production notes, equipment needs
-2. PROFESSIONAL TERMINOLOGY: Industry-specific language and best practices
-3. STRUCTURED APPROACH: Clear frameworks, methodologies, and systematic presentation
-4. QUALITY BENCHMARKS: Professional standards and measurable outcomes
-5. IMPLEMENTATION DETAILS: Step-by-step execution guidance
+EXPERTISE AREAS:
+🎯 TECHNICAL STRUCTURE: Logical flow, systematic presentation, modular design, scalable frameworks
+📊 PROFESSIONAL STANDARDS: Industry best practices, quality benchmarks, measurable outcomes, expert validation
+🎬 PRODUCTION SPECIFICATIONS: Shot requirements, visual elements, audio cues, timing frameworks
+📋 IMPLEMENTATION GUIDES: Step-by-step breakdowns, checklists, quality controls, troubleshooting
+🔧 OPTIMIZATION TECHNIQUES: Information hierarchy, cognitive load management, retention strategies
 
-Industry Context: {industry_context}
-Audience Profile: {audience_analysis.dict()}
+INDUSTRY CONTEXT: {industry_context}
+AUDIENCE PROFILE: {audience_analysis.dict()}
 
-Create highly detailed, technically proficient enhancements that demonstrate deep {request.industry_focus} industry expertise."""
+FEW-SHOT LEARNING EXAMPLES:
+{few_shot_examples['technical']}
+
+FRAMEWORK CREATION PROTOCOL:
+Create a technically excellent script framework that serves as a comprehensive blueprint for producing high-quality {request.industry_focus} content. Include specific production guidelines, technical specifications, and systematic structures that ensure professional results."""
         },
         {
             "focus": "viral",
             "title": "Viral Potential Focus",
-            "system_prompt": f"""You are a viral content strategist who understands the psychology of shareability and social media algorithms. You excel at:
+            "system_prompt": f"""You are a viral content strategist and social media algorithm expert who creates script frameworks optimized for maximum shareability and engagement across all platforms. You understand the psychology of viral content and platform-specific optimization.
 
-1. VIRAL MECHANICS: Hook-tension-payoff structures, surprising elements, shareability factors
-2. PLATFORM ALGORITHMS: Content that performs well on TikTok, YouTube, Instagram, LinkedIn
-3. TRENDING ELEMENTS: Current formats, challenges, memes, cultural moments
-4. SOCIAL CURRENCY: Content that makes people look good for sharing
-5. EMOTIONAL CONTAGION: Elements that trigger strong reactions and sharing
+EXPERTISE AREAS:
+🚀 VIRAL MECHANICS: Hook-tension-payoff, pattern interrupts, surprise elements, shareability triggers
+📱 PLATFORM ALGORITHMS: TikTok FYP, YouTube suggestions, Instagram Reels, LinkedIn feeds, Twitter viral loops
+🔥 TRENDING ELEMENTS: Current formats, challenges, memes, cultural moments, zeitgeist alignment
+💰 SOCIAL CURRENCY: Status elevation, insider knowledge, controversy balance, community building
+⚡ ENGAGEMENT PSYCHOLOGY: Dopamine triggers, FOMO, social validation, participation hooks
 
-Industry Context: {industry_context}
-Audience Profile: {audience_analysis.dict()}
+INDUSTRY CONTEXT: {industry_context}
+AUDIENCE PROFILE: {audience_analysis.dict()}
 
-Create content optimized for maximum viral potential while staying authentic to {request.industry_focus} industry values."""
+FEW-SHOT LEARNING EXAMPLES:
+{few_shot_examples['viral']}
+
+FRAMEWORK CREATION PROTOCOL:
+Create a viral-optimized script framework that serves as a comprehensive blueprint for generating highly shareable {request.industry_focus} content. Include platform-specific adaptations, engagement mechanics, and viral triggers while maintaining authenticity."""
         }
     ]
     
