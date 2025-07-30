@@ -499,8 +499,28 @@ function App() {
     useEffect(() => {
       if (generatedContract?.contract?.content && !editedContent) {
         setEditedContent(generatedContract.contract.content);
+        // Load existing signatures
+        loadExistingSignatures();
       }
     }, [generatedContract, editedContent]);
+
+    const loadExistingSignatures = async () => {
+      if (!generatedContract?.contract?.id) return;
+      
+      try {
+        const response = await axios.get(`${API}/contracts/${generatedContract.contract.id}/signatures`);
+        const { first_party_signature, second_party_signature } = response.data;
+        
+        if (first_party_signature) {
+          setFirstPartySignature(`data:image/png;base64,${first_party_signature}`);
+        }
+        if (second_party_signature) {
+          setSecondPartySignature(`data:image/png;base64,${second_party_signature}`);
+        }
+      } catch (error) {
+        console.error('Error loading existing signatures:', error);
+      }
+    };
 
     const handleContentChange = (value) => {
       setEditedContent(value);
