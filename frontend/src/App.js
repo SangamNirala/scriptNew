@@ -323,6 +323,36 @@ function App() {
     }
   };
 
+  const downloadPDF = async () => {
+    if (!generatedContract?.contract?.id) {
+      alert('No contract available for download');
+      return;
+    }
+
+    try {
+      const response = await axios.get(`${API}/contracts/${generatedContract.contract.id}/download-pdf`, {
+        responseType: 'blob'
+      });
+      
+      // Create blob link to download
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `contract_${generatedContract.contract.id}.pdf`);
+      
+      // Append to body, click and remove
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      
+      // Clean up the URL
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading PDF:', error);
+      alert('Failed to download PDF. Please try again.');
+    }
+  };
+
   const ContractTypeStep = () => (
     <Card className="w-full max-w-2xl mx-auto">
       <CardHeader className="text-center">
