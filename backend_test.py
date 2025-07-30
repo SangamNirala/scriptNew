@@ -1575,6 +1575,17 @@ def main():
     test_results.append(tester.test_edited_pdf_generation_invalid_data())
     test_results.append(tester.test_edited_pdf_content_verification())
     
+    # NEW: Execution Date Functionality Tests
+    print("\n" + "="*50)
+    print("📅 Testing Execution Date Functionality")
+    print("="*50)
+    
+    test_results.append(tester.test_execution_date_valid_iso_string())
+    test_results.append(tester.test_execution_date_null_empty())
+    test_results.append(tester.test_execution_date_formatting_variations())
+    test_results.append(tester.test_execution_date_invalid_formats())
+    test_results.append(tester.test_execution_date_pdf_integration())
+    
     # Print final results
     print("\n" + "="*60)
     print("📊 TEST RESULTS SUMMARY")
