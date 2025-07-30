@@ -404,6 +404,82 @@ async def get_jurisdictions():
         ]
     }
 
+@api_router.get("/contracts/{contract_id}/download-pdf")
+async def download_contract_pdf(contract_id: str):
+    """Generate and download PDF for a specific contract"""
+    try:
+        # Get the contract from database
+        contract = await db.contracts.find_one({"id": contract_id})
+        if not contract:
+            raise HTTPException(status_code=404, detail="Contract not found")
+        
+        # Create PDF buffer
+        buffer = io.BytesIO()
+        
+        # Create PDF document
+        doc = SimpleDocTemplate(buffer, pagesize=A4, 
+                              rightMargin=72, leftMargin=72,
+                              topMargin=72, bottomMargin=18)
+        
+        # Get styles
+        styles = getSampleStyleSheet()
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontSize=18,
+            spaceAfter=30,
+            alignment=1  # Center alignment
+        )
+        
+        # Build PDF content
+        content = []
+        
+        # Title
+        title = f"{contract['contract_type'].upper()} CONTRACT"
+        content.append(Paragraph(title, title_style))
+        content.append(Spacer(1, 12))
+        
+        # Contract metadata
+        metadata_style = styles['Normal']
+        content.append(Paragraph(f"<b>Contract ID:</b> {contract['id']}", metadata_style))
+        content.append(Paragraph(f"<b>Jurisdiction:</b> {contract['jurisdiction']}", metadata_style))
+        content.append(Paragraph(f"<b>Generated:</b> {contract['created_at']}", metadata_style))
+        content.append(Paragraph(f"<b>Compliance Score:</b> {contract['compliance_score']:.0f}%", metadata_style))
+        content.append(Spacer(1, 20))
+        
+        # Contract content
+        contract_content = contract['content']
+        # Split content into paragraphs and add to PDF
+        paragraphs = contract_content.split('\n\n')
+        for paragraph in paragraphs:
+            if paragraph.strip():
+                content.append(Paragraph(paragraph.strip(), styles['Normal']))
+                content.append(Spacer(1, 12))
+        
+        # Build PDF
+        doc.build(content)
+        
+        # Get PDF data
+        buffer.seek(0)
+        pdf_data = buffer.getvalue()
+        buffer.close()
+        
+        # Create filename
+        filename = f"contract_{contract_id}.pdf"
+        
+        # Return as streaming response
+        return StreamingResponse(
+            io.BytesIO(pdf_data),
+            media_type="application/pdf",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error generating PDF for contract {contract_id}: {e}")
+        raise HTTPException(status_code=500, detail=f"Error generating PDF: {str(e)}")
+
 # Include the router in the main app
 app.include_router(api_router)
 
