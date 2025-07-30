@@ -70,6 +70,15 @@ const EnhancedContractWizard = ({
     }
   }, [currentStep]);
 
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (typingTimeout) {
+        clearTimeout(typingTimeout);
+      }
+    };
+  }, [typingTimeout]);
+
   const initializeWizard = async () => {
     if (currentStep === 1) return;
     
