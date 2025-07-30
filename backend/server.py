@@ -262,7 +262,9 @@ class LegalMateAgents:
         }
         
         prompt = contract_prompts.get(contract_type, contract_prompts["NDA"]).format(
-            requirements=json.dumps(structured_requirements, indent=2)
+            requirements=json.dumps(structured_requirements, indent=2),
+            party1_name=structured_requirements.get('key_parties', {}).get('party1_name', 'First Party'),
+            party2_name=structured_requirements.get('key_parties', {}).get('party2_name', 'Second Party')
         )
         
         try:
