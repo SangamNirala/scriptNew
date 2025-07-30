@@ -342,7 +342,10 @@ metadata:
   signature_functionality: "completed"
 
 test_plan:
-  current_focus: []
+  current_focus:
+    - "Enhanced User Experience - User Profile Management"
+    - "Enhanced User Experience - Company Profile Management"
+    - "Enhanced User Experience - Smart Contract Wizard"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
