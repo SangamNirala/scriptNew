@@ -20,6 +20,12 @@ from lib.avatar_generator import avatar_generator
 from lib.enhanced_avatar_generator import enhanced_avatar_generator
 from lib.ultra_realistic_avatar_generator import ultra_realistic_avatar_generator
 from lib.context_integration import ContextIntegrationSystem
+# Phase 3: Advanced Analytics and Validation Components
+from lib.advanced_context_engine import AdvancedContextEngine
+from lib.script_quality_analyzer import ScriptQualityAnalyzer
+from lib.script_validator import ScriptValidator
+from lib.script_performance_tracker import ScriptPerformanceTracker
+from lib.script_preview_generator import ScriptPreviewGenerator
 
 
 ROOT_DIR = Path(__file__).parent
