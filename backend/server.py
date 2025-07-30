@@ -735,6 +735,74 @@ async def download_edited_contract_pdf(request: EditedContractRequest):
         logging.error(f"Error generating edited PDF: {e}")
         raise HTTPException(status_code=500, detail=f"Error generating PDF: {str(e)}")
 
+# Signature upload models
+class SignatureUploadRequest(BaseModel):
+    contract_id: str
+    party_type: str  # "first_party" or "second_party"
+    signature_image: str  # Base64 encoded image
+
+@api_router.post("/contracts/{contract_id}/upload-signature")
+async def upload_signature(request: SignatureUploadRequest):
+    """Upload a signature image for a contract"""
+    try:
+        # Validate party type
+        if request.party_type not in ["first_party", "second_party"]:
+            raise HTTPException(status_code=400, detail="Invalid party type. Must be 'first_party' or 'second_party'")
+        
+        # Validate base64 image
+        if not request.signature_image:
+            raise HTTPException(status_code=400, detail="Signature image is required")
+        
+        # Check if it's a valid base64 image
+        try:
+            import base64
+            # Remove data URL prefix if present
+            if request.signature_image.startswith('data:image'):
+                request.signature_image = request.signature_image.split(',')[1]
+            
+            # Validate base64
+            base64.b64decode(request.signature_image)
+        except Exception:
+            raise HTTPException(status_code=400, detail="Invalid base64 image format")
+        
+        # Update contract with signature
+        update_field = f"{request.party_type}_signature"
+        result = await db.contracts.update_one(
+            {"id": request.contract_id},
+            {"$set": {update_field: request.signature_image}}
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Contract not found")
+        
+        return {"message": "Signature uploaded successfully", "party_type": request.party_type}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error uploading signature: {e}")
+        raise HTTPException(status_code=500, detail=f"Error uploading signature: {str(e)}")
+
+@api_router.get("/contracts/{contract_id}/signatures")
+async def get_contract_signatures(contract_id: str):
+    """Get signatures for a contract"""
+    try:
+        contract = await db.contracts.find_one({"id": contract_id})
+        if not contract:
+            raise HTTPException(status_code=404, detail="Contract not found")
+        
+        return {
+            "contract_id": contract_id,
+            "first_party_signature": contract.get("first_party_signature"),
+            "second_party_signature": contract.get("second_party_signature")
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error getting signatures: {e}")
+        raise HTTPException(status_code=500, detail=f"Error getting signatures: {str(e)}")
+
 # Include the router in the main app
 app.include_router(api_router)
 
