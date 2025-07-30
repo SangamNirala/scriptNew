@@ -293,6 +293,12 @@ class LegalMateAgents:
         return content
 
     @staticmethod
+    def convert_markdown_to_html_bold(text: str) -> str:
+        """Convert **bold** markdown formatting to <b>bold</b> HTML tags for reportlab"""
+        # Convert **text** to <b>text</b>
+        return re.sub(r'\*\*([^*]+)\*\*', r'<b>\1</b>', text)
+
+    @staticmethod
     async def compliance_validator(contract_content: str, jurisdiction: str) -> Dict[str, Any]:
         """Validates contract compliance and assigns score"""
         
