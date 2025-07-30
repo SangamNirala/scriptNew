@@ -1450,28 +1450,406 @@ async def get_contract(contract_id: str):
 
 @api_router.get("/contract-types")
 async def get_contract_types():
-    """Get available contract types"""
+    """Get available contract types - 50+ professional templates"""
     return {
         "types": [
+            # Business Contracts
             {
                 "id": "NDA",
                 "name": "Non-Disclosure Agreement",
                 "description": "Protect confidential information",
-                "complexity": "Simple"
+                "complexity": "Simple",
+                "category": "Business"
+            },
+            {
+                "id": "employment_agreement",
+                "name": "Employment Agreement",
+                "description": "Hire employees with clear terms",
+                "complexity": "Medium",
+                "category": "Business"
             },
             {
                 "id": "freelance_agreement", 
                 "name": "Freelance Agreement",
                 "description": "Service contracts for freelancers",
-                "complexity": "Medium"
+                "complexity": "Medium",
+                "category": "Business"
             },
             {
                 "id": "partnership_agreement",
                 "name": "Partnership Agreement", 
                 "description": "Business partnership contracts",
-                "complexity": "Complex"
+                "complexity": "Complex",
+                "category": "Business"
+            },
+            {
+                "id": "consulting_agreement",
+                "name": "Consulting Agreement",
+                "description": "Professional consulting services",
+                "complexity": "Medium",
+                "category": "Business"
+            },
+            {
+                "id": "software_license",
+                "name": "Software License Agreement",
+                "description": "License software products",
+                "complexity": "Complex",
+                "category": "Technology"
+            },
+            {
+                "id": "vendor_agreement",
+                "name": "Vendor Agreement",
+                "description": "Supplier and vendor contracts",
+                "complexity": "Medium",
+                "category": "Business"
+            },
+            {
+                "id": "distribution_agreement",
+                "name": "Distribution Agreement",
+                "description": "Product distribution rights",
+                "complexity": "Complex",
+                "category": "Business"
+            },
+            {
+                "id": "franchise_agreement",
+                "name": "Franchise Agreement",
+                "description": "Franchise business operations",
+                "complexity": "Complex",
+                "category": "Business"
+            },
+            {
+                "id": "joint_venture",
+                "name": "Joint Venture Agreement",
+                "description": "Business collaboration ventures",
+                "complexity": "Complex",
+                "category": "Business"
+            },
+            {
+                "id": "merger_acquisition",
+                "name": "Merger & Acquisition Agreement",
+                "description": "Company merger and acquisition deals",
+                "complexity": "Very Complex",
+                "category": "Corporate"
+            },
+            {
+                "id": "shareholder_agreement",
+                "name": "Shareholder Agreement",
+                "description": "Company shareholder rights",
+                "complexity": "Complex",
+                "category": "Corporate"
+            },
+            {
+                "id": "loan_agreement",
+                "name": "Business Loan Agreement", 
+                "description": "Business financing and loans",
+                "complexity": "Complex",
+                "category": "Finance"
+            },
+            {
+                "id": "equipment_lease",
+                "name": "Equipment Lease",
+                "description": "Lease business equipment",
+                "complexity": "Medium",
+                "category": "Business"
+            },
+            {
+                "id": "service_agreement",
+                "name": "General Service Agreement",
+                "description": "Professional service contracts",
+                "complexity": "Simple",
+                "category": "Business"
+            },
+            {
+                "id": "licensing_agreement",
+                "name": "IP Licensing Agreement",
+                "description": "License intellectual property",
+                "complexity": "Complex",
+                "category": "IP"
+            },
+            {
+                "id": "manufacturing_agreement",
+                "name": "Manufacturing Agreement",
+                "description": "Product manufacturing contracts",
+                "complexity": "Complex",
+                "category": "Manufacturing"
+            },
+            {
+                "id": "marketing_agreement",
+                "name": "Marketing Agreement",
+                "description": "Marketing and advertising services",
+                "complexity": "Medium",
+                "category": "Marketing"
+            },
+            {
+                "id": "research_agreement",
+                "name": "Research & Development Agreement",
+                "description": "R&D collaboration contracts",
+                "complexity": "Complex",
+                "category": "Research"
+            },
+            {
+                "id": "maintenance_agreement",
+                "name": "Maintenance Agreement",
+                "description": "Equipment and service maintenance",
+                "complexity": "Simple",
+                "category": "Services"
+            },
+            {
+                "id": "supply_agreement",
+                "name": "Supply Agreement",
+                "description": "Product supply contracts",
+                "complexity": "Medium",
+                "category": "Supply Chain"
+            },
+            {
+                "id": "technology_transfer",
+                "name": "Technology Transfer Agreement",
+                "description": "Transfer technology rights",
+                "complexity": "Complex",
+                "category": "Technology"
+            },
+            {
+                "id": "indemnification_agreement",
+                "name": "Indemnification Agreement",
+                "description": "Legal protection and indemnity",
+                "complexity": "Complex",
+                "category": "Legal"
+            },
+            {
+                "id": "non_compete",
+                "name": "Non-Compete Agreement",
+                "description": "Restrict competitive activities",
+                "complexity": "Medium",
+                "category": "Employment"
+            },
+            {
+                "id": "settlement_agreement",
+                "name": "Settlement Agreement",
+                "description": "Resolve legal disputes",
+                "complexity": "Complex",
+                "category": "Legal"
+            },
+            
+            # Real Estate Contracts
+            {
+                "id": "purchase_agreement",
+                "name": "Real Estate Purchase Agreement",
+                "description": "Buy and sell real property",
+                "complexity": "Complex",
+                "category": "Real Estate"
+            },
+            {
+                "id": "lease_agreement",
+                "name": "Property Lease Agreement",
+                "description": "Lease residential or commercial property",
+                "complexity": "Medium",
+                "category": "Real Estate"
+            },
+            {
+                "id": "property_management",
+                "name": "Property Management Agreement",
+                "description": "Professional property management",
+                "complexity": "Medium",
+                "category": "Real Estate"
+            },
+            {
+                "id": "construction_contract",
+                "name": "Construction Contract",
+                "description": "Building and construction projects",
+                "complexity": "Complex",
+                "category": "Construction"
+            },
+            {
+                "id": "commercial_lease",
+                "name": "Commercial Lease",
+                "description": "Lease business properties",
+                "complexity": "Complex",
+                "category": "Real Estate"
+            },
+            {
+                "id": "residential_lease",
+                "name": "Residential Lease",
+                "description": "Rent residential properties",
+                "complexity": "Simple",
+                "category": "Real Estate"
+            },
+            {
+                "id": "deed_of_trust",
+                "name": "Deed of Trust",
+                "description": "Secure real estate loans",
+                "complexity": "Complex",
+                "category": "Real Estate Finance"
+            },
+            {
+                "id": "easement_agreement",
+                "name": "Easement Agreement",
+                "description": "Grant property access rights",
+                "complexity": "Medium",
+                "category": "Real Estate"
+            },
+            {
+                "id": "option_to_purchase",
+                "name": "Option to Purchase",
+                "description": "Future purchase options",
+                "complexity": "Medium",
+                "category": "Real Estate"
+            },
+            {
+                "id": "listing_agreement",
+                "name": "Real Estate Listing Agreement",
+                "description": "List property for sale",
+                "complexity": "Simple",
+                "category": "Real Estate"
+            },
+            {
+                "id": "land_contract",
+                "name": "Land Contract",
+                "description": "Seller-financed property sales",
+                "complexity": "Complex",
+                "category": "Real Estate"
+            },
+            {
+                "id": "development_agreement",
+                "name": "Real Estate Development Agreement",
+                "description": "Property development projects",
+                "complexity": "Very Complex",
+                "category": "Development"
+            },
+            {
+                "id": "tenant_improvement",
+                "name": "Tenant Improvement Agreement",
+                "description": "Property improvement contracts",
+                "complexity": "Medium",
+                "category": "Real Estate"
+            },
+            {
+                "id": "property_sale",
+                "name": "Property Sale Agreement",
+                "description": "General property sales",
+                "complexity": "Medium",
+                "category": "Real Estate"
+            },
+            {
+                "id": "sublease_agreement",
+                "name": "Sublease Agreement",
+                "description": "Sublease rental properties",
+                "complexity": "Medium",
+                "category": "Real Estate"
+            },
+            {
+                "id": "ground_lease",
+                "name": "Ground Lease Agreement",
+                "description": "Long-term land leases",
+                "complexity": "Complex",
+                "category": "Real Estate"
+            },
+            {
+                "id": "mortgage_agreement",
+                "name": "Mortgage Agreement",
+                "description": "Real estate financing",
+                "complexity": "Complex",
+                "category": "Real Estate Finance"
+            },
+            {
+                "id": "escrow_agreement",
+                "name": "Escrow Agreement",
+                "description": "Third-party escrow services",
+                "complexity": "Medium",
+                "category": "Real Estate"
+            },
+            {
+                "id": "brokerage_agreement",
+                "name": "Real Estate Brokerage Agreement",
+                "description": "Real estate broker services",
+                "complexity": "Medium",
+                "category": "Real Estate"
+            },
+            {
+                "id": "right_of_first_refusal",
+                "name": "Right of First Refusal",
+                "description": "Priority purchase rights",
+                "complexity": "Medium",
+                "category": "Real Estate"
+            },
+            
+            # Additional Service Contracts
+            {
+                "id": "confidentiality_agreement",
+                "name": "Confidentiality Agreement",
+                "description": "Protect sensitive information",
+                "complexity": "Simple",
+                "category": "Legal"
+            },
+            {
+                "id": "agency_agreement",
+                "name": "Agency Agreement",
+                "description": "Agent representation contracts",
+                "complexity": "Medium",
+                "category": "Business"
+            },
+            {
+                "id": "insurance_agreement",
+                "name": "Insurance Agreement",
+                "description": "Insurance service contracts",
+                "complexity": "Complex",
+                "category": "Insurance"
+            },
+            {
+                "id": "catering_agreement",
+                "name": "Catering Agreement",
+                "description": "Event catering services",
+                "complexity": "Simple",
+                "category": "Services"
+            },
+            {
+                "id": "transportation_agreement",
+                "name": "Transportation Agreement",
+                "description": "Transportation and logistics",
+                "complexity": "Medium",
+                "category": "Logistics"
+            },
+            {
+                "id": "security_agreement",
+                "name": "Security Services Agreement",
+                "description": "Security and protection services",
+                "complexity": "Medium",
+                "category": "Security"
+            },
+            {
+                "id": "cleaning_agreement",
+                "name": "Cleaning Services Agreement",
+                "description": "Cleaning and maintenance services",
+                "complexity": "Simple",
+                "category": "Services"
+            },
+            {
+                "id": "photography_agreement",
+                "name": "Photography Agreement",
+                "description": "Photography and media services",
+                "complexity": "Medium",
+                "category": "Creative"
+            },
+            {
+                "id": "web_development",
+                "name": "Web Development Agreement",
+                "description": "Website and app development",
+                "complexity": "Complex",
+                "category": "Technology"
+            },
+            {
+                "id": "advertising_agreement",
+                "name": "Advertising Agreement",
+                "description": "Advertising and marketing campaigns",
+                "complexity": "Medium",
+                "category": "Marketing"
             }
-        ]
+        ],
+        "categories": [
+            "Business", "Real Estate", "Technology", "Corporate", "Finance", 
+            "Legal", "Services", "Manufacturing", "Construction", "Development",
+            "Employment", "Marketing", "Research", "IP", "Insurance", "Creative"
+        ],
+        "total_count": 56
     }
 
 @api_router.get("/jurisdictions")
