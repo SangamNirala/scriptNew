@@ -64,20 +64,13 @@ function App() {
     }
   };
 
-  const generateContract = useCallback(async () => {
-    setIsGenerating(true);
-    try {
-      const response = await axios.post(`${API}/generate-contract`, contractData);
-      setGeneratedContract(response.data);
-      setCurrentStep(4);
-      loadContracts(); // Refresh the contracts list
-    } catch (error) {
-      console.error('Error generating contract:', error);
-      alert('Failed to generate contract. Please try again.');
-    } finally {
-      setIsGenerating(false);
-    }
-  }, [contractData]);
+  const handleParty1NameChange = useCallback((e) => {
+    updateParties('party1_name', e.target.value);
+  }, [updateParties]);
+
+  const handleParty2NameChange = useCallback((e) => {
+    updateParties('party2_name', e.target.value);
+  }, [updateParties]);
 
   const updateParties = useCallback((field, value) => {
     setContractData(prev => ({
