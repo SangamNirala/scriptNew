@@ -141,7 +141,26 @@ const EnhancedContractWizard = ({
     }
   };
 
+  // Add a flag to track user input activity
+  const [userIsTyping, setUserIsTyping] = useState(false);
+  const [typingTimeout, setTypingTimeout] = useState(null);
+
   const updateStepData = (step, field, value) => {
+    // Set typing flag to prevent suggestions from overriding user input
+    setUserIsTyping(true);
+    
+    // Clear existing timeout
+    if (typingTimeout) {
+      clearTimeout(typingTimeout);
+    }
+    
+    // Set new timeout to reset typing flag
+    const newTimeout = setTimeout(() => {
+      setUserIsTyping(false);
+    }, 1000); // 1 second delay
+    
+    setTypingTimeout(newTimeout);
+    
     setStepData(prev => ({
       ...prev,
       [step]: {
