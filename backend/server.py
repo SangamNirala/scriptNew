@@ -653,7 +653,34 @@ class LegalMateAgents:
             party1_name = 'First Party'
             party2_name = 'Second Party'
         
-        prompt = contract_prompts.get(contract_type, contract_prompts["NDA"]).format(
+        # Add signature section template to all contracts
+        signature_section = f"""
+            
+            **SIGNATURES**
+            
+            IN WITNESS WHEREOF, the parties have executed this agreement as of the Effective Date.
+            
+            **FIRST PARTY:**
+            
+            [First Party Signature Placeholder]
+            _________________________________
+            {party1_name}
+            
+            **SECOND PARTY:**
+            
+            [Second Party Signature Placeholder] 
+            _________________________________
+            {party2_name}
+        """
+        
+        # Get the base prompt
+        base_prompt = contract_prompts.get(contract_type, contract_prompts["NDA"])
+        
+        # Add signature section if not already present
+        if "**SIGNATURES**" not in base_prompt:
+            base_prompt += signature_section
+        
+        prompt = base_prompt.format(
             requirements=json.dumps(structured_requirements, indent=2),
             party1_name=party1_name,
             party2_name=party2_name
