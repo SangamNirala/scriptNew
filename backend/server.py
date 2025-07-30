@@ -931,23 +931,44 @@ Based on your expertise in {strategy['focus']} optimization with advanced featur
 - Platform-specific optimization with algorithm mastery
 - Advanced engagement mechanics and retention strategies
 
-STEP 3 - COMPREHENSIVE ADVANCED FRAMEWORK CREATION:
-Create a detailed, production-ready advanced framework that includes:
+STEP 3 - PHASE 1 COMPREHENSIVE ADVANCED FRAMEWORK CREATION:
+Create a detailed, production-ready advanced framework that MUST include these EXACT REQUIRED SECTIONS:
 
-A) ADVANCED OPENING HOOK FRAMEWORK:
-- Multi-layered attention-grabbing sequences (0-5 seconds)
-- Sophisticated pattern interrupts and curiosity gaps
-- Advanced audience identification and segmentation
-- Complex value proposition and promise architecture
+🎣 HOOK SECTION (0-3 seconds) - WORD COUNT: 25
+[Provide exactly 25-word hook with psychological triggers]
 
-B) ADVANCED NARRATIVE STRUCTURE TEMPLATE:
-- Act 1: Advanced setup with psychological profiling [detailed templates]
-- Act 2: Complex development with emotional engineering [detailed templates]  
-- Act 3: Sophisticated resolution with advanced CTAs [detailed templates]
-- Meta-layer: Advanced psychological frameworks woven throughout
+🎬 SETUP SECTION (3-15 seconds) - WORD COUNT: 50  
+[Provide exactly 50-word setup with audience engagement]
 
-C) ADVANCED DIALOGUE TEMPLATES AND TRANSITIONS:
-- Sophisticated phrases optimized for {strategy['focus']} with advanced psychology
+📚 CONTENT CORE (15-80% duration) - WORD COUNT: 250
+[Provide exactly 250-word content core with detailed structure]
+
+🏆 CLIMAX MOMENT (80-90% duration) - WORD COUNT: 35
+[Provide exactly 35-word climax with maximum impact]
+
+✨ RESOLUTION (90-100% duration) - WORD COUNT: 40
+[Provide exactly 40-word resolution with clear call-to-action]
+
+🧠 PSYCHOLOGICAL TRIGGERS INTEGRATED:
+- FOMO (Fear of Missing Out): [specific implementation]
+- Social Proof: [specific examples and placement]
+- Authority: [expert positioning and credibility markers]
+- Reciprocity: [value delivery and give-first approach]
+- Commitment: [engagement and participation hooks]
+
+📲 2025 TRENDS & PLATFORM OPTIMIZATION:
+- Current seasonal trends and relevance
+- Latest platform algorithm preferences
+- 2025 social media optimization techniques
+- Trending hashtags and format adaptation
+- Current zeitgeist alignment
+
+⚡ RETENTION ENGINEERING ELEMENTS:
+- Engagement questions every 15-20 seconds
+- Emotional peaks and valley management
+- Pattern interrupts and attention resets
+- Cognitive loops and completion triggers
+- Retention hooks and cliffhangers
 - Complex transition templates with emotional bridges
 - Advanced placeholder templates with psychological triggers
 - Sophisticated voice and tone guidelines with micro-adjustments
