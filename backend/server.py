@@ -264,10 +264,20 @@ class LegalMateAgents:
             """
         }
         
+        # Extract party names safely
+        key_parties = structured_requirements.get('key_parties', {})
+        if isinstance(key_parties, dict):
+            party1_name = key_parties.get('party1_name', 'First Party')
+            party2_name = key_parties.get('party2_name', 'Second Party')
+        else:
+            # Fallback if key_parties is not a dict (e.g., it's a list or other type)
+            party1_name = 'First Party'
+            party2_name = 'Second Party'
+        
         prompt = contract_prompts.get(contract_type, contract_prompts["NDA"]).format(
             requirements=json.dumps(structured_requirements, indent=2),
-            party1_name=structured_requirements.get('key_parties', {}).get('party1_name', 'First Party'),
-            party2_name=structured_requirements.get('key_parties', {}).get('party2_name', 'Second Party')
+            party1_name=party1_name,
+            party2_name=party2_name
         )
         
         try:
