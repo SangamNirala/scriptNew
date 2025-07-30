@@ -491,6 +491,9 @@ function App() {
     const [editedContent, setEditedContent] = useState('');
     const [hasEdits, setHasEdits] = useState(false);
     const [activeTab, setActiveTab] = useState('edit');
+    const [firstPartySignature, setFirstPartySignature] = useState(null);
+    const [secondPartySignature, setSecondPartySignature] = useState(null);
+    const [uploadingSignature, setUploadingSignature] = useState(null);
 
     // Initialize edited content when component mounts
     useEffect(() => {
