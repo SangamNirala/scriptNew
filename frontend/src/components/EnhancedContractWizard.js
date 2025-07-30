@@ -111,7 +111,9 @@ const EnhancedContractWizard = ({
     const updatedStepData = { ...stepData[currentStepKey] };
     
     newSuggestions.forEach(suggestion => {
-      if (suggestion.confidence > 0.8 && !updatedStepData[suggestion.field_name]) {
+      // Only apply suggestion if field is empty and confidence is high
+      if (suggestion.confidence > 0.8 && 
+          (!updatedStepData[suggestion.field_name] || updatedStepData[suggestion.field_name].trim() === '')) {
         updatedStepData[suggestion.field_name] = suggestion.suggested_value;
       }
     });
