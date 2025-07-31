@@ -984,6 +984,7 @@ const AnalyticsDashboard = ({ onBack }) => {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
 
         {/* AI Predictive Insights Tab */}
         <TabsContent value="predictive" className="space-y-6">
