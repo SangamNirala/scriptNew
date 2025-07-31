@@ -426,8 +426,10 @@ metadata:
   signature_functionality: "completed"
 
 test_plan:
-  current_focus: []
-  stuck_tasks: []
+  current_focus:
+    - "Smart Contract Wizard - Input Field Typing Issues and ResizeObserver Errors Fix"
+  stuck_tasks:
+    - "Smart Contract Wizard - Input Field Typing Issues and ResizeObserver Errors Fix"
   test_all: false
   test_priority: "high_first"
 
