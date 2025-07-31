@@ -50,8 +50,7 @@ const EnhancedContractWizard = ({
   // Simplified flag to track user interaction - no complex timeout logic
   const [userHasInteracted, setUserHasInteracted] = useState(false);
   
-  // Add refs and transitions to prevent race conditions
-  const [isPending, startTransition] = useTransition();
+  // Add refs to prevent race conditions
   const lastInputValuesRef = useRef({});
   const inputTimeoutRef = useRef(null);
 
