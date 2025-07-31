@@ -47,6 +47,10 @@ const EnhancedContractWizard = ({
   const [showProfileDialog, setShowProfileDialog] = useState(false);
   const [profileType, setProfileType] = useState('user'); // 'user' or 'company'
   
+  // Add a flag to track user input activity
+  const [userIsTyping, setUserIsTyping] = useState(false);
+  const [typingTimeout, setTypingTimeout] = useState(null);
+
   // Form data for each step
   const [stepData, setStepData] = useState({
     step1: { contract_type: '', industry: '', jurisdiction: 'US' },
@@ -79,10 +83,6 @@ const EnhancedContractWizard = ({
       return () => clearTimeout(initTimer);
     }
   }, [currentStep, userIsTyping]);
-
-  // Add a flag to track user input activity
-  const [userIsTyping, setUserIsTyping] = useState(false);
-  const [typingTimeout, setTypingTimeout] = useState(null);
 
   // Cleanup timeout on unmount
   useEffect(() => {
