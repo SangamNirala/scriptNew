@@ -39,3 +39,4 @@ Pillow
 httpx>=0.24.0
 protobuf>=4.21.0
 cachetools>=5.0.0
+pyparsing
