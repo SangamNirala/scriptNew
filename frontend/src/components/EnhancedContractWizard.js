@@ -160,6 +160,15 @@ const EnhancedContractWizard = ({
   const [typingTimeout, setTypingTimeout] = useState(null);
 
   const updateStepData = (step, field, value) => {
+    // Immediately update the step data without any delays or race conditions
+    setStepData(prev => ({
+      ...prev,
+      [step]: {
+        ...prev[step],
+        [field]: value
+      }
+    }));
+    
     // Set typing flag to prevent suggestions from overriding user input
     setUserIsTyping(true);
     
@@ -171,17 +180,9 @@ const EnhancedContractWizard = ({
     // Set new timeout to reset typing flag
     const newTimeout = setTimeout(() => {
       setUserIsTyping(false);
-    }, 1000); // 1 second delay
+    }, 2000); // Increase delay to 2 seconds for better UX
     
     setTypingTimeout(newTimeout);
-    
-    setStepData(prev => ({
-      ...prev,
-      [step]: {
-        ...prev[step],
-        [field]: value
-      }
-    }));
   };
 
   const applySuggestion = (suggestion) => {
