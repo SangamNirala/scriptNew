@@ -26,6 +26,8 @@ from lib.script_quality_analyzer import ScriptQualityAnalyzer
 from lib.script_validator import ScriptValidator
 from lib.script_performance_tracker import ScriptPerformanceTracker
 from lib.script_preview_generator import ScriptPreviewGenerator
+# Phase 4: Measurement & Optimization Components
+from lib.prompt_optimization_engine import PromptOptimizationEngine
 
 
 ROOT_DIR = Path(__file__).parent
