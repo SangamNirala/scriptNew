@@ -302,6 +302,7 @@ function App() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [contracts, setContracts] = useState([]);
   const [useEnhancedWizard, setUseEnhancedWizard] = useState(false);
+  const [showAnalytics, setShowAnalytics] = useState(false);
 
   useEffect(() => {
     loadContractTypes();
