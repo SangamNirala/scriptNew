@@ -2210,7 +2210,58 @@ async def get_contract_types():
                 "name": "Employment Agreement",
                 "description": "Hire employees with clear terms",
                 "complexity": "Medium",
-                "category": "Business"
+                "category": "HR & Employment"
+            },
+            
+            # HR & Employment Specialized Contracts
+            {
+                "id": "offer_letter",
+                "name": "Job Offer Letter",
+                "description": "Professional job offers with terms",
+                "complexity": "Simple",
+                "category": "HR & Employment"
+            },
+            {
+                "id": "employee_handbook_acknowledgment",
+                "name": "Employee Handbook Acknowledgment",
+                "description": "Policy acknowledgment and compliance",
+                "complexity": "Simple",
+                "category": "HR & Employment"
+            },
+            {
+                "id": "severance_agreement",
+                "name": "Severance Agreement",
+                "description": "Employee separation and severance terms",
+                "complexity": "Complex",
+                "category": "HR & Employment"
+            },
+            {
+                "id": "contractor_agreement",
+                "name": "Independent Contractor Agreement",
+                "description": "1099 contractor relationships",
+                "complexity": "Medium",
+                "category": "HR & Employment"
+            },
+            {
+                "id": "employee_nda",
+                "name": "Employee NDA",
+                "description": "Employee-specific confidentiality agreement",
+                "complexity": "Medium",
+                "category": "HR & Employment"
+            },
+            {
+                "id": "performance_improvement_plan",
+                "name": "Performance Improvement Plan",
+                "description": "Employee performance management",
+                "complexity": "Medium",
+                "category": "HR & Employment"
+            },
+            {
+                "id": "non_compete",
+                "name": "Non-Compete Agreement",
+                "description": "Restrict competitive activities",
+                "complexity": "Medium",
+                "category": "HR & Employment"
             },
             {
                 "id": "freelance_agreement", 
