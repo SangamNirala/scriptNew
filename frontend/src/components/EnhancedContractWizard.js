@@ -112,8 +112,8 @@ const EnhancedContractWizard = ({
   }, []);
 
   const applySuggestion = (suggestion) => {
-    const currentStepKey = `step${currentStep}`;
-    updateStepData(currentStepKey, suggestion.field_name, suggestion.suggested_value);
+    // COMPLETELY DISABLED to prevent any interference with typing
+    return;
   };
 
   const nextStep = () => {
