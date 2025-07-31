@@ -938,9 +938,12 @@ function App() {
         </p>
         
         {/* New: Contract Creation Options */}
-        <div className="mb-8 flex flex-col sm:flex-row gap-4 justify-center max-w-2xl mx-auto">
+        <div className="mb-8 flex flex-col sm:flex-row gap-4 justify-center max-w-4xl mx-auto">
           <Button
-            onClick={() => setUseEnhancedWizard(true)}
+            onClick={() => {
+              setUseEnhancedWizard(true);
+              setShowAnalytics(false);
+            }}
             className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-4 text-lg font-semibold rounded-lg transition-all duration-300 transform hover:scale-105"
           >
             <Sparkles className="h-5 w-5 mr-2" />
@@ -952,6 +955,7 @@ function App() {
           <Button
             onClick={() => {
               setUseEnhancedWizard(false);
+              setShowAnalytics(false);
               setCurrentStep(1);
             }}
             variant="outline"
@@ -959,6 +963,20 @@ function App() {
           >
             <FileText className="h-5 w-5 mr-2" />
             Classic Mode
+          </Button>
+          <Button
+            onClick={() => {
+              setShowAnalytics(true);
+              setUseEnhancedWizard(false);
+            }}
+            variant="outline"
+            className="border-white/30 text-white hover:bg-white/10 px-8 py-4 text-lg font-semibold rounded-lg"
+          >
+            <BarChart3 className="h-5 w-5 mr-2" />
+            Analytics Dashboard
+            <Badge variant="secondary" className="ml-2 bg-green-400 text-green-900 text-xs">
+              NEW
+            </Badge>
           </Button>
         </div>
         
