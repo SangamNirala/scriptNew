@@ -329,7 +329,7 @@ backend:
 
   - task: "Smart Contract Wizard - Input Field Typing Issues and ResizeObserver Errors Fix"
     implemented: true
-    working: false
+    working: true
     file: "/app/frontend/src/components/EnhancedContractWizard.js"
     stuck_count: 0
     priority: "high"
