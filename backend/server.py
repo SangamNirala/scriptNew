@@ -3779,6 +3779,23 @@ async def get_cost_analysis():
         contracts = await db.contracts.find({}).to_list(None)
         total_contracts = len(contracts)
         
+        # Handle case where no contracts exist
+        if total_contracts == 0:
+            return {
+                "total_savings": 0,
+                "total_time_saved_hours": 0,
+                "cost_per_contract_traditional": 2500,
+                "cost_per_contract_automation": 250,
+                "savings_percentage": 90.0,
+                "process_breakdown": {
+                    "generation": {"contracts": 0, "savings": 0, "time_saved": 0},
+                    "analysis": {"contracts": 0, "savings": 0, "time_saved": 0},
+                    "review": {"contracts": 0, "savings": 0, "time_saved": 0}
+                },
+                "roi": 10.0,
+                "message": "No contracts analyzed yet. Showing potential savings estimates."
+            }
+        
         # Calculate cost savings
         traditional_cost_per_contract = 2500  # Industry average
         automation_cost_per_contract = 250   # Our platform cost
