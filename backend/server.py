@@ -1500,6 +1500,386 @@ class LegalMateAgents:
         }
 
 
+# Legal Research Integration Service
+class LegalResearchService:
+    """Legal research service integrating multiple legal databases and AI analysis"""
+    
+    @staticmethod
+    @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10))
+    async def search_courtlistener(query: str, jurisdiction: str = "US", max_results: int = 10) -> List[LegalCase]:
+        """Search CourtListener API for legal cases"""
+        try:
+            search_params = {
+                "q": query,
+                "type": "o",  # Opinions
+                "order_by": "score desc",
+                "format": "json"
+            }
+            
+            if jurisdiction and jurisdiction != "US":
+                search_params["court"] = jurisdiction.lower()
+            
+            response = await courtlistener_client.get("/search/", params=search_params)
+            response.raise_for_status()
+            
+            data = response.json()
+            cases = []
+            
+            for result in data.get("results", [])[:max_results]:
+                case = LegalCase(
+                    title=result.get("caseName", "Unknown Case"),
+                    citation=result.get("citation", {}).get("neutral", result.get("citation", "N/A")),
+                    court=result.get("court", "Unknown Court"),
+                    date_filed=result.get("dateFiled"),
+                    jurisdiction=jurisdiction,
+                    summary=result.get("snippet", "")[:500] if result.get("snippet") else None,
+                    relevance_score=min(result.get("score", 0) / 100, 1.0),
+                    source="courtlistener",
+                    url=result.get("absolute_url")
+                )
+                cases.append(case)
+                
+            return cases
+            
+        except Exception as e:
+            logging.error(f"CourtListener search error: {e}")
+            return []
+
+    @staticmethod
+    @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10))
+    async def search_google_scholar(query: str, jurisdiction: str = "US", max_results: int = 10) -> List[LegalCase]:
+        """Search Google Scholar for legal cases using SerpAPI"""
+        try:
+            search = GoogleSearch({
+                "engine": "google_scholar",
+                "q": f"{query} site:scholar.google.com",
+                "hl": "en",
+                "lr": "lang_en",
+                "num": min(max_results, 20),
+                "api_key": serp_api_key
+            })
+            
+            results = search.get_dict()
+            cases = []
+            
+            for result in results.get("organic_results", [])[:max_results]:
+                case = LegalCase(
+                    title=result.get("title", "Unknown Case"),
+                    citation=result.get("publication_info", {}).get("summary", "N/A"),
+                    court="Google Scholar",
+                    jurisdiction=jurisdiction,
+                    summary=result.get("snippet", "")[:500] if result.get("snippet") else None,
+                    relevance_score=0.7,  # Default relevance for Scholar results
+                    source="google_scholar",
+                    url=result.get("link")
+                )
+                cases.append(case)
+                
+            return cases
+            
+        except Exception as e:
+            logging.error(f"Google Scholar search error: {e}")
+            return []
+
+    @staticmethod
+    async def analyze_legal_relevance(cases: List[LegalCase], contract_content: str, contract_type: str) -> List[LegalCase]:
+        """Use AI to analyze legal relevance of cases to the contract"""
+        try:
+            # Use Claude via OpenRouter for legal analysis
+            analysis_prompt = f"""
+            You are a legal research expert. Analyze the relevance of these legal cases to the following contract:
+            
+            Contract Type: {contract_type}
+            Contract Content: {contract_content[:1000]}...
+            
+            Legal Cases:
+            {json.dumps([{"title": case.title, "citation": case.citation, "summary": case.summary} for case in cases[:5]], indent=2)}
+            
+            For each case, provide:
+            1. Relevance score (0.0-1.0)
+            2. Key legal principles applicable to the contract
+            3. Potential implications for the contract
+            4. Risk assessment (LOW/MEDIUM/HIGH)
+            
+            Return as JSON array with structure:
+            [{
+                "case_index": 0,
+                "relevance_score": 0.8,
+                "legal_principles": ["principle1", "principle2"],
+                "implications": ["implication1", "implication2"],
+                "risk_assessment": "MEDIUM"
+            }]
+            """
+            
+            response = await openrouter_client.post(
+                "/chat/completions",
+                json={
+                    "model": "anthropic/claude-3.5-sonnet",
+                    "messages": [{"role": "user", "content": analysis_prompt}],
+                    "temperature": 0.1,
+                    "max_tokens": 2000
+                }
+            )
+            
+            if response.status_code == 200:
+                ai_response = response.json()
+                content = ai_response["choices"][0]["message"]["content"]
+                
+                # Extract JSON from AI response
+                json_match = re.search(r'\[.*\]', content, re.DOTALL)
+                if json_match:
+                    analysis_results = json.loads(json_match.group())
+                    
+                    # Update cases with AI analysis
+                    for i, result in enumerate(analysis_results):
+                        if i < len(cases):
+                            cases[i].relevance_score = result.get("relevance_score", cases[i].relevance_score)
+                            # Store additional analysis in summary if available
+                            if result.get("legal_principles"):
+                                cases[i].summary = f"Legal Principles: {', '.join(result['legal_principles'])}. {cases[i].summary or ''}"
+            
+            return sorted(cases, key=lambda x: x.relevance_score, reverse=True)
+            
+        except Exception as e:
+            logging.error(f"AI legal analysis error: {e}")
+            return cases
+
+    @staticmethod
+    async def comprehensive_legal_search(request: LegalCaseSearchRequest) -> LegalResearchResult:
+        """Comprehensive legal research using multiple sources"""
+        start_time = time.time()
+        
+        try:
+            # Search multiple sources concurrently
+            search_tasks = [
+                LegalResearchService.search_courtlistener(
+                    request.query, 
+                    request.jurisdiction, 
+                    min(request.max_results // 2, 10)
+                ),
+                LegalResearchService.search_google_scholar(
+                    request.query, 
+                    request.jurisdiction, 
+                    min(request.max_results // 2, 10)
+                )
+            ]
+            
+            search_results = await asyncio.gather(*search_tasks, return_exceptions=True)
+            
+            # Combine results from all sources
+            all_cases = []
+            for result in search_results:
+                if isinstance(result, list):
+                    all_cases.extend(result)
+            
+            # Remove duplicates based on title similarity
+            unique_cases = []
+            seen_titles = set()
+            for case in all_cases:
+                title_key = case.title.lower().strip()
+                if title_key not in seen_titles:
+                    seen_titles.add(title_key)
+                    unique_cases.append(case)
+            
+            # Limit to requested max results
+            unique_cases = unique_cases[:request.max_results]
+            
+            # Generate AI insights
+            ai_analysis = None
+            key_insights = []
+            
+            if unique_cases:
+                try:
+                    # Use Claude for comprehensive analysis
+                    insight_prompt = f"""
+                    Analyze these legal research results for query: "{request.query}"
+                    
+                    Found {len(unique_cases)} relevant cases. Key cases:
+                    {json.dumps([{"title": case.title, "court": case.court, "summary": case.summary[:200]} for case in unique_cases[:3]], indent=2)}
+                    
+                    Provide:
+                    1. Overall analysis of legal landscape
+                    2. Key trends or patterns
+                    3. Critical legal principles
+                    4. Practical implications
+                    5. Areas requiring attention
+                    
+                    Be concise but comprehensive.
+                    """
+                    
+                    response = await openrouter_client.post(
+                        "/chat/completions",
+                        json={
+                            "model": "anthropic/claude-3.5-sonnet",
+                            "messages": [{"role": "user", "content": insight_prompt}],
+                            "temperature": 0.2,
+                            "max_tokens": 1000
+                        }
+                    )
+                    
+                    if response.status_code == 200:
+                        ai_response = response.json()
+                        ai_analysis = ai_response["choices"][0]["message"]["content"]
+                        
+                        # Extract key insights (simple extraction)
+                        insight_lines = ai_analysis.split('\n')
+                        key_insights = [line.strip() for line in insight_lines if line.strip() and len(line.strip()) > 20][:5]
+                        
+                except Exception as e:
+                    logging.error(f"AI insight generation error: {e}")
+            
+            search_time = time.time() - start_time
+            
+            return LegalResearchResult(
+                query=request.query,
+                cases=unique_cases,
+                total_found=len(unique_cases),
+                search_time=search_time,
+                ai_analysis=ai_analysis,
+                key_insights=key_insights
+            )
+            
+        except Exception as e:
+            logging.error(f"Comprehensive legal search error: {e}")
+            search_time = time.time() - start_time
+            return LegalResearchResult(
+                query=request.query,
+                cases=[],
+                total_found=0,
+                search_time=search_time,
+                ai_analysis=f"Search error: {str(e)}",
+                key_insights=["Error occurred during legal research"]
+            )
+
+    @staticmethod
+    async def precedent_analysis(request: PrecedentAnalysisRequest) -> PrecedentAnalysisResult:
+        """Comprehensive precedent analysis for contract"""
+        try:
+            # Search for relevant cases
+            search_request = LegalCaseSearchRequest(
+                query=f"{request.contract_type} contract law precedent {request.jurisdiction}",
+                jurisdiction=request.jurisdiction,
+                max_results=15
+            )
+            
+            legal_research = await LegalResearchService.comprehensive_legal_search(search_request)
+            
+            # Analyze relevance to contract
+            relevant_cases = await LegalResearchService.analyze_legal_relevance(
+                legal_research.cases,
+                request.contract_content,
+                request.contract_type
+            )
+            
+            # Create precedent cases with detailed analysis
+            precedent_cases = []
+            for case in relevant_cases[:10]:  # Top 10 most relevant
+                precedent_case = PrecedentCase(
+                    case=case,
+                    similarity_score=case.relevance_score,
+                    relevant_principles=legal_research.key_insights[:3],
+                    contract_implications=[
+                        f"Case precedent may affect {request.contract_type} enforceability",
+                        f"Consider jurisdictional requirements from {case.court}",
+                        f"Review contractual clauses in light of {case.title[:50]}..."
+                    ],
+                    risk_assessment="HIGH" if case.relevance_score > 0.8 else "MEDIUM" if case.relevance_score > 0.5 else "LOW"
+                )
+                precedent_cases.append(precedent_case)
+            
+            # Generate comprehensive analysis using Claude
+            analysis_prompt = f"""
+            As a legal expert, analyze these precedent cases for a {request.contract_type} contract in {request.jurisdiction}:
+            
+            Contract Type: {request.contract_type}
+            Jurisdiction: {request.jurisdiction}
+            Contract Excerpt: {request.contract_content[:800]}...
+            
+            Relevant Precedent Cases:
+            {json.dumps([{"title": pc.case.title, "court": pc.case.court, "relevance": pc.similarity_score} for pc in precedent_cases[:5]], indent=2)}
+            
+            Provide detailed analysis including:
+            1. Key legal principles established by precedents
+            2. Outcome predictions based on similar cases
+            3. Specific recommendations for contract improvement
+            4. Overall confidence assessment
+            
+            Return as JSON:
+            {
+                "legal_principles": ["principle1", "principle2", ...],
+                "outcome_predictions": [
+                    {"scenario": "scenario1", "probability": 0.7, "outcome": "outcome1"},
+                    {"scenario": "scenario2", "probability": 0.3, "outcome": "outcome2"}
+                ],
+                "recommendations": ["rec1", "rec2", ...],
+                "confidence_score": 0.8
+            }
+            """
+            
+            response = await openrouter_client.post(
+                "/chat/completions",
+                json={
+                    "model": "anthropic/claude-3.5-sonnet",
+                    "messages": [{"role": "user", "content": analysis_prompt}],
+                    "temperature": 0.1,
+                    "max_tokens": 2000
+                }
+            )
+            
+            # Default values
+            legal_principles = legal_research.key_insights or ["Legal precedent analysis completed"]
+            outcome_predictions = [
+                {"scenario": "Standard enforcement", "probability": 0.7, "outcome": "Contract likely enforceable"},
+                {"scenario": "Dispute resolution", "probability": 0.3, "outcome": "May require legal review"}
+            ]
+            recommendations = [
+                "Review contract terms against precedent cases",
+                "Consider jurisdictional requirements",
+                "Ensure compliance with established legal principles"
+            ]
+            confidence_score = 0.75
+            
+            if response.status_code == 200:
+                try:
+                    ai_response = response.json()
+                    content = ai_response["choices"][0]["message"]["content"]
+                    
+                    # Extract JSON from response
+                    json_match = re.search(r'\{.*\}', content, re.DOTALL)
+                    if json_match:
+                        analysis_data = json.loads(json_match.group())
+                        legal_principles = analysis_data.get("legal_principles", legal_principles)
+                        outcome_predictions = analysis_data.get("outcome_predictions", outcome_predictions)
+                        recommendations = analysis_data.get("recommendations", recommendations)
+                        confidence_score = analysis_data.get("confidence_score", confidence_score)
+                except Exception as e:
+                    logging.error(f"AI analysis parsing error: {e}")
+            
+            return PrecedentAnalysisResult(
+                contract_content=request.contract_content,
+                contract_type=request.contract_type,
+                jurisdiction=request.jurisdiction,
+                similar_cases=precedent_cases,
+                legal_principles=legal_principles,
+                outcome_predictions=outcome_predictions,
+                recommendations=recommendations,
+                confidence_score=confidence_score
+            )
+            
+        except Exception as e:
+            logging.error(f"Precedent analysis error: {e}")
+            return PrecedentAnalysisResult(
+                contract_content=request.contract_content,
+                contract_type=request.contract_type,
+                jurisdiction=request.jurisdiction,
+                similar_cases=[],
+                legal_principles=["Error in precedent analysis"],
+                outcome_predictions=[{"scenario": "Error", "probability": 1.0, "outcome": "Analysis failed"}],
+                recommendations=["Manual legal review recommended"],
+                confidence_score=0.0
+            )
+
+
 # API Endpoints
 @api_router.get("/")
 async def root():
