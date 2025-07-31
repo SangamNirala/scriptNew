@@ -70,6 +70,10 @@ const EnhancedContractWizard = ({
     }
   }, [currentStep]);
 
+  // Add a flag to track user input activity
+  const [userIsTyping, setUserIsTyping] = useState(false);
+  const [typingTimeout, setTypingTimeout] = useState(null);
+
   // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
@@ -78,86 +82,6 @@ const EnhancedContractWizard = ({
       }
     };
   }, [typingTimeout]);
-
-  const initializeWizard = async () => {
-    if (currentStep === 1) return;
-    
-    setIsLoading(true);
-    try {
-      const response = await axios.post(`${API}/contract-wizard/initialize`, {
-        user_id: userProfile?.id,
-        company_id: companyProfile?.id,
-        contract_type: stepData.step1.contract_type,
-        current_step: currentStep,
-        partial_data: stepData
-      });
-
-      setSuggestions(response.data.suggestions || []);
-      setProgress(response.data.progress * 100);
-      setEstimatedTime(response.data.estimated_completion_time);
-      
-      // Apply suggestions to form data only if fields are empty
-      applySuggestions(response.data.suggestions);
-      
-      // Mark this step as initialized
-      const currentStepKey = `step${currentStep}`;
-      setStepData(prev => ({
-        ...prev,
-        [currentStepKey]: {
-          ...prev[currentStepKey],
-          initialized: true
-        }
-      }));
-    } catch (error) {
-      console.error('Error initializing wizard:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const applySuggestions = (newSuggestions) => {
-    // Don't apply suggestions if user is actively typing
-    if (userIsTyping) {
-      return;
-    }
-    
-    const currentStepKey = `step${currentStep}`;
-    const updatedStepData = { ...stepData[currentStepKey] };
-    
-    newSuggestions.forEach(suggestion => {
-      // Only apply suggestion if field is empty and confidence is high
-      if (suggestion.confidence > 0.8 && 
-          (!updatedStepData[suggestion.field_name] || updatedStepData[suggestion.field_name].trim() === '')) {
-        updatedStepData[suggestion.field_name] = suggestion.suggested_value;
-      }
-    });
-    
-    setStepData(prev => ({
-      ...prev,
-      [currentStepKey]: updatedStepData
-    }));
-  };
-
-  const getFieldSuggestions = async (fieldName) => {
-    try {
-      const response = await axios.post(`${API}/contract-wizard/suggestions`, {
-        contract_type: stepData.step1.contract_type,
-        field_name: fieldName,
-        user_id: userProfile?.id,
-        company_id: companyProfile?.id,
-        context: stepData
-      });
-      
-      return response.data.suggestions || [];
-    } catch (error) {
-      console.error('Error getting field suggestions:', error);
-      return [];
-    }
-  };
-
-  // Add a flag to track user input activity
-  const [userIsTyping, setUserIsTyping] = useState(false);
-  const [typingTimeout, setTypingTimeout] = useState(null);
 
   const updateStepData = (step, field, value) => {
     // Immediately update the step data without any delays or race conditions
