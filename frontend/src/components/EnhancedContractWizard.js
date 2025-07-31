@@ -47,9 +47,8 @@ const EnhancedContractWizard = ({
   const [showProfileDialog, setShowProfileDialog] = useState(false);
   const [profileType, setProfileType] = useState('user'); // 'user' or 'company'
   
-  // Add a flag to track user input activity
-  const [userIsTyping, setUserIsTyping] = useState(false);
-  const [typingTimeout, setTypingTimeout] = useState(null);
+  // Simplified flag to track user interaction - no complex timeout logic
+  const [userHasInteracted, setUserHasInteracted] = useState(false);
 
   // Form data for each step
   const [stepData, setStepData] = useState({
