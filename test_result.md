@@ -432,6 +432,8 @@ test_plan:
   test_priority: "high_first"
 
 agent_communication:
+    -agent: "user"
+    -message: "FRONTEND CLASSIC MODE COMPONENT PREVIEW ISSUE: User reports being unable to preview all the components present in classic mode. This suggests missing UI components, rendering issues, or incomplete component display in the classic mode interface. Requires comprehensive frontend testing to identify which components are not visible or accessible in classic mode."
     -agent: "main"
     -message: "SIGNATURE PDF DOWNLOAD FIX: Fixed critical bug where signatures weren't appearing in downloaded PDFs despite showing in preview. Root cause: Frontend changes signature placeholder text from '[First Party Signature Placeholder]' to '[First Party Signature Uploaded]' after upload, but backend only searched for original placeholder. Fixed by updating process_signature_content() regex patterns to recognize both placeholder states using '(?:Placeholder|Uploaded)' pattern. This fix applies to both original and edited PDF downloads. Signature functionality now needs retesting to verify PDF downloads include signatures correctly."
     -agent: "main"
