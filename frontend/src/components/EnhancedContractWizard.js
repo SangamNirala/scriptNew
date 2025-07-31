@@ -208,6 +208,8 @@ const EnhancedContractWizard = ({
   const prevStep = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
+      // Reset interaction flag when going back to allow suggestions
+      setUserHasInteracted(false);
     }
   };
 
