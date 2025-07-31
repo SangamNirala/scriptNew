@@ -235,28 +235,115 @@ const AnalyticsDashboard = ({ onBack }) => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading analytics data...</p>
+          <div className="relative">
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-200 border-t-blue-600 mx-auto"></div>
+            <div className="animate-pulse absolute inset-0 rounded-full h-16 w-16 border-4 border-transparent border-t-blue-400 mx-auto"></div>
+          </div>
+          <p className="mt-6 text-lg text-gray-700 font-medium">Loading Advanced Analytics...</p>
+          <p className="mt-2 text-sm text-gray-500">Gathering insights from your data</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Business Intelligence & Analytics</h1>
-          <p className="text-gray-600 mt-2">Comprehensive insights into your contract performance and market intelligence</p>
+    <div className="max-w-8xl mx-auto p-6 bg-gray-50 min-h-screen">
+      {/* Enhanced Header */}
+      <div className="bg-white rounded-lg shadow-sm border p-6 mb-8">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg">
+              <BarChart3 className="h-8 w-8 text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Business Intelligence & Analytics</h1>
+              <p className="text-gray-600 mt-1">Comprehensive insights powered by AI and machine learning</p>
+            </div>
+          </div>
+          <div className="flex items-center space-x-4">
+            <RealTimeIndicator 
+              lastUpdated="2 min ago" 
+              isLive={autoRefresh}
+            />
+            <Button
+              onClick={() => setAutoRefresh(!autoRefresh)}
+              variant={autoRefresh ? "default" : "outline"}
+              size="sm"
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+              {autoRefresh ? 'Live' : 'Auto-refresh'}
+            </Button>
+            <ExportControls onExport={handleExport} />
+            <Button onClick={onBack} variant="outline" className="flex items-center">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Dashboard
+            </Button>
+          </div>
         </div>
-        <Button onClick={onBack} variant="outline" className="flex items-center">
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Dashboard
-        </Button>
       </div>
+
+      {/* Real-time Stats Bar */}
+      {realTimeStats && (
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
+          <Card className="border-l-4 border-l-blue-500">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Today</p>
+                  <p className="text-2xl font-bold">{realTimeStats.current_stats?.contracts_today || 0}</p>
+                </div>
+                <Activity className="h-6 w-6 text-blue-500" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="border-l-4 border-l-green-500">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">This Week</p>
+                  <p className="text-2xl font-bold">{realTimeStats.current_stats?.contracts_this_week || 0}</p>
+                </div>
+                <TrendingUpIcon className="h-6 w-6 text-green-500" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="border-l-4 border-l-purple-500">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Active Sessions</p>
+                  <p className="text-2xl font-bold">{realTimeStats.current_stats?.active_sessions || 0}</p>
+                </div>
+                <Users className="h-6 w-6 text-purple-500" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="border-l-4 border-l-orange-500">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Response Time</p>
+                  <p className="text-2xl font-bold">{realTimeStats.system_performance?.response_time_avg || 'N/A'}</p>
+                </div>
+                <Gauge className="h-6 w-6 text-orange-500" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="border-l-4 border-l-red-500">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">System Health</p>
+                  <p className="text-lg font-bold text-green-600">{realTimeStats.status || 'Healthy'}</p>
+                </div>
+                <Server className="h-6 w-6 text-red-500" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Filters */}
       <Card className="mb-8">
