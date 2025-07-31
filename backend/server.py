@@ -255,7 +255,7 @@ class PrecedentAnalysisRequest(BaseModel):
     contract_content: str
     contract_type: str
     jurisdiction: str = "US"
-    analysis_depth: str = Field(default="standard", regex="^(basic|standard|comprehensive)$")
+    analysis_depth: str = Field(default="standard", pattern="^(basic|standard|comprehensive)$")
 
 class PrecedentCase(BaseModel):
     case: LegalCase
