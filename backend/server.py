@@ -2100,6 +2100,346 @@ class LegalResearchService:
             )
 
 
+# HR & Employment Industry-Specific Service
+class HRWorkflowService:
+    
+    @staticmethod
+    def get_onboarding_workflow_template(employee_type: str = "standard") -> List[Dict[str, Any]]:
+        """Get standardized onboarding workflow templates"""
+        
+        templates = {
+            "standard": [
+                {
+                    "step": 1,
+                    "title": "Welcome & Documentation",
+                    "description": "Generate offer letter and collect employee information",
+                    "documents": ["offer_letter"],
+                    "required_info": ["personal_details", "emergency_contacts", "tax_forms"],
+                    "estimated_time": "30 minutes"
+                },
+                {
+                    "step": 2,
+                    "title": "Employment Agreement",
+                    "description": "Review and sign employment contract",
+                    "documents": ["employment_agreement"],
+                    "required_info": ["job_details", "compensation", "benefits"],
+                    "estimated_time": "45 minutes"
+                },
+                {
+                    "step": 3,
+                    "title": "Confidentiality & Policies",
+                    "description": "Sign NDA and acknowledge company policies",
+                    "documents": ["employee_nda", "employee_handbook_acknowledgment"],
+                    "required_info": ["policy_versions", "acknowledgment_signatures"],
+                    "estimated_time": "20 minutes"
+                },
+                {
+                    "step": 4,
+                    "title": "Benefits & Compliance",
+                    "description": "Enroll in benefits and complete compliance training",
+                    "documents": ["benefits_enrollment", "compliance_training"],
+                    "required_info": ["benefit_selections", "training_completion"],
+                    "estimated_time": "60 minutes"
+                },
+                {
+                    "step": 5,
+                    "title": "System Setup",
+                    "description": "IT setup and workspace preparation",
+                    "documents": ["equipment_assignment", "system_access"],
+                    "required_info": ["equipment_list", "access_permissions"],
+                    "estimated_time": "30 minutes"
+                },
+                {
+                    "step": 6,
+                    "title": "Final Review & Welcome",
+                    "description": "Review all documents and welcome to team",
+                    "documents": ["onboarding_checklist"],
+                    "required_info": ["completion_confirmation"],
+                    "estimated_time": "15 minutes"
+                }
+            ],
+            "executive": [
+                # Executive workflow with additional steps for equity, advanced compliance, etc.
+                {
+                    "step": 1,
+                    "title": "Executive Welcome Package",
+                    "description": "Comprehensive offer with equity and executive benefits",
+                    "documents": ["executive_offer_letter", "equity_agreement"],
+                    "required_info": ["executive_compensation", "equity_details"],
+                    "estimated_time": "60 minutes"
+                },
+                {
+                    "step": 2,
+                    "title": "Executive Employment Agreement",
+                    "description": "Comprehensive executive employment contract",
+                    "documents": ["executive_employment_agreement"],
+                    "required_info": ["executive_terms", "performance_metrics"],
+                    "estimated_time": "90 minutes"
+                },
+                {
+                    "step": 3,
+                    "title": "Enhanced Confidentiality & Non-Compete",
+                    "description": "Executive-level confidentiality and restrictive covenants",
+                    "documents": ["executive_nda", "executive_non_compete"],
+                    "required_info": ["enhanced_restrictions", "trade_secrets"],
+                    "estimated_time": "45 minutes"
+                },
+                {
+                    "step": 4,
+                    "title": "Executive Benefits & Perquisites",
+                    "description": "Executive benefit package and perquisites",
+                    "documents": ["executive_benefits", "perquisite_agreement"],
+                    "required_info": ["executive_perks", "benefit_elections"],
+                    "estimated_time": "60 minutes"
+                },
+                {
+                    "step": 5,
+                    "title": "Board & Governance Integration",
+                    "description": "Board resolutions and governance documentation",
+                    "documents": ["board_resolution", "d_and_o_coverage"],
+                    "required_info": ["board_approval", "insurance_coverage"],
+                    "estimated_time": "30 minutes"
+                },
+                {
+                    "step": 6,
+                    "title": "Strategic Onboarding",
+                    "description": "Strategic briefings and stakeholder introductions",
+                    "documents": ["strategic_brief", "stakeholder_map"],
+                    "required_info": ["strategic_priorities", "key_relationships"],
+                    "estimated_time": "120 minutes"
+                }
+            ],
+            "contractor": [
+                {
+                    "step": 1,
+                    "title": "Contractor Setup",
+                    "description": "Independent contractor agreement and classification",
+                    "documents": ["contractor_agreement"],
+                    "required_info": ["contractor_classification", "work_scope"],
+                    "estimated_time": "30 minutes"
+                },
+                {
+                    "step": 2,
+                    "title": "Project Specifications",
+                    "description": "Define project scope and deliverables",
+                    "documents": ["statement_of_work"],
+                    "required_info": ["project_details", "deliverables", "timeline"],
+                    "estimated_time": "45 minutes"
+                },
+                {
+                    "step": 3,
+                    "title": "Compliance & Tax Setup",
+                    "description": "W-9 forms and contractor compliance requirements",
+                    "documents": ["w9_form", "contractor_compliance"],
+                    "required_info": ["tax_information", "compliance_requirements"],
+                    "estimated_time": "20 minutes"
+                }
+            ]
+        }
+        
+        return templates.get(employee_type, templates["standard"])
+    
+    @staticmethod
+    async def create_onboarding_workflow(employee_data: Dict[str, Any], company_id: str) -> OnboardingWorkflow:
+        """Create a new employee onboarding workflow"""
+        
+        # Determine workflow template based on employee type/role
+        employee_type = employee_data.get("employment_type", "standard")
+        if employee_data.get("role", "").lower() in ["ceo", "cto", "cfo", "vp", "director"]:
+            template_type = "executive"
+        elif employee_type in ["contractor", "freelancer"]:
+            template_type = "contractor"
+        else:
+            template_type = "standard"
+        
+        # Get workflow template
+        workflow_steps = HRWorkflowService.get_onboarding_workflow_template(template_type)
+        
+        # Create employee profile
+        employee_profile = EmployeeProfile(
+            employee_id=employee_data.get("employee_id", str(uuid.uuid4())),
+            first_name=employee_data.get("first_name", ""),
+            last_name=employee_data.get("last_name", ""),
+            email=employee_data.get("email", ""),
+            phone=employee_data.get("phone"),
+            department=employee_data.get("department", ""),
+            position=employee_data.get("position", ""),
+            employment_type=employee_data.get("employment_type", "full_time"),
+            start_date=datetime.fromisoformat(employee_data.get("start_date", datetime.utcnow().isoformat())),
+            manager_id=employee_data.get("manager_id"),
+            salary=employee_data.get("salary"),
+            hourly_rate=employee_data.get("hourly_rate"),
+            benefits_eligible=employee_data.get("benefits_eligible", True),
+            location=employee_data.get("location", "on_site"),
+            employment_status="pending",
+            company_id=company_id
+        )
+        
+        # Save employee profile
+        await db.employee_profiles.insert_one(employee_profile.dict())
+        
+        # Create onboarding workflow
+        workflow = OnboardingWorkflow(
+            employee_id=employee_profile.employee_id,
+            workflow_template=template_type,
+            current_step=1,
+            total_steps=len(workflow_steps),
+            steps=workflow_steps,
+            status="pending",
+            assigned_hr_rep=employee_data.get("hr_rep")
+        )
+        
+        # Save workflow
+        await db.onboarding_workflows.insert_one(workflow.dict())
+        
+        return workflow
+    
+    @staticmethod
+    async def generate_hr_smart_suggestions(field_name: str, employee_data: Dict[str, Any], company_profile: Optional[Dict[str, Any]] = None) -> List[SmartSuggestion]:
+        """Generate HR-specific smart suggestions for form fields"""
+        
+        suggestions = []
+        
+        # Salary suggestions based on role and industry
+        if field_name == "salary" and employee_data.get("position"):
+            position = employee_data["position"].lower()
+            industry = company_profile.get("industry", "technology") if company_profile else "technology"
+            
+            # Basic salary ranges by position (in thousands)
+            salary_ranges = {
+                "software engineer": {"min": 80, "max": 150},
+                "senior software engineer": {"min": 120, "max": 200},
+                "product manager": {"min": 100, "max": 180},
+                "marketing manager": {"min": 70, "max": 130},
+                "sales representative": {"min": 50, "max": 100},
+                "hr manager": {"min": 70, "max": 120},
+                "accountant": {"min": 55, "max": 85},
+                "data scientist": {"min": 95, "max": 165}
+            }
+            
+            for key, range_data in salary_ranges.items():
+                if key in position:
+                    mid_salary = (range_data["min"] + range_data["max"]) / 2
+                    suggestions.append(SmartSuggestion(
+                        field_name=field_name,
+                        suggested_value=f"{mid_salary}000",
+                        confidence=0.8,
+                        reasoning=f"Average salary for {position} in {industry} industry",
+                        source="industry_standard"
+                    ))
+                    break
+        
+        # Benefits suggestions based on company size
+        elif field_name == "benefits_eligible" and company_profile:
+            company_size = company_profile.get("size", "medium")
+            if company_size in ["medium", "large", "enterprise"]:
+                suggestions.append(SmartSuggestion(
+                    field_name=field_name,
+                    suggested_value="true",
+                    confidence=0.9,
+                    reasoning=f"Companies of size '{company_size}' typically offer full benefits",
+                    source="company_profile"
+                ))
+        
+        # Employment type suggestions
+        elif field_name == "employment_type" and employee_data.get("position"):
+            position = employee_data["position"].lower()
+            if any(keyword in position for keyword in ["contractor", "freelance", "consultant"]):
+                suggestions.append(SmartSuggestion(
+                    field_name=field_name,
+                    suggested_value="contractor",
+                    confidence=0.85,
+                    reasoning="Position title suggests contractor relationship",
+                    source="ai_generated"
+                ))
+            else:
+                suggestions.append(SmartSuggestion(
+                    field_name=field_name,
+                    suggested_value="full_time",
+                    confidence=0.8,
+                    reasoning="Standard employment type for permanent positions",
+                    source="industry_standard"
+                ))
+        
+        # Department suggestions based on role
+        elif field_name == "department" and employee_data.get("position"):
+            position = employee_data["position"].lower()
+            department_mappings = {
+                "engineer": "Engineering",
+                "developer": "Engineering", 
+                "product": "Product",
+                "marketing": "Marketing",
+                "sales": "Sales",
+                "hr": "Human Resources",
+                "finance": "Finance",
+                "accounting": "Finance",
+                "legal": "Legal"
+            }
+            
+            for keyword, dept in department_mappings.items():
+                if keyword in position: 
+                    suggestions.append(SmartSuggestion(
+                        field_name=field_name,
+                        suggested_value=dept,
+                        confidence=0.9,
+                        reasoning=f"Position '{employee_data['position']}' typically belongs to {dept} department",
+                        source="industry_standard"
+                    ))
+                    break
+        
+        return suggestions
+    
+    @staticmethod
+    async def get_policy_templates() -> Dict[str, Any]:
+        """Get HR policy templates"""
+        
+        templates = {
+            "employee_handbook": {
+                "title": "Employee Handbook",
+                "sections": [
+                    "Welcome Message",
+                    "Company Overview and Mission",
+                    "Employment Policies",
+                    "Code of Conduct",
+                    "Anti-Discrimination and Harassment",
+                    "Work Schedule and Attendance",
+                    "Leave Policies",
+                    "Benefits Overview",
+                    "Performance Management",
+                    "Technology and Social Media",
+                    "Safety and Security",
+                    "Grievance Procedures"
+                ]
+            },
+            "code_of_conduct": {
+                "title": "Code of Conduct",
+                "sections": [
+                    "Ethical Standards",
+                    "Professional Behavior",
+                    "Conflicts of Interest",
+                    "Confidentiality",
+                    "Anti-Corruption",
+                    "Reporting Violations",
+                    "Disciplinary Actions"
+                ]
+            },
+            "safety_policy": {
+                "title": "Workplace Safety Policy",
+                "sections": [
+                    "Safety Commitment",
+                    "Workplace Hazards",
+                    "Emergency Procedures",
+                    "Incident Reporting",
+                    "Personal Protective Equipment",
+                    "Training Requirements",
+                    "Compliance Monitoring"
+                ]
+            }
+        }
+        
+        return templates
+
+
 # API Endpoints
 @api_router.get("/")
 async def root():
