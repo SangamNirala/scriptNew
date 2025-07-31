@@ -3425,6 +3425,52 @@ def main():
     
     print("🚀"*60)
     
+    # NEW: Business Intelligence & Analytics Tests
+    print("\n" + "🧠"*60)
+    print("🧠 BUSINESS INTELLIGENCE & ANALYTICS TESTING - NEW FEATURES")
+    print("🧠"*60)
+    
+    # Analytics Dashboard Tests
+    print("\n" + "📊"*30)
+    print("📊 ANALYTICS DASHBOARD TESTING")
+    print("📊"*30)
+    test_results.append(tester.test_analytics_dashboard())
+    test_results.append(tester.test_analytics_dashboard_with_filters())
+    
+    # Performance Metrics Tests
+    print("\n" + "📈"*30)
+    print("📈 PERFORMANCE METRICS TESTING")
+    print("📈"*30)
+    test_results.append(tester.test_performance_metrics())
+    
+    # Cost Analysis Tests
+    print("\n" + "💰"*30)
+    print("💰 COST ANALYSIS TESTING")
+    print("💰"*30)
+    test_results.append(tester.test_cost_analysis())
+    
+    # Negotiation Insights Tests
+    print("\n" + "🤝"*30)
+    print("🤝 NEGOTIATION INSIGHTS TESTING")
+    print("🤝"*30)
+    test_results.append(tester.test_negotiation_insights())
+    
+    # Market Intelligence Tests
+    print("\n" + "🌐"*30)
+    print("🌐 MARKET INTELLIGENCE TESTING")
+    print("🌐"*30)
+    test_results.append(tester.test_market_intelligence())
+    test_results.append(tester.test_market_intelligence_with_parameters())
+    
+    # Event Tracking Tests
+    print("\n" + "📝"*30)
+    print("📝 EVENT TRACKING TESTING")
+    print("📝"*30)
+    test_results.append(tester.test_track_event())
+    test_results.append(tester.test_track_event_invalid_data())
+    
+    print("🧠"*60)
+    
     # Print final results
     print("\n" + "="*60)
     print("📊 TEST RESULTS SUMMARY")
