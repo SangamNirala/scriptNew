@@ -3862,8 +3862,18 @@ def generate_wizard_step(
     user_profile: Optional[UserProfile] = None,
     company_profile: Optional[CompanyProfile] = None
 ) -> WizardStep:
-    """Generate wizard step configuration"""
+    """Generate wizard step configuration with HR-specific enhancements"""
     
+    # Check if this is an HR & Employment contract type
+    hr_contract_types = [
+        "employment_agreement", "offer_letter", "employee_handbook_acknowledgment",
+        "severance_agreement", "contractor_agreement", "employee_nda", 
+        "performance_improvement_plan", "non_compete"
+    ]
+    
+    is_hr_contract = contract_type in hr_contract_types
+    
+    # Base step configurations
     step_configs = {
         1: {
             "title": "Contract Type & Industry",
@@ -3915,6 +3925,109 @@ def generate_wizard_step(
             ]
         }
     }
+    
+    # HR-specific field modifications
+    if is_hr_contract:
+        if step_number == 1:
+            step_configs[1] = {
+                "title": "HR Contract & Employment Type",
+                "description": "Configure employment contract type and organizational details",
+                "fields": [
+                    {"name": "contract_type", "type": "select", "required": True, "label": "HR Contract Type"},
+                    {"name": "employment_type", "type": "select", "required": True, "label": "Employment Type", 
+                     "options": ["full_time", "part_time", "contractor", "intern", "temporary"]},
+                    {"name": "jurisdiction", "type": "select", "required": True, "label": "Jurisdiction"},
+                    {"name": "company_industry", "type": "select", "required": False, "label": "Company Industry"}
+                ]
+            }
+        
+        elif step_number == 2:
+            step_configs[2] = {
+                "title": "Employee & Company Information",
+                "description": "Enter employee and employer details",
+                "fields": [
+                    {"name": "company_name", "type": "text", "required": True, "label": "Company Name"},
+                    {"name": "company_address", "type": "textarea", "required": True, "label": "Company Address"},
+                    {"name": "employee_name", "type": "text", "required": True, "label": "Employee Name"},
+                    {"name": "employee_email", "type": "email", "required": False, "label": "Employee Email"},
+                    {"name": "employee_address", "type": "textarea", "required": False, "label": "Employee Address"},
+                    {"name": "position_title", "type": "text", "required": True, "label": "Position/Job Title"},
+                    {"name": "department", "type": "text", "required": False, "label": "Department"},
+                    {"name": "manager_name", "type": "text", "required": False, "label": "Direct Manager"}
+                ]
+            }
+        
+        elif step_number == 3:
+            # Employment-specific terms
+            if contract_type in ["employment_agreement", "offer_letter"]:
+                step_configs[3] = {
+                    "title": "Employment Terms & Compensation",
+                    "description": "Define employment terms, compensation, and benefits",
+                    "fields": [
+                        {"name": "start_date", "type": "date", "required": True, "label": "Start Date"},
+                        {"name": "salary", "type": "number", "required": False, "label": "Annual Salary"},
+                        {"name": "hourly_rate", "type": "number", "required": False, "label": "Hourly Rate"},
+                        {"name": "work_schedule", "type": "text", "required": False, "label": "Work Schedule", "placeholder": "9 AM - 5 PM, Monday-Friday"},
+                        {"name": "benefits_eligible", "type": "boolean", "required": False, "label": "Eligible for Benefits"},
+                        {"name": "vacation_days", "type": "number", "required": False, "label": "Annual Vacation Days"},
+                        {"name": "probation_period", "type": "text", "required": False, "label": "Probationary Period"}
+                    ]
+                }
+            elif contract_type == "contractor_agreement":
+                step_configs[3] = {
+                    "title": "Contractor Terms & Payment",
+                    "description": "Define contractor relationship and payment terms",
+                    "fields": [
+                        {"name": "contract_duration", "type": "text", "required": True, "label": "Contract Duration"},
+                        {"name": "hourly_rate", "type": "number", "required": False, "label": "Hourly Rate"},
+                        {"name": "project_fee", "type": "number", "required": False, "label": "Total Project Fee"},
+                        {"name": "payment_schedule", "type": "text", "required": True, "label": "Payment Schedule"},
+                        {"name": "work_location", "type": "select", "required": False, "label": "Work Location",
+                         "options": ["remote", "on_site", "hybrid"]},
+                        {"name": "equipment_provided", "type": "boolean", "required": False, "label": "Company Provides Equipment"}
+                    ]
+                }
+            elif contract_type == "severance_agreement":
+                step_configs[3] = {
+                    "title": "Severance Terms & Benefits",
+                    "description": "Define severance package and transition terms",
+                    "fields": [
+                        {"name": "severance_weeks", "type": "number", "required": True, "label": "Severance Period (weeks)"},
+                        {"name": "severance_amount", "type": "number", "required": False, "label": "Severance Amount"},
+                        {"name": "benefits_continuation", "type": "boolean", "required": False, "label": "Continue Benefits (COBRA)"},
+                        {"name": "final_work_date", "type": "date", "required": True, "label": "Final Work Date"},
+                        {"name": "transition_period", "type": "text", "required": False, "label": "Transition/Training Period"},
+                        {"name": "reference_policy", "type": "text", "required": False, "label": "Reference/Recommendation Policy"}
+                    ]
+                }
+        
+        elif step_number == 4:
+            step_configs[4] = {
+                "title": "HR Policies & Compliance",
+                "description": "Configure employment policies and compliance requirements",
+                "fields": [
+                    {"name": "at_will_employment", "type": "boolean", "required": False, "label": "At-Will Employment"},
+                    {"name": "confidentiality_required", "type": "boolean", "required": False, "label": "Confidentiality Agreement Required"},
+                    {"name": "non_compete_required", "type": "boolean", "required": False, "label": "Non-Compete Agreement Required"},
+                    {"name": "ip_assignment", "type": "boolean", "required": False, "label": "Intellectual Property Assignment"},
+                    {"name": "background_check", "type": "boolean", "required": False, "label": "Background Check Required"},
+                    {"name": "drug_screening", "type": "boolean", "required": False, "label": "Drug Screening Required"},
+                    {"name": "handbook_acknowledgment", "type": "boolean", "required": False, "label": "Employee Handbook Acknowledgment"}
+                ]
+            }
+        
+        elif step_number == 5:
+            step_configs[5] = {
+                "title": "HR Review & Onboarding Setup",
+                "description": "Final review and onboarding workflow configuration",
+                "fields": [
+                    {"name": "review_complete", "type": "boolean", "required": True, "label": "I have reviewed all employment details"},
+                    {"name": "hr_review", "type": "boolean", "required": False, "label": "HR department will review this contract"},
+                    {"name": "create_onboarding", "type": "boolean", "required": False, "label": "Create onboarding workflow for this employee"},
+                    {"name": "send_offer", "type": "boolean", "required": False, "label": "Send offer letter to candidate"},
+                    {"name": "schedule_start", "type": "boolean", "required": False, "label": "Schedule first day orientation"}
+                ]
+            }
     
     config = step_configs.get(step_number, step_configs[1])
     
