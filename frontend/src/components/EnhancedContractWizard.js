@@ -262,38 +262,8 @@ const EnhancedContractWizard = ({
   );
 
   const SuggestionsPanel = () => {
-    if (suggestions.length === 0) return null;
-    
-    return (
-      <Card className="mb-6 border-blue-200 bg-blue-50">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium flex items-center">
-            <Lightbulb className="h-4 w-4 mr-2 text-blue-600" />
-            Smart Suggestions
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-0">
-          <div className="space-y-2">
-            {suggestions.map((suggestion, index) => (
-              <div key={index} className="flex items-center justify-between p-2 bg-white rounded border">
-                <div className="flex-1">
-                  <p className="text-sm font-medium">{suggestion.field_name.replace('_', ' ').toUpperCase()}</p>
-                  <p className="text-sm text-gray-600">{suggestion.suggested_value}</p>
-                  <p className="text-xs text-gray-500">{suggestion.reasoning}</p>
-                </div>
-                <Button
-                  size="sm"
-                  onClick={() => applySuggestion(suggestion)}
-                  className="ml-2 bg-blue-600 hover:bg-blue-700"
-                >
-                  Apply
-                </Button>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-    );
+    // COMPLETELY DISABLED to prevent focus interference
+    return null;
   };
 
   const ProfileSetup = () => (
