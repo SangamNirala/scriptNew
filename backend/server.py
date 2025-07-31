@@ -5202,6 +5202,257 @@ async def get_integration_metrics():
         raise HTTPException(status_code=500, detail=f"Error getting integration metrics: {str(e)}")
 
 
+# HR & Employment Industry-Specific API Endpoints
+
+@api_router.post("/hr/onboarding/create", response_model=HRWorkflowResponse)
+async def create_employee_onboarding(request: HRWorkflowRequest):
+    """Create a new employee onboarding workflow"""
+    try:
+        workflow = await HRWorkflowService.create_onboarding_workflow(
+            request.employee_data, 
+            request.company_id
+        )
+        
+        current_step = workflow.steps[0] if workflow.steps else {}
+        
+        return HRWorkflowResponse(
+            workflow_id=workflow.id,
+            status=workflow.status,
+            current_step=current_step,
+            next_actions=[
+                "Review employee information",
+                "Generate offer letter",
+                "Schedule onboarding meeting"
+            ],
+            documents_generated=[],
+            estimated_completion="3-5 business days"
+        )
+        
+    except Exception as e:
+        logging.error(f"Error creating onboarding workflow: {e}")
+        raise HTTPException(status_code=500, detail=f"Error creating onboarding workflow: {str(e)}")
+
+@api_router.get("/hr/onboarding/{workflow_id}")
+async def get_onboarding_workflow(workflow_id: str):
+    """Get onboarding workflow status and details"""
+    try:
+        workflow = await db.onboarding_workflows.find_one({"id": workflow_id})
+        if not workflow:
+            raise HTTPException(status_code=404, detail="Onboarding workflow not found")
+        
+        workflow = convert_objectid_to_str(workflow)
+        return workflow
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error fetching onboarding workflow: {e}")
+        raise HTTPException(status_code=500, detail=f"Error fetching onboarding workflow: {str(e)}")
+
+@api_router.put("/hr/onboarding/{workflow_id}/advance")
+async def advance_onboarding_step(workflow_id: str, step_data: Dict[str, Any]):
+    """Advance onboarding workflow to next step"""
+    try:
+        workflow = await db.onboarding_workflows.find_one({"id": workflow_id})
+        if not workflow:
+            raise HTTPException(status_code=404, detail="Onboarding workflow not found")
+        
+        # Update workflow
+        current_step = workflow.get("current_step", 1)
+        total_steps = workflow.get("total_steps", 6)
+        
+        if current_step < total_steps:
+            new_step = current_step + 1
+            status = "in_progress" if new_step < total_steps else "completed"
+            
+            await db.onboarding_workflows.update_one(
+                {"id": workflow_id},
+                {
+                    "$set": {
+                        "current_step": new_step,
+                        "status": status,
+                        "updated_at": datetime.utcnow()
+                    },
+                    "$push": {
+                        "documents_generated": step_data.get("document_generated")
+                    }
+                }
+            )
+            
+            return {"status": "success", "current_step": new_step, "workflow_status": status}
+        else:
+            return {"status": "completed", "message": "Onboarding workflow already completed"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error advancing onboarding workflow: {e}")
+        raise HTTPException(status_code=500, detail=f"Error advancing onboarding workflow: {str(e)}")
+
+@api_router.post("/hr/employees", response_model=EmployeeProfile)
+async def create_employee_profile(employee: EmployeeProfile):
+    """Create new employee profile"""
+    try:
+        # Save to database
+        await db.employee_profiles.insert_one(employee.dict())
+        return employee
+        
+    except Exception as e:
+        logging.error(f"Error creating employee profile: {e}")
+        raise HTTPException(status_code=500, detail=f"Error creating employee profile: {str(e)}")
+
+@api_router.get("/hr/employees/{employee_id}")
+async def get_employee_profile(employee_id: str):
+    """Get employee profile by ID"""
+    try:
+        employee = await db.employee_profiles.find_one({"employee_id": employee_id})
+        if not employee:
+            raise HTTPException(status_code=404, detail="Employee not found")
+        
+        employee = convert_objectid_to_str(employee)
+        return employee
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error fetching employee profile: {e}")
+        raise HTTPException(status_code=500, detail=f"Error fetching employee profile: {str(e)}")
+
+@api_router.get("/hr/companies/{company_id}/employees")
+async def get_company_employees(company_id: str):
+    """Get all employees for a company"""
+    try:
+        employees = await db.employee_profiles.find({"company_id": company_id}).to_list(100)
+        employees = [convert_objectid_to_str(emp) for emp in employees]
+        
+        return {
+            "employees": employees,
+            "count": len(employees)
+        }
+        
+    except Exception as e:
+        logging.error(f"Error fetching company employees: {e}")
+        raise HTTPException(status_code=500, detail=f"Error fetching company employees: {str(e)}")
+
+@api_router.post("/hr/policies", response_model=HRPolicy)
+async def create_hr_policy(policy: HRPolicy):
+    """Create new HR policy"""
+    try:
+        # Save to database
+        await db.hr_policies.insert_one(policy.dict())
+        return policy
+        
+    except Exception as e:
+        logging.error(f"Error creating HR policy: {e}")
+        raise HTTPException(status_code=500, detail=f"Error creating HR policy: {str(e)}")
+
+@api_router.get("/hr/policies/templates")
+async def get_policy_templates():
+    """Get HR policy templates"""
+    try:
+        templates = await HRWorkflowService.get_policy_templates()
+        return templates
+        
+    except Exception as e:
+        logging.error(f"Error fetching policy templates: {e}")
+        raise HTTPException(status_code=500, detail=f"Error fetching policy templates: {str(e)}")
+
+@api_router.get("/hr/companies/{company_id}/policies")
+async def get_company_policies(company_id: str):
+    """Get all policies for a company"""
+    try:
+        policies = await db.hr_policies.find({"company_id": company_id}).to_list(100)
+        policies = [convert_objectid_to_str(policy) for policy in policies]
+        
+        return {
+            "policies": policies,
+            "count": len(policies)
+        }
+        
+    except Exception as e:
+        logging.error(f"Error fetching company policies: {e}")
+        raise HTTPException(status_code=500, detail=f"Error fetching company policies: {str(e)}")
+
+@api_router.post("/hr/compliance/track", response_model=ComplianceTracker)
+async def create_compliance_tracker(tracker: ComplianceTracker):
+    """Create new compliance tracking item"""
+    try:
+        # Save to database
+        await db.compliance_trackers.insert_one(tracker.dict())
+        return tracker
+        
+    except Exception as e:
+        logging.error(f"Error creating compliance tracker: {e}")
+        raise HTTPException(status_code=500, detail=f"Error creating compliance tracker: {str(e)}")
+
+@api_router.get("/hr/companies/{company_id}/compliance")
+async def get_company_compliance(company_id: str):
+    """Get compliance status for a company"""
+    try:
+        trackers = await db.compliance_trackers.find({"company_id": company_id}).to_list(100)
+        trackers = [convert_objectid_to_str(tracker) for tracker in trackers]
+        
+        # Calculate compliance statistics
+        total_items = len(trackers)
+        completed_items = len([t for t in trackers if t.get("status") == "completed"])
+        overdue_items = len([t for t in trackers if t.get("status") == "overdue"])
+        
+        compliance_score = (completed_items / total_items * 100) if total_items > 0 else 100
+        
+        return {
+            "trackers": trackers,
+            "statistics": {
+                "total_items": total_items,
+                "completed_items": completed_items,
+                "overdue_items": overdue_items,
+                "compliance_score": compliance_score
+            }
+        }
+        
+    except Exception as e:
+        logging.error(f"Error fetching company compliance: {e}")
+        raise HTTPException(status_code=500, detail=f"Error fetching company compliance: {str(e)}")
+
+@api_router.post("/hr/suggestions")
+async def get_hr_smart_suggestions(request: Dict[str, Any]):
+    """Get HR-specific smart suggestions for form fields"""
+    try:
+        field_name = request.get("field_name")
+        employee_data = request.get("employee_data", {})
+        company_profile = request.get("company_profile")
+        
+        suggestions = await HRWorkflowService.generate_hr_smart_suggestions(
+            field_name, employee_data, company_profile
+        )
+        
+        return {"suggestions": [suggestion.dict() for suggestion in suggestions]}
+        
+    except Exception as e:
+        logging.error(f"Error generating HR suggestions: {e}")
+        raise HTTPException(status_code=500, detail=f"Error generating HR suggestions: {str(e)}")
+
+@api_router.post("/hr/policies/{policy_id}/acknowledge")
+async def acknowledge_policy(policy_id: str, acknowledgment: PolicyAcknowledgment):
+    """Record policy acknowledgment by employee"""
+    try:
+        # Check if policy exists
+        policy = await db.hr_policies.find_one({"id": policy_id})
+        if not policy:
+            raise HTTPException(status_code=404, detail="Policy not found")
+        
+        # Create acknowledgment record
+        acknowledgment.policy_id = policy_id
+        await db.policy_acknowledgments.insert_one(acknowledgment.dict())
+        
+        return {"status": "acknowledged", "acknowledgment_id": acknowledgment.id}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error recording policy acknowledgment: {e}")
+        raise HTTPException(status_code=500, detail=f"Error recording policy acknowledgment: {str(e)}")
+
+
 # Include the router in the main app
 app.include_router(api_router)
 
