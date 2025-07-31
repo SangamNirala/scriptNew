@@ -139,8 +139,8 @@ const EnhancedContractWizard = ({
   };
 
   const applySuggestions = (newSuggestions) => {
-    // Don't apply suggestions if user has interacted or if there are no suggestions
-    if (userHasInteracted || !newSuggestions || newSuggestions.length === 0) {
+    // Don't apply suggestions if user has interacted, if there are no suggestions, or if we're in a pending state
+    if (userHasInteracted || !newSuggestions || newSuggestions.length === 0 || isPending) {
       return;
     }
     
@@ -153,21 +153,28 @@ const EnhancedContractWizard = ({
     
     newSuggestions.forEach(suggestion => {
       const fieldValue = currentStepData[suggestion.field_name];
+      const fieldKey = `${currentStepKey}.${suggestion.field_name}`;
       
-      // Only apply if field is completely empty and confidence is very high
-      // Only apply suggestions with very high confidence (95%+) to completely empty fields
-      if (suggestion.confidence > 0.95 && (!fieldValue || fieldValue.trim() === '')) {
+      // Double-check that the field is still empty and hasn't been modified by user
+      const lastInputValue = lastInputValuesRef.current[fieldKey];
+      
+      // Only apply if field is empty AND hasn't been touched by user recently
+      if (suggestion.confidence > 0.95 && 
+          (!fieldValue || fieldValue.trim() === '') && 
+          (!lastInputValue || lastInputValue.trim() === '')) {
         updatedStepData[suggestion.field_name] = suggestion.suggested_value;
         hasChanges = true;
       }
     });
     
-    // Only update state if there are actual changes
+    // Only update state if there are actual changes and wrap in transition
     if (hasChanges) {
-      setStepData(prev => ({
-        ...prev,
-        [currentStepKey]: updatedStepData
-      }));
+      startTransition(() => {
+        setStepData(prev => ({
+          ...prev,
+          [currentStepKey]: updatedStepData
+        }));
+      });
     }
   };
 
