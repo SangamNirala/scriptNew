@@ -561,6 +561,7 @@ const EnhancedContractWizard = ({
             <div>
               <Label htmlFor="party2_name">Name/Company Name *</Label>
               <Input
+                key="party2_name_stable_input"
                 id="party2_name"
                 value={stepData.step2.party2_name}
                 onChange={(e) => updateStepData('step2', 'party2_name', e.target.value)}
@@ -570,6 +571,7 @@ const EnhancedContractWizard = ({
             <div>
               <Label htmlFor="party2_email">Email</Label>
               <Input
+                key="party2_email_stable_input"
                 id="party2_email"
                 type="email"
                 value={stepData.step2.party2_email}
