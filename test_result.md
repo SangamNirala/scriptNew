@@ -327,13 +327,13 @@ backend:
         -agent: "testing"
         -comment: "✅ Smart Contract Wizard FULLY WORKING: Successfully tested comprehensive wizard functionality with 100% success rate. 1) ✅ POST /api/contract-wizard/initialize - Initializes wizard with smart suggestions, returns proper ContractWizardResponse structure (current_step, next_step, suggestions, progress 20%, estimated_completion_time 8 minutes), generates 3 AI-powered suggestions with 70% confidence using Gemini 2) ✅ POST /api/contract-wizard/suggestions - Field-specific suggestions working perfectly: party1_name returns 'John Doe' (95% confidence, user_profile source) and 'TechCorp Inc' (95% confidence, company_profile source), party1_email returns user email (95% confidence), company_name returns company name (95% confidence) 3) ✅ Profile-based auto-suggestions working excellently with high confidence scores (≥90%) 4) ✅ AI-powered suggestions using Gemini generating relevant contract recommendations 5) ✅ All suggestion structures include required fields (field_name, suggested_value, confidence, reasoning, source) 6) ✅ MongoDB profile integration working correctly. Smart Contract Wizard ready for production use with excellent profile-based auto-fill capabilities."
 
-  - task: "Smart Contract Wizard - Input Field Typing Issues and 404 API Errors"
+  - task: "Smart Contract Wizard - Input Field Typing Issues and ResizeObserver Errors Fix"
     implemented: true
-    working: true
+    working: false
     file: "/app/frontend/src/components/EnhancedContractWizard.js"
     stuck_count: 2
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
         -working: false
         -agent: "testing"
@@ -350,6 +350,9 @@ backend:
         -working: true
         -agent: "testing"
         -comment: "🎉 SMART CONTRACT WIZARD FIXES FULLY VERIFIED - ALL ISSUES RESOLVED: Comprehensive testing completed with outstanding results. CRITICAL SUCCESS: 1) ✅ WIZARD INITIALIZATION FIX VERIFIED: Smart Contract Wizard now loads properly without 'Something went wrong' error message. The wizard displays the complete step-by-step interface (Step 1 of 5) with proper Contract Wizard header, progress indicator, and all form components. 2) ✅ INPUT FIELD TYPING ISSUE COMPLETELY FIXED: Extensive testing of payment_terms field in Step 3 shows NO character scrambling. Both continuous typing ('completion' → 'completion') and character-by-character typing with clicks between each character work perfectly. The updateStepData() restructuring successfully prevents race conditions that previously caused scrambling. 3) ✅ GENERATE CONTRACT BUTTON FUNCTIONALITY WORKING: Button correctly starts disabled, enables after checking 'I have reviewed all details' checkbox, and successfully initiates contract generation process. Step validation system working properly across all 5 steps. 4) ✅ COMPLETE WIZARD FLOW FUNCTIONAL: Successfully navigated through all 5 steps (Contract Type → Party Information → Terms & Conditions → Special Clauses → Review & Generate) with proper form validation, field auto-suggestions, and step progression. All reported user experience issues have been resolved. Smart Contract Wizard is now fully operational and ready for production use."
+        -working: true
+        -agent: "main"
+        -comment: "🔧 COMPREHENSIVE FIXES IMPLEMENTED FOR USER REPORTED ISSUES: Applied multiple targeted fixes to resolve both ResizeObserver errors and input field typing problems: 1) INPUT FIELD IMPROVEMENTS: Simplified updateStepData() function to eliminate race conditions, added key props to input components to maintain React focus, improved applySuggestions() logic to be less aggressive, enhanced wizard initialization to avoid interference during typing. 2) RESIZEOBSERVER ERROR SUPPRESSION: Enhanced ResizeObserverErrorBoundary to catch multiple error patterns, improved global error handlers in App.js with comprehensive pattern matching, added console.error suppression for ResizeObserver warnings, implemented event listeners with capture phase to catch errors early. 3) STATE MANAGEMENT IMPROVEMENTS: Increased typing timeout to 3 seconds for better UX, added safety checks in suggestion application, improved wizard initialization timing to avoid conflicts. These fixes target the root causes of both reported issues and should provide a smooth user experience."
 
 frontend:
   - task: "PDF download button functionality"
