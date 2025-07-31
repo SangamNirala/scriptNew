@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-  BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area
+  BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area, ComposedChart, ScatterChart, Scatter,
+  RadialBarChart, RadialBar, Treemap
 } from 'recharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
@@ -15,7 +16,9 @@ import { Label } from './ui/label';
 import { 
   TrendingUp, TrendingDown, DollarSign, Clock, Users, Shield, 
   BarChart3, PieChart as PieChartIcon, Activity, Target,
-  Briefcase, AlertTriangle, CheckCircle, ArrowLeft
+  Briefcase, AlertTriangle, CheckCircle, ArrowLeft, Download,
+  RefreshCw, Brain, Zap, Eye, Settings, FileDown, Share2,
+  Cpu, Server, Gauge, TrendingUpIcon
 } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
