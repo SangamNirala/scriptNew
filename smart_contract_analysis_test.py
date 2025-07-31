@@ -9,7 +9,7 @@ import json
 import sys
 
 class SmartContractAnalysisTest:
-    def __init__(self, base_url="https://7c3978bd-b0af-4864-a74f-9721d4acf899.preview.emergentagent.com"):
+    def __init__(self, base_url="https://693da3f0-d2b2-40ea-947b-628e6d645a48.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.tests_run = 0
