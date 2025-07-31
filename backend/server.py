@@ -210,6 +210,49 @@ class UltraRealisticAvatarVideoResponse(BaseModel):
     ai_model_used: str
     quality_level: str
 
+# Phase 4: A/B Testing and Optimization Models
+class PromptExperimentRequest(BaseModel):
+    base_prompt: str
+    strategies: List[str] = ["emotional_focus", "technical_focus", "viral_focus"]  # Default strategies
+    video_type: Optional[str] = "general"
+    duration: Optional[str] = "medium"
+    platform: Optional[str] = "youtube"
+    test_count: Optional[int] = 3
+
+class PromptExperimentResponse(BaseModel):
+    experiment_id: str
+    status: str
+    base_prompt: str
+    variations_tested: int
+    best_performing_strategy: Dict[str, Any]
+    all_results: List[Dict[str, Any]]
+    optimization_insights: List[str]
+    recommendations: List[str]
+
+class OptimizationAnalysisRequest(BaseModel):
+    results: Dict[str, Any]  # Dictionary of experiment results by variation ID
+
+class OptimizationAnalysisResponse(BaseModel):
+    status: str
+    best_variation: Dict[str, Any]
+    statistical_analysis: Dict[str, Any]
+    performance_comparison: Dict[str, Any]
+    confidence_level: str
+    optimization_recommendations: List[str]
+
+class OptimizationHistoryRequest(BaseModel):
+    date_range: Optional[Dict[str, str]] = None
+    strategy: Optional[str] = None
+    platform: Optional[str] = None
+
+class OptimizationHistoryResponse(BaseModel):
+    total_experiments: int
+    date_range: Dict[str, str]
+    trend_analysis: Dict[str, Any]
+    strategy_performance: Dict[str, Any]
+    success_patterns: List[str]
+    optimization_insights: List[str]
+
 # Add your routes to the router instead of directly to app
 @api_router.get("/")
 async def root():
