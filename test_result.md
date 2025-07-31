@@ -57,8 +57,8 @@
 ##   test_priority: "high_first"  # or "sequential" or "stuck_first"
 ##
 ## agent_communication:
-##     -agent: "main"  # or "testing" or "user"
-##     -message: "Communication message between agents"
+##     -agent: "main"
+##     -message: "COMPREHENSIVE FRONTEND TESTING REQUEST: User has requested complete frontend testing. Based on current status, most individual frontend components have been tested (Classic Mode, Enhanced Contract Wizard, ResizeObserver fixes, PDF functionality, contract editing). However, comprehensive end-to-end frontend testing across all three main application modes is needed: 1) Enhanced Contract Wizard with profile management and smart suggestions 2) Classic Mode with all contract types and full workflow 3) Analytics Dashboard with all charts and data visualization 4) Cross-mode navigation and state management 5) Complete UI/UX testing including responsive design, error handling, and edge cases. All backend functionality is confirmed working, so focus should be on frontend user experience, interface functionality, and workflow testing across the entire application."
 
 # Protocol Guidelines for Main agent
 #
