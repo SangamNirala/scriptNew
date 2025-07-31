@@ -5,7 +5,7 @@ import json
 def test_contract_generation():
     """Test contract generation with the fixed Groq model"""
     
-    base_url = "https://c959fdf2-af2c-40b5-9836-b7118835945d.preview.emergentagent.com"
+    base_url = "https://f56ed332-9cfe-47fc-9707-74c9b14c5a5e.preview.emergentagent.com"
     api_url = f"{base_url}/api"
     
     # Test data for NDA generation
