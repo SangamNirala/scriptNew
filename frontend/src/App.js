@@ -1078,8 +1078,13 @@ function App() {
       
       <div className="py-12 px-6">
         <div className="max-w-6xl mx-auto">
+          {/* Analytics Dashboard */}
+          {showAnalytics && (
+            <AnalyticsDashboard onBack={() => setShowAnalytics(false)} />
+          )}
+          
           {/* Enhanced Contract Wizard */}
-          {useEnhancedWizard && (
+          {useEnhancedWizard && !showAnalytics && (
             <ResizeObserverErrorBoundary>
               <EnhancedContractWizard
                 contractTypes={contractTypes}
@@ -1096,7 +1101,7 @@ function App() {
           )}
           
           {/* Classic Mode */}
-          {!useEnhancedWizard && (
+          {!useEnhancedWizard && !showAnalytics && (
             <>
               {currentStep < 4 && (
                 <div className="mb-8">
