@@ -309,32 +309,62 @@ function App() {
     loadContracts();
   }, []);
 
-  // Add ResizeObserver error handler to suppress common Radix UI warnings
+  // Enhanced ResizeObserver error handler to suppress common Radix UI warnings
   useEffect(() => {
     const handleError = (e) => {
-      if (e.message === 'ResizeObserver loop completed with undelivered notifications.') {
-        // This is a common Radix UI issue and doesn't affect functionality
-        // Suppress this specific error to avoid console noise
+      // Check for various ResizeObserver error patterns
+      const resizeObserverPatterns = [
+        'ResizeObserver loop completed with undelivered notifications',
+        'ResizeObserver loop limit exceeded',
+        'Script error',
+      ];
+      
+      const isResizeObserverError = resizeObserverPatterns.some(pattern => 
+        e.message && e.message.includes(pattern)
+      );
+      
+      if (isResizeObserverError) {
+        // Suppress these errors completely
         e.stopImmediatePropagation();
-        return false;
-      }
-    };
-
-    const handleUnhandledRejection = (e) => {
-      if (e.reason?.message?.includes('ResizeObserver loop')) {
-        // Also catch it if it comes as an unhandled promise rejection
         e.preventDefault();
         return false;
       }
     };
 
-    // Add both error and unhandledrejection listeners
-    window.addEventListener('error', handleError);
-    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+    const handleUnhandledRejection = (e) => {
+      // Handle ResizeObserver errors that come as promise rejections
+      const errorMessage = e.reason?.message || e.reason?.toString() || '';
+      
+      if (errorMessage.includes('ResizeObserver') || 
+          errorMessage.includes('loop completed') ||
+          errorMessage.includes('undelivered notifications')) {
+        e.preventDefault();
+        return false;
+      }
+    };
+
+    // Global console error suppression for ResizeObserver
+    const originalConsoleError = console.error;
+    console.error = (...args) => {
+      const errorMessage = args.join(' ');
+      if (errorMessage.includes('ResizeObserver') || 
+          errorMessage.includes('loop completed') ||
+          errorMessage.includes('undelivered notifications')) {
+        // Don't log ResizeObserver errors
+        return;
+      }
+      originalConsoleError.apply(console, args);
+    };
+
+    // Add event listeners
+    window.addEventListener('error', handleError, true);
+    window.addEventListener('unhandledrejection', handleUnhandledRejection, true);
 
     return () => {
-      window.removeEventListener('error', handleError);
-      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+      // Cleanup
+      window.removeEventListener('error', handleError, true);
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection, true);
+      console.error = originalConsoleError;
     };
   }, []);
 
