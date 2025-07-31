@@ -1125,3 +1125,558 @@ class ScriptQualityAnalyzer:
                 "error": error_message
             }
         }
+    
+    # Phase 4: New Metrics Implementation
+    
+    def analyze_structural_compliance(self, script: str, metadata: Dict[str, Any] = None) -> Dict[str, Any]:
+        """
+        Phase 4: Analyze adherence to template structure
+        Evaluates how well the script follows established video script templates
+        """
+        try:
+            if not script or not script.strip():
+                return {"score": 0.0, "compliance_issues": ["Empty script"]}
+            
+            metadata = metadata or {}
+            template_type = metadata.get('video_type', 'general')
+            
+            # Define template structure requirements
+            structure_requirements = {
+                "hook_section": {"weight": 0.25, "keywords": ["imagine", "what if", "did you know", "secret", "question"]},
+                "setup_section": {"weight": 0.20, "keywords": ["today", "going to show", "will learn", "about to"]},
+                "content_core": {"weight": 0.30, "keywords": ["first", "second", "next", "step", "point"]},
+                "climax_moment": {"weight": 0.15, "keywords": ["most important", "key", "crucial", "breakthrough"]},
+                "resolution": {"weight": 0.10, "keywords": ["conclusion", "summary", "remember", "takeaway"]}
+            }
+            
+            script_lower = script.lower()
+            words = script.split()
+            total_words = len(words)
+            
+            compliance_score = 0.0
+            section_scores = {}
+            compliance_issues = []
+            
+            # Analyze each structural section
+            for section, requirements in structure_requirements.items():
+                section_score = 0.0
+                keywords_found = 0
+                
+                # Check for section-specific keywords
+                for keyword in requirements["keywords"]:
+                    if keyword in script_lower:
+                        keywords_found += 1
+                        section_score += 2.0
+                
+                # Position-based scoring for proper structure
+                if section == "hook_section":
+                    # Hook should be in first 20% of script
+                    hook_section = ' '.join(words[:max(1, total_words//5)])
+                    if any(keyword in hook_section.lower() for keyword in requirements["keywords"]):
+                        section_score += 3.0
+                    else:
+                        compliance_issues.append("Hook section missing strong opening elements")
+                
+                elif section == "setup_section":
+                    # Setup should be in first 40% of script
+                    setup_section = ' '.join(words[:max(1, 2*total_words//5)])
+                    if any(keyword in setup_section.lower() for keyword in requirements["keywords"]):
+                        section_score += 2.5
+                    else:
+                        compliance_issues.append("Setup section lacks clear introduction elements")
+                
+                elif section == "content_core":
+                    # Content core should be in middle 60% of script
+                    start_idx = total_words//5
+                    end_idx = 4*total_words//5
+                    content_section = ' '.join(words[start_idx:end_idx])
+                    if any(keyword in content_section.lower() for keyword in requirements["keywords"]):
+                        section_score += 3.5
+                    else:
+                        compliance_issues.append("Content core missing structural organization")
+                
+                elif section == "climax_moment":
+                    # Climax should be in last 40% of script
+                    climax_section = ' '.join(words[3*total_words//5:])
+                    if any(keyword in climax_section.lower() for keyword in requirements["keywords"]):
+                        section_score += 2.0
+                    else:
+                        compliance_issues.append("Missing clear climax or key moment")
+                
+                elif section == "resolution":
+                    # Resolution should be in last 20% of script
+                    resolution_section = ' '.join(words[4*total_words//5:])
+                    if any(keyword in resolution_section.lower() for keyword in requirements["keywords"]):
+                        section_score += 2.0
+                    else:
+                        compliance_issues.append("Weak or missing conclusion/resolution")
+                
+                # Normalize section score and apply weight
+                section_score = min(10.0, section_score)
+                section_scores[section] = round(section_score, 2)
+                compliance_score += section_score * requirements["weight"]
+            
+            # Additional structural elements
+            if '?' in script:  # Questions for engagement
+                compliance_score += 0.5
+            if '!' in script:  # Exclamations for emphasis
+                compliance_score += 0.3
+            
+            # Check for clear transitions
+            transition_words = ['but', 'however', 'meanwhile', 'then', 'next', 'finally', 'therefore']
+            transition_count = sum(1 for word in transition_words if word in script_lower)
+            compliance_score += min(1.0, transition_count * 0.2)
+            
+            # Normalize final score
+            compliance_score = min(10.0, compliance_score)
+            
+            return {
+                "score": round(compliance_score, 2),
+                "section_scores": section_scores,
+                "compliance_issues": compliance_issues[:5],  # Top 5 issues
+                "structure_strength": "Strong" if compliance_score > 7.5 else "Moderate" if compliance_score > 5.0 else "Weak",
+                "template_adherence": round((compliance_score / 10.0) * 100, 1),
+                "recommendations": self._generate_structural_recommendations(compliance_score, compliance_issues)
+            }
+            
+        except Exception as e:
+            logger.error(f"Error analyzing structural compliance: {str(e)}")
+            return {"score": 5.0, "error": str(e)}
+    
+    def calculate_engagement_density(self, script: str, platform: str = "youtube", duration: str = "medium") -> Dict[str, Any]:
+        """
+        Phase 4: Calculate hooks per minute ratio
+        Measures the density of engagement elements throughout the script
+        """
+        try:
+            if not script or not script.strip():
+                return {"score": 0.0, "density": 0.0}
+            
+            # Get platform configuration
+            platform_config = self.platform_criteria.get(platform, self.platform_criteria["youtube"])
+            
+            # Calculate estimated duration in minutes
+            word_count = len(script.split())
+            estimated_duration_seconds = word_count / 2  # ~2 words per second
+            estimated_duration_minutes = estimated_duration_seconds / 60
+            
+            if estimated_duration_minutes <= 0:
+                return {"score": 0.0, "density": 0.0}
+            
+            # Count different types of engagement hooks
+            engagement_elements = {
+                "questions": script.count('?'),
+                "exclamations": script.count('!'),
+                "direct_address": len(re.findall(r'\b(you|your|we|us|our)\b', script, re.IGNORECASE)),
+                "emotional_triggers": 0,
+                "curiosity_gaps": 0,
+                "interactive_prompts": 0,
+                "social_proof": 0,
+                "urgency_indicators": 0
+            }
+            
+            script_lower = script.lower()
+            
+            # Count emotional triggers
+            emotional_words = ['amazing', 'incredible', 'shocking', 'surprising', 'unbelievable', 'secret', 'hidden', 'revealed']
+            engagement_elements["emotional_triggers"] = sum(1 for word in emotional_words if word in script_lower)
+            
+            # Count curiosity gaps
+            curiosity_words = ['why', 'how', 'what', 'secret', 'truth', 'mystery', 'reason']
+            engagement_elements["curiosity_gaps"] = sum(1 for word in curiosity_words if word in script_lower)
+            
+            # Count interactive prompts
+            interactive_phrases = ['imagine', 'picture', 'think about', 'consider', 'what if']
+            engagement_elements["interactive_prompts"] = sum(1 for phrase in interactive_phrases if phrase in script_lower)
+            
+            # Count social proof elements
+            social_proof_words = ['everyone', 'thousands', 'millions', 'experts', 'studies', 'research']
+            engagement_elements["social_proof"] = sum(1 for word in social_proof_words if word in script_lower)
+            
+            # Count urgency indicators
+            urgency_words = ['now', 'today', 'urgent', 'limited', 'hurry', 'don\'t wait']
+            engagement_elements["urgency_indicators"] = sum(1 for word in urgency_words if word in script_lower)
+            
+            # Calculate total engagement hooks
+            total_hooks = sum(engagement_elements.values())
+            
+            # Calculate hooks per minute
+            hooks_per_minute = total_hooks / estimated_duration_minutes
+            
+            # Score based on platform-specific optimal density
+            optimal_density = {
+                "youtube": 4.0,      # 4 hooks per minute for YouTube
+                "tiktok": 8.0,       # 8 hooks per minute for TikTok (faster pace)
+                "instagram": 6.0,    # 6 hooks per minute for Instagram
+                "linkedin": 3.0      # 3 hooks per minute for LinkedIn (professional)
+            }
+            
+            target_density = optimal_density.get(platform, 4.0)
+            
+            # Calculate density score (0-10 scale)
+            if hooks_per_minute <= 0:
+                density_score = 0.0
+            elif hooks_per_minute <= target_density * 0.5:
+                density_score = 3.0
+            elif hooks_per_minute <= target_density * 0.8:
+                density_score = 6.0
+            elif hooks_per_minute <= target_density * 1.2:
+                density_score = 10.0
+            elif hooks_per_minute <= target_density * 1.5:
+                density_score = 8.0
+            else:
+                density_score = 5.0  # Too dense can be overwhelming
+            
+            # Bonus for variety in engagement types
+            variety_bonus = len([v for v in engagement_elements.values() if v > 0]) * 0.3
+            density_score = min(10.0, density_score + variety_bonus)
+            
+            return {
+                "score": round(density_score, 2),
+                "hooks_per_minute": round(hooks_per_minute, 2),
+                "target_density": target_density,
+                "total_hooks": total_hooks,
+                "estimated_duration_minutes": round(estimated_duration_minutes, 2),
+                "engagement_breakdown": engagement_elements,
+                "density_rating": self._get_density_rating(hooks_per_minute, target_density),
+                "recommendations": self._generate_density_recommendations(hooks_per_minute, target_density, engagement_elements)
+            }
+            
+        except Exception as e:
+            logger.error(f"Error calculating engagement density: {str(e)}")
+            return {"score": 5.0, "error": str(e)}
+    
+    def calculate_viral_coefficient(self, script: str, platform: str = "youtube", metadata: Dict[str, Any] = None) -> Dict[str, Any]:
+        """
+        Phase 4: Calculate shareability prediction
+        Analyzes elements that make content likely to be shared
+        """
+        try:
+            if not script or not script.strip():
+                return {"score": 0.0, "shareability": "Low"}
+            
+            metadata = metadata or {}
+            script_lower = script.lower()
+            
+            # Viral content indicators with weights
+            viral_indicators = {
+                "emotional_impact": {"weight": 0.25, "score": 0},
+                "relatability": {"weight": 0.20, "score": 0},
+                "surprise_factor": {"weight": 0.20, "score": 0},
+                "practical_value": {"weight": 0.15, "score": 0},
+                "social_currency": {"weight": 0.10, "score": 0},
+                "story_quality": {"weight": 0.10, "score": 0}
+            }
+            
+            # Analyze emotional impact
+            high_emotion_words = ['amazing', 'incredible', 'shocking', 'unbelievable', 'mind-blowing', 'life-changing']
+            emotional_count = sum(1 for word in high_emotion_words if word in script_lower)
+            viral_indicators["emotional_impact"]["score"] = min(10.0, emotional_count * 2.0)
+            
+            # Analyze relatability
+            relatable_words = ['everyone', 'we all', 'you know', 'happens to me', 'can relate', 'struggle']
+            personal_pronouns_count = len(re.findall(r'\b(you|your|we|us|our)\b', script_lower))
+            viral_indicators["relatability"]["score"] = min(10.0, 
+                (sum(1 for word in relatable_words if word in script_lower) * 2.0) + 
+                (personal_pronouns_count * 0.2)
+            )
+            
+            # Analyze surprise factor
+            surprise_words = ['never', 'secret', 'hidden', 'revealed', 'truth', 'unexpected', 'plot twist']
+            surprise_count = sum(1 for word in surprise_words if word in script_lower)
+            viral_indicators["surprise_factor"]["score"] = min(10.0, surprise_count * 1.5)
+            
+            # Analyze practical value
+            value_words = ['tip', 'hack', 'how to', 'tutorial', 'guide', 'learn', 'save', 'money', 'time']
+            value_count = sum(1 for word in value_words if word in script_lower)
+            viral_indicators["practical_value"]["score"] = min(10.0, value_count * 1.8)
+            
+            # Analyze social currency (makes people look good for sharing)
+            social_words = ['expert', 'insider', 'exclusive', 'first', 'breakthrough', 'cutting-edge']
+            social_count = sum(1 for word in social_words if word in script_lower)
+            viral_indicators["social_currency"]["score"] = min(10.0, social_count * 2.5)
+            
+            # Analyze story quality
+            story_elements = ['once', 'story', 'happened', 'experience', 'journey', 'transformation']
+            story_count = sum(1 for word in story_elements if word in script_lower)
+            viral_indicators["story_quality"]["score"] = min(10.0, story_count * 2.0)
+            
+            # Calculate weighted viral score
+            viral_score = sum(
+                indicator["score"] * indicator["weight"]
+                for indicator in viral_indicators.values()
+            )
+            
+            # Platform-specific adjustments
+            if platform == "tiktok":
+                # TikTok favors trends and challenges
+                trend_words = ['trend', 'challenge', 'viral', 'fyp', 'trending']
+                trend_bonus = sum(1 for word in trend_words if word in script_lower) * 1.0
+                viral_score = min(10.0, viral_score + trend_bonus)
+            
+            elif platform == "youtube":
+                # YouTube favors educational and entertainment value
+                if any(word in script_lower for word in ['tutorial', 'how to', 'guide', 'explained']):
+                    viral_score = min(10.0, viral_score + 0.5)
+            
+            elif platform == "linkedin":
+                # LinkedIn favors professional insights
+                if any(word in script_lower for word in ['business', 'career', 'professional', 'industry']):
+                    viral_score = min(10.0, viral_score + 0.8)
+            
+            # Additional viral factors
+            if script.count('?') > 2:  # Questions encourage engagement
+                viral_score = min(10.0, viral_score + 0.3)
+            
+            if len(script.split()) < 100:  # Shorter content is more shareable
+                viral_score = min(10.0, viral_score + 0.2)
+            
+            # Determine shareability level
+            if viral_score >= 8.0:
+                shareability = "Very High"
+            elif viral_score >= 6.5:
+                shareability = "High"
+            elif viral_score >= 5.0:
+                shareability = "Moderate"
+            elif viral_score >= 3.0:
+                shareability = "Low"
+            else:
+                shareability = "Very Low"
+            
+            return {
+                "score": round(viral_score, 2),
+                "shareability": shareability,
+                "viral_indicators": {k: round(v["score"], 2) for k, v in viral_indicators.items()},
+                "viral_potential_percentage": round((viral_score / 10.0) * 100, 1),
+                "strongest_viral_element": max(viral_indicators.items(), key=lambda x: x[1]["score"])[0],
+                "platform_optimization": platform,
+                "recommendations": self._generate_viral_recommendations(viral_score, viral_indicators, platform)
+            }
+            
+        except Exception as e:
+            logger.error(f"Error calculating viral coefficient: {str(e)}")
+            return {"score": 5.0, "error": str(e)}
+    
+    def calculate_conversion_potential(self, script: str, platform: str = "youtube", metadata: Dict[str, Any] = None) -> Dict[str, Any]:
+        """
+        Phase 4: Calculate CTA effectiveness score
+        Analyzes how well the script drives desired actions
+        """
+        try:
+            if not script or not script.strip():
+                return {"score": 0.0, "conversion_likelihood": "Low"}
+            
+            metadata = metadata or {}
+            script_lower = script.lower()
+            words = script.split()
+            total_words = len(words)
+            
+            # Conversion elements analysis
+            conversion_factors = {
+                "cta_strength": {"weight": 0.30, "score": 0},
+                "value_proposition": {"weight": 0.25, "score": 0},
+                "urgency_creation": {"weight": 0.20, "score": 0},
+                "trust_building": {"weight": 0.15, "score": 0},
+                "objection_handling": {"weight": 0.10, "score": 0}
+            }
+            
+            # Analyze CTA strength
+            strong_ctas = ['subscribe', 'click', 'download', 'buy', 'get', 'join', 'start', 'try']
+            weak_ctas = ['maybe', 'might', 'could', 'perhaps']
+            
+            strong_cta_count = sum(1 for cta in strong_ctas if cta in script_lower)
+            weak_cta_count = sum(1 for cta in weak_ctas if cta in script_lower)
+            
+            conversion_factors["cta_strength"]["score"] = min(10.0, 
+                (strong_cta_count * 2.5) - (weak_cta_count * 1.0)
+            )
+            
+            # Analyze value proposition
+            value_words = ['free', 'save', 'earn', 'benefit', 'advantage', 'improve', 'better', 'results']
+            value_count = sum(1 for word in value_words if word in script_lower)
+            conversion_factors["value_proposition"]["score"] = min(10.0, value_count * 1.5)
+            
+            # Analyze urgency creation
+            urgency_words = ['now', 'today', 'limited', 'expire', 'deadline', 'hurry', 'last chance']
+            urgency_count = sum(1 for word in urgency_words if word in script_lower)
+            conversion_factors["urgency_creation"]["score"] = min(10.0, urgency_count * 2.0)
+            
+            # Analyze trust building
+            trust_words = ['proven', 'tested', 'guarantee', 'research', 'study', 'expert', 'testimonial']
+            trust_count = sum(1 for word in trust_words if word in script_lower)
+            conversion_factors["trust_building"]["score"] = min(10.0, trust_count * 2.0)
+            
+            # Analyze objection handling
+            objection_words = ['but', 'however', 'even if', 'what if', 'concern', 'worry', 'doubt']
+            objection_count = sum(1 for word in objection_words if word in script_lower)
+            conversion_factors["objection_handling"]["score"] = min(10.0, objection_count * 1.5)
+            
+            # CTA placement analysis
+            cta_placement_score = 0
+            
+            # Check for CTAs in different sections
+            beginning = ' '.join(words[:total_words//4])
+            middle = ' '.join(words[total_words//4:3*total_words//4])
+            end = ' '.join(words[3*total_words//4:])
+            
+            if any(cta in beginning.lower() for cta in strong_ctas):
+                cta_placement_score += 2.0  # Early CTA
+            if any(cta in middle.lower() for cta in strong_ctas):
+                cta_placement_score += 1.5  # Middle CTA
+            if any(cta in end.lower() for cta in strong_ctas):
+                cta_placement_score += 3.0  # End CTA (most important)
+            
+            # Calculate weighted conversion score
+            conversion_score = sum(
+                factor["score"] * factor["weight"]
+                for factor in conversion_factors.values()
+            )
+            
+            # Add CTA placement bonus
+            conversion_score = min(10.0, conversion_score + (cta_placement_score * 0.1))
+            
+            # Platform-specific adjustments
+            if platform == "youtube":
+                # YouTube needs subscribe prompts
+                if 'subscribe' in script_lower:
+                    conversion_score = min(10.0, conversion_score + 0.5)
+                if 'notification' in script_lower or 'bell' in script_lower:
+                    conversion_score = min(10.0, conversion_score + 0.3)
+            
+            elif platform == "tiktok":
+                # TikTok needs follow and engagement prompts
+                if 'follow' in script_lower:
+                    conversion_score = min(10.0, conversion_score + 0.5)
+                if 'like' in script_lower and 'share' in script_lower:
+                    conversion_score = min(10.0, conversion_score + 0.4)
+            
+            elif platform == "linkedin":
+                # LinkedIn needs professional networking CTAs
+                if any(word in script_lower for word in ['connect', 'network', 'linkedin']):
+                    conversion_score = min(10.0, conversion_score + 0.6)
+            
+            # Determine conversion likelihood
+            if conversion_score >= 8.5:
+                conversion_likelihood = "Very High"
+            elif conversion_score >= 7.0:
+                conversion_likelihood = "High"
+            elif conversion_score >= 5.5:
+                conversion_likelihood = "Moderate"
+            elif conversion_score >= 3.5:
+                conversion_likelihood = "Low"
+            else:
+                conversion_likelihood = "Very Low"
+            
+            return {
+                "score": round(conversion_score, 2),
+                "conversion_likelihood": conversion_likelihood,
+                "conversion_factors": {k: round(v["score"], 2) for k, v in conversion_factors.items()},
+                "cta_placement_score": round(cta_placement_score, 2),
+                "conversion_percentage": round((conversion_score / 10.0) * 100, 1),
+                "strongest_conversion_element": max(conversion_factors.items(), key=lambda x: x[1]["score"])[0],
+                "cta_count": strong_cta_count,
+                "platform_optimization": platform,
+                "recommendations": self._generate_conversion_recommendations(conversion_score, conversion_factors, platform)
+            }
+            
+        except Exception as e:
+            logger.error(f"Error calculating conversion potential: {str(e)}")
+            return {"score": 5.0, "error": str(e)}
+    
+    # Helper methods for Phase 4 metrics
+    
+    def _generate_structural_recommendations(self, compliance_score: float, issues: List[str]) -> List[str]:
+        """Generate recommendations for structural compliance"""
+        recommendations = []
+        
+        if compliance_score < 6.0:
+            recommendations.append("Strengthen script structure with clear hook, setup, content, climax, and resolution")
+        
+        if "Hook section missing" in ' '.join(issues):
+            recommendations.append("Add a compelling hook in the first 20% of the script")
+        
+        if "Setup section lacks" in ' '.join(issues):
+            recommendations.append("Include clear introduction and expectation setting")
+        
+        if "Content core missing" in ' '.join(issues):
+            recommendations.append("Organize main content with numbered points or clear structure")
+        
+        if "Missing clear climax" in ' '.join(issues):
+            recommendations.append("Add a key moment or main payoff in the latter part")
+        
+        return recommendations[:3]
+    
+    def _generate_density_recommendations(self, hooks_per_minute: float, target_density: float, engagement_elements: Dict[str, int]) -> List[str]:
+        """Generate recommendations for engagement density"""
+        recommendations = []
+        
+        if hooks_per_minute < target_density * 0.8:
+            recommendations.append(f"Increase engagement frequency - target {target_density} hooks per minute")
+        
+        if engagement_elements["questions"] < 1:
+            recommendations.append("Add more rhetorical questions throughout the script")
+        
+        if engagement_elements["direct_address"] < 3:
+            recommendations.append("Use more direct audience address (you, your, we)")
+        
+        if engagement_elements["emotional_triggers"] < 1:
+            recommendations.append("Include emotional trigger words for better engagement")
+        
+        return recommendations[:3]
+    
+    def _generate_viral_recommendations(self, viral_score: float, viral_indicators: Dict[str, Dict], platform: str) -> List[str]:
+        """Generate recommendations for viral potential"""
+        recommendations = []
+        
+        if viral_score < 6.0:
+            recommendations.append("Increase viral potential with more emotional and surprising content")
+        
+        # Find weakest viral elements
+        weak_elements = [k for k, v in viral_indicators.items() if v["score"] < 4.0]
+        
+        if "emotional_impact" in weak_elements:
+            recommendations.append("Add more emotionally charged language and examples")
+        
+        if "surprise_factor" in weak_elements:
+            recommendations.append("Include unexpected reveals or surprising information")
+        
+        if "practical_value" in weak_elements:
+            recommendations.append("Add actionable tips or valuable insights")
+        
+        return recommendations[:3]
+    
+    def _generate_conversion_recommendations(self, conversion_score: float, conversion_factors: Dict[str, Dict], platform: str) -> List[str]:
+        """Generate recommendations for conversion potential"""
+        recommendations = []
+        
+        if conversion_score < 6.0:
+            recommendations.append("Strengthen call-to-action and value proposition")
+        
+        # Find weakest conversion elements
+        weak_elements = [k for k, v in conversion_factors.items() if v["score"] < 4.0]
+        
+        if "cta_strength" in weak_elements:
+            recommendations.append("Use stronger, more direct call-to-action words")
+        
+        if "value_proposition" in weak_elements:
+            recommendations.append("Clearly communicate the value and benefits")
+        
+        if "urgency_creation" in weak_elements:
+            recommendations.append("Add urgency elements to drive immediate action")
+        
+        return recommendations[:3]
+    
+    def _get_density_rating(self, hooks_per_minute: float, target_density: float) -> str:
+        """Get density rating based on hooks per minute"""
+        ratio = hooks_per_minute / target_density if target_density > 0 else 0
+        
+        if ratio >= 1.2:
+            return "Very High"
+        elif ratio >= 0.9:
+            return "Optimal"
+        elif ratio >= 0.6:
+            return "Moderate"
+        elif ratio >= 0.3:
+            return "Low"
+        else:
+            return "Very Low"
