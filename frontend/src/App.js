@@ -335,10 +335,22 @@ function App() {
       originalConsoleWarn.apply(console, args);
     };
 
+    // Additional global error handler for runtime errors
+    const handleGlobalError = (event) => {
+      if (event.message && event.message.includes('ResizeObserver')) {
+        event.stopImmediatePropagation();
+        event.preventDefault();
+        return false;
+      }
+    };
+
+    window.addEventListener('error', handleGlobalError);
+
     return () => {
       // Restore original console methods on cleanup
       console.error = originalConsoleError;
       console.warn = originalConsoleWarn;
+      window.removeEventListener('error', handleGlobalError);
     };
   }, []);
 
