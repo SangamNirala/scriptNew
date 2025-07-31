@@ -3357,6 +3357,149 @@ async def generate_field_suggestions(
     
     return suggestions
 
+
+# Legal Research Integration API Endpoints
+
+@api_router.post("/legal-research/search", response_model=LegalResearchResult)
+async def search_legal_cases(request: LegalCaseSearchRequest):
+    """Comprehensive legal case search across multiple databases"""
+    try:
+        result = await LegalResearchService.comprehensive_legal_search(request)
+        
+        # Store search result in database
+        result_dict = result.dict()
+        await db.legal_research_results.insert_one(result_dict)
+        
+        return result
+        
+    except Exception as e:
+        logging.error(f"Legal research search error: {e}")
+        raise HTTPException(status_code=500, detail=f"Error searching legal cases: {str(e)}")
+
+@api_router.post("/legal-research/precedent-analysis", response_model=PrecedentAnalysisResult)
+async def analyze_precedents(request: PrecedentAnalysisRequest):
+    """AI-powered precedent analysis for contracts"""
+    try:
+        result = await LegalResearchService.precedent_analysis(request)
+        
+        # Store precedent analysis in database
+        result_dict = result.dict()
+        await db.precedent_analyses.insert_one(result_dict)
+        
+        return result
+        
+    except Exception as e:
+        logging.error(f"Precedent analysis error: {e}")
+        raise HTTPException(status_code=500, detail=f"Error analyzing precedents: {str(e)}")
+
+@api_router.get("/legal-research/results")
+async def get_legal_research_results():
+    """Get all legal research results"""
+    try:
+        results = await db.legal_research_results.find().sort("created_at", -1).to_list(50)
+        # Convert ObjectId to string for JSON serialization
+        results = [convert_objectid_to_str(result) for result in results]
+        return {"results": results, "count": len(results)}
+    except Exception as e:
+        logging.error(f"Error fetching legal research results: {e}")
+        raise HTTPException(status_code=500, detail=f"Error fetching results: {str(e)}")
+
+@api_router.get("/legal-research/precedent-analyses")
+async def get_precedent_analyses():
+    """Get all precedent analyses"""
+    try:
+        analyses = await db.precedent_analyses.find().sort("created_at", -1).to_list(50)
+        # Convert ObjectId to string for JSON serialization
+        analyses = [convert_objectid_to_str(analysis) for analysis in analyses]
+        return {"analyses": analyses, "count": len(analyses)}
+    except Exception as e:
+        logging.error(f"Error fetching precedent analyses: {e}")
+        raise HTTPException(status_code=500, detail=f"Error fetching analyses: {str(e)}")
+
+@api_router.get("/legal-research/results/{result_id}")
+async def get_legal_research_result(result_id: str):
+    """Get specific legal research result by ID"""
+    try:
+        result = await db.legal_research_results.find_one({"id": result_id})
+        if not result:
+            raise HTTPException(status_code=404, detail="Legal research result not found")
+        return convert_objectid_to_str(result)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error fetching legal research result {result_id}: {e}")
+        raise HTTPException(status_code=500, detail=f"Error fetching result: {str(e)}")
+
+@api_router.post("/legal-research/contract-insight")
+async def get_contract_legal_insights(request: dict):
+    """Get AI-powered legal insights for a specific contract"""
+    try:
+        contract_content = request.get("contract_content", "")
+        contract_type = request.get("contract_type", "general")
+        jurisdiction = request.get("jurisdiction", "US")
+        
+        if not contract_content:
+            raise HTTPException(status_code=400, detail="Contract content is required")
+        
+        # Perform precedent analysis
+        precedent_request = PrecedentAnalysisRequest(
+            contract_content=contract_content,
+            contract_type=contract_type,
+            jurisdiction=jurisdiction,
+            analysis_depth="comprehensive"
+        )
+        
+        precedent_analysis = await LegalResearchService.precedent_analysis(precedent_request)
+        
+        # Generate additional AI insights using Claude
+        insight_prompt = f"""
+        As a legal expert, provide comprehensive insights for this {contract_type} contract:
+        
+        Contract Content: {contract_content[:1000]}...
+        Jurisdiction: {jurisdiction}
+        
+        Based on the precedent analysis, provide:
+        1. Key legal risks and mitigation strategies
+        2. Compliance recommendations
+        3. Potential areas of dispute
+        4. Suggestions for contract improvement
+        5. Market standard comparisons
+        
+        Be practical and actionable in your recommendations.
+        """
+        
+        response = await openrouter_client.post(
+            "/chat/completions",
+            json={
+                "model": "anthropic/claude-3.5-sonnet",
+                "messages": [{"role": "user", "content": insight_prompt}],
+                "temperature": 0.2,
+                "max_tokens": 1500
+            }
+        )
+        
+        ai_insights = "Legal analysis completed. Review precedent cases for detailed insights."
+        if response.status_code == 200:
+            ai_response = response.json()
+            ai_insights = ai_response["choices"][0]["message"]["content"]
+        
+        return {
+            "contract_type": contract_type,
+            "jurisdiction": jurisdiction,
+            "precedent_analysis": precedent_analysis,
+            "ai_insights": ai_insights,
+            "key_recommendations": precedent_analysis.recommendations[:5],
+            "risk_level": "HIGH" if precedent_analysis.confidence_score < 0.5 else "MEDIUM" if precedent_analysis.confidence_score < 0.8 else "LOW",
+            "confidence_score": precedent_analysis.confidence_score
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Contract legal insights error: {e}")
+        raise HTTPException(status_code=500, detail=f"Error generating legal insights: {str(e)}")
+
+
 # Include the router in the main app
 app.include_router(api_router)
 
