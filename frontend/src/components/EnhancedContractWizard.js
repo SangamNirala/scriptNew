@@ -49,10 +49,6 @@ const EnhancedContractWizard = ({
   
   // Simplified flag to track user interaction - no complex timeout logic
   const [userHasInteracted, setUserHasInteracted] = useState(false);
-  
-  // Add refs to prevent race conditions
-  const lastInputValuesRef = useRef({});
-  const inputTimeoutRef = useRef(null);
 
   // Form data for each step
   const [stepData, setStepData] = useState({
