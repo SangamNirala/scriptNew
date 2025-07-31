@@ -429,7 +429,8 @@ metadata:
   signature_functionality: "completed"
 
 test_plan:
-  current_focus: []
+  current_focus:
+    - "Classic Mode - Complete Component Display and Preview Functionality"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
