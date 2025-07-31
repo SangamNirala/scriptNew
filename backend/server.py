@@ -2642,9 +2642,9 @@ async def get_contract_types():
         "categories": [
             "Business", "Real Estate", "Technology", "Corporate", "Finance", 
             "Legal", "Services", "Manufacturing", "Construction", "Development",
-            "Employment", "Marketing", "Research", "IP", "Insurance", "Creative"
+            "HR & Employment", "Marketing", "Research", "IP", "Insurance", "Creative"
         ],
-        "total_count": 56
+        "total_count": 63
     }
 
 # Smart Contract Analysis Endpoints
