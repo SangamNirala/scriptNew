@@ -137,7 +137,8 @@ const EnhancedContractWizard = ({
       const fieldValue = currentStepData[suggestion.field_name];
       
       // Only apply if field is completely empty and confidence is very high
-      if (suggestion.confidence > 0.9 && (!fieldValue || fieldValue.trim() === '')) {
+      // Only apply suggestions with very high confidence (95%+) to completely empty fields
+      if (suggestion.confidence > 0.95 && (!fieldValue || fieldValue.trim() === '')) {
         updatedStepData[suggestion.field_name] = suggestion.suggested_value;
         hasChanges = true;
       }
