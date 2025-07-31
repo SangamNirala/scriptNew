@@ -828,6 +828,38 @@ const EnhancedContractWizard = ({
     );
   };
 
+  // Validation helper functions
+  const isStep1Valid = () => {
+    return stepData.step1.contract_type && stepData.step1.jurisdiction;
+  };
+
+  const isStep2Valid = () => {
+    return stepData.step2.party1_name && stepData.step2.party2_name;
+  };
+
+  const isStep3Valid = () => {
+    return stepData.step3.payment_terms; // At least payment terms are required
+  };
+
+  const isStep4Valid = () => {
+    return true; // Step 4 is optional
+  };
+
+  const isStep5Valid = () => {
+    return stepData.step5.review_complete;
+  };
+
+  const isCurrentStepValid = () => {
+    switch (currentStep) {
+      case 1: return isStep1Valid();
+      case 2: return isStep2Valid();
+      case 3: return isStep3Valid();
+      case 4: return isStep4Valid();
+      case 5: return isStep5Valid();
+      default: return false;
+    }
+  };
+
   // Navigation
   const Navigation = () => (
     <div className="flex justify-between mt-8">
@@ -842,7 +874,7 @@ const EnhancedContractWizard = ({
       
       <Button
         onClick={nextStep}
-        disabled={isLoading || (currentStep === 1 && !stepData.step1.contract_type) || (currentStep === 5 && !stepData.step5.review_complete)}
+        disabled={isLoading || !isCurrentStepValid()}
         className="bg-blue-600 hover:bg-blue-700"
       >
         {isLoading ? (
