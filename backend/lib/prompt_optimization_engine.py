@@ -59,7 +59,7 @@ class PromptOptimizationEngine:
         
         # Initialize components
         self.quality_analyzer = ScriptQualityAnalyzer()
-        self.llm_chat = LlmChat(api_key=gemini_api_key, model="gemini-2.0-flash-exp")
+        self.llm_chat = LlmChat(api_key=gemini_api_key, session_id="optimization_engine", system_message="You are an AI prompt optimization assistant.")
         
         # A/B Testing Configuration
         self.testing_strategies = {
