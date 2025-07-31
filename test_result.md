@@ -550,14 +550,12 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Comprehensive Frontend Testing - Enhanced Contract Wizard Full Workflow"
-    - "Comprehensive Frontend Testing - Classic Mode Complete Interface Testing"
-    - "Comprehensive Frontend Testing - Analytics Dashboard All Charts and Functionality"
-    - "Cross-Mode Navigation and State Management Testing"
-    - "Responsive Design and UI/UX Testing"
-  stuck_tasks: []
-  test_all: true
-  test_priority: "comprehensive_frontend_testing"
+    - "Enhanced Contract Wizard Input Field Character Scrambling Fix"
+    - "Analytics Dashboard API Request Timeout Issues"
+  stuck_tasks:
+    - "Enhanced Contract Wizard Input Field Character Scrambling Fix"
+  test_all: false
+  test_priority: "critical_issues_first"
 
   - task: "Analytics Dashboard Backend Endpoints Testing"
     implemented: true
