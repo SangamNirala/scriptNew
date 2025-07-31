@@ -605,7 +605,7 @@ const EnhancedContractWizard = ({
           <div>
             <Label htmlFor="payment_terms">Payment Terms *</Label>
             <Input
-              key="payment_terms_input"
+              key="payment_terms_stable_input"
               id="payment_terms"
               value={stepData.step3.payment_terms}
               onChange={(e) => updateStepData('step3', 'payment_terms', e.target.value)}
@@ -615,7 +615,7 @@ const EnhancedContractWizard = ({
           <div>
             <Label htmlFor="project_duration">Project Duration</Label>
             <Input
-              key="project_duration_input"
+              key="project_duration_stable_input"
               id="project_duration"
               value={stepData.step3.project_duration}
               onChange={(e) => updateStepData('step3', 'project_duration', e.target.value)}
