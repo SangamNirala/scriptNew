@@ -170,7 +170,7 @@ const EnhancedContractWizard = ({
     }
   };
 
-  const updateStepData = (step, field, value) => {
+  const updateStepData = useCallback((step, field, value) => {
     // Simple, immediate state update without any interference or timeout logic
     setStepData(prev => ({
       ...prev,
@@ -184,7 +184,7 @@ const EnhancedContractWizard = ({
     if (!userHasInteracted) {
       setUserHasInteracted(true);
     }
-  };
+  }, [userHasInteracted]);
 
   const applySuggestion = (suggestion) => {
     const currentStepKey = `step${currentStep}`;
