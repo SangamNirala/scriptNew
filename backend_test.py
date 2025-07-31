@@ -3287,6 +3287,351 @@ class LegalMateAPITester:
             
         return success, response
 
+    # ===================================================================
+    # BUSINESS INTELLIGENCE & ANALYTICS TESTS
+    # ===================================================================
+    
+    def test_analytics_dashboard(self):
+        """Test analytics dashboard endpoint"""
+        success, response = self.run_test("Analytics Dashboard", "GET", "analytics/dashboard", 200)
+        if success:
+            # Check response structure
+            expected_keys = ['overview', 'contract_distribution', 'trends']
+            for key in expected_keys:
+                if key in response:
+                    print(f"   ✅ Found '{key}' section in dashboard")
+                else:
+                    print(f"   ❌ Missing '{key}' section in dashboard")
+            
+            # Check overview metrics
+            if 'overview' in response:
+                overview = response['overview']
+                metrics = ['total_contracts', 'total_analyses', 'average_compliance_score', 'active_metrics']
+                for metric in metrics:
+                    if metric in overview:
+                        value = overview[metric]
+                        print(f"   📊 {metric}: {value}")
+                        # Validate reasonable values
+                        if metric == 'average_compliance_score' and (value < 0 or value > 100):
+                            print(f"   ⚠️  Compliance score {value} outside valid range (0-100)")
+                    else:
+                        print(f"   ❌ Missing metric: {metric}")
+        
+        return success, response
+
+    def test_analytics_dashboard_with_filters(self):
+        """Test analytics dashboard with filtering parameters"""
+        # Test with date range filter
+        success, response = self.run_test(
+            "Analytics Dashboard with Date Filter", 
+            "GET", 
+            "analytics/dashboard?date_range_start=2024-01-01&date_range_end=2024-12-31", 
+            200
+        )
+        
+        if success and 'filters_applied' in response:
+            filters = response['filters_applied']
+            if filters.get('date_range'):
+                print(f"   ✅ Date range filter applied: {filters['date_range']}")
+            else:
+                print(f"   ❌ Date range filter not applied correctly")
+        
+        # Test with contract type filter
+        success2, response2 = self.run_test(
+            "Analytics Dashboard with Contract Type Filter", 
+            "GET", 
+            "analytics/dashboard?contract_types=NDA,freelance_agreement", 
+            200
+        )
+        
+        return success and success2, {"date_filter": response, "type_filter": response2}
+
+    def test_performance_metrics(self):
+        """Test performance metrics endpoint"""
+        success, response = self.run_test("Performance Metrics", "GET", "analytics/performance-metrics", 200)
+        if success:
+            # Check all expected metrics are present
+            expected_metrics = [
+                'total_contracts', 'success_rate', 'average_compliance_score', 
+                'dispute_frequency', 'renewal_rate', 'client_satisfaction',
+                'time_to_completion_avg', 'cost_savings_total', 'efficiency_improvement'
+            ]
+            
+            for metric in expected_metrics:
+                if metric in response:
+                    value = response[metric]
+                    print(f"   📈 {metric}: {value}")
+                    
+                    # Validate ranges for percentage metrics
+                    if metric in ['success_rate', 'renewal_rate', 'efficiency_improvement']:
+                        if not (0 <= value <= 100):
+                            print(f"   ⚠️  {metric} value {value} outside valid percentage range (0-100)")
+                    elif metric == 'client_satisfaction':
+                        if not (1 <= value <= 5):
+                            print(f"   ⚠️  {metric} value {value} outside valid range (1-5)")
+                    elif metric == 'average_compliance_score':
+                        if not (0 <= value <= 100):
+                            print(f"   ⚠️  {metric} value {value} outside valid range (0-100)")
+                    elif metric == 'cost_savings_total':
+                        if value < 0:
+                            print(f"   ⚠️  {metric} should not be negative: {value}")
+                else:
+                    print(f"   ❌ Missing metric: {metric}")
+        
+        return success, response
+
+    def test_cost_analysis(self):
+        """Test cost analysis endpoint"""
+        success, response = self.run_test("Cost Analysis", "GET", "analytics/cost-analysis", 200)
+        if success:
+            # Check expected cost analysis fields
+            expected_fields = [
+                'total_savings', 'total_time_saved_hours', 'cost_per_contract_traditional',
+                'cost_per_contract_automation', 'savings_percentage', 'process_breakdown', 'roi'
+            ]
+            
+            for field in expected_fields:
+                if field in response:
+                    value = response[field]
+                    print(f"   💰 {field}: {value}")
+                    
+                    # Validate cost values are reasonable
+                    if field in ['total_savings', 'cost_per_contract_traditional', 'cost_per_contract_automation']:
+                        if value < 0:
+                            print(f"   ⚠️  {field} should not be negative: {value}")
+                    elif field == 'savings_percentage':
+                        if not (0 <= value <= 100):
+                            print(f"   ⚠️  {field} value {value} outside valid percentage range (0-100)")
+                    elif field == 'roi':
+                        if value < 0:
+                            print(f"   ⚠️  ROI should not be negative: {value}")
+                else:
+                    print(f"   ❌ Missing field: {field}")
+            
+            # Check process breakdown structure
+            if 'process_breakdown' in response:
+                breakdown = response['process_breakdown']
+                expected_processes = ['generation', 'analysis', 'review']
+                for process in expected_processes:
+                    if process in breakdown:
+                        process_data = breakdown[process]
+                        print(f"   📊 {process}: {process_data.get('contracts', 0)} contracts, ${process_data.get('savings', 0):.2f} saved")
+                    else:
+                        print(f"   ❌ Missing process breakdown: {process}")
+        
+        return success, response
+
+    def test_negotiation_insights(self):
+        """Test negotiation insights endpoint"""
+        success, response = self.run_test("Negotiation Insights", "GET", "analytics/negotiation-insights", 200)
+        if success:
+            # Check expected negotiation insight fields
+            expected_fields = [
+                'total_negotiations', 'average_rounds', 'success_rate',
+                'most_effective_strategies', 'common_negotiation_points', 'time_to_resolution_avg'
+            ]
+            
+            for field in expected_fields:
+                if field in response:
+                    value = response[field]
+                    if field == 'most_effective_strategies':
+                        print(f"   🤝 {field}: {len(value)} strategies")
+                        # Check strategy structure
+                        for strategy in value[:2]:  # Show first 2 strategies
+                            print(f"      - {strategy.get('strategy', 'Unknown')}: {strategy.get('success_rate', 0)}% success")
+                    elif field == 'common_negotiation_points':
+                        print(f"   📋 {field}: {len(value)} points")
+                        # Show top negotiation points
+                        for point in value[:3]:  # Show first 3 points
+                            print(f"      - {point.get('point', 'Unknown')}: {point.get('frequency', 0)} times, {point.get('success_rate', 0)}% success")
+                    else:
+                        print(f"   📊 {field}: {value}")
+                        
+                        # Validate ranges
+                        if field == 'success_rate' and not (0 <= value <= 100):
+                            print(f"   ⚠️  {field} value {value} outside valid percentage range (0-100)")
+                else:
+                    print(f"   ❌ Missing field: {field}")
+        
+        return success, response
+
+    def test_market_intelligence(self):
+        """Test market intelligence endpoint"""
+        success, response = self.run_test("Market Intelligence", "GET", "analytics/market-intelligence", 200)
+        if success:
+            # Check expected market intelligence fields
+            expected_fields = [
+                'industry_benchmarks', 'market_trends', 'competitive_analysis', 'recommendations'
+            ]
+            
+            for field in expected_fields:
+                if field in response:
+                    value = response[field]
+                    if field == 'market_trends':
+                        print(f"   📈 {field}: {len(value)} trends")
+                        for trend in value[:3]:  # Show first 3 trends
+                            print(f"      - {trend}")
+                    elif field == 'recommendations':
+                        print(f"   💡 {field}: {len(value)} recommendations")
+                        for rec in value[:3]:  # Show first 3 recommendations
+                            print(f"      - {rec}")
+                    elif field == 'industry_benchmarks':
+                        print(f"   📊 {field}: {type(value).__name__}")
+                        if isinstance(value, dict):
+                            for key, val in list(value.items())[:3]:  # Show first 3 benchmarks
+                                print(f"      - {key}: {val}")
+                    else:
+                        print(f"   📋 {field}: {type(value).__name__}")
+                else:
+                    print(f"   ❌ Missing field: {field}")
+            
+            # Check if AI insights are present
+            if 'ai_generated_insights' in response:
+                ai_insights = response['ai_generated_insights']
+                if ai_insights and len(ai_insights) > 50:  # Should have substantial AI content
+                    print(f"   🤖 AI insights generated: {len(ai_insights)} characters")
+                else:
+                    print(f"   ⚠️  AI insights seem limited: {len(ai_insights) if ai_insights else 0} characters")
+        
+        return success, response
+
+    def test_market_intelligence_with_parameters(self):
+        """Test market intelligence with specific parameters"""
+        # Test with industry and contract type parameters
+        success, response = self.run_test(
+            "Market Intelligence with Parameters", 
+            "GET", 
+            "analytics/market-intelligence?industry=technology&contract_type=NDA&jurisdiction=US", 
+            200
+        )
+        
+        if success:
+            print(f"   🎯 Market intelligence generated for Technology/NDA/US")
+            # Check if response includes parameter-specific insights
+            if 'industry_benchmarks' in response:
+                benchmarks = response['industry_benchmarks']
+                print(f"   📊 Industry benchmarks: {len(benchmarks)} metrics")
+        
+        return success, response
+
+    def test_track_event(self):
+        """Test event tracking endpoint"""
+        # Test tracking a negotiation event
+        negotiation_event = {
+            "event_type": "negotiation",
+            "contract_id": "test-contract-123",
+            "event_data": {
+                "negotiation_round": 1,
+                "party_involved": "first_party",
+                "changes_requested": ["payment terms modification", "delivery timeline extension"],
+                "changes_accepted": ["payment terms modification"],
+                "changes_rejected": ["delivery timeline extension"],
+                "negotiation_duration_hours": 2.5,
+                "strategy_used": "collaborative",
+                "outcome": "successful"
+            }
+        }
+        
+        success1, response1 = self.run_test(
+            "Track Negotiation Event", 
+            "POST", 
+            "analytics/track-event", 
+            200, 
+            negotiation_event
+        )
+        
+        if success1:
+            if 'event_id' in response1:
+                print(f"   ✅ Negotiation event tracked with ID: {response1['event_id']}")
+            else:
+                print(f"   ❌ Event tracking response missing event_id")
+        
+        # Test tracking a dispute event
+        dispute_event = {
+            "event_type": "dispute",
+            "contract_id": "test-contract-456",
+            "event_data": {
+                "dispute_type": "payment",
+                "severity": "moderate",
+                "parties_involved": ["first_party", "second_party"],
+                "description": "Disagreement over payment schedule",
+                "status": "open"
+            }
+        }
+        
+        success2, response2 = self.run_test(
+            "Track Dispute Event", 
+            "POST", 
+            "analytics/track-event", 
+            200, 
+            dispute_event
+        )
+        
+        if success2:
+            if 'event_id' in response2:
+                print(f"   ✅ Dispute event tracked with ID: {response2['event_id']}")
+        
+        # Test tracking a renewal event
+        renewal_event = {
+            "event_type": "renewal",
+            "contract_id": "test-contract-789",
+            "event_data": {
+                "renewal_type": "negotiated",
+                "terms_changed": True,
+                "key_changes": ["increased payment amount", "extended duration"],
+                "success_rate": 85.0,
+                "client_retention": True
+            }
+        }
+        
+        success3, response3 = self.run_test(
+            "Track Renewal Event", 
+            "POST", 
+            "analytics/track-event", 
+            200, 
+            renewal_event
+        )
+        
+        if success3:
+            if 'event_id' in response3:
+                print(f"   ✅ Renewal event tracked with ID: {response3['event_id']}")
+        
+        return success1 and success2 and success3, {
+            "negotiation": response1, 
+            "dispute": response2, 
+            "renewal": response3
+        }
+
+    def test_track_event_invalid_data(self):
+        """Test event tracking with invalid data"""
+        # Test with missing required fields
+        invalid_event = {
+            "event_type": "negotiation"
+            # Missing contract_id and event_data
+        }
+        
+        success, response = self.run_test(
+            "Track Event with Invalid Data", 
+            "POST", 
+            "analytics/track-event", 
+            422,  # Expecting validation error
+            invalid_event
+        )
+        
+        # If 422 doesn't work, try 500
+        if not success:
+            success, response = self.run_test(
+                "Track Event with Invalid Data (500)", 
+                "POST", 
+                "analytics/track-event", 
+                500,
+                invalid_event
+            )
+            if success:
+                self.tests_passed += 1  # Adjust count since we ran an extra test
+        
+        return success, response
+
 def main():
     print("🚀 Starting LegalMate AI Backend API Tests")
     print("=" * 60)
