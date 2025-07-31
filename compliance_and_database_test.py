@@ -4,7 +4,7 @@ import sys
 from datetime import datetime
 
 class ComplianceAndDatabaseTester:
-    def __init__(self, base_url="https://1f884bd9-2c13-496f-838f-b47ac3e29b7b.preview.emergentagent.com"):
+    def __init__(self, base_url="https://c959fdf2-af2c-40b5-9836-b7118835945d.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.tests_run = 0
