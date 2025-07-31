@@ -693,6 +693,7 @@ const EnhancedContractWizard = ({
         <div>
           <Label htmlFor="special_terms">Additional Terms</Label>
           <Textarea
+            key="special_terms_stable_textarea"
             id="special_terms"
             value={stepData.step4.special_terms}
             onChange={(e) => updateStepData('step4', 'special_terms', e.target.value)}
@@ -704,6 +705,7 @@ const EnhancedContractWizard = ({
         <div>
           <Label htmlFor="execution_date">Execution Date</Label>
           <Input
+            key="execution_date_stable_input"
             id="execution_date"
             type="date"
             value={stepData.step4.execution_date}
