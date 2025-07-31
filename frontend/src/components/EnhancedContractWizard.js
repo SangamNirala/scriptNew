@@ -67,19 +67,8 @@ const EnhancedContractWizard = ({
   });
 
   useEffect(() => {
-    // Only initialize wizard when moving to a new step and user hasn't interacted much
-    if (currentStep > 1 && 
-        !stepData[`step${currentStep}`]?.initialized && 
-        !userHasInteracted) {
-      // Add a small delay to avoid interfering with user interactions
-      const initTimer = setTimeout(() => {
-        if (!userHasInteracted) {
-          initializeWizard();
-        }
-      }, 800); // Longer delay to ensure user can start typing
-      
-      return () => clearTimeout(initTimer);
-    }
+    // COMPLETELY DISABLED to prevent any interference with typing
+    return;
   }, [currentStep, userHasInteracted]);
 
 
