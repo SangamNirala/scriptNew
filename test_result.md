@@ -428,8 +428,7 @@ metadata:
 test_plan:
   current_focus:
     - "Smart Contract Wizard - Input Field Typing Issues and ResizeObserver Errors Fix"
-  stuck_tasks:
-    - "Smart Contract Wizard - Input Field Typing Issues and ResizeObserver Errors Fix"
+  stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
