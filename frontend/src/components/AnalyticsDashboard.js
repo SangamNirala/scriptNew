@@ -393,13 +393,40 @@ const AnalyticsDashboard = ({ onBack }) => {
       </Card>
 
       {/* Analytics Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="performance">Performance</TabsTrigger>
-          <TabsTrigger value="costs">Cost Analysis</TabsTrigger>
-          <TabsTrigger value="negotiations">Negotiations</TabsTrigger>
-          <TabsTrigger value="market">Market Intel</TabsTrigger>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <TabsList className="grid w-full grid-cols-8 bg-white p-1 rounded-lg border">
+          <TabsTrigger value="overview" className="flex items-center space-x-2">
+            <BarChart3 className="h-4 w-4" />
+            <span>Overview</span>
+          </TabsTrigger>
+          <TabsTrigger value="performance" className="flex items-center space-x-2">
+            <Target className="h-4 w-4" />
+            <span>Performance</span>
+          </TabsTrigger>
+          <TabsTrigger value="costs" className="flex items-center space-x-2">
+            <DollarSign className="h-4 w-4" />
+            <span>Costs</span>
+          </TabsTrigger>
+          <TabsTrigger value="negotiations" className="flex items-center space-x-2">
+            <Users className="h-4 w-4" />
+            <span>Negotiations</span>
+          </TabsTrigger>
+          <TabsTrigger value="market" className="flex items-center space-x-2">
+            <TrendingUp className="h-4 w-4" />
+            <span>Market</span>
+          </TabsTrigger>
+          <TabsTrigger value="predictive" className="flex items-center space-x-2">
+            <Brain className="h-4 w-4" />
+            <span>AI Insights</span>
+          </TabsTrigger>
+          <TabsTrigger value="compliance" className="flex items-center space-x-2">
+            <Shield className="h-4 w-4" />
+            <span>Compliance</span>
+          </TabsTrigger>
+          <TabsTrigger value="system" className="flex items-center space-x-2">
+            <Server className="h-4 w-4" />
+            <span>System</span>
+          </TabsTrigger>
         </TabsList>
 
         {/* Overview Tab */}
