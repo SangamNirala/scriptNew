@@ -638,41 +638,47 @@ const AnalyticsDashboard = ({ onBack }) => {
         {/* Performance Tab */}
         <TabsContent value="performance" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <MetricCard
+            <EnhancedMetricCard
               title="Success Rate"
               value={`${performanceMetrics?.success_rate || 0}%`}
               icon={Target}
               color="green"
+              trend="up"
             />
-            <MetricCard
+            <EnhancedMetricCard
               title="Dispute Frequency"
               value={`${performanceMetrics?.dispute_frequency || 0} per 100`}
               icon={AlertTriangle}
               color="red"
+              trend="down"
             />
-            <MetricCard
+            <EnhancedMetricCard
               title="Renewal Rate"
               value={`${performanceMetrics?.renewal_rate || 0}%`}
               icon={Activity}
               color="blue"
+              trend="up"
             />
-            <MetricCard
+            <EnhancedMetricCard
               title="Client Satisfaction"
               value={`${performanceMetrics?.client_satisfaction || 0}/5`}
               icon={Users}
               color="purple"
+              trend="up"
             />
-            <MetricCard
+            <EnhancedMetricCard
               title="Avg Completion Time"
               value={`${performanceMetrics?.time_to_completion_avg || 0} days`}
               icon={Clock}
               color="orange"
+              trend="down"
             />
-            <MetricCard
+            <EnhancedMetricCard
               title="Efficiency Improvement"
               value={`${performanceMetrics?.efficiency_improvement || 0}%`}
               icon={TrendingUp}
               color="emerald"
+              trend="up"
             />
           </div>
 
@@ -689,21 +695,21 @@ const AnalyticsDashboard = ({ onBack }) => {
                     <span>Contract Success Rate</span>
                     <span>{performanceMetrics?.success_rate || 0}%</span>
                   </div>
-                  <Progress value={performanceMetrics?.success_rate || 0} />
+                  <Progress value={performanceMetrics?.success_rate || 0} className="h-3" />
                 </div>
                 <div>
                   <div className="flex justify-between mb-2">
                     <span>Compliance Score</span>
                     <span>{performanceMetrics?.average_compliance_score || 0}%</span>
                   </div>
-                  <Progress value={performanceMetrics?.average_compliance_score || 0} />
+                  <Progress value={performanceMetrics?.average_compliance_score || 0} className="h-3" />
                 </div>
                 <div>
                   <div className="flex justify-between mb-2">
                     <span>Renewal Rate</span>
                     <span>{performanceMetrics?.renewal_rate || 0}%</span>
                   </div>
-                  <Progress value={performanceMetrics?.renewal_rate || 0} />
+                  <Progress value={performanceMetrics?.renewal_rate || 0} className="h-3" />
                 </div>
               </div>
             </CardContent>
