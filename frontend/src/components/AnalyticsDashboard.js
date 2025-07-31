@@ -24,30 +24,80 @@ import {
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-// Color schemes for charts
-const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4'];
+// Enhanced color schemes for charts
+const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4', '#EC4899', '#14B8A6'];
 const RISK_COLORS = { LOW: '#10B981', MEDIUM: '#F59E0B', HIGH: '#EF4444', CRITICAL: '#DC2626' };
+const GRADIENT_COLORS = {
+  primary: ['#3B82F6', '#1D4ED8'],
+  success: ['#10B981', '#047857'],
+  warning: ['#F59E0B', '#D97706'],
+  danger: ['#EF4444', '#DC2626']
+};
 
-const MetricCard = ({ title, value, change, icon: Icon, color = "blue" }) => (
-  <Card>
+// Enhanced Metric Card with more visual appeal
+const EnhancedMetricCard = ({ title, value, change, icon: Icon, color = "blue", trend, subtitle, loading = false }) => (
+  <Card className="relative overflow-hidden transition-all duration-300 hover:shadow-lg">
     <CardContent className="p-6">
       <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm font-medium text-gray-600">{title}</p>
-          <p className="text-2xl font-bold">{value}</p>
+        <div className="flex-1">
+          <p className="text-sm font-medium text-gray-600 mb-1">{title}</p>
+          <p className="text-3xl font-bold text-gray-900 mb-1">
+            {loading ? <div className="animate-pulse bg-gray-200 h-8 w-20 rounded"></div> : value}
+          </p>
+          {subtitle && <p className="text-xs text-gray-500">{subtitle}</p>}
           {change !== undefined && (
-            <div className={`flex items-center text-sm ${change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            <div className={`flex items-center mt-2 text-sm ${change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
               {change >= 0 ? <TrendingUp className="h-4 w-4 mr-1" /> : <TrendingDown className="h-4 w-4 mr-1" />}
-              {Math.abs(change)}%
+              {Math.abs(change)}% from last period
+            </div>
+          )}
+          {trend && (
+            <div className="mt-2">
+              <div className={`text-xs px-2 py-1 rounded-full inline-block ${
+                trend === 'up' ? 'bg-green-100 text-green-800' : 
+                trend === 'down' ? 'bg-red-100 text-red-800' : 
+                'bg-gray-100 text-gray-800'
+              }`}>
+                {trend === 'up' ? '↗ Trending Up' : trend === 'down' ? '↘ Trending Down' : '→ Stable'}
+              </div>
             </div>
           )}
         </div>
-        <div className={`p-3 rounded-full bg-${color}-100`}>
-          <Icon className={`h-6 w-6 text-${color}-600`} />
+        <div className={`p-4 rounded-full bg-gradient-to-br from-${color}-100 to-${color}-200`}>
+          <Icon className={`h-8 w-8 text-${color}-600`} />
         </div>
       </div>
     </CardContent>
+    <div className={`absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-${color}-400 to-${color}-600`}></div>
   </Card>
+);
+
+// Real-time indicator component
+const RealTimeIndicator = ({ lastUpdated, isLive = true }) => (
+  <div className="flex items-center text-sm text-gray-500">
+    <div className={`w-2 h-2 rounded-full mr-2 ${isLive ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`}></div>
+    {isLive ? 'Live' : `Updated ${lastUpdated}`}
+  </div>
+);
+
+// Export functionality component
+const ExportControls = ({ onExport, loading = false }) => (
+  <div className="flex items-center space-x-2">
+    <Select onValueChange={(value) => onExport(value)} disabled={loading}>
+      <SelectTrigger className="w-40">
+        <SelectValue placeholder="Export as..." />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="pdf">PDF Report</SelectItem>
+        <SelectItem value="excel">Excel File</SelectItem>
+        <SelectItem value="csv">CSV Data</SelectItem>
+      </SelectContent>
+    </Select>
+    <Button variant="outline" size="sm" disabled={loading}>
+      <Share2 className="h-4 w-4 mr-2" />
+      Share
+    </Button>
+  </div>
 );
 
 const AnalyticsDashboard = ({ onBack }) => {
