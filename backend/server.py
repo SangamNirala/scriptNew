@@ -51,6 +51,9 @@ script_validator = ScriptValidator()
 script_performance_tracker = ScriptPerformanceTracker(db)
 script_preview_generator = ScriptPreviewGenerator()
 
+# Phase 4: Initialize Measurement & Optimization Systems
+prompt_optimization_engine = PromptOptimizationEngine(db, GEMINI_API_KEY)
+
 # Create the main app without a prefix
 app = FastAPI()
 
