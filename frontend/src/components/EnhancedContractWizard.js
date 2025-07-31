@@ -598,6 +598,7 @@ const EnhancedContractWizard = ({
         <div>
           <Label htmlFor="liability_cap">Liability Cap</Label>
           <Input
+            key="liability_cap_input"
             id="liability_cap"
             value={stepData.step3.liability_cap}
             onChange={(e) => updateStepData('step3', 'liability_cap', e.target.value)}
