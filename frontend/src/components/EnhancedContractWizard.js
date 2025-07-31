@@ -192,49 +192,16 @@ const EnhancedContractWizard = ({
     }
   };
 
+  // CLASSIC MODE APPROACH: Simple, direct state update function
   const updateStepData = useCallback((step, field, value) => {
-    // Create a unique key for this field
-    const fieldKey = `${step}.${field}`;
-    
-    // CRITICAL FIX: Use synchronous state update to prevent DOM detachment
-    // This prevents React from re-rendering during typing and losing input focus
-    setStepData(prev => {
-      // Only update if the value actually changed to minimize re-renders
-      if (prev[step]?.[field] === value) {
-        return prev;
+    setStepData(prev => ({
+      ...prev,
+      [step]: {
+        ...prev[step],
+        [field]: value
       }
-      
-      return {
-        ...prev,
-        [step]: {
-          ...prev[step],
-          [field]: value
-        }
-      };
-    });
-    
-    // Update the ref to track latest value for this field
-    lastInputValuesRef.current[fieldKey] = value;
-    
-    // SIMPLIFIED: Only mark interaction without complex logic during typing
-    if (!userHasInteracted && value?.length > 0) {
-      setUserHasInteracted(true);
-    }
-    
-    // DEBOUNCED SUGGESTIONS: Only setup suggestions after user stops typing
-    if (inputTimeoutRef.current) {
-      clearTimeout(inputTimeoutRef.current);
-    }
-    
-    // Longer delay and simpler logic to prevent interference during active typing
-    inputTimeoutRef.current = setTimeout(() => {
-      // Only enable suggestions if user hasn't typed recently and field isn't empty
-      if (lastInputValuesRef.current[fieldKey] === value && value?.length > 0) {
-        setUserHasInteracted(false);
-      }
-    }, 3000); // Increased delay to 3 seconds
-    
-  }, [userHasInteracted]);
+    }));
+  }, []);
 
   const applySuggestion = (suggestion) => {
     const currentStepKey = `step${currentStep}`;
