@@ -664,7 +664,127 @@ class LegalMateAgents:
             Generate a Non-Compete Agreement with:
             {requirements}
             
+            FORMATTING REQUIREMENTS:
+            - Remove all instances of asterisk (*) expressions 
+            - Use proper bold formatting for headings and key sections using **text** format
+            - Include Date of Execution: [Date of Execution]
+            
             Include: Restricted Activities, Territory, Duration, Consideration, Remedies
+            """,
+            
+            # HR & Employment Specialized Templates
+            "offer_letter": """
+            Generate a comprehensive Job Offer Letter with:
+            {requirements}
+            
+            FORMATTING REQUIREMENTS:
+            - Remove all instances of asterisk (*) expressions 
+            - Use proper bold formatting for headings and key sections using **text** format
+            - Include Date of Execution: [Date of Execution]
+            
+            Include essential components:
+            - Position Details and Job Title
+            - Compensation Package (salary, benefits, equity if applicable)
+            - Start Date and Work Schedule
+            - Reporting Structure
+            - Employment Terms (at-will, probationary period)
+            - Next Steps and Acceptance Deadline
+            - Company Overview and Culture
+            """,
+            
+            "employee_handbook_acknowledgment": """
+            Generate an Employee Handbook Acknowledgment Form with:
+            {requirements}
+            
+            FORMATTING REQUIREMENTS:
+            - Remove all instances of asterisk (*) expressions 
+            - Use proper bold formatting for headings and key sections using **text** format
+            - Include Date of Execution: [Date of Execution]
+            
+            Include key elements:
+            - Acknowledgment of Receipt and Review
+            - Understanding of Policies and Procedures
+            - Agreement to Comply with Company Policies
+            - At-Will Employment Acknowledgment
+            - Policy Update Process
+            - Signature Section with Date
+            """,
+            
+            "severance_agreement": """
+            Generate a Severance Agreement with:
+            {requirements}
+            
+            FORMATTING REQUIREMENTS:
+            - Remove all instances of asterisk (*) expressions 
+            - Use proper bold formatting for headings and key sections using **text** format
+            - Include Date of Execution: [Date of Execution]
+            
+            Include essential clauses:
+            - Severance Payment Terms and Schedule
+            - Release of Claims (General and Age Discrimination)
+            - Confidentiality and Non-Disclosure
+            - Non-Competition and Non-Solicitation
+            - Return of Company Property
+            - Benefits Continuation (COBRA)
+            - Reference and Recommendation Policy
+            """,
+            
+            "contractor_agreement": """
+            Generate an Independent Contractor Agreement with:
+            {requirements}
+            
+            FORMATTING REQUIREMENTS:
+            - Remove all instances of asterisk (*) expressions 
+            - Use proper bold formatting for headings and key sections using **text** format
+            - Include Date of Execution: [Date of Execution]
+            
+            Include contractor-specific terms:
+            - Independent Contractor Status and Classification
+            - Scope of Services and Deliverables
+            - Payment Terms and Invoice Requirements
+            - Intellectual Property Rights
+            - Confidentiality and Non-Disclosure
+            - Termination Conditions
+            - Tax Responsibilities and 1099 Reporting
+            - Equipment and Expense Provisions
+            """,
+            
+            "employee_nda": """
+            Generate an Employee-Specific Non-Disclosure Agreement with:
+            {requirements}
+            
+            FORMATTING REQUIREMENTS:
+            - Remove all instances of asterisk (*) expressions 
+            - Use proper bold formatting for headings and key sections using **text** format
+            - Include Date of Execution: [Date of Execution]
+            
+            Include employment-specific confidentiality terms:
+            - Definition of Confidential Information (broad for employees)
+            - Employee Duties and Obligations
+            - Customer and Client Information Protection
+            - Proprietary Information and Trade Secrets
+            - Post-Employment Confidentiality
+            - Return of Materials Upon Termination
+            - Remedies and Enforcement
+            """,
+            
+            "performance_improvement_plan": """
+            Generate a Performance Improvement Plan (PIP) with:
+            {requirements}
+            
+            FORMATTING REQUIREMENTS:
+            - Remove all instances of asterisk (*) expressions 
+            - Use proper bold formatting for headings and key sections using **text** format
+            - Include Date of Execution: [Date of Execution]
+            
+            Include PIP essentials:
+            - Performance Issues and Specific Deficiencies
+            - Improvement Goals and Measurable Objectives
+            - Timeline and Milestones
+            - Support and Resources Provided
+            - Review Schedule and Check-in Meetings
+            - Consequences of Non-Improvement
+            - Employee Rights and Appeal Process
             """,
             
             "settlement_agreement": """
