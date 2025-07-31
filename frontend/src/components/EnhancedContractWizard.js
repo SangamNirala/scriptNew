@@ -198,6 +198,8 @@ const EnhancedContractWizard = ({
   const nextStep = () => {
     if (currentStep < 5) {
       setCurrentStep(currentStep + 1);
+      // Reset interaction flag for the new step so suggestions can work
+      setUserHasInteracted(false);
     } else {
       generateContract();
     }
