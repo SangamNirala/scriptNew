@@ -627,7 +627,7 @@ const EnhancedContractWizard = ({
         <div>
           <Label htmlFor="deliverables">Deliverables</Label>
           <Textarea
-            key="deliverables_textarea"
+            key="deliverables_stable_textarea"
             id="deliverables"
             value={stepData.step3.deliverables}
             onChange={(e) => updateStepData('step3', 'deliverables', e.target.value)}
@@ -639,7 +639,7 @@ const EnhancedContractWizard = ({
         <div>
           <Label htmlFor="liability_cap">Liability Cap</Label>
           <Input
-            key="liability_cap_input"
+            key="liability_cap_stable_input"
             id="liability_cap"
             value={stepData.step3.liability_cap}
             onChange={(e) => updateStepData('step3', 'liability_cap', e.target.value)}
