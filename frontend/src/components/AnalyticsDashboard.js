@@ -719,60 +719,97 @@ const AnalyticsDashboard = ({ onBack }) => {
         {/* Cost Analysis Tab */}
         <TabsContent value="costs" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <MetricCard
+            <EnhancedMetricCard
               title="Total Savings"
               value={`$${costAnalysis?.total_savings?.toLocaleString() || 0}`}
               icon={DollarSign}
               color="green"
+              trend="up"
             />
-            <MetricCard
+            <EnhancedMetricCard
               title="Time Saved"
               value={`${costAnalysis?.total_time_saved_hours || 0} hrs`}
               icon={Clock}
               color="blue"
+              trend="up"
             />
-            <MetricCard
+            <EnhancedMetricCard
               title="ROI"
               value={`${costAnalysis?.roi || 0}x`}
               icon={TrendingUp}
               color="purple"
+              trend="up"
             />
-            <MetricCard
+            <EnhancedMetricCard
               title="Savings %"
               value={`${costAnalysis?.savings_percentage || 0}%`}
               icon={BarChart3}
               color="emerald"
+              trend="stable"
             />
           </div>
 
-          {/* Cost Breakdown */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Cost Savings Breakdown</CardTitle>
-              <CardDescription>Savings by process type</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={400}>
-                <BarChart data={Object.entries(costAnalysis?.process_breakdown || {}).map(([process, data]) => ({
-                  process: process.charAt(0).toUpperCase() + process.slice(1),
-                  savings: data.savings,
-                  contracts: data.contracts,
-                  time_saved: data.time_saved
-                }))}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="process" />
-                  <YAxis />
-                  <Tooltip formatter={(value, name) => [
-                    name === 'savings' ? `$${value.toLocaleString()}` : value,
-                    name === 'savings' ? 'Cost Savings' : name === 'contracts' ? 'Contracts' : 'Time Saved (hrs)'
-                  ]} />
-                  <Legend />
-                  <Bar dataKey="savings" fill="#10B981" name="Cost Savings ($)" />
-                  <Bar dataKey="time_saved" fill="#3B82F6" name="Time Saved (hrs)" />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
+          {/* Enhanced Cost Breakdown */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Cost Savings Breakdown</CardTitle>
+                <CardDescription>Savings by process type</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={400}>
+                  <ComposedChart data={Object.entries(costAnalysis?.process_breakdown || {}).map(([process, data]) => ({
+                    process: process.charAt(0).toUpperCase() + process.slice(1),
+                    savings: data.savings,
+                    contracts: data.contracts,
+                    time_saved: data.time_saved
+                  }))}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="process" />
+                    <YAxis yAxisId="left" />
+                    <YAxis yAxisId="right" orientation="right" />
+                    <Tooltip formatter={(value, name) => [
+                      name === 'savings' ? `$${value.toLocaleString()}` : value,
+                      name === 'savings' ? 'Cost Savings' : name === 'contracts' ? 'Contracts' : 'Time Saved (hrs)'
+                    ]} />
+                    <Legend />
+                    <Bar yAxisId="left" dataKey="savings" fill="#10B981" name="Cost Savings ($)" />
+                    <Line yAxisId="right" type="monotone" dataKey="time_saved" stroke="#3B82F6" strokeWidth={3} name="Time Saved (hrs)" />
+                  </ComposedChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>ROI Analysis</CardTitle>
+                <CardDescription>Return on investment breakdown</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  <div className="text-center">
+                    <div className="text-4xl font-bold text-green-600">{costAnalysis?.roi || 0}x</div>
+                    <p className="text-gray-600">Return on Investment</p>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                      <span className="font-medium">Traditional Cost per Contract</span>
+                      <span className="text-red-600 font-bold">${costAnalysis?.cost_per_contract_traditional || 0}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                      <span className="font-medium">Automation Cost per Contract</span>
+                      <span className="text-green-600 font-bold">${costAnalysis?.cost_per_contract_automation || 0}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
+                      <span className="font-medium">Savings Percentage</span>
+                      <span className="text-blue-600 font-bold">{costAnalysis?.savings_percentage || 0}%</span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         {/* Negotiations Tab */}
