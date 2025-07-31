@@ -2848,6 +2848,138 @@ def _generate_comprehensive_summary(analyses: Dict[str, Any]) -> Dict[str, Any]:
 # END PHASE 3 ENDPOINTS
 # =============================================================================
 
+# =============================================================================
+# PHASE 4: MEASUREMENT & OPTIMIZATION ENDPOINTS
+# =============================================================================
+
+@api_router.post("/run-prompt-experiments", response_model=PromptExperimentResponse)
+async def run_prompt_experiments(request: PromptExperimentRequest):
+    """
+    Phase 4: Run A/B testing experiments on different prompt strategies
+    Tests multiple prompt variations and identifies the best performing strategy
+    """
+    try:
+        # Convert strategies to variation configs
+        variations = [
+            {"strategy": strategy} 
+            for strategy in request.strategies
+        ]
+        
+        # Prepare metadata
+        metadata = {
+            "video_type": request.video_type,
+            "duration": request.duration,
+            "platform": request.platform
+        }
+        
+        # Run the experiment using PromptOptimizationEngine
+        results = await prompt_optimization_engine.run_prompt_experiments(
+            base_prompt=request.base_prompt,
+            variations=variations,
+            metadata=metadata
+        )
+        
+        return PromptExperimentResponse(**results)
+        
+    except Exception as e:
+        logger.error(f"Error running prompt experiments: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Experiment failed: {str(e)}")
+
+@api_router.post("/analyze-best-strategy", response_model=OptimizationAnalysisResponse)
+async def analyze_best_strategy(request: OptimizationAnalysisRequest):
+    """
+    Phase 4: Analyze experiment results and identify best performing strategy
+    Uses statistical analysis to determine optimal prompt optimization approach
+    """
+    try:
+        # Use PromptOptimizationEngine to identify best strategy
+        analysis = await prompt_optimization_engine.identify_best_performing_strategy(
+            results=request.results
+        )
+        
+        return OptimizationAnalysisResponse(**analysis)
+        
+    except Exception as e:
+        logger.error(f"Error analyzing best strategy: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
+
+@api_router.post("/optimization-history", response_model=OptimizationHistoryResponse)
+async def get_optimization_history(request: OptimizationHistoryRequest):
+    """
+    Phase 4: Get historical optimization data and performance trends
+    Provides insights into optimization patterns and strategy effectiveness over time
+    """
+    try:
+        filters = {}
+        
+        if request.date_range:
+            filters["date_range"] = request.date_range
+        if request.strategy:
+            filters["strategy"] = request.strategy
+        if request.platform:
+            filters["platform"] = request.platform
+        
+        # Get historical data from PromptOptimizationEngine
+        history = await prompt_optimization_engine.get_optimization_history(filters)
+        
+        return OptimizationHistoryResponse(**history)
+        
+    except Exception as e:
+        logger.error(f"Error getting optimization history: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"History retrieval failed: {str(e)}")
+
+@api_router.post("/quality-metrics-analysis")
+async def analyze_quality_metrics(request: Dict[str, Any]):
+    """
+    Phase 4: Analyze script using enhanced quality metrics
+    Uses the updated ScriptQualityAnalyzer with Phase 4 metrics integration
+    """
+    try:
+        script = request.get("script", "")
+        metadata = request.get("metadata", {})
+        
+        if not script:
+            raise HTTPException(status_code=400, detail="Script content is required")
+        
+        # Use enhanced Phase 4 quality analyzer
+        analysis = script_quality_analyzer.analyze_script_quality(script, metadata)
+        
+        # Extract Phase 4 specific metrics
+        phase4_metrics = {
+            "structural_compliance": analysis.get("detailed_scores", {}).get("structural_compliance", {}),
+            "engagement_density": analysis.get("detailed_scores", {}).get("engagement_density", {}),
+            "emotional_arc_strength": analysis.get("detailed_scores", {}).get("emotional_arc_strength", {}),
+            "platform_optimization": analysis.get("detailed_scores", {}).get("platform_optimization", {}),
+            "retention_potential": analysis.get("detailed_scores", {}).get("retention_potential", {}),
+            "viral_coefficient": analysis.get("detailed_scores", {}).get("viral_coefficient", {}),
+            "conversion_potential": analysis.get("detailed_scores", {}).get("conversion_potential", {})
+        }
+        
+        return {
+            "status": "SUCCESS",
+            "phase": "PHASE_4_ENHANCED_METRICS",
+            "overall_analysis": analysis,
+            "phase4_metrics": phase4_metrics,
+            "quality_summary": {
+                "overall_score": analysis.get("overall_quality_score", 0.0),
+                "quality_grade": analysis.get("quality_grade", "F"),
+                "top_metrics": sorted(
+                    [(k, v.get("score", 0) if isinstance(v, dict) else v) 
+                     for k, v in phase4_metrics.items()],
+                    key=lambda x: x[1], reverse=True
+                )[:3]
+            },
+            "analyzed_at": datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error in Phase 4 quality metrics analysis: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Quality analysis failed: {str(e)}")
+
+# =============================================================================
+# END PHASE 4 ENDPOINTS  
+# =============================================================================
+
 # Add CORS middleware BEFORE including router
 app.add_middleware(
     CORSMiddleware,
