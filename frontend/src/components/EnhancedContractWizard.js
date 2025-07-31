@@ -546,6 +546,7 @@ const EnhancedContractWizard = ({
             <div>
               <Label htmlFor="party1_address">Address</Label>
               <Textarea
+                key="party1_address_stable_textarea"
                 id="party1_address"
                 value={stepData.step2.party1_address}
                 onChange={(e) => updateStepData('step2', 'party1_address', e.target.value)}
