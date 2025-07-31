@@ -214,6 +214,63 @@ class ContractComparisonResult(BaseModel):
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 
+# Legal Research Integration Models
+class LegalCaseSearchRequest(BaseModel):
+    query: str
+    jurisdiction: Optional[str] = "US"
+    case_type: Optional[str] = None
+    date_range: Optional[Dict[str, str]] = None  # {"start": "2020-01-01", "end": "2024-01-01"}
+    max_results: int = Field(default=10, le=100)
+
+class LegalCase(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    title: str
+    citation: str
+    court: str
+    date_filed: Optional[str] = None
+    jurisdiction: str
+    summary: Optional[str] = None
+    full_text: Optional[str] = None
+    relevance_score: float = Field(ge=0, le=1)
+    source: str  # "courtlistener", "google_scholar", "caselaw_access_project"
+    url: Optional[str] = None
+
+class PrecedentAnalysisRequest(BaseModel):
+    contract_content: str
+    contract_type: str
+    jurisdiction: str = "US"
+    analysis_depth: str = Field(default="standard", regex="^(basic|standard|comprehensive)$")
+
+class PrecedentCase(BaseModel):
+    case: LegalCase
+    similarity_score: float = Field(ge=0, le=1)
+    relevant_principles: List[str]
+    contract_implications: List[str]
+    risk_assessment: str  # "LOW", "MEDIUM", "HIGH"
+
+class PrecedentAnalysisResult(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    contract_content: str
+    contract_type: str
+    jurisdiction: str
+    similar_cases: List[PrecedentCase]
+    legal_principles: List[str]
+    outcome_predictions: List[Dict[str, Any]]
+    recommendations: List[str]
+    confidence_score: float = Field(ge=0, le=1)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class LegalResearchResult(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    query: str
+    cases: List[LegalCase]
+    total_found: int
+    search_time: float
+    ai_analysis: Optional[str] = None
+    key_insights: List[str] = Field(default_factory=list)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
 # Multi-Agent System
 class LegalMateAgents:
     
