@@ -98,20 +98,28 @@ class ScriptQualityAnalyzer:
             platform = metadata.get('target_platform', 'youtube').lower()
             duration = metadata.get('duration', 'medium')
             
-            # Core quality analyses
-            retention_analysis = self.calculate_retention_score(script, platform, duration)
-            engagement_analysis = self.count_engagement_hooks(script, platform)
+            # Phase 4: Enhanced quality analyses with new metrics
+            structural_analysis = self.analyze_structural_compliance(script, metadata)
+            engagement_density_analysis = self.calculate_engagement_density(script, platform, duration)
             emotional_analysis = self.analyze_emotional_journey(script)
             platform_analysis = self.check_platform_compliance(script, platform, duration)
+            retention_analysis = self.calculate_retention_score(script, platform, duration)
+            viral_analysis = self.calculate_viral_coefficient(script, platform, metadata)
+            conversion_analysis = self.calculate_conversion_potential(script, platform, metadata)
+            
+            # Keep legacy analyses for backward compatibility
+            engagement_analysis = self.count_engagement_hooks(script, platform)
             cta_analysis = self.evaluate_cta(script, platform)
             
-            # Calculate weighted overall score
+            # Calculate weighted overall score with Phase 4 metrics
             overall_score = self._calculate_weighted_score({
-                "retention_potential": retention_analysis["score"],
-                "engagement_triggers": engagement_analysis["score"],
+                "structural_compliance": structural_analysis["score"],
+                "engagement_density": engagement_density_analysis["score"], 
                 "emotional_arc_strength": emotional_analysis["score"],
                 "platform_optimization": platform_analysis["score"],
-                "call_to_action_effectiveness": cta_analysis["score"]
+                "retention_potential": retention_analysis["score"],
+                "viral_coefficient": viral_analysis["score"],
+                "conversion_potential": conversion_analysis["score"]
             })
             
             # Generate comprehensive recommendations
