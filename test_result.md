@@ -460,10 +460,14 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Classic Mode - Complete Component Display and Preview Functionality"
+    - "Comprehensive Frontend Testing - Enhanced Contract Wizard Full Workflow"
+    - "Comprehensive Frontend Testing - Classic Mode Complete Interface Testing"
+    - "Comprehensive Frontend Testing - Analytics Dashboard All Charts and Functionality"
+    - "Cross-Mode Navigation and State Management Testing"
+    - "Responsive Design and UI/UX Testing"
   stuck_tasks: []
-  test_all: false
-  test_priority: "high_first"
+  test_all: true
+  test_priority: "comprehensive_frontend_testing"
 
   - task: "Analytics Dashboard Backend Endpoints Testing"
     implemented: true
