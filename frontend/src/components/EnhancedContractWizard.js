@@ -120,26 +120,35 @@ const EnhancedContractWizard = ({
   };
 
   const applySuggestions = (newSuggestions) => {
-    // Don't apply suggestions if user is actively typing
-    if (userIsTyping) {
+    // Don't apply suggestions if user is actively typing or if there are no suggestions
+    if (userIsTyping || !newSuggestions || newSuggestions.length === 0) {
       return;
     }
     
     const currentStepKey = `step${currentStep}`;
-    const updatedStepData = { ...stepData[currentStepKey] };
+    const currentStepData = stepData[currentStepKey];
+    
+    // Only apply suggestions to completely empty fields with very high confidence
+    const updatedStepData = { ...currentStepData };
+    let hasChanges = false;
     
     newSuggestions.forEach(suggestion => {
-      // Only apply suggestion if field is empty and confidence is high
-      if (suggestion.confidence > 0.8 && 
-          (!updatedStepData[suggestion.field_name] || updatedStepData[suggestion.field_name].trim() === '')) {
+      const fieldValue = currentStepData[suggestion.field_name];
+      
+      // Only apply if field is completely empty and confidence is very high
+      if (suggestion.confidence > 0.9 && (!fieldValue || fieldValue.trim() === '')) {
         updatedStepData[suggestion.field_name] = suggestion.suggested_value;
+        hasChanges = true;
       }
     });
     
-    setStepData(prev => ({
-      ...prev,
-      [currentStepKey]: updatedStepData
-    }));
+    // Only update state if there are actual changes
+    if (hasChanges) {
+      setStepData(prev => ({
+        ...prev,
+        [currentStepKey]: updatedStepData
+      }));
+    }
   };
 
   const getFieldSuggestions = async (fieldName) => {
