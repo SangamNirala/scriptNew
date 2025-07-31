@@ -101,8 +101,12 @@ const EnhancedContractWizard = ({
       setProgress(response.data.progress * 100);
       setEstimatedTime(response.data.estimated_completion_time);
       
-      // Apply suggestions to form data only if fields are empty
-      applySuggestions(response.data.suggestions);
+      // Apply suggestions to form data only if fields are empty and after a small delay
+      setTimeout(() => {
+        if (!userHasInteracted) {
+          applySuggestions(response.data.suggestions);
+        }
+      }, 1000); // Wait 1 second before applying suggestions
       
       // Mark this step as initialized
       const currentStepKey = `step${currentStep}`;
