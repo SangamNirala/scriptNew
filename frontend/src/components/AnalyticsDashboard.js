@@ -106,6 +106,14 @@ const AnalyticsDashboard = ({ onBack }) => {
   const [costAnalysis, setCostAnalysis] = useState(null);
   const [negotiationInsights, setNegotiationInsights] = useState(null);
   const [marketIntelligence, setMarketIntelligence] = useState(null);
+  
+  // New enhanced state
+  const [predictiveInsights, setPredictiveInsights] = useState(null);
+  const [advancedMetrics, setAdvancedMetrics] = useState(null);
+  const [realTimeStats, setRealTimeStats] = useState(null);
+  const [complianceDeepDive, setComplianceDeepDive] = useState(null);
+  const [integrationMetrics, setIntegrationMetrics] = useState(null);
+  
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
   const [filters, setFilters] = useState({
@@ -113,22 +121,42 @@ const AnalyticsDashboard = ({ onBack }) => {
     contractTypes: '',
     jurisdictions: ''
   });
+  const [refreshing, setRefreshing] = useState(false);
+  const [autoRefresh, setAutoRefresh] = useState(false);
 
   useEffect(() => {
     loadAnalyticsData();
   }, []);
 
+  // Auto-refresh functionality
+  useEffect(() => {
+    let interval;
+    if (autoRefresh) {
+      interval = setInterval(() => {
+        loadRealTimeData();
+      }, 30000); // Refresh every 30 seconds
+    }
+    return () => clearInterval(interval);
+  }, [autoRefresh]);
+
   const loadAnalyticsData = async () => {
     try {
       setLoading(true);
       
-      // Load all analytics data
-      const [dashboardRes, performanceRes, costRes, negotiationRes, marketRes] = await Promise.all([
+      // Load all analytics data including new enhanced endpoints
+      const [
+        dashboardRes, performanceRes, costRes, negotiationRes, marketRes,
+        advancedRes, realTimeRes, complianceRes, integrationRes
+      ] = await Promise.all([
         axios.get(`${API}/analytics/dashboard`),
         axios.get(`${API}/analytics/performance-metrics`),
         axios.get(`${API}/analytics/cost-analysis`),
         axios.get(`${API}/analytics/negotiation-insights`),
-        axios.get(`${API}/analytics/market-intelligence`)
+        axios.get(`${API}/analytics/market-intelligence`),
+        axios.get(`${API}/analytics/advanced-metrics`).catch(() => ({ data: null })),
+        axios.get(`${API}/analytics/real-time-stats`).catch(() => ({ data: null })),
+        axios.get(`${API}/analytics/compliance-deep-dive`).catch(() => ({ data: null })),
+        axios.get(`${API}/analytics/integration-metrics`).catch(() => ({ data: null }))
       ]);
       
       setDashboardData(dashboardRes.data);
@@ -136,10 +164,55 @@ const AnalyticsDashboard = ({ onBack }) => {
       setCostAnalysis(costRes.data);
       setNegotiationInsights(negotiationRes.data);
       setMarketIntelligence(marketRes.data);
+      setAdvancedMetrics(advancedRes.data);
+      setRealTimeStats(realTimeRes.data);
+      setComplianceDeepDive(complianceRes.data);
+      setIntegrationMetrics(integrationRes.data);
+      
     } catch (error) {
       console.error('Error loading analytics data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadRealTimeData = async () => {
+    try {
+      setRefreshing(true);
+      const realTimeRes = await axios.get(`${API}/analytics/real-time-stats`);
+      setRealTimeStats(realTimeRes.data);
+    } catch (error) {
+      console.error('Error loading real-time data:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  const loadPredictiveInsights = async (contractType = 'nda', jurisdiction = 'US') => {
+    try {
+      const response = await axios.get(`${API}/analytics/predictive-insights`, {
+        params: { contract_type: contractType, jurisdiction }
+      });
+      setPredictiveInsights(response.data);
+    } catch (error) {
+      console.error('Error loading predictive insights:', error);
+    }
+  };
+
+  const handleExport = async (exportType) => {
+    try {
+      const response = await axios.post(`${API}/analytics/export-data`, {
+        export_type: exportType,
+        data_types: ['overview', 'performance', 'costs', 'negotiations'],
+        filters: filters
+      });
+      
+      // In a real implementation, you would handle file download
+      console.log('Export data:', response.data);
+      alert(`Export initiated. File will be ready for download shortly.`);
+    } catch (error) {
+      console.error('Error exporting data:', error);
+      alert('Export failed. Please try again.');
     }
   };
 
