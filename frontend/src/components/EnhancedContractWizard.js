@@ -180,20 +180,44 @@ const EnhancedContractWizard = ({
   };
 
   const updateStepData = useCallback((step, field, value) => {
-    // Simple, immediate state update without any interference or timeout logic
-    setStepData(prev => ({
-      ...prev,
-      [step]: {
-        ...prev[step],
-        [field]: value
-      }
-    }));
+    // Create a unique key for this field
+    const fieldKey = `${step}.${field}`;
+    
+    // Use startTransition to ensure smooth UI updates
+    startTransition(() => {
+      // Immediate state update without any interference
+      setStepData(prev => ({
+        ...prev,
+        [step]: {
+          ...prev[step],
+          [field]: value
+        }
+      }));
+      
+      // Update the ref to track latest value for this field
+      lastInputValuesRef.current[fieldKey] = value;
+    });
     
     // Mark that user has interacted - simple boolean flag
     if (!userHasInteracted) {
       setUserHasInteracted(true);
     }
-  }, [userHasInteracted]);
+    
+    // Clear any existing timeout for suggestions to prevent race conditions
+    if (inputTimeoutRef.current) {
+      clearTimeout(inputTimeoutRef.current);
+    }
+    
+    // Debounce suggestions to prevent interference with rapid typing
+    inputTimeoutRef.current = setTimeout(() => {
+      // Only apply suggestions if the value hasn't changed since this timeout was set
+      if (lastInputValuesRef.current[fieldKey] === value) {
+        // Allow suggestions after user stops typing for 2 seconds
+        setUserHasInteracted(false);
+      }
+    }, 2000);
+    
+  }, [userHasInteracted, startTransition]);
 
   const applySuggestion = (suggestion) => {
     const currentStepKey = `step${currentStep}`;
