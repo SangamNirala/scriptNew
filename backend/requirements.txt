@@ -1,58 +1,115 @@
+# Core FastAPI and Server Dependencies
 fastapi==0.110.1
 uvicorn==0.25.0
-boto3>=1.34.129
-requests-oauthlib>=2.0.0
-cryptography>=42.0.8
 python-dotenv>=1.0.1
+python-multipart>=0.0.9
+
+# Database Dependencies
 pymongo==4.5.0
-pydantic>=2.6.4
-email-validator>=2.2.0
+motor==3.3.1
+
+# Data Processing and Analysis
+pandas>=2.2.0
+numpy>=2.2.0
+scipy>=1.12.0
+joblib>=1.4.0
+
+# HTTP Requests and API Integration
+requests>=2.31.0
+httpx>=0.27.0
+requests-oauthlib>=2.0.0
+
+# Security and Authentication
+cryptography>=42.0.8
 pyjwt>=2.10.1
 passlib>=1.7.4
+python-jose>=3.3.0
+
+# Data Validation
+pydantic>=2.6.4
+email-validator>=2.2.0
+
+# AWS and Cloud Services
+boto3>=1.34.129
+
+# Date and Time
 tzdata>=2024.2
-motor==3.3.1
+
+# Development and Testing Tools
 pytest>=8.0.0
 black>=24.1.1
 isort>=5.13.2
 flake8>=7.0.0
 mypy>=1.8.0
-python-jose>=3.3.0
-requests>=2.31.0
-pandas>=2.2.0
-numpy>=1.26.0
-python-multipart>=0.0.9
-jq>=1.6.0
+
+# Command Line Tools
 typer>=0.9.0
-emergentintegrations
-edge-tts>=6.1.15
-torch
-torchvision
-torchaudio
-opencv-python
-imageio
-imageio-ffmpeg
-librosa
-pydub
-scipy
-tqdm
-pyyaml
-joblib
-scikit-image
-litellm
-httpx
-# Additional dependencies for ultra-realistic avatar generation
-face-recognition
-mediapipe
-dlib
-insightface
-onnx
-onnxruntime
-transformers
-diffusers
-accelerate
-xformers
-google-search-results
-feedparser
-beautifulsoup4
-newspaper3k
-textstat
+jq>=1.6.0
+
+# AI and LLM Integration (CRITICAL - Install with special index)
+# Install with: pip install emergentintegrations --extra-index-url https://d33sy5i8bnduwe.cloudfront.net/simple/
+emergentintegrations>=0.1.0
+litellm>=1.74.0
+openai>=1.98.0
+google-generativeai>=0.8.0
+google-genai>=1.28.0
+
+# Text-to-Speech and Audio Processing (CRITICAL)
+edge-tts>=7.0.0
+pydub>=0.25.1
+librosa>=0.10.0
+
+# Computer Vision and Image Processing (CRITICAL)
+opencv-python>=4.12.0
+Pillow>=10.0.0
+imageio>=2.34.0
+imageio-ffmpeg>=0.5.0
+scikit-image>=0.23.0
+
+# Web Scraping and Content Analysis (CRITICAL)
+beautifulsoup4>=4.13.0
+newspaper3k>=0.2.8
+lxml>=6.0.0
+lxml_html_clean>=0.4.0
+feedparser>=6.0.11
+google-search-results>=2.4.2
+textstat>=0.7.8
+
+# Natural Language Processing
+nltk>=3.9.0
+cssselect>=1.3.0
+tldextract>=5.3.0
+
+# Machine Learning and AI Models
+torch>=2.1.0
+torchvision>=0.16.0
+torchaudio>=2.1.0
+transformers>=4.35.0
+diffusers>=0.24.0
+accelerate>=0.24.0
+
+# YAML Processing
+pyyaml>=6.0.0
+
+# Utility Libraries
+tqdm>=4.67.0
+aiohttp>=3.12.0
+tabulate>=0.9.0
+srt>=3.5.0
+
+# Advanced Dependencies for Avatar Generation (Optional but included)
+# Note: These may require additional system dependencies
+face-recognition>=1.3.0
+mediapipe>=0.10.0
+dlib>=19.24.0
+insightface>=0.7.0
+onnx>=1.15.0
+onnxruntime>=1.16.0
+xformers>=0.0.22
+
+# Additional HTTP Processing
+cmudict>=1.1.1
+pyphen>=0.17.0
+importlib-resources>=6.5.0
+importlib-metadata>=8.7.0
+jsonschema>=4.25.0
