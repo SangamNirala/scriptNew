@@ -76,6 +76,16 @@ huggingface_client = httpx.AsyncClient(
     }
 )
 
+# Legal Research API Setup
+courtlistener_client = httpx.AsyncClient(
+    base_url="https://www.courtlistener.com/api/rest/v3",
+    headers={
+        "Authorization": f"Token {os.environ['COURTLISTENER_API_KEY']}"
+    }
+)
+
+serp_api_key = os.environ['SERP_API_KEY']
+
 # Create the main app without a prefix
 app = FastAPI()
 
