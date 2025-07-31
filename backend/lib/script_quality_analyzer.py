@@ -17,13 +17,26 @@ class ScriptQualityAnalyzer:
     """Comprehensive script quality analysis engine"""
     
     def __init__(self):
-        # Define quality scoring weights
+        # Define quality scoring weights (Phase 4: Updated with new metrics)
         self.scoring_weights = {
-            "retention_potential": 0.25,
-            "engagement_triggers": 0.25,
-            "emotional_arc_strength": 0.20,
-            "platform_optimization": 0.15,
-            "call_to_action_effectiveness": 0.15
+            "structural_compliance": 0.15,        # Phase 4: Adherence to template structure
+            "engagement_density": 0.15,           # Phase 4: Hooks per minute ratio  
+            "emotional_arc_strength": 0.15,       # Phase 4: Peak-to-valley emotional variance
+            "platform_optimization": 0.15,       # Phase 4: Algorithm-friendly elements
+            "retention_potential": 0.15,          # Phase 4: Predicted watch-through rate
+            "viral_coefficient": 0.125,           # Phase 4: Shareability prediction
+            "conversion_potential": 0.125         # Phase 4: CTA effectiveness score
+        }
+        
+        # Phase 4: Quality Metrics Dictionary as specified
+        self.QUALITY_METRICS = {
+            "structural_compliance": 0.0,    # Adherence to template structure
+            "engagement_density": 0.0,       # Hooks per minute ratio
+            "emotional_arc_strength": 0.0,   # Peak-to-valley emotional variance
+            "platform_optimization": 0.0,    # Algorithm-friendly elements
+            "retention_potential": 0.0,      # Predicted watch-through rate
+            "viral_coefficient": 0.0,        # Shareability prediction
+            "conversion_potential": 0.0      # CTA effectiveness score
         }
         
         # Platform-specific optimization criteria
