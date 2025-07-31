@@ -121,15 +121,15 @@ const EnhancedContractWizard = ({
   };
 
   const applySuggestions = (newSuggestions) => {
-    // Don't apply suggestions if user is actively typing or if there are no suggestions
-    if (userIsTyping || !newSuggestions || newSuggestions.length === 0) {
+    // Don't apply suggestions if user has interacted or if there are no suggestions
+    if (userHasInteracted || !newSuggestions || newSuggestions.length === 0) {
       return;
     }
     
     const currentStepKey = `step${currentStep}`;
     const currentStepData = stepData[currentStepKey];
     
-    // Only apply suggestions to completely empty fields with very high confidence
+    // Only apply suggestions to completely empty fields with very high confidence (95%+)
     const updatedStepData = { ...currentStepData };
     let hasChanges = false;
     
