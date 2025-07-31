@@ -87,6 +87,15 @@ const EnhancedContractWizard = ({
     }
   }, [currentStep, userHasInteracted]);
 
+  // Cleanup timeout on unmount or when component updates
+  useEffect(() => {
+    return () => {
+      if (inputTimeoutRef.current) {
+        clearTimeout(inputTimeoutRef.current);
+      }
+    };
+  }, []);
+
 
 
   const initializeWizard = async () => {
