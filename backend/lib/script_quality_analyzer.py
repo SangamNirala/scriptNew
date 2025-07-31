@@ -132,10 +132,16 @@ class ScriptQualityAnalyzer:
                 "overall_quality_score": round(overall_score, 2),
                 "quality_grade": self._get_quality_grade(overall_score),
                 "detailed_scores": {
-                    "retention_potential": retention_analysis,
-                    "engagement_triggers": engagement_analysis,
+                    # Phase 4: Enhanced metrics
+                    "structural_compliance": structural_analysis,
+                    "engagement_density": engagement_density_analysis,
                     "emotional_arc_strength": emotional_analysis,
                     "platform_optimization": platform_analysis,
+                    "retention_potential": retention_analysis,
+                    "viral_coefficient": viral_analysis,
+                    "conversion_potential": conversion_analysis,
+                    # Legacy metrics for backward compatibility
+                    "engagement_triggers": engagement_analysis,
                     "call_to_action_effectiveness": cta_analysis
                 },
                 "recommendations": recommendations,
