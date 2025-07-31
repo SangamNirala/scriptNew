@@ -170,7 +170,7 @@ const EnhancedContractWizard = ({
   };
 
   const updateStepData = (step, field, value) => {
-    // Simple, immediate state update without any interference
+    // Simple, immediate state update without any interference or timeout logic
     setStepData(prev => ({
       ...prev,
       [step]: {
@@ -179,19 +179,10 @@ const EnhancedContractWizard = ({
       }
     }));
     
-    // Mark that user has interacted with this field to prevent auto-suggestions
-    setUserIsTyping(true);
-    
-    // Use a debounced approach to reset typing flag
-    if (typingTimeout) {
-      clearTimeout(typingTimeout);
+    // Mark that user has interacted - simple boolean flag
+    if (!userHasInteracted) {
+      setUserHasInteracted(true);
     }
-    
-    const newTimeout = setTimeout(() => {
-      setUserIsTyping(false);
-    }, 3000); // Longer delay to ensure user can type freely
-    
-    setTypingTimeout(newTimeout);
   };
 
   const applySuggestion = (suggestion) => {
