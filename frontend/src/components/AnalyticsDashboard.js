@@ -433,34 +433,128 @@ const AnalyticsDashboard = ({ onBack }) => {
         <TabsContent value="overview" className="space-y-6">
           {/* Key Metrics */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <MetricCard
+            <EnhancedMetricCard
               title="Total Contracts"
               value={dashboardData?.overview?.total_contracts || 0}
               icon={Briefcase}
               color="blue"
+              trend={advancedMetrics?.growth_metrics ? 
+                (advancedMetrics.growth_metrics.monthly_growth_rate > 0 ? 'up' : 'down') 
+                : 'stable'}
+              subtitle="All time"
             />
-            <MetricCard
+            <EnhancedMetricCard
               title="Success Rate"
               value={`${performanceMetrics?.success_rate || 0}%`}
               change={5.2}
               icon={CheckCircle}
               color="green"
+              trend="up"
+              subtitle="High compliance contracts"
             />
-            <MetricCard
+            <EnhancedMetricCard
               title="Cost Savings"
               value={`$${costAnalysis?.total_savings?.toLocaleString() || 0}`}
               change={12.8}
               icon={DollarSign}
               color="emerald"
+              trend="up"
+              subtitle="vs traditional legal costs"
             />
-            <MetricCard
+            <EnhancedMetricCard
               title="Avg Compliance"
               value={`${performanceMetrics?.average_compliance_score?.toFixed(1) || 0}%`}
               change={3.1}
               icon={Shield}
               color="purple"
+              trend="up"
+              subtitle="Regulatory alignment"
             />
           </div>
+
+          {/* Advanced Growth Metrics */}
+          {advancedMetrics && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+                <CardHeader>
+                  <CardTitle className="text-blue-800">Growth Metrics</CardTitle>
+                  <CardDescription>30-day performance overview</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex justify-between">
+                      <span>Contracts (30d)</span>
+                      <span className="font-bold">{advancedMetrics.growth_metrics?.contracts_last_30_days || 0}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Growth Rate</span>
+                      <span className={`font-bold ${
+                        (advancedMetrics.growth_metrics?.monthly_growth_rate || 0) >= 0 ? 'text-green-600' : 'text-red-600'
+                      }`}>
+                        {advancedMetrics.growth_metrics?.monthly_growth_rate || 0}%
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Forecast Next Month</span>
+                      <span className="font-bold text-blue-600">{advancedMetrics.growth_metrics?.forecasted_next_month || 0}</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+                <CardHeader>
+                  <CardTitle className="text-green-800">Quality Metrics</CardTitle>
+                  <CardDescription>Automation efficiency</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex justify-between">
+                      <span>Quality Score</span>
+                      <span className="font-bold">{advancedMetrics.quality_metrics?.overall_quality_score || 0}%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Efficiency</span>
+                      <span className="font-bold text-green-600">{advancedMetrics.quality_metrics?.automation_efficiency || 0}%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Error Rate</span>
+                      <span className="font-bold text-orange-600">{advancedMetrics.quality_metrics?.error_rate || 0}%</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+                <CardHeader>
+                  <CardTitle className="text-purple-800">Trend Analysis</CardTitle>
+                  <CardDescription>Risk assessment trends</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex justify-between">
+                      <span>Improving</span>
+                      <span className="font-bold text-green-600">
+                        {advancedMetrics.trend_analysis?.risk_trends?.improving || 0}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Stable</span>
+                      <span className="font-bold text-blue-600">
+                        {advancedMetrics.trend_analysis?.risk_trends?.stable || 0}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Declining</span>
+                      <span className="font-bold text-red-600">
+                        {advancedMetrics.trend_analysis?.risk_trends?.declining || 0}
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
 
           {/* Charts Row */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
