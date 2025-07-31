@@ -4045,12 +4045,21 @@ async def generate_field_suggestions(
     company_profile: Optional[CompanyProfile] = None,
     context: Dict[str, Any] = {}
 ) -> List[SmartSuggestion]:
-    """Generate suggestions for a specific field"""
+    """Generate suggestions for a specific field with HR-specific enhancements"""
     suggestions = []
+    
+    # Check if this is an HR contract type
+    hr_contract_types = [
+        "employment_agreement", "offer_letter", "employee_handbook_acknowledgment",
+        "severance_agreement", "contractor_agreement", "employee_nda", 
+        "performance_improvement_plan", "non_compete"
+    ]
+    
+    is_hr_contract = contract_type in hr_contract_types
     
     # Profile-based suggestions
     if user_profile:
-        if field_name in ["party1_name", "client_name", "contractor_name"]:
+        if field_name in ["party1_name", "client_name", "contractor_name", "employee_name"]:
             suggestions.append(SmartSuggestion(
                 field_name=field_name,
                 suggested_value=user_profile.name,
@@ -4059,7 +4068,7 @@ async def generate_field_suggestions(
                 source="user_profile"
             ))
         
-        if field_name in ["party1_email", "client_email", "contractor_email"]:
+        if field_name in ["party1_email", "client_email", "contractor_email", "employee_email"]:
             if user_profile.email:
                 suggestions.append(SmartSuggestion(
                     field_name=field_name,
@@ -4078,6 +4087,180 @@ async def generate_field_suggestions(
                 reasoning="From your company profile",
                 source="company_profile"
             ))
+        
+        if field_name == "company_address" and company_profile.address:
+            address_text = ", ".join([
+                company_profile.address.get("street", ""),
+                company_profile.address.get("city", ""),
+                company_profile.address.get("state", ""),
+                company_profile.address.get("zip", "")
+            ]).strip(", ")
+            if address_text:
+                suggestions.append(SmartSuggestion(
+                    field_name=field_name,
+                    suggested_value=address_text,
+                    confidence=0.9,
+                    reasoning="From your company profile address",
+                    source="company_profile"
+                ))
+    
+    # HR-specific suggestions
+    if is_hr_contract:
+        # Salary suggestions based on position
+        if field_name == "salary" and context.get("position_title"):
+            position = context["position_title"].lower()
+            industry = company_profile.industry if company_profile else "technology"
+            
+            salary_suggestions = await HRWorkflowService.generate_hr_smart_suggestions(
+                "salary", {"position": position}, {"industry": industry}
+            )
+            suggestions.extend(salary_suggestions)
+        
+        # Employment type suggestions
+        if field_name == "employment_type":
+            suggestions.extend([
+                SmartSuggestion(
+                    field_name=field_name,
+                    suggested_value="full_time",
+                    confidence=0.8,
+                    reasoning="Most common employment type for permanent positions",
+                    source="industry_standard"
+                ),
+                SmartSuggestion(
+                    field_name=field_name,
+                    suggested_value="part_time",
+                    confidence=0.6,
+                    reasoning="Alternative for flexible scheduling",
+                    source="industry_standard"
+                )
+            ])
+        
+        # Work schedule suggestions
+        if field_name == "work_schedule":
+            suggestions.extend([
+                SmartSuggestion(
+                    field_name=field_name,
+                    suggested_value="9:00 AM - 5:00 PM, Monday through Friday",
+                    confidence=0.9,
+                    reasoning="Standard business hours",
+                    source="industry_standard"
+                ),
+                SmartSuggestion(
+                    field_name=field_name,
+                    suggested_value="Flexible hours between 8:00 AM - 6:00 PM",
+                    confidence=0.7,
+                    reasoning="Flexible schedule option",
+                    source="industry_standard"
+                )
+            ])
+        
+        # Benefits suggestions based on company size
+        if field_name == "benefits_eligible" and company_profile:
+            if company_profile.size in ["medium", "large", "enterprise"]:
+                suggestions.append(SmartSuggestion(
+                    field_name=field_name,
+                    suggested_value="true",
+                    confidence=0.9,
+                    reasoning=f"Companies of size '{company_profile.size}' typically offer full benefits",
+                    source="company_profile"
+                ))
+        
+        # Vacation days suggestions
+        if field_name == "vacation_days":
+            suggestions.extend([
+                SmartSuggestion(
+                    field_name=field_name,
+                    suggested_value="15",
+                    confidence=0.8,
+                    reasoning="Standard starting vacation allowance",
+                    source="industry_standard"
+                ),
+                SmartSuggestion(
+                    field_name=field_name,
+                    suggested_value="20",
+                    confidence=0.7,
+                    reasoning="Competitive vacation package",
+                    source="industry_standard"
+                )
+            ])
+        
+        # Probation period suggestions
+        if field_name == "probation_period":
+            suggestions.extend([
+                SmartSuggestion(
+                    field_name=field_name,
+                    suggested_value="90 days",
+                    confidence=0.9,
+                    reasoning="Standard probationary period",
+                    source="industry_standard"
+                ),
+                SmartSuggestion(
+                    field_name=field_name,
+                    suggested_value="6 months",
+                    confidence=0.7,
+                    reasoning="Extended probationary period for senior roles",
+                    source="industry_standard"
+                )
+            ])
+        
+        # Department suggestions based on company industry
+        if field_name == "department" and company_profile:
+            industry = company_profile.industry.lower()
+            if "technology" in industry or "software" in industry:
+                suggestions.extend([
+                    SmartSuggestion(
+                        field_name=field_name,
+                        suggested_value="Engineering",
+                        confidence=0.8,
+                        reasoning="Common department in technology companies",
+                        source="industry_standard"
+                    ),
+                    SmartSuggestion(
+                        field_name=field_name,
+                        suggested_value="Product",
+                        confidence=0.7,
+                        reasoning="Product development department",
+                        source="industry_standard"
+                    )
+                ])
+        
+        # Payment schedule for contractors
+        if field_name == "payment_schedule" and contract_type == "contractor_agreement":
+            suggestions.extend([
+                SmartSuggestion(
+                    field_name=field_name,
+                    suggested_value="Net 30 days",
+                    confidence=0.8,
+                    reasoning="Standard contractor payment terms",
+                    source="industry_standard"
+                ),
+                SmartSuggestion(
+                    field_name=field_name,
+                    suggested_value="Bi-weekly",
+                    confidence=0.7,
+                    reasoning="Regular payment schedule",
+                    source="industry_standard"
+                )
+            ])
+        
+        # Severance-specific suggestions
+        if field_name == "severance_weeks" and contract_type == "severance_agreement":
+            suggestions.extend([
+                SmartSuggestion(
+                    field_name=field_name,
+                    suggested_value="4",
+                    confidence=0.8,
+                    reasoning="Standard severance for employees with 1-2 years service",
+                    source="industry_standard"
+                ),
+                SmartSuggestion(
+                    field_name=field_name,
+                    suggested_value="8",
+                    confidence=0.7,
+                    reasoning="Generous severance for longer-term employees",
+                    source="industry_standard"
+                )
+            ])
     
     return suggestions
 
