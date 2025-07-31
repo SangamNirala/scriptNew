@@ -138,8 +138,8 @@ const EnhancedContractWizard = ({
   };
 
   const applySuggestions = (newSuggestions) => {
-    // Don't apply suggestions if user has interacted, if there are no suggestions, or if we're in a pending state
-    if (userHasInteracted || !newSuggestions || newSuggestions.length === 0 || isPending) {
+    // Don't apply suggestions if user has interacted, if there are no suggestions
+    if (userHasInteracted || !newSuggestions || newSuggestions.length === 0) {
       return;
     }
     
@@ -166,14 +166,12 @@ const EnhancedContractWizard = ({
       }
     });
     
-    // Only update state if there are actual changes and wrap in transition
+    // Only update state if there are actual changes
     if (hasChanges) {
-      startTransition(() => {
-        setStepData(prev => ({
-          ...prev,
-          [currentStepKey]: updatedStepData
-        }));
-      });
+      setStepData(prev => ({
+        ...prev,
+        [currentStepKey]: updatedStepData
+      }));
     }
   };
 
