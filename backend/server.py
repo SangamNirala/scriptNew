@@ -24,6 +24,12 @@ from PIL import Image as PILImage
 import httpx
 import difflib
 from bson import ObjectId
+import asyncio
+import aiohttp
+from bs4 import BeautifulSoup
+from serpapi import GoogleSearch
+import time
+from tenacity import retry, stop_after_attempt, wait_exponential
 
 # Helper function to handle MongoDB ObjectId serialization
 def convert_objectid_to_str(doc):
