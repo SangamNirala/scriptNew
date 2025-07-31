@@ -85,43 +85,8 @@ const EnhancedContractWizard = ({
 
 
   const initializeWizard = async () => {
-    if (currentStep === 1) return;
-    
-    setIsLoading(true);
-    try {
-      const response = await axios.post(`${API}/contract-wizard/initialize`, {
-        user_id: userProfile?.id,
-        company_id: companyProfile?.id,
-        contract_type: stepData.step1.contract_type,
-        current_step: currentStep,
-        partial_data: stepData
-      });
-
-      setSuggestions(response.data.suggestions || []);
-      setProgress(response.data.progress * 100);
-      setEstimatedTime(response.data.estimated_completion_time);
-      
-      // Apply suggestions to form data only if fields are empty and after a small delay
-      setTimeout(() => {
-        if (!userHasInteracted) {
-          applySuggestions(response.data.suggestions);
-        }
-      }, 1000); // Wait 1 second before applying suggestions
-      
-      // Mark this step as initialized
-      const currentStepKey = `step${currentStep}`;
-      setStepData(prev => ({
-        ...prev,
-        [currentStepKey]: {
-          ...prev[currentStepKey],
-          initialized: true
-        }
-      }));
-    } catch (error) {
-      console.error('Error initializing wizard:', error);
-    } finally {
-      setIsLoading(false);
-    }
+    // COMPLETELY DISABLED to prevent interference with typing
+    return;
   };
 
   const applySuggestions = (newSuggestions) => {
