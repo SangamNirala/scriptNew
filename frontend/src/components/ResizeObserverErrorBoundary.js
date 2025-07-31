@@ -7,25 +7,37 @@ class ResizeObserverErrorBoundary extends React.Component {
   }
 
   static getDerivedStateFromError(error) {
-    // Check if it's a ResizeObserver error
-    if (error.message === 'ResizeObserver loop completed with undelivered notifications.') {
-      // Don't update state, just return null to prevent the error from being thrown
+    // Check for ResizeObserver errors (common with Radix UI components)
+    const resizeObserverErrors = [
+      'ResizeObserver loop completed with undelivered notifications.',
+      'ResizeObserver loop limit exceeded',
+      'ResizeObserver loop completed with undelivered notifications'
+    ];
+    
+    const isResizeObserverError = resizeObserverErrors.some(errorMsg => 
+      error.message && error.message.includes('ResizeObserver')
+    );
+    
+    if (isResizeObserverError) {
+      // Don't update state for ResizeObserver errors - just suppress them
       return null;
     }
-    // For other errors, update state to show fallback UI
+    
+    // For other errors, show fallback UI
     return { hasError: true };
   }
 
   componentDidCatch(error, errorInfo) {
-    // Log only non-ResizeObserver errors
-    if (error.message !== 'ResizeObserver loop completed with undelivered notifications.') {
+    // Only log non-ResizeObserver errors
+    const isResizeObserverError = error.message && error.message.includes('ResizeObserver');
+    
+    if (!isResizeObserverError) {
       console.error('Component error caught:', error, errorInfo);
     }
   }
 
   render() {
     if (this.state.hasError) {
-      // You can render any custom fallback UI
       return (
         <div className="p-4 border border-red-200 bg-red-50 rounded-lg">
           <h2 className="text-lg font-semibold text-red-800">Something went wrong</h2>
