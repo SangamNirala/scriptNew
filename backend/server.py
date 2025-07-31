@@ -131,6 +131,106 @@ class UserProfile(BaseModel):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
+# HR & Employment Industry-Specific Models
+class EmployeeProfile(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    employee_id: str
+    first_name: str
+    last_name: str
+    email: str
+    phone: Optional[str] = None
+    department: str
+    position: str
+    employment_type: str  # "full_time", "part_time", "contractor", "intern"
+    start_date: datetime
+    manager_id: Optional[str] = None
+    salary: Optional[float] = None
+    hourly_rate: Optional[float] = None
+    benefits_eligible: bool = True
+    location: str  # "remote", "on_site", "hybrid"
+    employment_status: str  # "active", "terminated", "on_leave", "pending"
+    company_id: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+class HRPolicy(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    title: str
+    category: str  # "employee_handbook", "code_of_conduct", "safety", "benefits", "leave", "other"
+    content: str
+    version: str
+    effective_date: datetime
+    expiry_date: Optional[datetime] = None
+    mandatory_acknowledgment: bool = True
+    applies_to: List[str] = Field(default_factory=list)  # departments, roles, or "all"
+    company_id: str
+    created_by: str
+    approved_by: Optional[str] = None
+    approval_date: Optional[datetime] = None
+    status: str = Field(default="draft")  # "draft", "approved", "published", "archived"
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+class OnboardingWorkflow(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    employee_id: str
+    workflow_template: str  # "standard", "executive", "contractor", "intern"
+    current_step: int = 1
+    total_steps: int = 6
+    steps: List[Dict[str, Any]] = Field(default_factory=list)
+    status: str = Field(default="in_progress")  # "pending", "in_progress", "completed", "paused"
+    assigned_hr_rep: Optional[str] = None
+    start_date: datetime = Field(default_factory=datetime.utcnow)
+    completion_date: Optional[datetime] = None
+    documents_generated: List[str] = Field(default_factory=list)
+    policies_acknowledged: List[str] = Field(default_factory=list)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+class PolicyAcknowledgment(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    employee_id: str
+    policy_id: str
+    acknowledged_at: datetime = Field(default_factory=datetime.utcnow)
+    digital_signature: Optional[str] = None  # Base64 encoded signature
+    ip_address: Optional[str] = None
+    acknowledgment_method: str = Field(default="digital")  # "digital", "physical", "verbal"
+    witness: Optional[str] = None
+    notes: Optional[str] = None
+
+class ComplianceTracker(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    company_id: str
+    compliance_area: str  # "employment_law", "safety", "benefits", "tax", "other"
+    requirement: str
+    description: str
+    jurisdiction: str
+    due_date: Optional[datetime] = None
+    status: str = Field(default="pending")  # "pending", "in_progress", "completed", "overdue"
+    assigned_to: Optional[str] = None
+    last_review_date: Optional[datetime] = None
+    next_review_date: Optional[datetime] = None
+    risk_level: str = Field(default="medium")  # "low", "medium", "high", "critical"
+    documents_required: List[str] = Field(default_factory=list)
+    completed_documents: List[str] = Field(default_factory=list)
+    notes: Optional[str] = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+class HRWorkflowRequest(BaseModel):
+    workflow_type: str  # "onboarding", "offboarding", "policy_acknowledgment"
+    employee_data: Dict[str, Any]
+    workflow_options: Dict[str, Any] = Field(default_factory=dict)
+    company_id: str
+
+class HRWorkflowResponse(BaseModel):
+    workflow_id: str
+    status: str
+    current_step: Dict[str, Any]
+    next_actions: List[str]
+    documents_generated: List[Dict[str, Any]]
+    estimated_completion: str
+
 class CompanyProfile(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     name: str
