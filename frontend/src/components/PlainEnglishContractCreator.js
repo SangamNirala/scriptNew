@@ -212,6 +212,91 @@ const PlainEnglishContractCreator = ({ onBack, contractTypes, jurisdictions }) =
     setActiveTab('input');
   };
 
+  // Signature upload handlers
+  const handleSignatureUpload = async (partyType, file) => {
+    try {
+      setUploadingSignature(partyType);
+      
+      // Validate file type
+      if (!['image/png', 'image/jpg', 'image/jpeg'].includes(file.type)) {
+        alert('Please upload a PNG, JPG, or JPEG image file.');
+        return;
+      }
+      
+      // Validate file size (1MB limit)
+      if (file.size > 1024 * 1024) {
+        alert('File size must be less than 1MB.');
+        return;
+      }
+      
+      // Convert to base64
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const base64Data = e.target.result.split(',')[1]; // Remove data URL prefix
+        
+        try {
+          // For Plain English contracts, we'll store signatures locally
+          // Update local state
+          if (partyType === 'first_party') {
+            setFirstPartySignature(e.target.result);
+          } else {
+            setSecondPartySignature(e.target.result);
+          }
+          
+          // Update contract content with signature
+          updateContractWithSignature(partyType, e.target.result);
+          
+          alert(`${partyType === 'first_party' ? 'First' : 'Second'} party signature uploaded successfully!`);
+        } catch (error) {
+          console.error('Error uploading signature:', error);
+          alert('Error uploading signature. Please try again.');
+        } finally {
+          setUploadingSignature(null);
+        }
+      };
+      
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error('Error processing signature:', error);
+      alert('Error processing signature. Please try again.');
+      setUploadingSignature(null);
+    }
+  };
+
+  const updateContractWithSignature = (partyType, signatureDataUrl) => {
+    const placeholder = partyType === 'first_party' 
+      ? '[First Party Signature Placeholder]' 
+      : '[Second Party Signature Placeholder]';
+    
+    // Replace placeholder with signature indicator in content
+    let updatedContent = editedContract;
+    
+    // If placeholder doesn't exist, add signature sections at the end
+    if (!updatedContent.includes('[First Party Signature Placeholder]') && !updatedContent.includes('[Second Party Signature Placeholder]')) {
+      updatedContent += '\n\nSIGNATURES:\n\n[First Party Signature Placeholder]\nFirst Party: _________________________ Date: _________\n\n[Second Party Signature Placeholder]\nSecond Party: _________________________ Date: _________';
+    }
+    
+    updatedContent = updatedContent.replace(
+      placeholder,
+      `[${partyType === 'first_party' ? 'First' : 'Second'} Party Signature Uploaded]`
+    );
+    
+    setEditedContract(updatedContent);
+  };
+
+  const triggerFileUpload = (partyType) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/png,image/jpg,image/jpeg';
+    input.onchange = (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        handleSignatureUpload(partyType, file);
+      }
+    };
+    input.click();
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-6">
       <div className="max-w-6xl mx-auto">
