@@ -3519,6 +3519,272 @@ async def generate_script_with_intelligent_qa(request: ScriptRequest):
 # END PHASE 5 ENDPOINTS
 # =============================================================================
 
+# =============================================================================
+# STEP 2: FEW-SHOT LEARNING & PATTERN RECOGNITION ENDPOINTS
+# =============================================================================
+
+@api_router.post("/generate-script-few-shot", response_model=FewShotScriptResponse)
+async def generate_script_few_shot(request: FewShotScriptRequest):
+    """
+    Generate scripts using Few-Shot Learning & Pattern Recognition
+    
+    This endpoint leverages curated high-performing examples and pattern recognition
+    to generate scripts with proven techniques and structures.
+    """
+    try:
+        # Initialize few-shot generator if not already done
+        if not hasattr(few_shot_generator, 'nlp') or few_shot_generator.nlp is None:
+            await few_shot_generator.initialize()
+        
+        # Create context profile
+        context = ContextProfile(
+            video_type=request.video_type,
+            industry=request.industry,
+            platform=request.platform,
+            duration=request.duration,
+            audience_tone=request.audience_tone,
+            complexity_level=request.complexity_level,
+            engagement_goals=request.engagement_goals
+        )
+        
+        # Apply learned patterns to enhance the prompt
+        pattern_result = await few_shot_generator.apply_learned_patterns(
+            context=context,
+            base_prompt=request.prompt
+        )
+        
+        # Generate script using the enhanced prompt
+        script_chat = LlmChat(
+            api_key=GEMINI_API_KEY,
+            session_id=f"few-shot-script-{str(uuid.uuid4())[:8]}",
+            system_message=f"""You are an expert video script writer enhanced with Few-Shot Learning capabilities. You generate scripts by applying proven patterns from high-performing content.
+
+Your writing incorporates:
+1. PROVEN STRUCTURAL PATTERNS: Hook → Setup → Content → Climax → Resolution
+2. ENGAGEMENT TECHNIQUES: Psychological triggers, retention cues, platform optimization
+3. INDUSTRY BEST PRACTICES: {request.industry}-specific terminology and approaches
+4. PLATFORM OPTIMIZATION: {request.platform}-native formatting and style
+
+Generate engaging, high-quality scripts that follow proven successful patterns while maintaining authenticity and value."""
+        ).with_model("gemini", "gemini-2.0-flash")
+        
+        # Create duration mapping
+        duration_mapping = {
+            'short': '30-60 seconds',
+            'medium': '1-3 minutes', 
+            'long': '3-5 minutes'
+        }
+        duration_text = duration_mapping.get(request.duration, request.duration)
+        
+        script_prompt = f"""Generate a {request.duration} {request.video_type} video script optimized for {request.platform}.
+
+ENHANCED PROMPT WITH LEARNED PATTERNS:
+{pattern_result['enhanced_prompt']}
+
+REQUIREMENTS:
+- Duration: {request.duration} ({duration_text})
+- Platform: {request.platform}
+- Industry: {request.industry}
+- Tone: {request.audience_tone}
+- Complexity: {request.complexity_level}
+
+Apply the learned patterns while creating an original, engaging script that follows proven success structures."""
+        
+        generated_script = await script_chat.send_message(UserMessage(text=script_prompt))
+        
+        # Extract learning insights
+        learning_insights = [
+            f"Applied {pattern_result['patterns_applied']} proven patterns",
+            f"Leveraged {pattern_result['examples_used']} high-performing examples",
+            f"Confidence score: {pattern_result['confidence_score']:.1f}/10",
+            f"Enhanced prompt was {len(pattern_result['enhanced_prompt']) / len(request.prompt):.1f}x more detailed"
+        ]
+        
+        # Store the generated script
+        script_response = FewShotScriptResponse(
+            original_prompt=request.prompt,
+            enhanced_prompt=pattern_result['enhanced_prompt'],
+            generated_script=generated_script,
+            patterns_applied=pattern_result['patterns_applied'],
+            examples_used=pattern_result['examples_used'],
+            confidence_score=pattern_result['confidence_score'],
+            learning_insights=learning_insights,
+            pattern_details=pattern_result['pattern_details']
+        )
+        
+        # Save to database
+        await db.few_shot_scripts.insert_one(script_response.dict())
+        
+        logger.info(f"✅ Generated few-shot script with {pattern_result['patterns_applied']} patterns applied")
+        
+        return script_response
+        
+    except Exception as e:
+        logger.error(f"Error in few-shot script generation: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Few-shot script generation failed: {str(e)}")
+
+@api_router.post("/analyze-patterns", response_model=PatternAnalysisResponse)
+async def analyze_patterns(request: PatternAnalysisRequest):
+    """
+    Analyze patterns in the example database for specific contexts
+    
+    Provides insights into what makes scripts successful in different contexts.
+    """
+    try:
+        # Initialize few-shot generator if needed
+        if not hasattr(few_shot_generator, 'nlp') or few_shot_generator.nlp is None:
+            await few_shot_generator.initialize()
+        
+        # Get patterns for the specified context
+        query = {request.context_type: request.context_value}
+        cursor = few_shot_generator.patterns_collection.find({
+            "applicable_contexts": {"$in": [request.context_value, "general"]}
+        })
+        patterns_data = await cursor.to_list(length=None)
+        
+        # Get example scripts for this context
+        examples_cursor = few_shot_generator.examples_collection.find(query)
+        examples_data = await examples_cursor.to_list(length=None)
+        
+        # Analyze top patterns
+        top_patterns = []
+        for pattern_data in sorted(patterns_data, key=lambda x: x.get('effectiveness_score', 0), reverse=True)[:5]:
+            top_patterns.append({
+                "name": pattern_data.get('template_name', 'Unknown'),
+                "type": pattern_data.get('pattern_type', 'general'),
+                "effectiveness": pattern_data.get('effectiveness_score', 0),
+                "usage_guide": pattern_data.get('usage_guidelines', {}).get('when_to_use', 'General usage'),
+                "example_count": len(pattern_data.get('example_scripts', []))
+            })
+        
+        # Extract success factors
+        success_factors = []
+        for example in examples_data:
+            success_factors.extend(example.get('success_factors', []))
+        
+        # Get most common success factors
+        from collections import Counter
+        common_factors = Counter(success_factors).most_common(5)
+        top_success_factors = [factor for factor, count in common_factors]
+        
+        # Calculate effectiveness metrics
+        if examples_data:
+            avg_engagement = sum(ex.get('performance_metrics', {}).get('engagement_rate', 0) for ex in examples_data) / len(examples_data)
+            avg_viral = sum(ex.get('performance_metrics', {}).get('viral_score', 0) for ex in examples_data) / len(examples_data)
+            avg_retention = sum(ex.get('performance_metrics', {}).get('retention_rate', 0) for ex in examples_data) / len(examples_data)
+        else:
+            avg_engagement = avg_viral = avg_retention = 0
+        
+        # Generate recommendations
+        recommendations = [
+            f"Focus on {top_patterns[0]['name'] if top_patterns else 'structural patterns'} for best results",
+            f"Top success factor: {top_success_factors[0] if top_success_factors else 'clear value proposition'}",
+            f"Average engagement rate: {avg_engagement:.1f}/10 - {'above' if avg_engagement > 7 else 'at' if avg_engagement > 5 else 'below'} average",
+            f"Recommended improvement: {'Increase viral elements' if avg_viral < 7 else 'Maintain current viral strategy'}"
+        ]
+        
+        return PatternAnalysisResponse(
+            context={request.context_type: request.context_value},
+            patterns_found=len(patterns_data),
+            top_patterns=top_patterns,
+            success_factors=top_success_factors,
+            recommendations=recommendations,
+            effectiveness_metrics={
+                "average_engagement": round(avg_engagement, 2),
+                "average_viral_score": round(avg_viral, 2),
+                "average_retention": round(avg_retention, 2)
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"Error in pattern analysis: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Pattern analysis failed: {str(e)}")
+
+@api_router.post("/manage-example-database", response_model=ExampleDatabaseResponse)
+async def manage_example_database(request: ExampleDatabaseRequest):
+    """
+    Manage the curated example database
+    
+    Allows rebuilding, adding examples, or querying the database status.
+    """
+    try:
+        # Initialize few-shot generator if needed
+        if not hasattr(few_shot_generator, 'nlp') or few_shot_generator.nlp is None:
+            await few_shot_generator.initialize()
+        
+        if request.rebuild:
+            # Clear existing examples and rebuild
+            await few_shot_generator.examples_collection.delete_many({})
+            await few_shot_generator.patterns_collection.delete_many({})
+            
+            # Rebuild database
+            result = await few_shot_generator.build_example_database()
+            
+            # Extract patterns
+            await few_shot_generator.extract_patterns()
+            
+            status = "rebuilt"
+        else:
+            # Get current status
+            result = await few_shot_generator.get_system_stats()
+            status = "current_status"
+        
+        # Add new examples if provided
+        if request.add_examples:
+            for example_data in request.add_examples:
+                # Validate and add example
+                await few_shot_generator.examples_collection.insert_one(example_data)
+            
+        # Get final statistics
+        stats = await few_shot_generator.get_system_stats()
+        
+        return ExampleDatabaseResponse(
+            status=status,
+            examples_count=stats["database_stats"]["examples_count"],
+            patterns_count=stats["database_stats"]["patterns_count"],
+            categories=stats["database_stats"]["categories"],
+            performance_metrics=stats["performance_averages"],
+            last_updated=datetime.utcnow()
+        )
+        
+    except Exception as e:
+        logger.error(f"Error managing example database: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Database management failed: {str(e)}")
+
+@api_router.get("/few-shot-stats")
+async def get_few_shot_stats():
+    """Get comprehensive statistics about the Few-Shot Learning system"""
+    try:
+        # Initialize few-shot generator if needed
+        if not hasattr(few_shot_generator, 'nlp') or few_shot_generator.nlp is None:
+            await few_shot_generator.initialize()
+        
+        stats = await few_shot_generator.get_system_stats()
+        
+        return {
+            "status": "operational",
+            "system_stats": stats,
+            "capabilities": {
+                "pattern_recognition": "✅ Active",
+                "example_matching": "✅ Context-aware",
+                "template_learning": "✅ Adaptive",
+                "dynamic_selection": "✅ Intelligent"
+            },
+            "learning_effectiveness": {
+                "pattern_application": f"{stats['database_stats']['patterns_count']} patterns available",
+                "example_quality": f"Average {stats['performance_averages']['engagement_rate']}/10 engagement",
+                "context_coverage": f"{len(stats['database_stats']['categories']['video_types'])} video types"
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting few-shot stats: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Stats retrieval failed: {str(e)}")
+
+# =============================================================================
+# END STEP 2: FEW-SHOT LEARNING ENDPOINTS
+# =============================================================================
+
 # Add CORS middleware BEFORE including router
 app.add_middleware(
     CORSMiddleware,
