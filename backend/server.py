@@ -274,6 +274,13 @@ class ContractWizardResponse(BaseModel):
     progress: float  # 0.0 to 1.0
     estimated_completion_time: str
 
+class FieldSuggestionsRequest(BaseModel):
+    contract_type: str
+    field_name: str
+    user_id: Optional[str] = None
+    company_id: Optional[str] = None
+    context: Dict[str, Any] = Field(default_factory=dict)
+
 # New models for Smart Contract Analysis
 class ContractAnalysisRequest(BaseModel):
     contract_content: str
