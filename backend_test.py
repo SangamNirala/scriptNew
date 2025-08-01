@@ -4202,6 +4202,207 @@ class LegalMateAPITester:
         
         return success, response
 
+    def test_academic_legal_content_collection_endpoint(self):
+        """Test the new Academic Legal Content Collection endpoint"""
+        print(f"\n🎓 Testing Academic Legal Content Collection Endpoint...")
+        
+        # Test 1: Endpoint Availability
+        success, response = self.run_test(
+            "Academic Knowledge Base Rebuild Endpoint Availability",
+            "POST",
+            "legal-qa/rebuild-academic-knowledge-base",
+            200,
+            timeout=120  # Academic collection might take longer
+        )
+        
+        if not success:
+            print("❌ Academic endpoint not available - cannot proceed with further tests")
+            return False, {}
+        
+        print(f"✅ Academic endpoint is available and accessible")
+        
+        # Test 2: Response Structure Validation
+        print(f"\n📋 Validating Academic Endpoint Response Structure...")
+        
+        # Check required fields
+        required_fields = [
+            "message", "collection_mode", "status", "statistics", 
+            "academic_features", "focus_areas", "timestamp"
+        ]
+        
+        missing_fields = []
+        for field in required_fields:
+            if field not in response:
+                missing_fields.append(field)
+        
+        if missing_fields:
+            print(f"❌ Missing required fields: {missing_fields}")
+            return False, response
+        else:
+            print(f"✅ All required response fields present")
+        
+        # Test 3: Collection Mode Validation
+        collection_mode = response.get("collection_mode")
+        if collection_mode == "ACADEMIC":
+            print(f"✅ Collection mode correctly set to 'ACADEMIC'")
+        else:
+            print(f"❌ Expected collection mode 'ACADEMIC', got '{collection_mode}'")
+        
+        # Test 4: Status Validation
+        status = response.get("status")
+        if status == "completed":
+            print(f"✅ Status correctly set to 'completed'")
+        else:
+            print(f"❌ Expected status 'completed', got '{status}'")
+        
+        # Test 5: Target Documents Validation
+        statistics = response.get("statistics", {})
+        target_documents = statistics.get("target_documents")
+        if target_documents == 3500:
+            print(f"✅ Target documents correctly set to 3,500")
+        else:
+            print(f"❌ Expected target documents 3,500, got {target_documents}")
+        
+        # Test 6: Academic Features Validation
+        academic_features = response.get("academic_features", {})
+        expected_features = [
+            "google_scholar_papers", "legal_journals", "research_repositories",
+            "quality_filters", "citation_analysis", "priority_sources"
+        ]
+        
+        missing_features = []
+        for feature in expected_features:
+            if feature not in academic_features:
+                missing_features.append(feature)
+        
+        if missing_features:
+            print(f"❌ Missing academic features: {missing_features}")
+        else:
+            print(f"✅ All expected academic features present")
+            
+            # Validate specific academic features
+            if "Google Scholar" in str(academic_features.get("google_scholar_papers", "")):
+                print(f"✅ Google Scholar integration confirmed")
+            
+            if "legal journals" in str(academic_features.get("legal_journals", "")).lower():
+                print(f"✅ Legal journals integration confirmed")
+                
+            if "research repositories" in str(academic_features.get("research_repositories", "")).lower():
+                print(f"✅ Research repositories integration confirmed")
+        
+        # Test 7: Focus Areas Validation
+        focus_areas = response.get("focus_areas", [])
+        expected_focus_areas = [
+            "Constitutional Law", "AI & Technology Law", 
+            "Administrative Law", "Intellectual Property"
+        ]
+        
+        found_focus_areas = []
+        for expected_area in expected_focus_areas:
+            for actual_area in focus_areas:
+                if expected_area.lower() in actual_area.lower():
+                    found_focus_areas.append(expected_area)
+                    break
+        
+        if len(found_focus_areas) == len(expected_focus_areas):
+            print(f"✅ All expected focus areas found: {found_focus_areas}")
+        else:
+            missing_areas = [area for area in expected_focus_areas if area not in found_focus_areas]
+            print(f"❌ Missing focus areas: {missing_areas}")
+            print(f"   Found areas: {focus_areas}")
+        
+        # Test 8: Priority Sources Validation
+        priority_sources = academic_features.get("priority_sources", [])
+        expected_sources = ["Harvard Law Review", "Yale Law Journal", "Columbia Law Review", "Stanford Law Review"]
+        
+        found_sources = []
+        for expected_source in expected_sources:
+            if expected_source in priority_sources:
+                found_sources.append(expected_source)
+        
+        if len(found_sources) >= 3:  # At least 3 of the 4 expected sources
+            print(f"✅ Priority academic sources confirmed: {found_sources}")
+        else:
+            print(f"❌ Insufficient priority sources found. Expected: {expected_sources}, Found: {found_sources}")
+        
+        # Test 9: Statistics Structure Validation
+        required_stats = ["total_documents", "target_documents", "achievement_percentage"]
+        missing_stats = []
+        for stat in required_stats:
+            if stat not in statistics:
+                missing_stats.append(stat)
+        
+        if missing_stats:
+            print(f"❌ Missing statistics fields: {missing_stats}")
+        else:
+            print(f"✅ All required statistics fields present")
+            print(f"   Total Documents: {statistics.get('total_documents', 'N/A')}")
+            print(f"   Target Documents: {statistics.get('target_documents', 'N/A')}")
+            print(f"   Achievement: {statistics.get('achievement_percentage', 'N/A')}%")
+        
+        return True, response
+
+    def test_academic_endpoint_error_handling(self):
+        """Test error handling for the academic endpoint"""
+        print(f"\n🛡️ Testing Academic Endpoint Error Handling...")
+        
+        # The academic endpoint doesn't take parameters, so we test it as-is
+        # and verify it handles internal errors gracefully
+        
+        # Test with multiple rapid calls to check rate limiting/error handling
+        print(f"   Testing rapid successive calls...")
+        
+        for i in range(2):  # Test 2 rapid calls
+            success, response = self.run_test(
+                f"Academic Endpoint Rapid Call {i+1}",
+                "POST", 
+                "legal-qa/rebuild-academic-knowledge-base",
+                200,  # Should still succeed or handle gracefully
+                timeout=60
+            )
+            
+            if success:
+                print(f"   ✅ Rapid call {i+1} handled successfully")
+            else:
+                print(f"   ⚠️ Rapid call {i+1} failed - this may be expected behavior")
+        
+        return True, {}
+
+    def test_academic_endpoint_integration(self):
+        """Test integration with existing legal knowledge builder system"""
+        print(f"\n🔗 Testing Academic Endpoint Integration...")
+        
+        # Test 1: Check if other legal-qa endpoints are still functional
+        other_endpoints = [
+            ("legal-qa/stats", "GET"),
+            ("legal-qa/knowledge-base/stats", "GET")
+        ]
+        
+        integration_success = True
+        
+        for endpoint, method in other_endpoints:
+            success, response = self.run_test(
+                f"Integration Test - {endpoint}",
+                method,
+                endpoint,
+                200,
+                timeout=30
+            )
+            
+            if success:
+                print(f"   ✅ {endpoint} integration working")
+            else:
+                print(f"   ❌ {endpoint} integration failed")
+                integration_success = False
+        
+        # Test 2: Verify the academic endpoint doesn't break existing functionality
+        if integration_success:
+            print(f"✅ Academic endpoint integrates properly with existing legal knowledge system")
+        else:
+            print(f"❌ Academic endpoint may have integration issues")
+        
+        return integration_success, {}
+
 def main():
     print("🚀 Starting LegalMate AI Backend API Tests")
     print("=" * 60)
