@@ -40,6 +40,8 @@ const PlainEnglishContractCreator = ({ onBack, contractTypes, jurisdictions }) =
   const [exportFormat, setExportFormat] = useState('pdf');
   const [isExporting, setIsExporting] = useState(false);
   const [conversions, setConversions] = useState([]);
+  const [contractActiveTab, setContractActiveTab] = useState('edit');
+  const [editedContract, setEditedContract] = useState('');
 
   // Industry options
   const industries = [
