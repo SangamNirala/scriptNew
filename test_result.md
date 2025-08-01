@@ -957,12 +957,14 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Enhanced Contract Wizard Input Field Character Scrambling Fix"
-    - "Analytics Dashboard API Request Timeout Issues"
-  stuck_tasks:
-    - "Enhanced Contract Wizard Input Field Character Scrambling Fix"
+    - "Academic Legal Content Collection - Backend Academic Collection Endpoint"
+    - "Academic Legal Content Collection - Google Scholar Legal Collection"
+    - "Academic Legal Content Collection - Legal Journals Collection"
+    - "Academic Legal Content Collection - Research Papers Collection"
+    - "Academic Legal Content Collection - Quality Metrics and Validation"
+  stuck_tasks: []
   test_all: false
-  test_priority: "critical_issues_first"
+  test_priority: "high_first"
 
   - task: "Analytics Dashboard Backend Endpoints Testing"
     implemented: true
