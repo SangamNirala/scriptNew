@@ -4,7 +4,7 @@ import json
 from datetime import datetime
 
 class EditedPDFTester:
-    def __init__(self, base_url="https://778d18c1-91c5-4750-9611-350f516e0a08.preview.emergentagent.com"):
+    def __init__(self, base_url="https://d527467e-d286-44e1-80dd-a5d65cee7daf.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.tests_run = 0
