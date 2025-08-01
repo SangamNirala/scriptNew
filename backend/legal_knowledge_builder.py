@@ -3003,6 +3003,9 @@ async def build_legal_knowledge_base(collection_mode: CollectionMode = Collectio
         elif collection_mode == CollectionMode.FEDERAL_RESOURCES:
             target_achievement = (stats['total_documents'] / 5000) * 100
             print(f"Target Achievement: {target_achievement:.1f}% of 5,000 federal documents")
+        elif collection_mode == CollectionMode.ACADEMIC:
+            target_achievement = (stats['total_documents'] / 3500) * 100
+            print(f"Target Achievement: {target_achievement:.1f}% of 3,500 academic documents")
         
         print(f"\n🎯 Collection Progress:")
         print(f"  Total Queries: {builder.progress.total_queries}")
