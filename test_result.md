@@ -233,20 +233,65 @@ TESTING RESULTS: ✅ ALL TESTS PASSED
 READY FOR PRODUCTION: The system can now efficiently collect 15,000+ high-quality legal documents with comprehensive quality controls and detailed progress reporting."
 
 backend:
-  - task: "Smart Contract Analysis - Enhanced Contract Types Endpoint"
+  - task: "Academic Legal Content Collection - Backend Academic Collection Endpoint"
     implemented: true
-    working: true
+    working: false
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
         -working: "NA"
         -agent: "main"
-        -comment: "Implemented enhanced contract types endpoint that returns 56 contract types across 16 categories including Business, Real Estate, Technology, Corporate, Finance, Legal, Services, Manufacturing, Construction, Development, Employment, Marketing, Research, IP, Insurance, and Creative categories."
-        -working: true
-        -agent: "testing"
-        -comment: "✅ Enhanced Contract Types endpoint working perfectly. Successfully tested: 1) Returns 200 status code 2) Found 55 contract types (reported total_count: 56) which meets expectation (50+) 3) Includes 16 categories as expected 4) All key contract types found including NDA, employment_agreement, freelance_agreement, partnership_agreement, purchase_agreement, lease_agreement, software_license, consulting_agreement 5) Response structure matches expected model with 'types', 'categories', and 'total_count' fields. Contract types endpoint fully functional."
+        -comment: "Found existing POST /api/legal-qa/rebuild-academic-knowledge-base endpoint with comprehensive academic collection system targeting 3,500+ documents from Google Scholar Legal (2,000), Legal Academic Databases (1,000), and Legal Research Repositories (500). System includes academic quality control, metadata extraction, and enhanced filtering. Needs testing to verify functionality and deliverables."
+
+  - task: "Academic Legal Content Collection - Google Scholar Legal Collection"
+    implemented: true
+    working: false
+    file: "/app/backend/legal_knowledge_builder.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        -working: "NA"
+        -agent: "main"
+        -comment: "Found existing _fetch_google_scholar_legal() method targeting 2,000 academic papers from top law schools with constitutional law, AI & technology law, administrative law, and IP law focus. Uses Google Scholar search with academic quality filters and metadata extraction."
+
+  - task: "Academic Legal Content Collection - Legal Journals Collection"
+    implemented: true
+    working: false
+    file: "/app/backend/legal_knowledge_builder.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        -working: "NA"
+        -agent: "main"
+        -comment: "Found existing _fetch_legal_journals() method targeting 1,000 bar journal articles and professional publications including ABA journals, state bar publications, and practice area journals with enhanced quality control."
+
+  - task: "Academic Legal Content Collection - Research Papers Collection"
+    implemented: true
+    working: false
+    file: "/app/backend/legal_knowledge_builder.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        -working: "NA"
+        -agent: "main"
+        -comment: "Found existing _fetch_legal_research_papers() method targeting 500 legal research papers from SSRN, university law school publications, and legal think tank reports with academic repository integration."
+
+  - task: "Academic Legal Content Collection - Quality Metrics and Validation"
+    implemented: true
+    working: false
+    file: "/app/backend/legal_knowledge_builder.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        -working: "NA"
+        -agent: "main"
+        -comment: "Found existing academic quality control systems including _apply_academic_quality_filters(), _extract_academic_metadata(), minimum 1,500 words content filter, peer-reviewed focus, citation analysis, and comprehensive quality metrics tracking."
 
   - task: "Smart Contract Analysis - Enhanced Jurisdictions Endpoint"
     implemented: true
