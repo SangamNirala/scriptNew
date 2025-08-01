@@ -17,10 +17,17 @@ import time
 from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional
 from bs4 import BeautifulSoup
-from serpapi import GoogleSearch
 import httpx
 import os
 from pathlib import Path
+
+# SerpAPI - handle import gracefully
+try:
+    from serpapi import GoogleSearch
+    SERPAPI_AVAILABLE = True
+except ImportError:
+    SERPAPI_AVAILABLE = False
+    GoogleSearch = None
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
