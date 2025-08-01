@@ -4425,6 +4425,21 @@ def main():
     
     print("🧠"*60)
     
+    # NEW: Academic Legal Content Collection Tests
+    print("\n" + "🎓"*60)
+    print("🎓 ACADEMIC LEGAL CONTENT COLLECTION TESTING - NEW FEATURE")
+    print("🎓"*60)
+    
+    # Academic Endpoint Tests
+    print("\n" + "📚"*30)
+    print("📚 ACADEMIC ENDPOINT TESTING")
+    print("📚"*30)
+    test_results.append(tester.test_academic_legal_content_collection_endpoint())
+    test_results.append(tester.test_academic_endpoint_error_handling())
+    test_results.append(tester.test_academic_endpoint_integration())
+    
+    print("🎓"*60)
+    
     # Print final results
     print("\n" + "="*60)
     print("📊 TEST RESULTS SUMMARY")
