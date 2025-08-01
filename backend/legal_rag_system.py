@@ -25,10 +25,24 @@ from uuid import uuid4
 import httpx
 import google.generativeai as genai
 from groq import Groq
-from sentence_transformers import SentenceTransformer
 import faiss
-from supabase import create_client, Client
 import re
+
+# Import dependencies with fallbacks
+try:
+    from sentence_transformers import SentenceTransformer
+    SENTENCE_TRANSFORMERS_AVAILABLE = True
+except ImportError:
+    SENTENCE_TRANSFORMERS_AVAILABLE = False
+    SentenceTransformer = None
+
+try:
+    from supabase import create_client, Client
+    SUPABASE_AVAILABLE = True
+except ImportError:
+    SUPABASE_AVAILABLE = False
+    create_client = None
+    Client = None
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
