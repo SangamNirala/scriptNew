@@ -735,7 +735,46 @@ const PlainEnglishContractCreator = ({ onBack, contractTypes, jurisdictions }) =
                           <div className="space-y-4">
                             <div className="max-h-96 overflow-y-auto bg-gray-50 p-4 rounded border">
                               <div className="font-mono text-sm whitespace-pre-wrap">
-                                {editedContract}
+                                {editedContract.split('\n').map((line, index) => {
+                                  // Check if line contains signature placeholders
+                                  if (line.includes('[First Party Signature Placeholder]') || line.includes('[First Party Signature Uploaded]')) {
+                                    return (
+                                      <div key={index} className="my-4">
+                                        {firstPartySignature ? (
+                                          <img 
+                                            src={firstPartySignature} 
+                                            alt="First Party Signature" 
+                                            className="max-w-full h-auto max-h-16 mb-2"
+                                            style={{ maxWidth: '300px' }}
+                                          />
+                                        ) : (
+                                          <div className="h-16 border-b-2 border-gray-400 mb-2" style={{ width: '300px' }}>
+                                            <span className="text-gray-500 text-xs">[First Party Signature Area]</span>
+                                          </div>
+                                        )}
+                                      </div>
+                                    );
+                                  }
+                                  if (line.includes('[Second Party Signature Placeholder]') || line.includes('[Second Party Signature Uploaded]')) {
+                                    return (
+                                      <div key={index} className="my-4">
+                                        {secondPartySignature ? (
+                                          <img 
+                                            src={secondPartySignature} 
+                                            alt="Second Party Signature" 
+                                            className="max-w-full h-auto max-h-16 mb-2"
+                                            style={{ maxWidth: '300px' }}
+                                          />
+                                        ) : (
+                                          <div className="h-16 border-b-2 border-gray-400 mb-2" style={{ width: '300px' }}>
+                                            <span className="text-gray-500 text-xs">[Second Party Signature Area]</span>
+                                          </div>
+                                        )}
+                                      </div>
+                                    );
+                                  }
+                                  return <div key={index}>{line}</div>;
+                                })}
                               </div>
                             </div>
                             <div className="flex gap-2">
