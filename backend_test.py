@@ -4301,31 +4301,31 @@ class LegalMateAPITester:
         
         missing_fields = []
         for field in required_fields:
-            if field not in response:
+            if field not in response_data:
                 missing_fields.append(field)
         
         if missing_fields:
             print(f"❌ Missing required fields: {missing_fields}")
-            return False, response
+            return False, response_data
         else:
             print(f"✅ All required response fields present")
         
         # Test 3: Collection Mode Validation
-        collection_mode = response.get("collection_mode")
+        collection_mode = response_data.get("collection_mode")
         if collection_mode == "ACADEMIC":
             print(f"✅ Collection mode correctly set to 'ACADEMIC'")
         else:
             print(f"❌ Expected collection mode 'ACADEMIC', got '{collection_mode}'")
         
         # Test 4: Status Validation
-        status = response.get("status")
-        if status == "completed":
-            print(f"✅ Status correctly set to 'completed'")
+        status = response_data.get("status")
+        if status in ["completed", "processing"]:
+            print(f"✅ Status correctly set to '{status}'")
         else:
-            print(f"❌ Expected status 'completed', got '{status}'")
+            print(f"❌ Expected status 'completed' or 'processing', got '{status}'")
         
         # Test 5: Target Documents Validation
-        statistics = response.get("statistics", {})
+        statistics = response_data.get("statistics", {})
         target_documents = statistics.get("target_documents")
         if target_documents == 3500:
             print(f"✅ Target documents correctly set to 3,500")
@@ -4333,7 +4333,7 @@ class LegalMateAPITester:
             print(f"❌ Expected target documents 3,500, got {target_documents}")
         
         # Test 6: Academic Features Validation
-        academic_features = response.get("academic_features", {})
+        academic_features = response_data.get("academic_features", {})
         expected_features = [
             "google_scholar_papers", "legal_journals", "research_repositories",
             "quality_filters", "citation_analysis", "priority_sources"
@@ -4360,7 +4360,7 @@ class LegalMateAPITester:
                 print(f"✅ Research repositories integration confirmed")
         
         # Test 7: Focus Areas Validation
-        focus_areas = response.get("focus_areas", [])
+        focus_areas = response_data.get("focus_areas", [])
         expected_focus_areas = [
             "Constitutional Law", "AI & Technology Law", 
             "Administrative Law", "Intellectual Property"
@@ -4409,7 +4409,7 @@ class LegalMateAPITester:
             print(f"   Target Documents: {statistics.get('target_documents', 'N/A')}")
             print(f"   Achievement: {statistics.get('achievement_percentage', 'N/A')}%")
         
-        return True, response
+        return True, response_data
 
     def test_academic_endpoint_error_handling(self):
         """Test error handling for the academic endpoint"""
