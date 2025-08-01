@@ -142,9 +142,12 @@ class PDFTitleFixTester:
         # Create sample edited contract data (wrapped in "contract" field as expected by endpoint)
         edited_contract_data = {
             "contract": {
+                "id": "test-contract-123",
                 "contract_type": "freelance_agreement",
                 "content": "FREELANCE WEB DEVELOPMENT AGREEMENT\n\nThis agreement is for web development services...",
                 "jurisdiction": "US",
+                "created_at": datetime.now().isoformat(),
+                "compliance_score": 85.0,
                 "parties": {
                     "party1_name": "Client Company",
                     "party2_name": "Freelance Developer"
