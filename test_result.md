@@ -112,16 +112,23 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Enhanced User Experience Features - Phase 1: Contract Wizard + Smart Form Fields. Test the new Smart Contract Analysis backend endpoints I just implemented: 1. GET /api/contract-types - Should now return 56 contract types across business and real estate categories 2. GET /api/jurisdictions - Should return expanded list of 10 supported jurisdictions 3. POST /api/analyze-contract - Test contract analysis with sample contract content 4. GET /api/clause-recommendations/{contract_type} - Test clause recommendations for different contract types 5. POST /api/compare-contracts - Test contract comparison with two sample contracts 6. POST /api/compliance-check - Test multi-jurisdiction compliance checking. Please test these endpoints with appropriate sample data and verify: All endpoints respond with 200 status codes, Response structure matches the expected models, AI analysis features work with the free API keys (Gemini, Groq, OpenRouter), Error handling works properly, Database operations (saving analyses/comparisons) work correctly. Focus on testing the core Smart Contract Analysis functionality I just added to expand the existing contract generation platform.
+user_problem_statement: "Test the expanded CourtListener API integration with the new search strategy implementation. Please verify:
 
-NEW ENHANCED USER EXPERIENCE FEATURES ADDED:
-1. User Profile Management (POST/GET/PUT /api/users/profile)
-2. Company Profile Management (POST/GET /api/companies/profile) 
-3. Smart Contract Wizard with AI suggestions (POST /api/contract-wizard/initialize)
-4. Field-specific smart suggestions (POST /api/contract-wizard/suggestions)
-5. Enhanced frontend with Smart Contract Wizard interface
-6. Profile-based auto-fill capabilities
-7. Industry-specific recommendations and smart form fields"
+1. **API Key Rotation System**: Test that the system properly rotates through the 4 CourtListener API keys when making requests
+2. **Expanded Search Queries**: Verify that the system now uses 60 targeted search queries instead of the original 7 generic ones, organized by legal domain:
+   - Contract Law: 15 queries (targeting 3,000 docs)
+   - Employment Law: 12 queries (targeting 2,500 docs) 
+   - Constitutional Law: 10 queries (targeting 2,000 docs)
+   - Intellectual Property: 8 queries (targeting 1,500 docs)
+   - Corporate Law: 6 queries (targeting 1,200 docs)
+   - Civil Procedure: 5 queries (targeting 1,000 docs)
+   - Criminal Law: 4 queries (targeting 800 docs)
+
+3. **Broader Court Coverage**: Confirm the system now searches across 14 different courts (Supreme Court + 13 Circuit Courts) instead of just Supreme Court
+4. **Enhanced Rate Limiting**: Verify the new 3-second delays and rate limiting logic
+5. **Document Volume**: Test that the system can potentially collect significantly more than the original 35 documents (aiming for the 15,000 target)
+
+Please test the legal knowledge builder functionality by calling the relevant endpoints or running a small subset of the expanded search strategy to verify it's working correctly. Focus on verifying the core improvements work as expected."
 
 backend:
   - task: "Smart Contract Analysis - Enhanced Contract Types Endpoint"
