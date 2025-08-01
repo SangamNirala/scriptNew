@@ -950,7 +950,411 @@ class LegalKnowledgeBuilder:
         
         return min(score, 1.0)  # Cap at 1.0
 
-    async def _fetch_court_decisions(self) -> List[Dict[str, Any]]:
+    async def bulk_collect_court_decisions(self) -> List[Dict[str, Any]]:
+        """
+        Comprehensive bulk collection process for 15,000 CourtListener legal documents
+        with court hierarchy prioritization, quality control, and intelligent processing
+        """
+        logger.info("🚀 Starting COMPREHENSIVE BULK COLLECTION PROCESS")
+        logger.info("=" * 80)
+        logger.info(f"🎯 Target: 15,000 high-quality court decisions")
+        logger.info(f"⚖️ Court Hierarchy: Supreme Court → Circuit Courts → District Courts")
+        logger.info(f"📊 Quality Filters: {self.config['min_content_length']}+ words, Precedential/Published only")
+        logger.info(f"📅 Date Priority: 2020-2025 (primary), 2015-2019 (secondary)")
+        logger.info("=" * 80)
+        
+        content = []
+        self.progress.start_time = time.time()
+        
+        try:
+            async with httpx.AsyncClient(timeout=60.0) as client:
+                
+                # Sort courts by priority for hierarchical collection
+                sorted_courts = sorted(self.court_priorities, key=lambda x: (x.priority, x.code))
+                
+                # PHASE 1: Priority-based Collection by Court Hierarchy
+                for court_priority in sorted_courts:
+                    court_code = court_priority.code
+                    court_name = court_priority.name
+                    target_docs = court_priority.target_documents
+                    priority_level = court_priority.priority
+                    
+                    logger.info(f"\n🏛️ COURT PRIORITY {priority_level}: {court_name}")
+                    logger.info(f"🎯 Target Documents: {target_docs}")
+                    logger.info("-" * 60)
+                    
+                    court_results = await self._collect_from_single_court(
+                        client, court_code, court_name, target_docs
+                    )
+                    
+                    content.extend(court_results)
+                    court_priority.collected_documents = len(court_results)
+                    self.progress.documents_by_court[court_code] = len(court_results)
+                    
+                    # Update progress and ETA
+                    self._update_progress_metrics()
+                    
+                    logger.info(f"✅ {court_name}: Collected {len(court_results)}/{target_docs} documents")
+                    logger.info(f"📊 Total Progress: {len(content)}/15,000 ({(len(content)/15000)*100:.1f}%)")
+                    
+                    # Checkpoint save every 1000 documents
+                    if len(content) >= self.checkpoint_interval and len(content) % self.checkpoint_interval == 0:
+                        await self._save_checkpoint(content)
+                        
+                    # Stop if we've reached our overall target
+                    if len(content) >= 15000:
+                        logger.info("🎉 Target of 15,000 documents reached!")
+                        break
+                
+                # PHASE 2: Gap Filling for Underperforming Courts
+                if len(content) < 15000:
+                    logger.info(f"\n🔄 PHASE 2: Gap Filling ({len(content)}/15,000 collected)")
+                    remaining_needed = 15000 - len(content)
+                    
+                    # Redistribute remaining documents among courts that underperformed
+                    underperforming_courts = [
+                        court for court in self.court_priorities 
+                        if court.collected_documents < court.target_documents * 0.8
+                    ]
+                    
+                    if underperforming_courts:
+                        additional_per_court = remaining_needed // len(underperforming_courts)
+                        
+                        for court_priority in underperforming_courts:
+                            if len(content) >= 15000:
+                                break
+                                
+                            logger.info(f"🔄 Gap filling for {court_priority.name}: +{additional_per_court} documents")
+                            
+                            additional_results = await self._collect_from_single_court(
+                                client, court_priority.code, court_priority.name, 
+                                additional_per_court, gap_filling=True
+                            )
+                            
+                            content.extend(additional_results)
+                            court_priority.collected_documents += len(additional_results)
+                            self.progress.documents_by_court[court_priority.code] += len(additional_results)
+                
+                # PHASE 3: Final Quality Assessment and Reporting
+                await self._generate_final_report(content)
+                
+        except Exception as e:
+            logger.error(f"Critical error in bulk collection: {e}", exc_info=True)
+            
+        return content
+    
+    async def _collect_from_single_court(self, client: httpx.AsyncClient, court_code: str, 
+                                       court_name: str, target_documents: int, 
+                                       gap_filling: bool = False) -> List[Dict[str, Any]]:
+        """Collect documents from a single court with intelligent query distribution"""
+        court_results = []
+        
+        # Distribute target documents across legal domains
+        queries_per_domain = self._distribute_queries_by_court_priority(court_code, target_documents)
+        
+        for legal_domain, domain_queries in queries_per_domain.items():
+            for query, target_per_query in domain_queries:
+                try:
+                    # Parallel processing for efficiency (respecting rate limits)
+                    if self.config["enable_parallel_processing"]:
+                        query_results = await self._fetch_paginated_results_parallel(
+                            client, query, legal_domain, court_code, court_name, target_per_query
+                        )
+                    else:
+                        query_results = await self._fetch_paginated_results_enhanced(
+                            client, query, legal_domain, court_code, court_name, target_per_query
+                        )
+                    
+                    court_results.extend(query_results)
+                    
+                    # Real-time progress logging
+                    if len(query_results) > 0:
+                        logger.info(f"  ✅ '{query[:40]}...': {len(query_results)} quality documents")
+                    else:
+                        logger.info(f"  ❌ '{query[:40]}...': No qualifying documents")
+                    
+                    # Stop if we've reached the target for this court
+                    if len(court_results) >= target_documents:
+                        break
+                        
+                except Exception as e:
+                    logger.error(f"Error with query '{query}' in {court_name}: {e}")
+                    continue
+            
+            # Break outer loop if target reached
+            if len(court_results) >= target_documents:
+                break
+        
+        return court_results[:target_documents]  # Ensure we don't exceed target
+    
+    def _distribute_queries_by_court_priority(self, court_code: str, target_documents: int) -> Dict[str, List[tuple]]:
+        """Distribute queries intelligently based on court type and target"""
+        
+        # Get appropriate queries based on court level
+        if court_code == "scotus":
+            # Supreme Court: Focus on landmark constitutional and high-impact cases
+            query_distribution = {
+                "constitutional_law": [
+                    ("First Amendment free speech restrictions", target_documents // 8),
+                    ("Due process substantive procedural", target_documents // 8),
+                    ("Equal protection strict scrutiny", target_documents // 8),
+                    ("Commerce Clause federal regulatory power", target_documents // 8)
+                ],
+                "contract_law": [
+                    ("breach of contract damages Supreme Court", target_documents // 10),
+                    ("contract interpretation parol evidence", target_documents // 10)
+                ],
+                "intellectual_property": [
+                    ("patent infringement claim construction", target_documents // 10),
+                    ("copyright fair use transformation", target_documents // 10)
+                ],
+                "employment_labor_law": [
+                    ("employment discrimination Title VII", target_documents // 10),
+                    ("Americans with Disabilities Act reasonable accommodation", target_documents // 10)
+                ]
+            }
+        elif court_code.startswith("ca"):
+            # Circuit Courts: Broader range of appellate decisions
+            query_distribution = {
+                "contract_law": [
+                    ("breach of contract damages", target_documents // 6),
+                    ("contract formation elements", target_documents // 8)
+                ],
+                "employment_labor_law": [
+                    ("employment discrimination Title VII", target_documents // 6),
+                    ("wrongful termination at-will employment", target_documents // 8)
+                ],
+                "intellectual_property": [
+                    ("patent infringement claim construction", target_documents // 8),
+                    ("trademark dilution likelihood confusion", target_documents // 8)
+                ],
+                "constitutional_law": [
+                    ("First Amendment free speech restrictions", target_documents // 8),
+                    ("Fourth Amendment search seizure warrant", target_documents // 8)
+                ],
+                "corporate_regulatory": [
+                    ("securities fraud disclosure requirements", target_documents // 8),
+                    ("fiduciary duty business judgment rule", target_documents // 8)
+                ]
+            }
+        else:
+            # District Courts: Focus on landmark trial court decisions
+            query_distribution = {
+                "contract_law": [
+                    ("breach of contract damages district court", target_documents // 4),
+                    ("contract interpretation landmark", target_documents // 6)
+                ],
+                "employment_labor_law": [
+                    ("employment discrimination class action", target_documents // 4),
+                    ("wage hour violations FLSA", target_documents // 6)
+                ],
+                "intellectual_property": [
+                    ("patent infringement jury verdict", target_documents // 5),
+                    ("trademark infringement injunction", target_documents // 6)
+                ],
+                "civil_criminal_procedure": [
+                    ("class action certification requirements", target_documents // 5),
+                    ("summary judgment material facts", target_documents // 6)
+                ]
+            }
+        
+        return query_distribution
+    
+    async def _fetch_paginated_results_enhanced(self, client: httpx.AsyncClient, query: str,
+                                              legal_domain: str, court_code: str, court_name: str,
+                                              target_results: int) -> List[Dict[str, Any]]:
+        """Enhanced paginated results fetching with intelligent quality filtering"""
+        all_results = []
+        page_count = 0
+        next_url = "https://www.courtlistener.com/api/rest/v3/search/"
+        
+        # Enhanced parameters for quality
+        params = {
+            "q": query,
+            "type": "o",  # Opinions only
+            "order_by": "score desc",
+            "court": court_code,
+            "format": "json"
+        }
+        
+        # Add quality filters
+        if self.config["enable_quality_filters"]:
+            params.update({
+                "stat_Precedential": "on",  # Only precedential opinions
+                "stat_Published": "on",     # Only published opinions
+            })
+            
+            # Prioritize recent cases (2020-2025) but include 2015-2019
+            params["filed_after"] = self.config["date_range"]["primary_min"]
+            params["filed_before"] = self.config["date_range"]["primary_max"]
+        
+        while next_url and page_count < self.config["max_pages_per_query"] and len(all_results) < target_results:
+            try:
+                page_count += 1
+                
+                # Get API key with intelligent rotation
+                api_key = self._get_next_api_key()
+                if not api_key:
+                    logger.warning("No API keys available, waiting...")
+                    await asyncio.sleep(5)
+                    continue
+                
+                key_index = next((i for i, k in enumerate(self.courtlistener_api_keys) if k == api_key), 0)
+                await self._wait_for_rate_limit(key_index)
+                
+                headers = {"Authorization": f"Token {api_key}", "Accept": "application/json"}
+                
+                # Make request
+                if page_count == 1:
+                    response = await client.get(next_url, headers=headers, params=params)
+                else:
+                    response = await client.get(next_url, headers=headers)
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    results = data.get('results', [])
+                    
+                    if not results:
+                        break
+                    
+                    # Process and filter results with enhanced quality checks
+                    quality_results = []
+                    for result in results:
+                        if len(all_results) >= target_results:
+                            break
+                        
+                        processed_result = await self._process_court_result(
+                            result, query, legal_domain, court_code, court_name
+                        )
+                        
+                        if processed_result and self._meets_quality_filters(processed_result):
+                            quality_results.append(processed_result)
+                    
+                    all_results.extend(quality_results)
+                    next_url = data.get('next')
+                    
+                    # Reset consecutive failures on success
+                    self.rate_limits[key_index].consecutive_failures = 0
+                    
+                elif response.status_code in [429, 500, 502, 503, 504]:
+                    should_retry = await self._handle_api_error(key_index, response.status_code, response.text)
+                    if should_retry:
+                        page_count -= 1  # Don't count failed attempts
+                        continue
+                    else:
+                        break
+                else:
+                    logger.warning(f"API request failed with status {response.status_code}")
+                    break
+                    
+            except Exception as e:
+                logger.error(f"Error fetching page {page_count}: {e}")
+                break
+        
+        return all_results
+    
+    async def _fetch_paginated_results_parallel(self, client: httpx.AsyncClient, query: str,
+                                              legal_domain: str, court_code: str, court_name: str,
+                                              target_results: int) -> List[Dict[str, Any]]:
+        """Parallel processing of paginated results (respecting rate limits)"""
+        # For now, use sequential processing to ensure rate limit compliance
+        # TODO: Implement true parallel processing with semaphore and rate limit coordination
+        return await self._fetch_paginated_results_enhanced(
+            client, query, legal_domain, court_code, court_name, target_results
+        )
+    
+    def _update_progress_metrics(self):
+        """Update progress metrics and ETA calculations"""
+        current_time = time.time()
+        elapsed_time = current_time - self.progress.start_time
+        total_collected = sum(self.progress.documents_by_court.values())
+        
+        if total_collected > 0:
+            self.progress.average_doc_time = elapsed_time / total_collected
+            remaining_docs = 15000 - total_collected
+            self.progress.eta_seconds = remaining_docs * self.progress.average_doc_time
+        
+        # Update quality metrics
+        if self.quality_metrics.total_processed > 0:
+            success_rate = (
+                self.quality_metrics.passed_date_filter / self.quality_metrics.total_processed
+            ) * 100
+            
+            logger.info(f"📊 Quality Metrics: {success_rate:.1f}% pass rate, "
+                       f"avg {self.quality_metrics.average_word_count:.0f} words")
+    
+    async def _save_checkpoint(self, content: List[Dict[str, Any]]):
+        """Save collection checkpoint for resumability"""
+        checkpoint_data = {
+            "timestamp": datetime.utcnow().isoformat(),
+            "documents_collected": len(content),
+            "court_progress": {court.code: court.collected_documents for court in self.court_priorities},
+            "quality_metrics": {
+                "total_processed": self.quality_metrics.total_processed,
+                "average_word_count": self.quality_metrics.average_word_count,
+                "duplicates_filtered": self.quality_metrics.duplicates_filtered
+            }
+        }
+        
+        checkpoint_file = f"/app/bulk_collection_checkpoint_{int(time.time())}.json"
+        try:
+            with open(checkpoint_file, 'w') as f:
+                json.dump(checkpoint_data, f, indent=2)
+            logger.info(f"📋 Checkpoint saved: {checkpoint_file}")
+        except Exception as e:
+            logger.error(f"Error saving checkpoint: {e}")
+    
+    async def _generate_final_report(self, content: List[Dict[str, Any]]):
+        """Generate comprehensive final collection report"""
+        total_time = time.time() - self.progress.start_time
+        
+        logger.info("\n" + "=" * 80)
+        logger.info("🎉 BULK COLLECTION COMPLETED - FINAL REPORT")
+        logger.info("=" * 80)
+        
+        # Overall statistics
+        logger.info(f"📊 COLLECTION SUMMARY:")
+        logger.info(f"  Total Documents Collected: {len(content):,}")
+        logger.info(f"  Target Achievement: {(len(content)/15000)*100:.1f}%")
+        logger.info(f"  Total Collection Time: {total_time/3600:.1f} hours")
+        logger.info(f"  Average Documents/Hour: {len(content)/(total_time/3600):.1f}")
+        
+        # Court hierarchy breakdown
+        logger.info(f"\n🏛️ COURT HIERARCHY BREAKDOWN:")
+        total_priority_1 = sum(court.collected_documents for court in self.court_priorities if court.priority == 1)
+        total_priority_2 = sum(court.collected_documents for court in self.court_priorities if court.priority == 2)  
+        total_priority_3 = sum(court.collected_documents for court in self.court_priorities if court.priority == 3)
+        
+        logger.info(f"  Supreme Court (Priority 1): {total_priority_1:,} documents")
+        logger.info(f"  Circuit Courts (Priority 2): {total_priority_2:,} documents") 
+        logger.info(f"  District Courts (Priority 3): {total_priority_3:,} documents")
+        
+        # Quality metrics
+        logger.info(f"\n📈 QUALITY METRICS:")
+        logger.info(f"  Documents Processed: {self.quality_metrics.total_processed:,}")
+        logger.info(f"  Quality Pass Rate: {(len(content)/max(self.quality_metrics.total_processed, 1))*100:.1f}%")
+        logger.info(f"  Average Word Count: {self.quality_metrics.average_word_count:.0f}")
+        logger.info(f"  Duplicates Filtered: {self.quality_metrics.duplicates_filtered:,}")
+        
+        # Legal domain distribution
+        domain_counts = {}
+        for doc in content:
+            domain = doc.get("legal_domain", "unknown")
+            domain_counts[domain] = domain_counts.get(domain, 0) + 1
+        
+        logger.info(f"\n⚖️ LEGAL DOMAIN DISTRIBUTION:")
+        for domain, count in sorted(domain_counts.items(), key=lambda x: x[1], reverse=True):
+            logger.info(f"  {domain}: {count:,} documents")
+        
+        # Date distribution
+        primary_date_count = sum(1 for doc in content if doc.get("date_priority") == "primary")
+        secondary_date_count = sum(1 for doc in content if doc.get("date_priority") == "secondary")
+        
+        logger.info(f"\n📅 DATE DISTRIBUTION:")
+        logger.info(f"  Primary Period (2020-2025): {primary_date_count:,} documents")
+        logger.info(f"  Secondary Period (2015-2019): {secondary_date_count:,} documents")
+        
+        logger.info("=" * 80)
         """Fetch comprehensive court decisions using CourtListener API with enhanced pagination and bulk collection"""
         content = []
         
