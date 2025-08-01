@@ -1054,7 +1054,12 @@ The smartest people I know don't have all the answers. They just ask questions t
         # Convert to PatternTemplate objects
         patterns = []
         for pattern_data in patterns_data:
-            pattern = PatternTemplate(**pattern_data)
+            # Handle MongoDB _id field - create a copy to avoid modifying original
+            pattern_copy = pattern_data.copy()
+            if '_id' in pattern_copy:
+                pattern_copy['id'] = str(pattern_copy['_id'])
+                del pattern_copy['_id']
+            pattern = PatternTemplate(**pattern_copy)
             patterns.append(pattern)
         
         # Sort by effectiveness score
