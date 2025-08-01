@@ -584,6 +584,14 @@ Generate a comprehensive legal response:
                                 conversation_context: str) -> Dict[str, Any]:
         """Generate answer using Groq as fallback"""
         try:
+            if not self.groq_client:
+                logger.error("Groq client not available")
+                return {
+                    "answer": "I apologize, but I'm unable to generate a response at this time due to service unavailability.",
+                    "confidence": 0.0,
+                    "model_used": "unavailable"
+                }
+                
             prompt = f"""
 You are a legal AI assistant. Analyze the legal sources and provide accurate information.
 
