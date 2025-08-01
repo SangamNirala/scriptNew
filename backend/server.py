@@ -378,6 +378,57 @@ class ABTestOptimizationResponse(BaseModel):
     performance_improvement: float
     recommendations: List[str]
 
+# STEP 2: Few-Shot Learning & Pattern Recognition Models
+class FewShotScriptRequest(BaseModel):
+    prompt: str
+    video_type: Optional[str] = "general"
+    industry: Optional[str] = "general"
+    platform: Optional[str] = "general"
+    duration: Optional[str] = "medium"
+    audience_tone: Optional[str] = "engaging"
+    complexity_level: Optional[str] = "intermediate"
+    engagement_goals: Optional[List[str]] = []
+    use_pattern_learning: Optional[bool] = True
+    max_examples: Optional[int] = 5
+
+class FewShotScriptResponse(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    original_prompt: str
+    enhanced_prompt: str
+    generated_script: str
+    patterns_applied: int
+    examples_used: int
+    confidence_score: float
+    learning_insights: List[str]
+    pattern_details: List[Dict[str, Any]]
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class PatternAnalysisRequest(BaseModel):
+    context_type: str  # "video_type", "industry", "platform"
+    context_value: str
+    analysis_depth: Optional[str] = "comprehensive"  # "basic", "comprehensive", "detailed"
+
+class PatternAnalysisResponse(BaseModel):
+    context: Dict[str, str]
+    patterns_found: int
+    top_patterns: List[Dict[str, Any]]
+    success_factors: List[str]
+    recommendations: List[str]
+    effectiveness_metrics: Dict[str, float]
+
+class ExampleDatabaseRequest(BaseModel):
+    rebuild: Optional[bool] = False
+    add_examples: Optional[List[Dict[str, Any]]] = []
+    filter_by: Optional[Dict[str, str]] = {}
+
+class ExampleDatabaseResponse(BaseModel):
+    status: str
+    examples_count: int
+    patterns_count: int
+    categories: Dict[str, Any]
+    performance_metrics: Dict[str, float]
+    last_updated: datetime
+
 # Add your routes to the router instead of directly to app
 @api_router.get("/")
 async def root():
