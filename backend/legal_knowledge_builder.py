@@ -1264,5 +1264,22 @@ async def build_bulk_knowledge_base():
 
 
 if __name__ == "__main__":
+    import sys
+    
+    # Check command line arguments for collection mode
+    collection_mode = CollectionMode.STANDARD
+    if len(sys.argv) > 1:
+        mode_arg = sys.argv[1].lower()
+        if mode_arg in ['bulk', 'b']:
+            collection_mode = CollectionMode.BULK
+        elif mode_arg in ['standard', 's']:
+            collection_mode = CollectionMode.STANDARD
+        else:
+            print("Usage: python legal_knowledge_builder.py [standard|s|bulk|b]")
+            print("Default: standard mode (backward compatible)")
+            sys.exit(1)
+    
+    print(f"🚀 Running Legal Knowledge Builder in {collection_mode.value.upper()} mode")
+    
     # Run the knowledge base builder
-    asyncio.run(build_legal_knowledge_base())
+    asyncio.run(build_legal_knowledge_base(collection_mode))
