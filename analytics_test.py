@@ -4,7 +4,7 @@ import json
 from datetime import datetime, timedelta
 
 class AnalyticsAPITester:
-    def __init__(self, base_url="https://14854655-cc0f-42cb-a050-65a0df468688.preview.emergentagent.com"):
+    def __init__(self, base_url="https://89fe9693-d9a3-475b-b0c8-12f5e1f9bf0b.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.tests_run = 0
