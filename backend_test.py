@@ -4340,6 +4340,45 @@ def main():
     
     print("🚀"*60)
     
+    # NEW: Plain English to Legal Clauses API Tests
+    print("\n" + "📝"*60)
+    print("📝 PLAIN ENGLISH TO LEGAL CLAUSES API TESTING - NEW FEATURE")
+    print("📝"*60)
+    
+    # Plain English Conversion Tests
+    print("\n" + "🔄"*30)
+    print("🔄 PLAIN ENGLISH CONVERSION TESTING")
+    print("🔄"*30)
+    test_results.append(tester.test_plain_english_to_legal_conversion())
+    test_results.append(tester.test_plain_english_different_contract_types())
+    test_results.append(tester.test_plain_english_different_jurisdictions())
+    
+    # Conversion Retrieval Tests
+    print("\n" + "📋"*30)
+    print("📋 CONVERSION RETRIEVAL TESTING")
+    print("📋"*30)
+    test_results.append(tester.test_get_plain_english_conversions_list())
+    test_results.append(tester.test_get_specific_plain_english_conversion())
+    test_results.append(tester.test_get_nonexistent_plain_english_conversion())
+    
+    # Export Functionality Tests
+    print("\n" + "📤"*30)
+    print("📤 EXPORT FUNCTIONALITY TESTING")
+    print("📤"*30)
+    test_results.append(tester.test_export_legal_clauses_pdf())
+    test_results.append(tester.test_export_legal_clauses_json())
+    test_results.append(tester.test_export_legal_clauses_docx())
+    test_results.append(tester.test_export_legal_clauses_invalid_format())
+    test_results.append(tester.test_export_nonexistent_conversion())
+    
+    # AI Processing Verification Tests
+    print("\n" + "🤖"*30)
+    print("🤖 AI PROCESSING VERIFICATION TESTING")
+    print("🤖"*30)
+    test_results.append(tester.test_plain_english_ai_processing_verification())
+    
+    print("📝"*60)
+    
     # NEW: Business Intelligence & Analytics Tests
     print("\n" + "🧠"*60)
     print("🧠 BUSINESS INTELLIGENCE & ANALYTICS TESTING - NEW FEATURES")
