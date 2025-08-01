@@ -8,7 +8,7 @@ import sys
 import re
 
 class ContractFormattingTester:
-    def __init__(self, base_url="https://e82a94e6-473a-4ddb-bc8d-afdd2267245e.preview.emergentagent.com"):
+    def __init__(self, base_url="https://a2c7a59e-4249-4784-a115-d1fb1a3612a0.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.tests_run = 0
