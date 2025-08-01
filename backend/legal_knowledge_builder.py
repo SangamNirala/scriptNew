@@ -36,6 +36,29 @@ except ImportError:
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+class CollectionMode(Enum):
+    """Collection modes for backward compatibility"""
+    STANDARD = "standard"  # Original 35 document collection
+    BULK = "bulk"         # New 15,000+ document collection
+
+@dataclass
+class RateLimitState:
+    """Track rate limiting state for each API key"""
+    requests_made: int = 0
+    last_request_time: float = 0
+    backoff_until: float = 0
+    consecutive_failures: int = 0
+
+@dataclass 
+class CollectionProgress:
+    """Track collection progress for resumability"""
+    total_queries: int = 0
+    completed_queries: int = 0
+    successful_queries: int = 0
+    total_documents: int = 0
+    failed_queries: List[str] = field(default_factory=list)
+    last_checkpoint: Dict[str, Any] = field(default_factory=dict)
+
 class LegalKnowledgeBuilder:
     """Comprehensive legal knowledge base builder for RAG system"""
     
