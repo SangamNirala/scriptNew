@@ -2982,6 +2982,8 @@ async def build_legal_knowledge_base(collection_mode: CollectionMode = Collectio
             filename_suffix = "_bulk"
         elif collection_mode == CollectionMode.FEDERAL_RESOURCES:
             filename_suffix = "_federal"
+        elif collection_mode == CollectionMode.ACADEMIC:
+            filename_suffix = "_academic"
         else:
             filename_suffix = "_standard"
         
