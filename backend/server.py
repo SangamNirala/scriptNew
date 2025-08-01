@@ -6601,8 +6601,7 @@ async def get_hr_compliance_summary(company_id: Optional[str] = None):
         raise HTTPException(status_code=500, detail=f"Error generating HR compliance summary: {str(e)}")
 
 
-# Include all API routes in the main app
-app.include_router(api_router)
+# Note: Router will be included after all endpoints are defined
 
 # RAG System Models and Endpoints
 print(f"🔍 RAG_SYSTEM_AVAILABLE = {RAG_SYSTEM_AVAILABLE}")
