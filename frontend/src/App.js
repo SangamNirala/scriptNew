@@ -962,6 +962,7 @@ function App() {
               setShowPlainEnglishCreator(true);
               setUseEnhancedWizard(false);
               setShowAnalytics(false);
+              setShowLegalQA(false);
             }}
             className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white px-8 py-4 text-lg font-semibold rounded-lg transition-all duration-300 transform hover:scale-105"
           >
@@ -969,6 +970,21 @@ function App() {
             Plain English Creator
             <Badge variant="secondary" className="ml-2 bg-green-400 text-green-900 text-xs">
               AI-POWERED
+            </Badge>
+          </Button>
+          <Button
+            onClick={() => {
+              setShowLegalQA(true);
+              setUseEnhancedWizard(false);
+              setShowAnalytics(false);
+              setShowPlainEnglishCreator(false);
+            }}
+            className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white px-8 py-4 text-lg font-semibold rounded-lg transition-all duration-300 transform hover:scale-105"
+          >
+            <Scale className="h-5 w-5 mr-2" />
+            Legal Q&A Assistant
+            <Badge variant="secondary" className="ml-2 bg-purple-400 text-purple-900 text-xs">
+              RAG-POWERED
             </Badge>
           </Button>
           <Button
