@@ -3208,13 +3208,6 @@ async def get_contract_types():
                 "category": "Legal"
             },
             {
-                "id": "non_compete",
-                "name": "Non-Compete Agreement",
-                "description": "Restrict competitive activities",
-                "complexity": "Medium",
-                "category": "Employment"
-            },
-            {
                 "id": "settlement_agreement",
                 "name": "Settlement Agreement",
                 "description": "Resolve legal disputes",
