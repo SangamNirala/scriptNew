@@ -16,6 +16,7 @@ import { Popover, PopoverContent, PopoverTrigger } from './components/ui/popover
 import EnhancedContractWizard from './components/EnhancedContractWizard';
 import AnalyticsDashboard from './components/AnalyticsDashboard';
 import PlainEnglishContractCreator from './components/PlainEnglishContractCreator';
+import LegalQuestionAnswering from './components/LegalQuestionAnswering';
 import ResizeObserverErrorBoundary from './components/ResizeObserverErrorBoundary';
 import { FileText, Zap, Shield, Users, CheckCircle, AlertTriangle, Download, Eye, Calendar, Sparkles, Wand2, Clock, BarChart3, MessageSquare } from 'lucide-react';
 
