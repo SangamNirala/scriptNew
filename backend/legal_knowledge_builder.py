@@ -14,12 +14,15 @@ import json
 import logging
 import re
 import time
+import random
 from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional
 from bs4 import BeautifulSoup
 import httpx
 import os
 from pathlib import Path
+from dataclasses import dataclass, field
+from enum import Enum
 
 # SerpAPI - handle import gracefully
 try:
