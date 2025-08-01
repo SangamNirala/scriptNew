@@ -1117,7 +1117,7 @@ function App() {
       <div className="py-12 px-6">
         <div className="max-w-6xl mx-auto">
           {/* Plain English Creator */}
-          {showPlainEnglishCreator && !showAnalytics && !useEnhancedWizard && (
+          {showPlainEnglishCreator && !showAnalytics && !useEnhancedWizard && !showLegalQA && (
             <PlainEnglishContractCreator
               contractTypes={contractTypes}
               jurisdictions={jurisdictions}
