@@ -537,21 +537,37 @@ class LegalKnowledgeBuilder:
     
     async def _process_court_result(self, result: Dict[str, Any], query: str, 
                                   legal_domain: str, court_code: str, court_name: str) -> Optional[Dict[str, Any]]:
-        """Process a single court result with error handling"""
+        """Process a single court result with enhanced metadata extraction"""
         try:
+            # Extract basic content
+            content = result.get('text', '') or result.get('snippet', '')
+            title = result.get('caseName', 'Unknown Case')
+            
+            # Enhanced metadata extraction
+            enhanced_metadata = await self._extract_enhanced_metadata(result, content) if self.config.get("enable_enhanced_metadata", False) else {}
+            
+            # Legal concept tagging
+            legal_concepts = self._extract_legal_concepts(content, legal_domain)
+            
+            # Court level classification
+            court_level = self._classify_court_level(court_code)
+            
             legal_doc = {
                 "id": f"court_{result.get('id')}_{court_code}",
-                "title": result.get('caseName', 'Unknown Case'),
-                "content": result.get('text', '') or result.get('snippet', ''),
+                "title": title,
+                "content": content,
                 "source": "CourtListener",
                 "source_url": result.get('absolute_url', ''),
                 "jurisdiction": "us_federal",
                 "legal_domain": legal_domain,
                 "document_type": "court_decision",
                 "court": f"{court_name} ({court_code})",
+                "court_code": court_code,
+                "court_level": court_level,
                 "date_filed": result.get('dateFiled', ''),
                 "precedential_status": result.get('status', ''),
-                "word_count": len(result.get('text', '').split()) if result.get('text') else 0,
+                "word_count": len(content.split()) if content else 0,
+                "legal_concepts": legal_concepts,
                 "metadata": {
                     "citation": result.get('citation', ''),
                     "judges": result.get('judges', []),
@@ -560,10 +576,13 @@ class LegalKnowledgeBuilder:
                     "target_domain": legal_domain,
                     "author": result.get('author', ''),
                     "cluster_id": result.get('cluster', ''),
-                    "opinion_type": result.get('type', '')
+                    "opinion_type": result.get('type', ''),
+                    "panel": result.get('panel', []),
+                    "attorneys": result.get('attorneys', []),
+                    **enhanced_metadata
                 },
                 "created_at": datetime.utcnow().isoformat(),
-                "content_hash": self._generate_content_hash(result.get('text', '') or result.get('snippet', ''))
+                "content_hash": self._generate_content_hash(content)
             }
             
             return legal_doc
@@ -571,6 +590,221 @@ class LegalKnowledgeBuilder:
         except Exception as e:
             logger.error(f"Error processing court result: {e}")
             return None
+    
+    async def _extract_enhanced_metadata(self, result: Dict[str, Any], content: str) -> Dict[str, Any]:
+        """Extract enhanced metadata for better legal document understanding"""
+        enhanced_metadata = {}
+        
+        try:
+            # Extract citation network
+            citations = self._extract_citations(content)
+            enhanced_metadata["cited_cases"] = citations
+            enhanced_metadata["citation_count"] = len(citations)
+            
+            # Extract legal authority references
+            authorities = self._extract_legal_authorities(content)
+            enhanced_metadata["legal_authorities"] = authorities
+            
+            # Extract procedural posture
+            posture = self._extract_procedural_posture(content)
+            if posture:
+                enhanced_metadata["procedural_posture"] = posture
+            
+            # Extract key legal issues
+            issues = self._extract_legal_issues(content)
+            enhanced_metadata["legal_issues"] = issues
+            
+            # Extract outcome/holding
+            outcome = self._extract_case_outcome(content)
+            if outcome:
+                enhanced_metadata["case_outcome"] = outcome
+            
+            # Court composition analysis
+            judges = result.get('judges', [])
+            if judges:
+                enhanced_metadata["judge_count"] = len(judges)
+                enhanced_metadata["unanimous"] = self._detect_unanimous_decision(content)
+            
+        except Exception as e:
+            logger.error(f"Error extracting enhanced metadata: {e}")
+            
+        return enhanced_metadata
+    
+    def _extract_legal_concepts(self, content: str, legal_domain: str) -> List[str]:
+        """Extract and tag legal concepts from document content"""
+        concepts = []
+        content_lower = content.lower()
+        
+        # Legal concept dictionaries by domain
+        concept_mapping = {
+            "contract_law": [
+                "breach of contract", "consideration", "offer and acceptance", "specific performance",
+                "damages", "rescission", "unconscionability", "statute of frauds", "parol evidence",
+                "third party beneficiary", "assignment", "delegation", "conditions", "warranties"
+            ],
+            "employment_labor_law": [
+                "wrongful termination", "discrimination", "harassment", "retaliation", "wage and hour",
+                "overtime", "FLSA", "Title VII", "ADA", "FMLA", "workers compensation",
+                "collective bargaining", "union organizing", "at-will employment"
+            ],
+            "constitutional_law": [
+                "due process", "equal protection", "first amendment", "fourth amendment", "commerce clause",
+                "supremacy clause", "establishment clause", "free speech", "search and seizure",
+                "takings clause", "substantive due process", "procedural due process"
+            ],
+            "intellectual_property": [
+                "patent infringement", "trademark dilution", "copyright fair use", "trade secret",
+                "obviousness", "claim construction", "likelihood of confusion", "transformative use",
+                "genericness", "abandonment", "misappropriation"
+            ],
+            "corporate_regulatory": [
+                "fiduciary duty", "business judgment rule", "securities fraud", "insider trading",
+                "merger and acquisition", "shareholder rights", "derivative suit", "piercing corporate veil",
+                "disclosure requirements", "proxy solicitation"
+            ],
+            "civil_criminal_procedure": [
+                "personal jurisdiction", "subject matter jurisdiction", "class action", "summary judgment",
+                "discovery", "privilege", "forum non conveniens", "venue", "service of process",
+                "pleading standards", "motions to dismiss"
+            ]
+        }
+        
+        # Extract concepts for the specific domain
+        domain_concepts = concept_mapping.get(legal_domain, [])
+        for concept in domain_concepts:
+            if concept in content_lower:
+                concepts.append(concept)
+        
+        # Extract general legal concepts regardless of domain
+        general_concepts = [
+            "injunctive relief", "damages", "attorney fees", "settlement", "judgment",
+            "appeal", "remand", "affirm", "reverse", "cert denied", "writ of certiorari"
+        ]
+        
+        for concept in general_concepts:
+            if concept in content_lower and concept not in concepts:
+                concepts.append(concept)
+        
+        return concepts[:10]  # Limit to top 10 concepts
+    
+    def _classify_court_level(self, court_code: str) -> str:
+        """Classify court level for hierarchy understanding"""
+        if court_code == "scotus":
+            return "supreme_court"
+        elif court_code.startswith("ca"):
+            return "circuit_court"
+        elif court_code.endswith("d"):
+            return "district_court"
+        else:
+            return "other"
+    
+    def _extract_citations(self, content: str) -> List[str]:
+        """Extract legal citations from content"""
+        import re
+        citations = []
+        
+        # Common citation patterns
+        patterns = [
+            r'\d+\s+U\.S\.\s+\d+',  # Supreme Court
+            r'\d+\s+F\.\d+d\s+\d+',  # Federal cases
+            r'\d+\s+S\.Ct\.\s+\d+',  # Supreme Court Reporter
+            r'\d+\s+L\.Ed\.\d+d\s+\d+'  # Lawyers' Edition
+        ]
+        
+        for pattern in patterns:
+            matches = re.findall(pattern, content)
+            citations.extend(matches)
+        
+        return list(set(citations))[:20]  # Limit and deduplicate
+    
+    def _extract_legal_authorities(self, content: str) -> List[str]:
+        """Extract legal authorities (statutes, regulations, etc.)"""
+        import re
+        authorities = []
+        
+        # Authority patterns
+        patterns = [
+            r'\d+\s+U\.S\.C\.\s+§\s+\d+',  # U.S. Code
+            r'\d+\s+C\.F\.R\.\s+§\s+\d+',  # Code of Federal Regulations
+            r'Rule\s+\d+',  # Federal Rules
+            r'Fed\.\s*R\.\s*Civ\.\s*P\.\s*\d+',  # Federal Rules of Civil Procedure
+        ]
+        
+        for pattern in patterns:
+            matches = re.findall(pattern, content)
+            authorities.extend(matches)
+        
+        return list(set(authorities))[:10]
+    
+    def _extract_procedural_posture(self, content: str) -> Optional[str]:
+        """Extract procedural posture of the case"""
+        content_lower = content.lower()
+        
+        postures = {
+            "motion to dismiss": "motion_to_dismiss",
+            "summary judgment": "summary_judgment", 
+            "appeal": "appeal",
+            "petition for certiorari": "certiorari",
+            "preliminary injunction": "preliminary_injunction",
+            "class certification": "class_certification",
+            "trial": "trial"
+        }
+        
+        for phrase, posture in postures.items():
+            if phrase in content_lower:
+                return posture
+        
+        return None
+    
+    def _extract_legal_issues(self, content: str) -> List[str]:
+        """Extract key legal issues from content"""
+        issues = []
+        content_lower = content.lower()
+        
+        # Common legal issue indicators
+        issue_indicators = [
+            "whether", "the issue is", "the question presented", "the court must decide",
+            "at issue", "the legal question", "the matter before us"
+        ]
+        
+        import re
+        for indicator in issue_indicators:
+            pattern = rf"{indicator}[^.]*\."
+            matches = re.findall(pattern, content_lower)
+            issues.extend(matches[:2])  # Limit per indicator
+        
+        return issues[:5]  # Limit total issues
+    
+    def _extract_case_outcome(self, content: str) -> Optional[str]:
+        """Extract case outcome/disposition"""
+        content_lower = content.lower()
+        
+        outcomes = {
+            "affirmed": "affirmed",
+            "reversed": "reversed", 
+            "remanded": "remanded",
+            "dismissed": "dismissed",
+            "granted": "granted",
+            "denied": "denied",
+            "vacated": "vacated"
+        }
+        
+        for outcome, key in outcomes.items():
+            if outcome in content_lower:
+                return key
+        
+        return None
+    
+    def _detect_unanimous_decision(self, content: str) -> bool:
+        """Detect if decision was unanimous"""
+        content_lower = content.lower()
+        unanimous_indicators = ["unanimous", "unanimously", "per curiam"]
+        dissent_indicators = ["dissent", "dissenting", "concur"]
+        
+        has_unanimous = any(indicator in content_lower for indicator in unanimous_indicators)
+        has_dissent = any(indicator in content_lower for indicator in dissent_indicators)
+        
+        return has_unanimous and not has_dissent
     
     def _meets_quality_filters(self, document: Dict[str, Any]) -> bool:
         """Enhanced quality filters with comprehensive checks"""
