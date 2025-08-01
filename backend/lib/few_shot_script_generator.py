@@ -874,7 +874,7 @@ The smartest people I know don't have all the answers. They just ask questions t
     
     def _calculate_pattern_effectiveness(self, example_ids: List[str], examples: List[Dict]) -> float:
         """Calculate effectiveness score for a pattern based on examples"""
-        relevant_examples = [ex for ex in examples if ex["id"] in example_ids]
+        relevant_examples = [ex for ex in examples if str(ex.get("_id", ex.get("id", ""))) in example_ids]
         if not relevant_examples:
             return 5.0
         
