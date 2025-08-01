@@ -1007,6 +1007,7 @@ function App() {
               setShowAnalytics(true);
               setUseEnhancedWizard(false);
               setShowPlainEnglishCreator(false);
+              setShowLegalQA(false);
             }}
             variant="outline"
             className="border-white/30 text-white hover:bg-white/10 px-8 py-4 text-lg font-semibold rounded-lg"
