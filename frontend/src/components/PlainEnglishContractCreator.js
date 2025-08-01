@@ -30,9 +30,9 @@ const API = `${BACKEND_URL}/api`;
 
 const PlainEnglishContractCreator = ({ onBack, contractTypes, jurisdictions }) => {
   const [inputText, setInputText] = useState('');
-  const [selectedContractType, setSelectedContractType] = useState('');
+  const [selectedContractType, setSelectedContractType] = useState('auto_detect');
   const [selectedJurisdiction, setSelectedJurisdiction] = useState('US');
-  const [selectedIndustry, setSelectedIndustry] = useState('');
+  const [selectedIndustry, setSelectedIndustry] = useState('general_business');
   const [outputFormat, setOutputFormat] = useState('legal_clauses');
   const [isProcessing, setIsProcessing] = useState(false);
   const [result, setResult] = useState(null);
