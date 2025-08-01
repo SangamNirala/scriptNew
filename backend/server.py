@@ -8121,6 +8121,568 @@ async def search_legal_concepts(
         logger.error(f"Error searching legal concepts: {e}")
         raise HTTPException(status_code=500, detail=f"Concept search failed: {str(e)}")
 
+# ================================
+# PRECEDENT ANALYSIS & CITATION NETWORK ENDPOINTS (Day 17-18)
+# ================================
+
+# Import precedent analysis system
+try:
+    from precedent_analysis_engine import precedent_engine, initialize_precedent_engine, PrecedentAnalysisResult
+    from citation_extraction_engine import citation_engine, CitationNetwork, LegalCitation
+    PRECEDENT_SYSTEM_AVAILABLE = True
+except ImportError as e:
+    logger.warning(f"Precedent Analysis system not available: {e}")
+    PRECEDENT_SYSTEM_AVAILABLE = False
+
+# Precedent Analysis Models
+class PrecedentAnalysisRequest(BaseModel):
+    legal_issue: str = Field(..., description="The legal issue or question to analyze")
+    jurisdiction: str = Field(default="US_Federal", description="Target jurisdiction for precedent analysis")
+    user_facts: Optional[str] = Field(default=None, description="Optional user facts to apply precedents to")
+    analysis_depth: str = Field(default="standard", pattern="^(basic|standard|comprehensive)$")
+
+class PrecedentHierarchyRequest(BaseModel):
+    case_ids: List[str] = Field(..., description="List of case IDs to rank by precedent hierarchy")
+    jurisdiction: str = Field(default="US_Federal", description="Jurisdiction for hierarchy analysis")
+
+class LegalReasoningChainRequest(BaseModel):
+    legal_issue: str = Field(..., description="Legal issue for reasoning chain")
+    user_facts: str = Field(..., description="Factual scenario to analyze")
+    jurisdiction: str = Field(default="US_Federal", description="Applicable jurisdiction")
+    
+class ConflictingPrecedentsQuery(BaseModel):
+    legal_concept: str = Field(..., description="Legal concept to check for conflicts")
+    jurisdiction_scope: str = Field(default="federal", description="Scope of jurisdictions to check")
+
+@api_router.post("/legal-reasoning/analyze-precedents")
+async def analyze_precedents(request: PrecedentAnalysisRequest):
+    """
+    Analyze precedents for a specific legal issue.
+    
+    Identifies controlling precedents, persuasive authorities, and conflicts
+    across jurisdictions with legal reasoning analysis.
+    """
+    if not PRECEDENT_SYSTEM_AVAILABLE:
+        raise HTTPException(
+            status_code=503,
+            detail="Precedent Analysis system is currently unavailable"
+        )
+    
+    try:
+        # Ensure precedent engine is initialized
+        if not precedent_engine.precedent_database:
+            await initialize_precedent_engine()
+        
+        # Perform precedent analysis
+        analysis_result = await precedent_engine.analyze_precedents_for_issue(
+            legal_issue=request.legal_issue,
+            jurisdiction=request.jurisdiction,
+            user_facts=request.user_facts
+        )
+        
+        return {
+            "legal_issue": analysis_result.legal_issue,
+            "jurisdiction": request.jurisdiction,
+            "controlling_precedents": analysis_result.controlling_precedents,
+            "persuasive_precedents": analysis_result.persuasive_precedents,
+            "conflicting_precedents": analysis_result.conflicting_precedents,
+            "legal_reasoning_chain": analysis_result.legal_reasoning_chain,
+            "precedent_summary": analysis_result.precedent_summary,
+            "confidence_score": analysis_result.confidence_score,
+            "jurisdiction_analysis": analysis_result.jurisdiction_analysis,
+            "temporal_analysis": analysis_result.temporal_analysis,
+            "concept_integration": analysis_result.concept_integration,
+            "analysis_metadata": {
+                "analysis_depth": request.analysis_depth,
+                "total_precedents_analyzed": (
+                    len(analysis_result.controlling_precedents) + 
+                    len(analysis_result.persuasive_precedents) + 
+                    len(analysis_result.conflicting_precedents)
+                ),
+                "analysis_timestamp": datetime.utcnow().isoformat()
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Error in precedent analysis: {e}")
+        raise HTTPException(status_code=500, detail=f"Precedent analysis failed: {str(e)}")
+
+@api_router.get("/legal-reasoning/citation-network/{case_id}")
+async def get_citation_network(case_id: str):
+    """
+    Get citation network relationships for a specific case.
+    
+    Returns inbound and outbound citations with relationship strength
+    and authority analysis.
+    """
+    if not PRECEDENT_SYSTEM_AVAILABLE:
+        raise HTTPException(
+            status_code=503,
+            detail="Precedent Analysis system is currently unavailable"
+        )
+    
+    try:
+        # Ensure precedent engine is initialized
+        if not precedent_engine.citation_networks:
+            await initialize_precedent_engine()
+        
+        if case_id not in precedent_engine.citation_networks:
+            raise HTTPException(status_code=404, detail=f"Case ID '{case_id}' not found in citation network")
+        
+        network = precedent_engine.citation_networks[case_id]
+        precedent = precedent_engine.precedent_database.get(case_id)
+        
+        # Format outbound citations
+        outbound_citations = []
+        for citation in network.outbound_citations:
+            outbound_citations.append({
+                "citation_string": citation.citation_string,
+                "case_name": citation.case_name,
+                "court": citation.court,
+                "year": citation.year,
+                "citation_type": citation.citation_type.value,
+                "citation_context": citation.citation_context.value,
+                "authority_level": citation.authority_level,
+                "jurisdiction": citation.jurisdiction,
+                "confidence_score": citation.confidence_score
+            })
+        
+        # Get inbound citation details
+        inbound_citation_details = []
+        for citing_case_id in network.inbound_citations:
+            if citing_case_id in precedent_engine.precedent_database:
+                citing_precedent = precedent_engine.precedent_database[citing_case_id]
+                inbound_citation_details.append({
+                    "citing_case_id": citing_case_id,
+                    "citing_case_name": citing_precedent.case_name,
+                    "citing_court": citing_precedent.court,
+                    "citing_jurisdiction": citing_precedent.jurisdiction,
+                    "precedent_authority": citing_precedent.precedent_authority
+                })
+        
+        return {
+            "case_id": case_id,
+            "case_name": network.case_name,
+            "citation_network": {
+                "outbound_citations": outbound_citations,
+                "outbound_count": len(outbound_citations),
+                "inbound_citations": inbound_citation_details,
+                "inbound_count": len(inbound_citation_details),
+                "authority_score": network.authority_score,
+                "influence_score": network.influence_score,
+                "precedent_rank": network.precedent_rank
+            },
+            "precedent_details": {
+                "court": precedent.court if precedent else "Unknown",
+                "jurisdiction": precedent.jurisdiction if precedent else "Unknown", 
+                "decision_date": precedent.decision_date.isoformat() if precedent and precedent.decision_date else None,
+                "precedent_authority": precedent.precedent_authority if precedent else 0.0,
+                "precedent_strength": precedent.precedent_strength.value if precedent else "unknown",
+                "legal_concepts": precedent.legal_concepts if precedent else []
+            },
+            "network_statistics": {
+                "total_network_size": len(precedent_engine.citation_networks),
+                "average_citations_per_case": sum(len(net.outbound_citations) for net in precedent_engine.citation_networks.values()) / len(precedent_engine.citation_networks)
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error retrieving citation network: {e}")
+        raise HTTPException(status_code=500, detail=f"Citation network retrieval failed: {str(e)}")
+
+@api_router.post("/legal-reasoning/precedent-hierarchy")
+async def analyze_precedent_hierarchy(request: PrecedentHierarchyRequest):
+    """
+    Analyze precedent hierarchy and authority ranking for given cases.
+    
+    Ranks cases by precedent authority considering court level, jurisdiction,
+    citation influence, and temporal factors.
+    """
+    if not PRECEDENT_SYSTEM_AVAILABLE:
+        raise HTTPException(
+            status_code=503,
+            detail="Precedent Analysis system is currently unavailable"
+        )
+    
+    try:
+        # Ensure precedent engine is initialized
+        if not precedent_engine.precedent_database:
+            await initialize_precedent_engine()
+        
+        hierarchy_analysis = []
+        found_cases = []
+        missing_cases = []
+        
+        for case_id in request.case_ids:
+            if case_id in precedent_engine.precedent_database:
+                precedent = precedent_engine.precedent_database[case_id]
+                network = precedent_engine.citation_networks.get(case_id)
+                
+                # Determine binding status for the requested jurisdiction
+                is_binding = await precedent_engine._is_controlling_precedent(precedent, request.jurisdiction)
+                
+                hierarchy_entry = {
+                    "case_id": case_id,
+                    "case_name": precedent.case_name,
+                    "court": precedent.court,
+                    "jurisdiction": precedent.jurisdiction,
+                    "precedent_authority": precedent.precedent_authority,
+                    "precedent_strength": precedent.precedent_strength.value,
+                    "precedent_rank": network.precedent_rank if network else 999,
+                    "is_binding": is_binding,
+                    "binding_status": "controlling" if is_binding else "persuasive",
+                    "citations_received": precedent.citations_received,
+                    "authority_score": network.authority_score if network else 0.0,
+                    "influence_score": network.influence_score if network else 0.0,
+                    "decision_date": precedent.decision_date.isoformat() if precedent.decision_date else None,
+                    "legal_concepts": precedent.legal_concepts
+                }
+                hierarchy_analysis.append(hierarchy_entry)
+                found_cases.append(case_id)
+            else:
+                missing_cases.append(case_id)
+        
+        # Sort by precedent authority (descending)
+        hierarchy_analysis.sort(key=lambda x: (
+            x["precedent_authority"], 
+            x["authority_score"], 
+            -x["precedent_rank"]
+        ), reverse=True)
+        
+        # Add hierarchy rankings
+        for i, entry in enumerate(hierarchy_analysis, 1):
+            entry["hierarchy_rank"] = i
+        
+        return {
+            "jurisdiction": request.jurisdiction,
+            "precedent_hierarchy": hierarchy_analysis,
+            "hierarchy_summary": {
+                "total_cases_requested": len(request.case_ids),
+                "cases_found": len(found_cases),
+                "cases_missing": len(missing_cases),
+                "controlling_precedents": len([p for p in hierarchy_analysis if p["is_binding"]]),
+                "persuasive_precedents": len([p for p in hierarchy_analysis if not p["is_binding"]]),
+                "highest_authority_case": hierarchy_analysis[0]["case_name"] if hierarchy_analysis else None,
+                "average_authority_score": sum(p["precedent_authority"] for p in hierarchy_analysis) / len(hierarchy_analysis) if hierarchy_analysis else 0
+            },
+            "missing_cases": missing_cases,
+            "analysis_metadata": {
+                "analysis_timestamp": datetime.utcnow().isoformat(),
+                "total_precedents_in_database": len(precedent_engine.precedent_database)
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Error in precedent hierarchy analysis: {e}")
+        raise HTTPException(status_code=500, detail=f"Precedent hierarchy analysis failed: {str(e)}")
+
+@api_router.post("/legal-reasoning/legal-reasoning-chain")
+async def generate_legal_reasoning_chain(request: LegalReasoningChainRequest):
+    """
+    Generate complete legal reasoning chain from precedents to conclusion.
+    
+    Constructs multi-step legal reasoning: issue identification → precedent matching
+    → rule extraction → rule application → conclusion generation.
+    """
+    if not PRECEDENT_SYSTEM_AVAILABLE:
+        raise HTTPException(
+            status_code=503,
+            detail="Precedent Analysis system is currently unavailable"
+        )
+    
+    try:
+        # Ensure precedent engine is initialized
+        if not precedent_engine.precedent_database:
+            await initialize_precedent_engine()
+        
+        # First, analyze precedents for the legal issue
+        precedent_analysis = await precedent_engine.analyze_precedents_for_issue(
+            legal_issue=request.legal_issue,
+            jurisdiction=request.jurisdiction,
+            user_facts=request.user_facts
+        )
+        
+        # Combine controlling and persuasive precedents for reasoning
+        all_precedents = precedent_analysis.controlling_precedents + precedent_analysis.persuasive_precedents
+        
+        # Generate detailed legal reasoning chain
+        reasoning_chain = await precedent_engine._generate_legal_reasoning_chain(
+            legal_issue=request.legal_issue,
+            precedents=all_precedents[:10],  # Use top 10 precedents
+            user_facts=request.user_facts
+        )
+        
+        if not reasoning_chain:
+            raise HTTPException(status_code=500, detail="Failed to generate legal reasoning chain")
+        
+        # Enhance with precedent integration for concept understanding
+        concept_integration = {}
+        if precedent_engine.legal_concepts_integration:
+            concept_integration = await precedent_engine._integrate_with_legal_concepts(
+                request.legal_issue, all_precedents
+            )
+        
+        return {
+            "legal_issue": request.legal_issue,
+            "user_facts": request.user_facts,
+            "jurisdiction": request.jurisdiction,
+            "legal_reasoning_chain": {
+                "step_1_issue_identification": reasoning_chain.issue_identification,
+                "step_2_applicable_precedents": reasoning_chain.applicable_precedents,
+                "step_3_rule_extraction": reasoning_chain.rule_extraction,
+                "step_4_rule_application": reasoning_chain.rule_application,
+                "step_5_conclusion": reasoning_chain.conclusion,
+                "alternative_reasoning": reasoning_chain.alternative_reasoning,
+                "confidence_score": reasoning_chain.confidence_score
+            },
+            "supporting_precedents": {
+                "controlling_precedents": precedent_analysis.controlling_precedents,
+                "persuasive_precedents": precedent_analysis.persuasive_precedents[:5],  # Limit to top 5
+                "precedent_summary": precedent_analysis.precedent_summary
+            },
+            "concept_integration": concept_integration,
+            "analysis_quality": {
+                "reasoning_chain_strength": "strong" if reasoning_chain.confidence_score > 0.7 else "moderate" if reasoning_chain.confidence_score > 0.4 else "weak",
+                "precedent_support": len(all_precedents),
+                "legal_concept_coverage": len(concept_integration.get("concept_precedent_mapping", {})),
+                "overall_confidence": (reasoning_chain.confidence_score + precedent_analysis.confidence_score) / 2
+            },
+            "reasoning_metadata": {
+                "reasoning_timestamp": datetime.utcnow().isoformat(),
+                "analysis_depth": "comprehensive",
+                "steps_completed": 5
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error generating legal reasoning chain: {e}")
+        raise HTTPException(status_code=500, detail=f"Legal reasoning chain generation failed: {str(e)}")
+
+@api_router.get("/legal-reasoning/conflicting-precedents")
+async def find_conflicting_precedents(
+    legal_concept: str,
+    jurisdiction_scope: str = "federal",
+    limit: int = 10
+):
+    """
+    Identify conflicting precedents for a legal concept across jurisdictions.
+    
+    Analyzes precedent networks to find cases that conflict, distinguish, 
+    or overrule each other on the same legal concept.
+    """
+    if not PRECEDENT_SYSTEM_AVAILABLE:
+        raise HTTPException(
+            status_code=503,
+            detail="Precedent Analysis system is currently unavailable"
+        )
+    
+    try:
+        # Ensure precedent engine is initialized
+        if not precedent_engine.precedent_database:
+            await initialize_precedent_engine()
+        
+        conflicts_found = []
+        concept_precedents = []
+        
+        # Find all precedents related to the legal concept
+        for precedent in precedent_engine.precedent_database.values():
+            relevance_score = 0.0
+            
+            # Check legal concepts
+            for concept in precedent.legal_concepts:
+                if legal_concept.lower() in concept.lower():
+                    relevance_score += 0.5
+            
+            # Check legal issues and holding
+            combined_text = f"{' '.join(precedent.legal_issues)} {precedent.holding}".lower()
+            if legal_concept.lower() in combined_text:
+                relevance_score += 0.3
+            
+            # Check legal principles
+            for principle in precedent.legal_principles:
+                if legal_concept.lower() in principle.lower():
+                    relevance_score += 0.4
+            
+            # Apply jurisdiction scope filter
+            if jurisdiction_scope == "federal" and not precedent.jurisdiction.startswith("US_"):
+                relevance_score *= 0.5
+            elif jurisdiction_scope == "state" and precedent.jurisdiction.startswith("US_"):
+                relevance_score *= 0.5
+            
+            if relevance_score > 0.3:
+                concept_precedents.append((precedent, relevance_score))
+        
+        # Sort by relevance
+        concept_precedents.sort(key=lambda x: x[1], reverse=True)
+        
+        # Analyze for conflicts
+        analyzed_pairs = set()
+        
+        for i, (precedent_a, score_a) in enumerate(concept_precedents[:20]):  # Limit to top 20
+            network_a = precedent_engine.citation_networks.get(precedent_a.case_id)
+            
+            for j, (precedent_b, score_b) in enumerate(concept_precedents[i+1:], i+1):
+                pair_key = tuple(sorted([precedent_a.case_id, precedent_b.case_id]))
+                if pair_key in analyzed_pairs:
+                    continue
+                analyzed_pairs.add(pair_key)
+                
+                # Check for conflict indicators
+                conflict_indicators = []
+                conflict_strength = 0.0
+                
+                # Check if one overrules the other
+                if precedent_b.case_id in precedent_a.overruling_cases:
+                    conflict_indicators.append(f"{precedent_a.case_name} overruled by {precedent_b.case_name}")
+                    conflict_strength += 0.8
+                elif precedent_a.case_id in precedent_b.overruling_cases:
+                    conflict_indicators.append(f"{precedent_b.case_name} overruled by {precedent_a.case_name}")
+                    conflict_strength += 0.8
+                
+                # Check for distinguishing citations
+                if network_a:
+                    for citation in network_a.outbound_citations:
+                        if citation.citation_context.value == "distinguishing" and precedent_b.case_name in citation.case_name:
+                            conflict_indicators.append(f"{precedent_a.case_name} distinguishes {precedent_b.case_name}")
+                            conflict_strength += 0.4
+                
+                # Check for different jurisdictions with different holdings
+                if (precedent_a.jurisdiction != precedent_b.jurisdiction and 
+                    precedent_a.holding and precedent_b.holding and 
+                    len(precedent_a.holding) > 50 and len(precedent_b.holding) > 50):
+                    
+                    # Simple text similarity check for conflicting holdings
+                    if _holdings_appear_conflicting(precedent_a.holding, precedent_b.holding):
+                        conflict_indicators.append(f"Different jurisdictional approaches: {precedent_a.jurisdiction} vs {precedent_b.jurisdiction}")
+                        conflict_strength += 0.6
+                
+                # Check temporal conflicts (newer case contradicting older)
+                if (precedent_a.decision_date and precedent_b.decision_date and
+                    abs((precedent_a.decision_date - precedent_b.decision_date).days) > 365):
+                    
+                    newer_case = precedent_a if precedent_a.decision_date > precedent_b.decision_date else precedent_b
+                    older_case = precedent_b if precedent_a.decision_date > precedent_b.decision_date else precedent_a
+                    
+                    if conflict_strength > 0.3:  # Only if other conflict indicators present
+                        conflict_indicators.append(f"Temporal evolution: {newer_case.case_name} ({newer_case.decision_date.year}) potentially updates {older_case.case_name} ({older_case.decision_date.year})")
+                        conflict_strength += 0.2
+                
+                # If conflicts found, add to results
+                if conflict_strength > 0.3 and len(conflicts_found) < limit:
+                    conflicts_found.append({
+                        "conflict_id": f"{precedent_a.case_id}_{precedent_b.case_id}",
+                        "legal_concept": legal_concept,
+                        "conflicting_cases": [
+                            {
+                                "case_id": precedent_a.case_id,
+                                "case_name": precedent_a.case_name,
+                                "court": precedent_a.court,
+                                "jurisdiction": precedent_a.jurisdiction,
+                                "decision_date": precedent_a.decision_date.isoformat() if precedent_a.decision_date else None,
+                                "holding": precedent_a.holding[:200] + "..." if len(precedent_a.holding) > 200 else precedent_a.holding,
+                                "precedent_authority": precedent_a.precedent_authority,
+                                "precedent_strength": precedent_a.precedent_strength.value
+                            },
+                            {
+                                "case_id": precedent_b.case_id,
+                                "case_name": precedent_b.case_name,
+                                "court": precedent_b.court,
+                                "jurisdiction": precedent_b.jurisdiction,
+                                "decision_date": precedent_b.decision_date.isoformat() if precedent_b.decision_date else None,
+                                "holding": precedent_b.holding[:200] + "..." if len(precedent_b.holding) > 200 else precedent_b.holding,
+                                "precedent_authority": precedent_b.precedent_authority,
+                                "precedent_strength": precedent_b.precedent_strength.value
+                            }
+                        ],
+                        "conflict_analysis": {
+                            "conflict_strength": round(conflict_strength, 2),
+                            "conflict_type": _classify_conflict_type(conflict_indicators),
+                            "conflict_indicators": conflict_indicators,
+                            "resolution_needed": conflict_strength > 0.6,
+                            "jurisdictional_split": precedent_a.jurisdiction != precedent_b.jurisdiction
+                        },
+                        "resolution_guidance": _suggest_conflict_resolution(
+                            precedent_a, precedent_b, conflict_indicators
+                        )
+                    })
+        
+        return {
+            "legal_concept": legal_concept,
+            "jurisdiction_scope": jurisdiction_scope,
+            "conflicting_precedents": conflicts_found,
+            "conflict_summary": {
+                "total_conflicts_found": len(conflicts_found),
+                "high_priority_conflicts": len([c for c in conflicts_found if c["conflict_analysis"]["conflict_strength"] > 0.6]),
+                "jurisdictional_conflicts": len([c for c in conflicts_found if c["conflict_analysis"]["jurisdictional_split"]]),
+                "concept_precedents_analyzed": len(concept_precedents),
+                "average_conflict_strength": sum(c["conflict_analysis"]["conflict_strength"] for c in conflicts_found) / len(conflicts_found) if conflicts_found else 0
+            },
+            "analysis_metadata": {
+                "analysis_timestamp": datetime.utcnow().isoformat(),
+                "total_precedents_examined": len(precedent_engine.precedent_database),
+                "search_depth": "comprehensive"
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Error finding conflicting precedents: {e}")
+        raise HTTPException(status_code=500, detail=f"Conflicting precedents analysis failed: {str(e)}")
+
+# Helper methods for conflict analysis
+def _holdings_appear_conflicting(holding_a: str, holding_b: str) -> bool:
+    """Simple heuristic to detect potentially conflicting holdings"""
+    conflicting_terms = [
+        ("liable", "not liable"), ("valid", "invalid"), ("enforceable", "unenforceable"),
+        ("constitutional", "unconstitutional"), ("permissible", "impermissible"),
+        ("allowed", "prohibited"), ("required", "forbidden")
+    ]
+    
+    holding_a_lower = holding_a.lower()
+    holding_b_lower = holding_b.lower()
+    
+    for term_a, term_b in conflicting_terms:
+        if ((term_a in holding_a_lower and term_b in holding_b_lower) or
+            (term_b in holding_a_lower and term_a in holding_b_lower)):
+            return True
+    
+    return False
+
+def _classify_conflict_type(conflict_indicators: List[str]) -> str:
+    """Classify the type of conflict based on indicators"""
+    if any("overruled" in indicator.lower() for indicator in conflict_indicators):
+        return "overruling_conflict"
+    elif any("distinguish" in indicator.lower() for indicator in conflict_indicators):
+        return "distinguishing_conflict"  
+    elif any("jurisdictional" in indicator.lower() for indicator in conflict_indicators):
+        return "jurisdictional_split"
+    elif any("temporal" in indicator.lower() for indicator in conflict_indicators):
+        return "temporal_evolution"
+    else:
+        return "doctrinal_conflict"
+
+def _suggest_conflict_resolution(precedent_a, precedent_b, conflict_indicators: List[str]) -> str:
+    """Suggest how to resolve the precedent conflict"""
+    if precedent_a.precedent_authority > precedent_b.precedent_authority:
+        higher_authority = precedent_a
+        lower_authority = precedent_b
+    else:
+        higher_authority = precedent_b
+        lower_authority = precedent_a
+    
+    resolution = f"Consider following {higher_authority.case_name} as it has higher precedent authority ({higher_authority.precedent_authority:.2f} vs {lower_authority.precedent_authority:.2f})"
+    
+    if any("jurisdictional" in indicator.lower() for indicator in conflict_indicators):
+        resolution += ". Note jurisdictional differences - apply the precedent from the relevant jurisdiction."
+    
+    if any("overruled" in indicator.lower() for indicator in conflict_indicators):
+        resolution += ". Follow the more recent precedent that overrules the earlier case."
+    
+    return resolution
+
 # Include all API routes in the main app (after all endpoints are defined)
 app.include_router(api_router)
 
