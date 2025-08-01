@@ -307,6 +307,7 @@ function App() {
   const [useEnhancedWizard, setUseEnhancedWizard] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [showPlainEnglishCreator, setShowPlainEnglishCreator] = useState(false);
+  const [showLegalQA, setShowLegalQA] = useState(false);
 
   useEffect(() => {
     loadContractTypes();
