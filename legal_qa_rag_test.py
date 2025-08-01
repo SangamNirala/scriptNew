@@ -343,7 +343,7 @@ class LegalQARAGTester:
             ("RAG System Stats", stats_success),
             ("Knowledge Base Stats", kb_stats_success), 
             ("Legal Question Answering", qa_success),
-            ("Knowledge Base Initialization", init_success if user_input in ['y', 'yes'] else "Skipped")
+            ("Knowledge Base Initialization", init_success)
         ]
         
         passed_count = 0
