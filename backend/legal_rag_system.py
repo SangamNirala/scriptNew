@@ -124,8 +124,8 @@ class LegalRAGSystem:
     async def _initialize_supabase_vector(self) -> bool:
         """Initialize Supabase vector database"""
         try:
-            if not self.supabase_url or not self.supabase_key:
-                logger.warning("Supabase credentials not available")
+            if not self.supabase_url or not self.supabase_key or not SUPABASE_AVAILABLE:
+                logger.warning("Supabase not available or credentials missing")
                 return False
                 
             logger.info("🔗 Connecting to Supabase vector database...")
