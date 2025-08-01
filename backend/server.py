@@ -7079,6 +7079,104 @@ if RAG_SYSTEM_AVAILABLE:
                 status_code=500,
                 detail=f"Error rebuilding federal resources knowledge base: {str(e)}"
             )
+    
+    @api_router.post("/legal-qa/rebuild-academic-knowledge-base")
+    async def rebuild_academic_knowledge_base():
+        """
+        Comprehensive academic legal content collection process for 3,500+ scholarly documents
+        
+        Target Sources:
+        - Google Scholar Legal: Academic papers from top law schools (2,000 docs)
+        - Legal Academic Databases: Bar journals and professional publications (1,000 docs)  
+        - Legal Research Repositories: SSRN, university research, think tanks (500 docs)
+        
+        Focus Areas:
+        - Constitutional Law: Supreme Court analysis, constitutional doctrine
+        - AI & Technology Law: AI governance, digital privacy, algorithmic accountability
+        - Administrative Law: Agency rulemaking, judicial review, regulatory compliance
+        - Intellectual Property: Patent law, copyright, trademark analysis
+        
+        Priority Sources:
+        - Harvard Law Review, Yale Law Journal, Columbia Law Review, Stanford Law Review
+        - ABA journals, state bar publications, practice area journals
+        - SSRN research papers, law school publications, legal think tank reports
+        
+        Enhanced with:
+        - Academic quality control (1,500+ words, peer-reviewed focus)
+        - Citation analysis and academic ranking
+        - Author credibility and institutional affiliation tracking
+        - Legal topic modeling and advanced categorization
+        """
+        try:
+            logger.info("🎓 Starting ACADEMIC LEGAL CONTENT COLLECTION PROCESS (3,500+ documents)...")
+            
+            # Import and run knowledge base builder in academic mode
+            from legal_knowledge_builder import LegalKnowledgeBuilder, CollectionMode
+            
+            # Initialize builder with ACADEMIC mode
+            builder = LegalKnowledgeBuilder(CollectionMode.ACADEMIC)
+            
+            # Run the comprehensive academic collection
+            knowledge_base = await builder.build_academic_knowledge_base()
+            
+            # Save academic knowledge base
+            builder.knowledge_base = knowledge_base
+            builder.save_knowledge_base("/app/legal_knowledge_base_academic.json")
+            
+            # Get comprehensive statistics
+            stats = builder.get_knowledge_base_stats()
+            
+            # Calculate target achievement
+            target_docs = builder.config.get('target_documents', 3500)
+            actual_docs = stats['total_documents']
+            achievement_percentage = (actual_docs / target_docs) * 100
+            
+            logger.info(f"🎯 Academic Collection Complete: {actual_docs:,}/{target_docs:,} documents ({achievement_percentage:.1f}%)")
+            
+            return {
+                "message": "Academic legal knowledge base rebuilt successfully",
+                "collection_mode": "ACADEMIC",
+                "status": "completed",
+                "statistics": {
+                    "total_documents": stats['total_documents'],
+                    "target_documents": target_docs,
+                    "achievement_percentage": round(achievement_percentage, 1),
+                    "total_queries": builder.progress.total_queries,
+                    "successful_queries": builder.progress.successful_queries,
+                    "failed_queries": len(builder.progress.failed_queries),
+                    "by_jurisdiction": stats['by_jurisdiction'],
+                    "by_legal_domain": stats['by_legal_domain'],
+                    "by_document_type": stats['by_document_type'],
+                    "by_source": stats['by_source']
+                },
+                "academic_features": {
+                    "google_scholar_papers": "Academic papers from top law schools",
+                    "legal_journals": "Bar journals and professional publications", 
+                    "research_repositories": "SSRN, university research, think tank reports",
+                    "quality_filters": "1,500+ words, peer-reviewed focus",
+                    "citation_analysis": "Academic ranking and author credibility",
+                    "priority_sources": [
+                        "Harvard Law Review",
+                        "Yale Law Journal", 
+                        "Columbia Law Review",
+                        "Stanford Law Review"
+                    ]
+                },
+                "focus_areas": [
+                    "Constitutional Law & Supreme Court Analysis",
+                    "AI & Technology Law Policy",
+                    "Administrative Law & Regulatory Compliance", 
+                    "Intellectual Property Law Analysis"
+                ],
+                "timestamp": datetime.utcnow().isoformat()
+            }
+            
+        except Exception as e:
+            logger.error(f"Error rebuilding academic knowledge base: {e}", exc_info=True)  
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error rebuilding academic knowledge base: {str(e)}"
+            )
 
 else:
     # Fallback endpoints when RAG system is not available
