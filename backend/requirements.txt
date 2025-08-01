@@ -44,6 +44,7 @@ uritemplate
 tqdm
 distro
 httpcore
+attrs>=22.0.0
 # Legal Research Integration Dependencies
 beautifulsoup4>=4.12.0
 google-api-python-client>=2.110.0
