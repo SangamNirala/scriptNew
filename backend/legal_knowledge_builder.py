@@ -1189,23 +1189,37 @@ class LegalKnowledgeBuilder:
 
 
 # Main execution function
-async def build_legal_knowledge_base():
-    """Main function to build comprehensive legal knowledge base"""
-    builder = LegalKnowledgeBuilder()
+async def build_legal_knowledge_base(collection_mode: CollectionMode = CollectionMode.STANDARD):
+    """Main function to build comprehensive legal knowledge base with configurable collection mode"""
+    builder = LegalKnowledgeBuilder(collection_mode=collection_mode)
     
     try:
+        logger.info(f"🚀 Starting legal knowledge base building in {collection_mode.value.upper()} mode")
+        
         # Build the knowledge base
         knowledge_base = await builder.build_comprehensive_knowledge_base()
         
-        # Save to file
-        builder.save_knowledge_base()
+        # Save to file with mode-specific filename
+        filename_suffix = "_bulk" if collection_mode == CollectionMode.BULK else "_standard"
+        filepath = f"/app/legal_knowledge_base{filename_suffix}.json"
+        builder.save_knowledge_base(filepath)
         
         # Print statistics
         stats = builder.get_knowledge_base_stats()
-        print("\n" + "="*50)
-        print("📊 LEGAL KNOWLEDGE BASE STATISTICS")
-        print("="*50)
+        print("\n" + "="*60)
+        print(f"📊 LEGAL KNOWLEDGE BASE STATISTICS ({collection_mode.value.upper()} MODE)")
+        print("="*60)
         print(f"Total Documents: {stats['total_documents']}")
+        
+        if collection_mode == CollectionMode.BULK:
+            target_achievement = (stats['total_documents'] / 15000) * 100
+            print(f"Target Achievement: {target_achievement:.1f}% of 15,000 documents")
+        
+        print(f"\n🎯 Collection Progress:")
+        print(f"  Total Queries: {builder.progress.total_queries}")
+        print(f"  Completed Queries: {builder.progress.completed_queries}")
+        print(f"  Successful Queries: {builder.progress.successful_queries}")
+        print(f"  Failed Queries: {len(builder.progress.failed_queries)}")
         
         print("\n📍 By Jurisdiction:")
         for jurisdiction, count in sorted(stats['by_jurisdiction'].items()):
@@ -1223,12 +1237,30 @@ async def build_legal_knowledge_base():
         for source, count in sorted(stats['by_source'].items()):
             print(f"  {source}: {count}")
         
-        print("\n✅ Legal knowledge base created successfully!")
+        if builder.progress.failed_queries:
+            print(f"\n⚠️ Failed Queries ({len(builder.progress.failed_queries)}):")
+            for failed_query in builder.progress.failed_queries[:10]:  # Show first 10
+                print(f"  - {failed_query}")
+            if len(builder.progress.failed_queries) > 10:
+                print(f"  ... and {len(builder.progress.failed_queries) - 10} more")
+        
+        print(f"\n✅ Legal knowledge base created successfully in {collection_mode.value.upper()} mode!")
+        print(f"📁 Saved to: {filepath}")
         return knowledge_base
         
     except Exception as e:
         logger.error(f"Error building knowledge base: {e}")
         return []
+
+
+# Convenience functions for different collection modes
+async def build_standard_knowledge_base():
+    """Build knowledge base in standard mode (backward compatible)"""
+    return await build_legal_knowledge_base(CollectionMode.STANDARD)
+
+async def build_bulk_knowledge_base():
+    """Build knowledge base in bulk mode (15,000+ documents target)"""
+    return await build_legal_knowledge_base(CollectionMode.BULK)
 
 
 if __name__ == "__main__":
