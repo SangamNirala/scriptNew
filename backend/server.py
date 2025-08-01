@@ -6841,30 +6841,89 @@ if RAG_SYSTEM_AVAILABLE:
             )
     
     @api_router.post("/legal-qa/rebuild-knowledge-base")
-    async def rebuild_knowledge_base():
-        """Rebuild the legal knowledge base from scratch"""
+    async def rebuild_knowledge_base(collection_mode: str = "standard"):
+        """Rebuild the legal knowledge base from scratch with configurable collection mode"""
         try:
-            logger.info("🔄 Rebuilding legal knowledge base...")
+            logger.info(f"🔄 Rebuilding legal knowledge base in {collection_mode.upper()} mode...")
             
-            # Import and run knowledge base builder
-            from legal_knowledge_builder import build_legal_knowledge_base
-            knowledge_base = await build_legal_knowledge_base()
+            # Import and run knowledge base builder with specified mode
+            from legal_knowledge_builder import build_legal_knowledge_base, CollectionMode
+            
+            # Parse collection mode
+            if collection_mode.lower() in ['bulk', 'b']:
+                mode = CollectionMode.BULK
+                logger.info("🚀 Starting BULK collection (target: 15,000+ documents)")
+            else:
+                mode = CollectionMode.STANDARD
+                logger.info("📚 Starting STANDARD collection (backward compatible)")
+            
+            knowledge_base = await build_legal_knowledge_base(mode)
+            
+            # Determine which knowledge base file to use
+            filename_suffix = "_bulk" if mode == CollectionMode.BULK else "_standard"
+            kb_file = f"/app/legal_knowledge_base{filename_suffix}.json"
             
             # Reinitialize RAG system with new knowledge base
             rag_system = await get_rag_system()
-            await rag_system.ingest_knowledge_base("/app/legal_knowledge_base.json")
+            await rag_system.ingest_knowledge_base(kb_file)
             
             return {
-                "message": "Legal knowledge base rebuilt successfully!",
+                "message": f"Legal knowledge base rebuilt successfully in {collection_mode.upper()} mode!",
+                "collection_mode": collection_mode.upper(),
                 "documents_processed": len(knowledge_base),
+                "knowledge_base_file": kb_file,
+                "target_achievement": f"{(len(knowledge_base)/15000)*100:.1f}%" if mode == CollectionMode.BULK else "N/A",
                 "timestamp": datetime.utcnow().isoformat()
             }
             
         except Exception as e:
-            logger.error(f"Error rebuilding knowledge base: {e}")
+            logger.error(f"Error rebuilding knowledge base: {e}", exc_info=True)  
             raise HTTPException(
                 status_code=500,
                 detail=f"Error rebuilding knowledge base: {str(e)}"
+            )
+    
+    @api_router.post("/legal-qa/rebuild-bulk-knowledge-base")
+    async def rebuild_bulk_knowledge_base():
+        """Rebuild the legal knowledge base in BULK mode for large-scale collection (15,000+ documents)"""
+        try:
+            logger.info("🚀 Starting BULK knowledge base collection (target: 15,000+ documents)...")
+            
+            # Import and run knowledge base builder in bulk mode
+            from legal_knowledge_builder import build_bulk_knowledge_base
+            knowledge_base = await build_bulk_knowledge_base()
+            
+            # Reinitialize RAG system with new bulk knowledge base
+            rag_system = await get_rag_system()
+            await rag_system.ingest_knowledge_base("/app/legal_knowledge_base_bulk.json")
+            
+            # Calculate statistics
+            total_docs = len(knowledge_base)
+            target_achievement = (total_docs / 15000) * 100
+            
+            return {
+                "message": "Legal knowledge base rebuilt successfully in BULK mode!",
+                "collection_mode": "BULK",
+                "documents_processed": total_docs,
+                "target_documents": 15000,
+                "target_achievement": f"{target_achievement:.1f}%",
+                "knowledge_base_file": "/app/legal_knowledge_base_bulk.json",
+                "features_enabled": [
+                    "Pagination (up to 500 results per query)",
+                    "Quality filters (500+ words, precedential status)",
+                    "Date range filtering (2015-2025)",
+                    "Intelligent rate limiting",
+                    "Batch processing (200 documents per batch)",
+                    "Enhanced error recovery"
+                ],
+                "timestamp": datetime.utcnow().isoformat()
+            }
+            
+        except Exception as e:
+            logger.error(f"Error rebuilding bulk knowledge base: {e}", exc_info=True)  
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error rebuilding bulk knowledge base: {str(e)}"
             )
 
 else:
