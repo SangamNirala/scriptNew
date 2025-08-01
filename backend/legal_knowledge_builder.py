@@ -2587,6 +2587,301 @@ class LegalKnowledgeBuilder:
         return content
     
     async def _search_google_scholar_content(self, query: str) -> List[Dict[str, Any]]:
+        """Specialized Google Scholar search for academic legal content"""
+        content = []
+        
+        if not self.serp_api_key or not SERPAPI_AVAILABLE:
+            logger.warning("SerpAPI not available or key missing, skipping Google Scholar search")
+            return content
+            
+        try:
+            client = GoogleSearch(api_key=self.serp_api_key)
+            
+            # Google Scholar specific parameters
+            search_params = {
+                "engine": "google_scholar",
+                "q": query,
+                "num": self.config.get("results_per_query", 250),
+                "hl": "en",
+                "lr": "lang_en",
+                "as_ylo": "2015",  # From 2015 onwards
+                "as_yhi": "2025",  # Through 2025
+                "scisbd": 1       # Sort by date
+            }
+            
+            result = client.get_dict()
+            
+            if "organic_results" in result:
+                for item in result["organic_results"]:
+                    try:
+                        # Enhanced metadata extraction for academic content
+                        metadata = self._extract_academic_metadata(item, "google_scholar")
+                        
+                        content_item = {
+                            "id": f"scholar_{hash(item.get('link', '') + item.get('title', '')) % 100000}",
+                            "title": item.get("title", "Untitled Academic Paper"),
+                            "content": item.get("snippet", ""),
+                            "url": item.get("link", ""),
+                            "source": "Google Scholar",
+                            "jurisdiction": metadata.get("jurisdiction", "us_federal"),
+                            "legal_domain": metadata.get("legal_domain", "academic_analysis"),
+                            "document_type": "academic_paper",
+                            "publication_info": item.get("publication_info", {}),
+                            "citation_count": item.get("inline_links", {}).get("cited_by", {}).get("total", 0),
+                            "authors": metadata.get("authors", []),
+                            "academic_source": metadata.get("academic_source", ""),
+                            "collection_timestamp": datetime.now().isoformat(),
+                            "metadata": metadata
+                        }
+                        
+                        content.append(content_item)
+                        
+                    except Exception as e:
+                        logger.error(f"Error processing Google Scholar result: {e}")
+                        continue
+                        
+        except Exception as e:
+            logger.error(f"Error in Google Scholar search for '{query}': {e}")
+            
+        return content
+    
+    def _apply_academic_filters(self, results: List[Dict[str, Any]], source_type: str) -> List[Dict[str, Any]]:
+        """Apply academic-specific quality filters"""
+        filtered_results = []
+        
+        for result in results:
+            # Length filter - academic content should be substantial
+            content_length = len(result.get("content", ""))
+            if content_length < self.config.get("min_content_length", 1500):
+                continue
+                
+            # Academic quality indicators
+            title = result.get("title", "").lower()
+            content = result.get("content", "").lower()
+            url = result.get("url", "").lower()
+            
+            # Strong academic indicators (high priority)
+            strong_academic_indicators = [
+                "law review", "journal", "scholarly", "academic", "university",
+                "research", "analysis", "doctrine", "constitutional", "legal framework",
+                "harvard law", "yale law", "stanford law", "columbia law",
+                ".edu", "ssrn", "law school"
+            ]
+            
+            # Medium academic indicators
+            medium_academic_indicators = [
+                "bar journal", "legal publication", "professional", "practice",
+                "continuing education", "legal analysis", "case law", "statute"
+            ]
+            
+            # Calculate academic priority score
+            strong_score = sum(1 for indicator in strong_academic_indicators 
+                             if indicator in title or indicator in content or indicator in url)
+            medium_score = sum(1 for indicator in medium_academic_indicators 
+                             if indicator in title or indicator in content or indicator in url)
+            
+            academic_score = (strong_score * 2) + medium_score
+            
+            # Source-specific filtering
+            if source_type == "google_scholar":
+                # Higher standards for Google Scholar
+                if academic_score < 2:
+                    continue
+                result["academic_priority"] = "high" if academic_score >= 4 else "medium"
+                    
+            elif source_type == "legal_journal":
+                # Professional publications
+                if academic_score < 1:
+                    continue
+                result["academic_priority"] = "high" if academic_score >= 3 else "medium"
+                    
+            elif source_type == "research_paper":
+                # Research repositories
+                if academic_score < 1:
+                    continue
+                result["academic_priority"] = "medium" if academic_score >= 2 else "low"
+            
+            # Add academic scoring metadata
+            result["academic_score"] = academic_score
+            result["academic_indicators"] = {
+                "strong_indicators": strong_score,
+                "medium_indicators": medium_score,
+                "total_score": academic_score
+            }
+            
+            filtered_results.append(result)
+        
+        return filtered_results
+    
+    def _extract_academic_metadata(self, item: Dict[str, Any], source: str) -> Dict[str, Any]:
+        """Extract academic-specific metadata from search results"""
+        metadata = {
+            "source": source,
+            "academic_source": "",
+            "authors": [],
+            "publication_year": None,
+            "journal_name": "",
+            "legal_domain": "general_legal",
+            "jurisdiction": "us_federal"
+        }
+        
+        title = item.get("title", "").lower()
+        snippet = item.get("content", item.get("snippet", "")).lower()
+        url = item.get("link", "").lower()
+        publication_info = item.get("publication_info", {})
+        
+        # Extract publication year
+        pub_info_text = str(publication_info)
+        year_match = re.search(r'\b(20[0-2][0-9])\b', pub_info_text + " " + title)
+        if year_match:
+            metadata["publication_year"] = int(year_match.group(1))
+        
+        # Identify academic source type
+        if any(school in title or school in url for school in ["harvard", "yale", "stanford", "columbia"]):
+            metadata["academic_source"] = "top_tier_law_school"
+        elif "law review" in title or "law journal" in title:
+            metadata["academic_source"] = "law_review"
+        elif "bar journal" in title or "bar publication" in title:
+            metadata["academic_source"] = "bar_publication"
+        elif "ssrn" in url or "research" in title:
+            metadata["academic_source"] = "research_repository"
+        
+        # Extract legal domain
+        if any(term in title or term in snippet for term in ["constitutional", "constitution"]):
+            metadata["legal_domain"] = "constitutional_law"
+        elif any(term in title or term in snippet for term in ["artificial intelligence", "ai ", "technology", "digital"]):
+            metadata["legal_domain"] = "technology_law"
+        elif any(term in title or term in snippet for term in ["administrative", "regulatory", "agency"]):
+            metadata["legal_domain"] = "administrative_law"
+        elif any(term in title or term in snippet for term in ["intellectual property", "patent", "copyright", "trademark"]):
+            metadata["legal_domain"] = "intellectual_property"
+        elif any(term in title or term in snippet for term in ["contract", "agreement", "commercial"]):
+            metadata["legal_domain"] = "contract_law"
+        
+        # Extract authors from publication info
+        if isinstance(publication_info, dict) and "authors" in publication_info:
+            metadata["authors"] = publication_info["authors"]
+        elif isinstance(publication_info, str):
+            # Try to extract author names from publication string
+            author_match = re.search(r'by\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)', publication_info)
+            if author_match:
+                metadata["authors"] = [author_match.group(1)]
+        
+        # Extract journal name
+        if "law review" in title:
+            journal_match = re.search(r'([A-Z][^-]+Law Review)', title, re.IGNORECASE)
+            if journal_match:
+                metadata["journal_name"] = journal_match.group(1)
+        elif "journal" in title:
+            journal_match = re.search(r'([A-Z][^-]+Journal)', title, re.IGNORECASE)
+            if journal_match:
+                metadata["journal_name"] = journal_match.group(1)
+        
+        return metadata
+    
+    def _apply_academic_quality_filters(self, content: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Apply comprehensive quality filters for academic content"""
+        logger.info("🔍 Applying academic quality filters...")
+        
+        quality_filtered = []
+        total_processed = len(content)
+        
+        quality_metrics = {
+            "total_processed": total_processed,
+            "passed_length_filter": 0,
+            "passed_academic_filter": 0,
+            "passed_date_filter": 0,
+            "passed_final_filter": 0,
+            "high_priority_count": 0,
+            "medium_priority_count": 0,
+            "low_priority_count": 0
+        }
+        
+        for item in content:
+            # 1. Length filter
+            content_length = len(item.get("content", ""))
+            if content_length < self.config.get("min_content_length", 1500):
+                continue
+            quality_metrics["passed_length_filter"] += 1
+            
+            # 2. Academic quality filter
+            academic_score = item.get("academic_score", 0)
+            if academic_score < 1:
+                continue
+            quality_metrics["passed_academic_filter"] += 1
+            
+            # 3. Date relevance filter (if available)
+            pub_year = item.get("metadata", {}).get("publication_year")
+            if pub_year and pub_year >= 2015:
+                quality_metrics["passed_date_filter"] += 1
+            elif not pub_year:  # Include if no date available
+                quality_metrics["passed_date_filter"] += 1
+            else:
+                continue
+            
+            # Track priority distribution
+            priority = item.get("academic_priority", "medium")
+            quality_metrics[f"{priority}_priority_count"] += 1
+            
+            quality_filtered.append(item)
+            quality_metrics["passed_final_filter"] += 1
+        
+        # Update quality metrics
+        self.quality_metrics.total_processed += quality_metrics["total_processed"]
+        self.quality_metrics.passed_length_filter += quality_metrics["passed_length_filter"]
+        self.quality_metrics.passed_content_filter += quality_metrics["passed_final_filter"]
+        
+        logger.info(f"📊 Quality Filter Results:")
+        logger.info(f"   📝 Total processed: {quality_metrics['total_processed']}")
+        logger.info(f"   ✅ Passed length filter: {quality_metrics['passed_length_filter']}")
+        logger.info(f"   ✅ Passed academic filter: {quality_metrics['passed_academic_filter']}")
+        logger.info(f"   ✅ Passed date filter: {quality_metrics['passed_date_filter']}")
+        logger.info(f"   🎯 Final qualifying documents: {quality_metrics['passed_final_filter']}")
+        logger.info(f"   🏆 Priority distribution: High={quality_metrics['high_priority_count']}, Medium={quality_metrics['medium_priority_count']}, Low={quality_metrics['low_priority_count']}")
+        
+        return quality_filtered
+    
+    def _log_academic_collection_summary(self, content: List[Dict[str, Any]]) -> None:
+        """Generate detailed collection summary for academic content"""
+        logger.info("📊 Academic Collection Summary:")
+        
+        # Source distribution
+        source_counts = {}
+        domain_counts = {}
+        priority_counts = {}
+        academic_source_counts = {}
+        
+        for item in content:
+            source = item.get("source", "Unknown")
+            domain = item.get("legal_domain", "general_legal")
+            priority = item.get("academic_priority", "medium")
+            academic_source = item.get("metadata", {}).get("academic_source", "general")
+            
+            source_counts[source] = source_counts.get(source, 0) + 1
+            domain_counts[domain] = domain_counts.get(domain, 0) + 1
+            priority_counts[priority] = priority_counts.get(priority, 0) + 1
+            academic_source_counts[academic_source] = academic_source_counts.get(academic_source, 0) + 1
+        
+        logger.info(f"📚 Total Academic Documents: {len(content):,}")
+        logger.info(f"🎯 Target Achievement: {len(content)}/{self.config.get('target_documents', 3500)} ({(len(content)/self.config.get('target_documents', 3500)*100):.1f}%)")
+        
+        logger.info("📖 Source Distribution:")
+        for source, count in sorted(source_counts.items(), key=lambda x: x[1], reverse=True):
+            logger.info(f"   {source}: {count:,} documents")
+        
+        logger.info("⚖️ Legal Domain Distribution:")
+        for domain, count in sorted(domain_counts.items(), key=lambda x: x[1], reverse=True):
+            logger.info(f"   {domain}: {count:,} documents")
+        
+        logger.info("🏆 Academic Priority Distribution:")
+        for priority, count in sorted(priority_counts.items(), key=lambda x: x[1], reverse=True):
+            logger.info(f"   {priority}: {count:,} documents")
+        
+        logger.info("🎓 Academic Source Type Distribution:")
+        for academic_source, count in sorted(academic_source_counts.items(), key=lambda x: x[1], reverse=True):
+            logger.info(f"   {academic_source}: {count:,} documents")
+    
+    async def _search_google_scholar_content(self, query: str) -> List[Dict[str, Any]]:
         """Search Google Scholar for academic legal content"""
         content = []
         
