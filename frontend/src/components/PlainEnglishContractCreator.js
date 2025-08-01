@@ -89,6 +89,11 @@ const PlainEnglishContractCreator = ({ onBack, contractTypes, jurisdictions }) =
 
       setResult(response.data);
       setActiveTab('results');
+      // Initialize edited contract content
+      if (response.data.full_contract) {
+        setEditedContract(response.data.full_contract);
+        setContractActiveTab('edit');
+      }
       loadRecentConversions(); // Refresh the list
     } catch (error) {
       console.error('Error converting plain English:', error);
