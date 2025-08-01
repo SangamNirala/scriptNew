@@ -3002,9 +3002,13 @@ async def export_legal_clauses(conversion_id: str, format: str = "pdf"):
         elif format.lower() == "docx":
             # For DOCX format, return structured data that can be used by frontend
             # to generate DOCX using libraries like docx.js or similar
+            detected_title = LegalMateAgents.detect_contract_title_from_description(
+                conversion.get('original_text', ''), 
+                conversion.get('contract_type')
+            )
             docx_content = {
                 "format": "docx",
-                "title": "Legal Clauses - Plain English Conversion",
+                "title": detected_title,
                 "sections": [
                     {
                         "heading": "Original Plain English Input",
