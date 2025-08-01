@@ -3921,8 +3921,8 @@ async def download_edited_contract_pdf(request: EditedContractRequest):
         # Build PDF content
         content = []
         
-        # Title
-        title = f"{contract['contract_type'].upper()} CONTRACT"
+        # Title - Use intelligent title detection
+        title = LegalMateAgents.generate_intelligent_pdf_title(contract)
         content.append(Paragraph(title, title_style))
         content.append(Spacer(1, 12))
         
