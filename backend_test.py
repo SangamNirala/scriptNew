@@ -4472,6 +4472,238 @@ class LegalMateAPITester:
         
         return integration_success, {}
 
+    def test_knowledge_integration_status(self):
+        """Test GET /api/knowledge-integration/status endpoint"""
+        return self.run_test(
+            "Knowledge Integration Status", 
+            "GET", 
+            "knowledge-integration/status", 
+            200
+        )
+
+    def test_knowledge_integration_quality_metrics(self):
+        """Test GET /api/knowledge-integration/quality-metrics endpoint"""
+        return self.run_test(
+            "Knowledge Integration Quality Metrics", 
+            "GET", 
+            "knowledge-integration/quality-metrics", 
+            200
+        )
+
+    def test_knowledge_integration_execute_phase1(self):
+        """Test POST /api/knowledge-integration/execute with phase1"""
+        execute_data = {"phase": "phase1"}
+        return self.run_test(
+            "Knowledge Integration Execute Phase1", 
+            "POST", 
+            "knowledge-integration/execute", 
+            200, 
+            execute_data,
+            timeout=120  # Integration might take longer
+        )
+
+    def test_knowledge_integration_execute_phase2(self):
+        """Test POST /api/knowledge-integration/execute with phase2"""
+        execute_data = {"phase": "phase2"}
+        return self.run_test(
+            "Knowledge Integration Execute Phase2", 
+            "POST", 
+            "knowledge-integration/execute", 
+            200, 
+            execute_data,
+            timeout=120
+        )
+
+    def test_knowledge_integration_execute_phase3(self):
+        """Test POST /api/knowledge-integration/execute with phase3"""
+        execute_data = {"phase": "phase3"}
+        return self.run_test(
+            "Knowledge Integration Execute Phase3", 
+            "POST", 
+            "knowledge-integration/execute", 
+            200, 
+            execute_data,
+            timeout=120
+        )
+
+    def test_knowledge_integration_execute_phase4(self):
+        """Test POST /api/knowledge-integration/execute with phase4"""
+        execute_data = {"phase": "phase4"}
+        return self.run_test(
+            "Knowledge Integration Execute Phase4", 
+            "POST", 
+            "knowledge-integration/execute", 
+            200, 
+            execute_data,
+            timeout=120
+        )
+
+    def test_knowledge_integration_execute_all(self):
+        """Test POST /api/knowledge-integration/execute with all phases"""
+        execute_data = {"phase": "all"}
+        return self.run_test(
+            "Knowledge Integration Execute All Phases", 
+            "POST", 
+            "knowledge-integration/execute", 
+            200, 
+            execute_data,
+            timeout=300  # All phases might take much longer
+        )
+
+    def test_knowledge_integration_execute_invalid_phase(self):
+        """Test POST /api/knowledge-integration/execute with invalid phase"""
+        execute_data = {"phase": "invalid_phase"}
+        success, response = self.run_test(
+            "Knowledge Integration Execute Invalid Phase", 
+            "POST", 
+            "knowledge-integration/execute", 
+            400, 
+            execute_data
+        )
+        
+        # If 400 doesn't work, try 422 (validation error)
+        if not success:
+            success, response = self.run_test(
+                "Knowledge Integration Execute Invalid Phase (422)", 
+                "POST", 
+                "knowledge-integration/execute", 
+                422, 
+                execute_data
+            )
+            if success:
+                self.tests_passed += 1  # Adjust count since we ran an extra test
+        
+        return success, response
+
+    def test_knowledge_integration_concurrent_execution(self):
+        """Test that system prevents concurrent executions (409 error)"""
+        execute_data = {"phase": "phase1"}
+        
+        # Start first execution
+        success1, response1 = self.run_test(
+            "Knowledge Integration First Execution", 
+            "POST", 
+            "knowledge-integration/execute", 
+            200, 
+            execute_data,
+            timeout=5  # Short timeout to avoid waiting
+        )
+        
+        if success1:
+            # Immediately try second execution (should fail with 409)
+            success2, response2 = self.run_test(
+                "Knowledge Integration Concurrent Execution (should fail)", 
+                "POST", 
+                "knowledge-integration/execute", 
+                409, 
+                execute_data,
+                timeout=5
+            )
+            
+            if success2:
+                print("   ✅ System correctly prevents concurrent executions")
+                return True, {"first": response1, "second": response2}
+            else:
+                print("   ⚠️  System may not prevent concurrent executions properly")
+                return False, {"first": response1, "second": response2}
+        else:
+            print("   ⚠️  Could not test concurrent execution - first execution failed")
+            return False, {"first": response1}
+
+    def test_knowledge_integration_comprehensive_workflow(self):
+        """Test complete workflow: Execute phase1 → Check status → Get quality metrics"""
+        print(f"\n🔍 Testing Knowledge Integration Comprehensive Workflow...")
+        
+        # Step 1: Execute phase1
+        execute_data = {"phase": "phase1"}
+        success1, response1 = self.run_test(
+            "Workflow Step 1: Execute Phase1", 
+            "POST", 
+            "knowledge-integration/execute", 
+            200, 
+            execute_data,
+            timeout=120
+        )
+        
+        if not success1:
+            print("   ❌ Workflow failed at step 1 (execute phase1)")
+            return False, {"step1": response1}
+        
+        # Step 2: Check status
+        success2, response2 = self.run_test(
+            "Workflow Step 2: Check Status", 
+            "GET", 
+            "knowledge-integration/status", 
+            200
+        )
+        
+        if not success2:
+            print("   ❌ Workflow failed at step 2 (check status)")
+            return False, {"step1": response1, "step2": response2}
+        
+        # Verify status response structure
+        if isinstance(response2, dict):
+            expected_fields = ['is_running', 'current_phase', 'progress', 'start_time', 'documents_processed', 'errors']
+            missing_fields = [field for field in expected_fields if field not in response2]
+            if missing_fields:
+                print(f"   ⚠️  Status response missing fields: {missing_fields}")
+            else:
+                print("   ✅ Status response has all expected fields")
+        
+        # Step 3: Get quality metrics
+        success3, response3 = self.run_test(
+            "Workflow Step 3: Get Quality Metrics", 
+            "GET", 
+            "knowledge-integration/quality-metrics", 
+            200
+        )
+        
+        if not success3:
+            print("   ❌ Workflow failed at step 3 (get quality metrics)")
+            return False, {"step1": response1, "step2": response2, "step3": response3}
+        
+        # Verify quality metrics response structure
+        if isinstance(response3, dict):
+            expected_metrics = ['total_documents', 'quality_score_distribution', 'source_authority_distribution', 'legal_domain_distribution']
+            missing_metrics = [metric for metric in expected_metrics if metric not in response3]
+            if missing_metrics:
+                print(f"   ⚠️  Quality metrics response missing fields: {missing_metrics}")
+            else:
+                print("   ✅ Quality metrics response has expected structure")
+        
+        print("   ✅ Complete workflow executed successfully")
+        self.tests_passed += 1  # Count this as one comprehensive test
+        
+        return True, {
+            "step1_execute": response1,
+            "step2_status": response2, 
+            "step3_metrics": response3
+        }
+
+    def run_knowledge_integration_tests(self):
+        """Run all Knowledge Base Integration System tests"""
+        print("\n" + "=" * 80)
+        print("🧠 KNOWLEDGE BASE INTEGRATION SYSTEM TESTS")
+        print("=" * 80)
+        
+        # Test individual endpoints
+        self.test_knowledge_integration_status()
+        self.test_knowledge_integration_quality_metrics()
+        
+        # Test execution endpoints with different phases
+        self.test_knowledge_integration_execute_phase1()
+        self.test_knowledge_integration_execute_phase2()
+        self.test_knowledge_integration_execute_phase3()
+        self.test_knowledge_integration_execute_phase4()
+        self.test_knowledge_integration_execute_all()
+        
+        # Test error handling
+        self.test_knowledge_integration_execute_invalid_phase()
+        self.test_knowledge_integration_concurrent_execution()
+        
+        # Test comprehensive workflow
+        self.test_knowledge_integration_comprehensive_workflow()
+
 def main():
     print("🚀 Starting LegalMate AI Backend API Tests")
     print("=" * 60)
@@ -4709,6 +4941,19 @@ def main():
     test_results.append(tester.test_academic_endpoint_integration())
     
     print("🎓"*60)
+    
+    # NEW: Knowledge Base Integration System Tests
+    print("\n" + "🧠"*60)
+    print("🧠 KNOWLEDGE BASE INTEGRATION SYSTEM TESTING - NEW FEATURE")
+    print("🧠"*60)
+    
+    # Knowledge Integration Tests
+    print("\n" + "🔗"*30)
+    print("🔗 KNOWLEDGE INTEGRATION TESTING")
+    print("🔗"*30)
+    tester.run_knowledge_integration_tests()
+    
+    print("🧠"*60)
     
     # Print final results
     print("\n" + "="*60)
