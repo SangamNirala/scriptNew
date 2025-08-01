@@ -331,7 +331,14 @@ class LegalRAGSystem:
             if not session_id:
                 session_id = str(uuid4())
             
-            # Retrieve relevant documents
+            # Check if this is a simple greeting or small talk
+            is_simple_greeting = self._is_simple_greeting(question)
+            
+            if is_simple_greeting:
+                # Handle simple greetings without legal complexity
+                return await self._handle_simple_greeting(question, session_id)
+            
+            # Retrieve relevant documents for legal questions
             retrieved_docs = await self._retrieve_relevant_documents(
                 question, jurisdiction, legal_domain
             )
@@ -344,7 +351,7 @@ class LegalRAGSystem:
             # Add to conversation history
             self._update_conversation_history(session_id, question, answer_result)
             
-            # Add legal disclaimer
+            # Add legal disclaimer only for actual legal questions
             answer_result["answer"] += self.legal_disclaimer
             
             logger.info("✅ Legal question answered successfully!")
