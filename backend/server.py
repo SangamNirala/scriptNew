@@ -2993,10 +2993,15 @@ async def export_legal_clauses(conversion_id: str, format: str = "pdf"):
             doc.build(story)
             buffer.seek(0)
             
+            # Generate a meaningful filename based on the detected title
+            safe_title = detected_title.lower().replace(' ', '_').replace('-', '_')
+            # Remove special characters and keep only alphanumeric and underscores
+            safe_title = ''.join(c for c in safe_title if c.isalnum() or c == '_')
+            
             return StreamingResponse(
                 io.BytesIO(buffer.read()),
                 media_type="application/pdf",
-                headers={"Content-Disposition": f"attachment; filename=legal_clauses_{conversion_id}.pdf"}
+                headers={"Content-Disposition": f"attachment; filename={safe_title}_{conversion_id[:8]}.pdf"}
             )
         
         elif format.lower() == "docx":
