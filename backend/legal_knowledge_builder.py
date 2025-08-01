@@ -1355,7 +1355,15 @@ class LegalKnowledgeBuilder:
         logger.info(f"  Secondary Period (2015-2019): {secondary_date_count:,} documents")
         
         logger.info("=" * 80)
+    async def _fetch_court_decisions(self) -> List[Dict[str, Any]]:
         """Fetch comprehensive court decisions using CourtListener API with enhanced pagination and bulk collection"""
+        
+        # Use the new comprehensive bulk collection system for BULK mode
+        if self.collection_mode == CollectionMode.BULK:
+            logger.info("🚀 Using COMPREHENSIVE BULK COLLECTION SYSTEM")
+            return await self.bulk_collect_court_decisions()
+        
+        # Original implementation for STANDARD mode (backward compatibility)
         content = []
         
         if not self.courtlistener_api_keys:
@@ -1369,7 +1377,7 @@ class LegalKnowledgeBuilder:
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
                 
-                # EXPANDED SEARCH STRATEGY - 60 targeted queries organized by legal domain
+                # STANDARD MODE: Original search strategy
                 
                 # CONTRACT LAW - 15 queries (target 3,000 docs in bulk mode)
                 contract_law_queries = [
@@ -1481,29 +1489,19 @@ class LegalKnowledgeBuilder:
                 
                 logger.info(f"📚 Executing {len(all_queries)} targeted search queries for comprehensive legal document collection")
                 
-                # Expanded court coverage beyond just Supreme Court
+                # Simplified court coverage for standard mode
                 courts = [
                     ("scotus", "Supreme Court"),           # Supreme Court
                     ("ca1", "1st Circuit Court"),         # 1st Circuit  
                     ("ca2", "2nd Circuit Court"),         # 2nd Circuit
-                    ("ca3", "3rd Circuit Court"),         # 3rd Circuit
-                    ("ca4", "4th Circuit Court"),         # 4th Circuit
-                    ("ca5", "5th Circuit Court"),         # 5th Circuit
-                    ("ca6", "6th Circuit Court"),         # 6th Circuit
-                    ("ca7", "7th Circuit Court"),         # 7th Circuit
-                    ("ca8", "8th Circuit Court"),         # 8th Circuit
                     ("ca9", "9th Circuit Court"),         # 9th Circuit
-                    ("ca10", "10th Circuit Court"),       # 10th Circuit
-                    ("ca11", "11th Circuit Court"),       # 11th Circuit
-                    ("cadc", "DC Circuit Court"),         # DC Circuit
-                    ("cafc", "Federal Circuit Court")     # Federal Circuit
                 ]
                 
                 query_count = 0
                 batch_results = []
                 
-                # Execute searches with enhanced pagination and batch processing
-                for query, legal_domain in all_queries:
+                # Execute searches - simplified for standard mode
+                for query, legal_domain in all_queries[:10]:  # Limit queries in standard mode
                     for court_code, court_name in courts:
                         try:
                             query_count += 1
@@ -1519,48 +1517,31 @@ class LegalKnowledgeBuilder:
                                 "format": "json"
                             }
                             
-                            # Add quality filters if enabled
-                            if self.config["enable_quality_filters"]:
-                                params.update({
-                                    "stat_Precedential": "on",  # Only precedential/published opinions
-                                })
-                                
-                                # Add date range filter
-                                if self.config["date_range"]:
-                                    params["filed_after"] = self.config["date_range"]["min"]
-                                    params["filed_before"] = self.config["date_range"]["max"]
-                            
-                            logger.info(f"🔍 Query {query_count}/{self.progress.total_queries * len(courts)}: '{query}' in {court_name}")
+                            logger.info(f"🔍 Query {query_count}: '{query}' in {court_name}")
                             
                             headers = {"Accept": "application/json"}
                             
-                            # Fetch results with pagination
-                            if self.config["enable_pagination"]:
-                                results = await self._fetch_paginated_results(
-                                    client, base_url, params, headers, query, legal_domain, (court_code, court_name)
-                                )
-                            else:
-                                # Standard mode: single page, limited results
-                                api_key = self._get_next_api_key()
-                                if api_key:
-                                    headers["Authorization"] = f"Token {api_key}"
-                                    response = await client.get(base_url, headers=headers, params=params)
+                            # Standard mode: single page, limited results
+                            api_key = self._get_next_api_key()
+                            if api_key:
+                                headers["Authorization"] = f"Token {api_key}"
+                                response = await client.get(base_url, headers=headers, params=params)
+                                
+                                if response.status_code == 200:
+                                    data = response.json()
+                                    raw_results = data.get('results', [])[:self.config["results_per_query"]]
                                     
-                                    if response.status_code == 200:
-                                        data = response.json()
-                                        raw_results = data.get('results', [])[:self.config["results_per_query"]]
-                                        
-                                        results = []
-                                        for result in raw_results:
-                                            processed = await self._process_court_result(
-                                                result, query, legal_domain, court_code, court_name
-                                            )
-                                            if processed and self._meets_quality_filters(processed):
-                                                results.append(processed)
-                                    else:
-                                        results = []
+                                    results = []
+                                    for result in raw_results:
+                                        processed = await self._process_court_result(
+                                            result, query, legal_domain, court_code, court_name
+                                        )
+                                        if processed and self._meets_quality_filters(processed):
+                                            results.append(processed)
                                 else:
                                     results = []
+                            else:
+                                results = []
                             
                             # Add results to batch
                             batch_results.extend(results)
@@ -1573,26 +1554,13 @@ class LegalKnowledgeBuilder:
                                 logger.info(f"❌ Query {query_count} failed or no results")
                                 self.progress.failed_queries.append(f"{query} in {court_name}")
                             
-                            # Process batch when it reaches the configured size
-                            if len(batch_results) >= self.config["batch_size"]:
-                                content.extend(batch_results)
-                                logger.info(f"📦 Batch processed: {len(batch_results)} documents added to collection")
-                                batch_results = []
-                            
-                            # Progress logging every 50 queries
-                            if query_count % 50 == 0:
-                                success_rate = (self.progress.successful_queries / query_count) * 100
-                                logger.info(f"📊 Progress: {query_count} queries completed, {self.progress.successful_queries} successful ({success_rate:.1f}%), {self.progress.total_documents} documents collected")
-                            
                         except Exception as e:
                             logger.error(f"Error processing query '{query}' in {court_name}: {e}")
                             self.progress.failed_queries.append(f"{query} in {court_name} - Error: {str(e)}")
                             continue
                 
-                # Process remaining batch
-                if batch_results:
-                    content.extend(batch_results)
-                    logger.info(f"📦 Final batch processed: {len(batch_results)} documents added to collection")
+                # Process final batch
+                content.extend(batch_results)
                 
                 # Final statistics
                 success_rate = (self.progress.successful_queries / query_count) * 100 if query_count > 0 else 0
@@ -1604,10 +1572,6 @@ class LegalKnowledgeBuilder:
                 logger.info(f"   - Successful Queries: {self.progress.successful_queries}")
                 logger.info(f"   - Success Rate: {success_rate:.1f}%")
                 logger.info(f"   - Documents Collected: {len(content)}")
-                logger.info(f"   - Target Achievement: {(len(content)/15000)*100:.1f}%" if self.collection_mode == CollectionMode.BULK else "N/A")
-                
-                if self.progress.failed_queries:
-                    logger.warning(f"⚠️ {len(self.progress.failed_queries)} queries failed")
                         
         except Exception as e:
             logger.error(f"Critical error in CourtListener API collection: {e}")
