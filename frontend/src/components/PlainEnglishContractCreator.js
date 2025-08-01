@@ -165,7 +165,9 @@ const PlainEnglishContractCreator = ({ onBack, contractTypes, jurisdictions }) =
       const response = await axios.post(`${API}/contracts/download-pdf-edited`, {
         contract: {
           id: result.id,
-          contract_type: selectedContractType === 'auto_detect' ? 'Plain English Contract' : selectedContractType,
+          contract_type: selectedContractType === 'auto_detect' 
+            ? (result.contract_type || 'Plain English Contract') 
+            : selectedContractType,
           jurisdiction: selectedJurisdiction,
           content: editedContract,
           compliance_score: result.confidence_score ? (result.confidence_score * 100) : 85,
