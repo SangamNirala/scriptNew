@@ -1097,6 +1097,15 @@ function App() {
       
       <div className="py-12 px-6">
         <div className="max-w-6xl mx-auto">
+          {/* Plain English Creator */}
+          {showPlainEnglishCreator && !showAnalytics && !useEnhancedWizard && (
+            <PlainEnglishContractCreator
+              contractTypes={contractTypes}
+              jurisdictions={jurisdictions}
+              onBack={() => setShowPlainEnglishCreator(false)}
+            />
+          )}
+          
           {/* Analytics Dashboard */}
           {showAnalytics && (
             <AnalyticsDashboard onBack={() => setShowAnalytics(false)} />
