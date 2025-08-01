@@ -624,6 +624,10 @@ The smartest people I know don't have all the answers. They just ask questions t
         # Convert to ScriptExample objects
         script_examples = []
         for example_data in examples:
+            # Handle MongoDB _id field
+            if '_id' in example_data and 'id' not in example_data:
+                example_data['id'] = str(example_data['_id'])
+                del example_data['_id']
             script_example = ScriptExample(**example_data)
             script_examples.append(script_example)
         
