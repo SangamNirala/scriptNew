@@ -154,6 +154,45 @@ const PlainEnglishContractCreator = ({ onBack, contractTypes, jurisdictions }) =
     }
   };
 
+  const downloadContractPDF = async () => {
+    if (!result?.id || !editedContract) {
+      alert('No contract content available for download');
+      return;
+    }
+
+    setIsExporting(true);
+    try {
+      const response = await axios.post(`${API}/contracts/download-pdf-edited`, {
+        contract_id: result.id,
+        edited_content: editedContract,
+        contract_type: selectedContractType === 'auto_detect' ? 'plain_english_contract' : selectedContractType,
+        jurisdiction: selectedJurisdiction,
+        parties: {
+          party1: { name: 'Party 1', type: 'individual' },
+          party2: { name: 'Party 2', type: 'individual' }
+        }
+      }, {
+        responseType: 'blob'
+      });
+      
+      // Download PDF file
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `plain_english_contract_${result.id}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+    } catch (error) {
+      console.error('Error downloading contract PDF:', error);
+      alert('Failed to download PDF. Please try again.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   const copyClauseToClipboard = (clause) => {
     navigator.clipboard.writeText(clause.content);
     alert('Clause copied to clipboard!');
