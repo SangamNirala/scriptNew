@@ -643,6 +643,73 @@ const PlainEnglishContractCreator = ({ onBack, contractTypes, jurisdictions }) =
                               className="min-h-96 font-mono text-sm"
                               placeholder="Edit your contract content here..."
                             />
+                            
+                            {/* Signature Upload Section */}
+                            <div className="border-t pt-4">
+                              <h3 className="text-lg font-semibold mb-4">Digital Signatures</h3>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {/* First Party Signature */}
+                                <div className="space-y-2">
+                                  <Button
+                                    onClick={() => triggerFileUpload('first_party')}
+                                    disabled={uploadingSignature === 'first_party'}
+                                    className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                                    variant="outline"
+                                  >
+                                    {uploadingSignature === 'first_party' ? (
+                                      'Uploading...'
+                                    ) : (
+                                      <>
+                                        <FileText className="mr-2 h-4 w-4" />
+                                        Add Signature of First Party
+                                      </>
+                                    )}
+                                  </Button>
+                                  {firstPartySignature && (
+                                    <div className="mt-2 p-2 border rounded">
+                                      <p className="text-sm text-green-600 mb-2">✓ First Party signature uploaded</p>
+                                      <img 
+                                        src={firstPartySignature} 
+                                        alt="First Party Signature" 
+                                        className="max-w-full h-auto max-h-20 border"
+                                        style={{ maxWidth: '300px' }}
+                                      />
+                                    </div>
+                                  )}
+                                </div>
+                                
+                                {/* Second Party Signature */}
+                                <div className="space-y-2">
+                                  <Button
+                                    onClick={() => triggerFileUpload('second_party')}
+                                    disabled={uploadingSignature === 'second_party'}
+                                    className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+                                    variant="outline"
+                                  >
+                                    {uploadingSignature === 'second_party' ? (
+                                      'Uploading...'
+                                    ) : (
+                                      <>
+                                        <FileText className="mr-2 h-4 w-4" />
+                                        Add Signature of Second Party
+                                      </>
+                                    )}
+                                  </Button>
+                                  {secondPartySignature && (
+                                    <div className="mt-2 p-2 border rounded">
+                                      <p className="text-sm text-green-600 mb-2">✓ Second Party signature uploaded</p>
+                                      <img 
+                                        src={secondPartySignature} 
+                                        alt="Second Party Signature" 
+                                        className="max-w-full h-auto max-h-20 border"
+                                        style={{ maxWidth: '300px' }}
+                                      />
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                            
                             <div className="flex gap-2">
                               <Button
                                 onClick={() => setContractActiveTab('preview')}
