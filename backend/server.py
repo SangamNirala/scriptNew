@@ -1700,6 +1700,89 @@ Second Party Name
         return contract_header + contract_body + contract_footer
 
     @staticmethod
+    def detect_contract_title_from_description(plain_text: str, contract_type: str = None) -> str:
+        """
+        Intelligently detect a professional contract title from the plain text description
+        """
+        try:
+            # Convert to lowercase for analysis
+            text_lower = plain_text.lower()
+            
+            # Common service types and their professional titles
+            service_patterns = {
+                'web dev': 'Web Development Service Agreement',
+                'website': 'Website Development Contract',
+                'e-commerce': 'E-commerce Development Agreement',
+                'app dev': 'Application Development Contract',
+                'mobile app': 'Mobile Application Development Agreement',
+                'software dev': 'Software Development Contract',
+                'freelanc': 'Freelance Service Agreement',
+                'consult': 'Consulting Service Agreement',
+                'design': 'Design Service Contract',
+                'market': 'Marketing Service Agreement',
+                'content': 'Content Creation Agreement',
+                'writing': 'Writing Service Contract',
+                'translation': 'Translation Service Agreement',
+                'graphic': 'Graphic Design Contract',
+                'video': 'Video Production Agreement',
+                'photo': 'Photography Service Contract',
+                'maintenance': 'Maintenance Service Agreement',
+                'support': 'Support Service Contract',
+                'training': 'Training Service Agreement',
+                'legal': 'Legal Service Agreement',
+                'accounting': 'Accounting Service Contract',
+                'clean': 'Cleaning Service Agreement',
+                'construct': 'Construction Service Contract',
+                'repair': 'Repair Service Agreement',
+                'install': 'Installation Service Contract',
+                'rental': 'Rental Agreement',
+                'lease': 'Lease Agreement',
+                'sale': 'Sales Agreement',
+                'purchase': 'Purchase Agreement',
+                'partnership': 'Partnership Agreement',
+                'joint venture': 'Joint Venture Agreement',
+                'employment': 'Employment Agreement',
+                'contractor': 'Independent Contractor Agreement',
+                'nda': 'Non-Disclosure Agreement',
+                'confidential': 'Confidentiality Agreement',
+                'license': 'License Agreement',
+                'subscription': 'Subscription Agreement',
+                'service': 'Service Agreement'
+            }
+            
+            # First check for specific project types
+            for pattern, title in service_patterns.items():
+                if pattern in text_lower:
+                    return title
+            
+            # Try to extract from the contract_type if provided
+            if contract_type and contract_type != "auto_detect":
+                contract_type_clean = contract_type.replace('_', ' ').title()
+                if not contract_type_clean.endswith('Agreement') and not contract_type_clean.endswith('Contract'):
+                    contract_type_clean += ' Agreement'
+                return contract_type_clean
+            
+            # Look for action words that indicate service type
+            if any(word in text_lower for word in ['hire', 'contract', 'engage']):
+                if any(word in text_lower for word in ['developer', 'programming', 'coding', 'website', 'app']):
+                    return 'Development Service Agreement'
+                
+            # Check for specific industries
+            if 'technology' in text_lower or 'tech' in text_lower:
+                return 'Technology Service Agreement'
+                
+            # General fallback based on context
+            if any(word in text_lower for word in ['provide', 'deliver', 'perform', 'complete']):
+                return 'Professional Service Agreement'
+                
+            # Final fallback
+            return 'Plain English Contract'
+            
+        except Exception as e:
+            logging.warning(f"Error detecting contract title: {e}")
+            return 'Plain English Contract'
+
+    @staticmethod
     def create_fallback_legal_clauses(plain_text: str, contract_type: str = None, jurisdiction: str = "US", industry: str = None) -> PlainEnglishResult:
         """Create basic legal clauses when AI processing fails"""
         
