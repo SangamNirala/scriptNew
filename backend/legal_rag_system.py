@@ -106,13 +106,20 @@ class LegalRAGSystem:
     async def _initialize_embeddings(self):
         """Initialize the embeddings model"""
         try:
+            if not SENTENCE_TRANSFORMERS_AVAILABLE:
+                logger.error("Sentence transformers not available - using fallback embeddings")
+                # Use a simple fallback - in production you'd want a better solution
+                self.embeddings_model = None
+                self.embedding_dimension = 384
+                return
+            
             # Use free sentence-transformers model for embeddings
             logger.info("🔤 Loading sentence transformers model...")
             self.embeddings_model = SentenceTransformer('all-MiniLM-L6-v2')
             logger.info("✅ Embeddings model loaded successfully!")
         except Exception as e:
             logger.error(f"Error loading embeddings model: {e}")
-            raise
+            self.embeddings_model = None
     
     async def _initialize_supabase_vector(self) -> bool:
         """Initialize Supabase vector database"""
