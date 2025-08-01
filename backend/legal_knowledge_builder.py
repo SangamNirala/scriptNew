@@ -285,6 +285,44 @@ class LegalKnowledgeBuilder:
         logger.info(f"✅ Legal knowledge base created with {len(self.knowledge_base)} documents")
         return self.knowledge_base
     
+    async def build_federal_resources_knowledge_base(self) -> List[Dict[str, Any]]:
+        """Main method to build federal legal resources knowledge base"""
+        logger.info("🏛️ Starting federal legal resources collection...")
+        logger.info(f"Target: {self.config['target_documents']:,} documents from government sources")
+        
+        # Phase 1: Cornell Law - Legal Information Institute (Target: 2,000 docs)
+        logger.info("🎓 Phase 1: Collecting Cornell Law LII Resources...")
+        cornell_content = await self._fetch_cornell_legal_resources()
+        logger.info(f"✅ Cornell LII: {len(cornell_content)} documents collected")
+        
+        # Phase 2: Federal Agency Resources (Target: 2,000 docs)
+        logger.info("🏢 Phase 2: Collecting Priority Federal Agency Resources...")
+        agency_content = await self._fetch_priority_federal_agency_content()
+        logger.info(f"✅ Federal Agencies: {len(agency_content)} documents collected")
+        
+        # Phase 3: Federal Register & Government Sources (Target: 1,000 docs)
+        logger.info("📋 Phase 3: Collecting Federal Register and Government Documents...")
+        government_content = await self._fetch_government_legal_docs()
+        logger.info(f"✅ Government Sources: {len(government_content)} documents collected")
+        
+        # Combine all federal resources
+        self.knowledge_base.extend(cornell_content)
+        self.knowledge_base.extend(agency_content)
+        self.knowledge_base.extend(government_content)
+        
+        # Remove duplicates based on content hash and government source URLs
+        self.knowledge_base = self._deduplicate_government_content(self.knowledge_base)
+        
+        total_collected = len(self.knowledge_base)
+        logger.info(f"🎉 Federal legal resources collection completed!")
+        logger.info(f"📊 Total Documents Collected: {total_collected:,}")
+        logger.info(f"🎯 Target Achievement: {(total_collected/self.config['target_documents']*100):.1f}%")
+        
+        # Generate collection summary
+        await self._generate_federal_collection_summary()
+        
+        return self.knowledge_base
+    
     async def _collect_us_legal_content(self) -> List[Dict[str, Any]]:
         """Collect comprehensive US legal content"""
         us_content = []
