@@ -26,7 +26,7 @@ import google.generativeai as genai
 from groq import Groq
 import os
 
-from .legal_concept_ontology import (
+from legal_concept_ontology import (
     legal_ontology, LegalConcept, LegalDomain, Jurisdiction, 
     ConceptType, ConceptRelationship
 )
