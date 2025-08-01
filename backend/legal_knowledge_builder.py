@@ -485,15 +485,13 @@ class LegalKnowledgeBuilder:
             return content
             
         try:
-            search = GoogleSearch({
+            client = GoogleSearch(api_key=self.serp_api_key)
+            results = client.search({
                 "q": query,
-                "api_key": self.serp_api_key,
                 "num": 10,  # Get top 10 results
                 "hl": "en",
                 "gl": "us"
             })
-            
-            results = search.get_dict()
             
             for i, result in enumerate(results.get("organic_results", [])[:5]):  # Limit to top 5
                 try:
