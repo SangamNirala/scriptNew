@@ -24,11 +24,11 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 
-from .legal_concept_ontology import (
+from legal_concept_ontology import (
     legal_ontology, LegalConcept, LegalDomain, Jurisdiction, 
     ConceptType, ConceptRelationship
 )
-from .legal_concept_extractor import legal_concept_extractor, ConceptExtractionResult
+from legal_concept_extractor import legal_concept_extractor, ConceptExtractionResult
 
 logger = logging.getLogger(__name__)
 
