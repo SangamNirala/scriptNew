@@ -110,8 +110,12 @@ class LegalKnowledgeBuilder:
         # Rate limiting state for each API key
         self.rate_limits = {i: RateLimitState() for i in range(len(self.courtlistener_api_keys))}
         
-        # Collection progress tracking
+        # Collection progress tracking with enhancements
         self.progress = CollectionProgress()
+        self.quality_metrics = QualityMetrics()
+        
+        # Court hierarchy prioritization
+        self.court_priorities = self._initialize_court_priorities()
         
         # Legal domain categories
         self.legal_domains = [
@@ -134,6 +138,11 @@ class LegalKnowledgeBuilder:
         # Knowledge base storage
         self.knowledge_base = []
         self.collected_sources = set()
+        
+        # Enhanced tracking for bulk collection
+        self.seen_case_ids = set()  # Deduplication tracking
+        self.seen_citations = set()  # Citation-based deduplication
+        self.checkpoint_interval = 1000  # Save checkpoint every 1000 docs
         
     def _get_collection_config(self) -> Dict[str, Any]:
         """Get configuration based on collection mode"""
