@@ -201,6 +201,39 @@ class LegalKnowledgeBuilder:
                 "priority_agencies": ["SEC", "DOL", "USPTO", "IRS"],  # Priority federal agencies
                 "focus_domains": ["securities_law", "employment_law", "patent_law", "administrative_law"]
             }
+        elif self.collection_mode == CollectionMode.ACADEMIC:
+            return {
+                "results_per_query": 250,  # Target 100-250 results per academic query
+                "max_pages_per_query": 15,  # Max pages for academic sources
+                "batch_size": 150,  # Process in batches of 150
+                "min_content_length": 1500,  # Minimum 1500 words for substantive academic content
+                "enable_pagination": True,
+                "enable_quality_filters": True,
+                "date_range": {
+                    "primary_min": "2020-01-01",  # Primary: Recent scholarship 2020-2025
+                    "primary_max": "2025-12-31",
+                    "secondary_min": "2015-01-01",  # Secondary: 2015-2019
+                    "secondary_max": "2019-12-31"
+                },
+                "peer_reviewed_only": True,  # Focus on peer-reviewed content
+                "excluded_keywords": ["news", "blog", "comment", "brief"],  # Exclude non-academic content
+                "rate_limit_requests_per_minute": 40,  # Conservative rate limiting for academic sources
+                "max_retries": 5,
+                "base_backoff_seconds": 2,
+                "enable_parallel_processing": True,
+                "max_concurrent_requests": 2,  # Conservative parallel processing
+                "checkpoint_enabled": True,
+                "quality_threshold": 0.8,  # High quality threshold for academic content
+                "enable_enhanced_metadata": True,
+                "target_documents": 3500,  # Target 3,500+ academic documents
+                "priority_journals": ["Harvard Law Review", "Yale Law Journal", "Columbia Law Review", "Stanford Law Review"],
+                "focus_topics": ["constitutional_law", "ai_and_law", "tech_policy", "administrative_law", "intellectual_property"],
+                "academic_sources": {
+                    "google_scholar": {"target": 2000, "priority": 1},
+                    "legal_journals": {"target": 1000, "priority": 2},
+                    "research_papers": {"target": 500, "priority": 3}
+                }
+            }
         else:  # STANDARD mode for backward compatibility
             return {
                 "results_per_query": 10,  # Original behavior
