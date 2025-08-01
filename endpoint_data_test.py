@@ -3,7 +3,7 @@ import json
 
 def test_edited_pdf_endpoint_data():
     """Test that the edited PDF endpoint receives and processes data correctly"""
-    base_url = "https://c205ec86-92e9-4d3d-8dfb-09409a60b8c3.preview.emergentagent.com"
+    base_url = "https://cddfd558-2905-4d2b-9eb2-1c32abef8de7.preview.emergentagent.com"
     api_url = f"{base_url}/api"
     
     # Create a simple test contract data structure

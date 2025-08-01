@@ -10,7 +10,7 @@ import sys
 from datetime import datetime
 
 class ComprehensivePDFTitleTest:
-    def __init__(self, base_url="https://c205ec86-92e9-4d3d-8dfb-09409a60b8c3.preview.emergentagent.com"):
+    def __init__(self, base_url="https://cddfd558-2905-4d2b-9eb2-1c32abef8de7.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.tests_run = 0
