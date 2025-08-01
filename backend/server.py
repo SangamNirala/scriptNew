@@ -72,6 +72,9 @@ advanced_quality_metrics = AdvancedQualityMetrics()
 quality_improvement_loop = QualityImprovementLoop(db, GEMINI_API_KEY)
 intelligent_qa_system = IntelligentQASystem(db, GEMINI_API_KEY)
 
+# STEP 2: Initialize Few-Shot Learning & Pattern Recognition System
+few_shot_generator = FewShotScriptGenerator(db, GEMINI_API_KEY)
+
 # Create the main app without a prefix
 app = FastAPI()
 
