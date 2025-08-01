@@ -2931,7 +2931,11 @@ async def export_legal_clauses(conversion_id: str, format: str = "pdf"):
             styles = getSampleStyleSheet()
             story = []
             
-            # Title
+            # Title - Intelligent detection from contract description
+            detected_title = LegalMateAgents.detect_contract_title_from_description(
+                conversion.get('original_text', ''), 
+                conversion.get('contract_type')
+            )
             title_style = ParagraphStyle(
                 'CustomTitle',
                 parent=styles['Heading1'],
@@ -2939,7 +2943,7 @@ async def export_legal_clauses(conversion_id: str, format: str = "pdf"):
                 textColor='darkblue',
                 alignment=1
             )
-            story.append(Paragraph("Legal Clauses - Plain English Conversion", title_style))
+            story.append(Paragraph(detected_title, title_style))
             story.append(Spacer(1, 20))
             
             # Original text
