@@ -815,25 +815,25 @@ const AnalyticsDashboard = ({ onBack }) => {
         {/* Negotiations Tab */}
         <TabsContent value="negotiations" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <MetricCard
+            <EnhancedMetricCard
               title="Total Negotiations"
               value={negotiationInsights?.total_negotiations || 0}
               icon={Users}
               color="blue"
             />
-            <MetricCard
+            <EnhancedMetricCard
               title="Success Rate"
               value={`${negotiationInsights?.success_rate || 0}%`}
               icon={CheckCircle}
               color="green"
             />
-            <MetricCard
+            <EnhancedMetricCard
               title="Avg Rounds"
               value={negotiationInsights?.average_rounds || 0}
               icon={Activity}
               color="orange"
             />
-            <MetricCard
+            <EnhancedMetricCard
               title="Avg Resolution Time"
               value={`${negotiationInsights?.time_to_resolution_avg || 0} hrs`}
               icon={Clock}
