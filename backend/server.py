@@ -27,7 +27,10 @@ from bson import ObjectId
 import asyncio
 import aiohttp
 from bs4 import BeautifulSoup
-from serpapi import GoogleSearch
+try:
+    from serpapi import Client as GoogleSearch
+except ImportError:
+    GoogleSearch = None
 import time
 from tenacity import retry, stop_after_attempt, wait_exponential
 
