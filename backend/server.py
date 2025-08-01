@@ -2314,17 +2314,19 @@ def extract_clean_script(raw_script):
     - Section headers (TARGET DURATION, VIDEO TYPE, etc.)
     - Production notes and metadata
     - Bullet points and formatting instructions
+    - Duplicate content (same text in CHARACTER and DIALOGUE fields)
     """
     
     lines = raw_script.strip().split('\n')
     spoken_content = []
+    seen_content = set()  # Track unique content to avoid duplicates
     
     # Section headers and metadata to completely skip
     skip_sections = [
         'TARGET DURATION', 'VIDEO TYPE', 'VIDEO SCRIPT', 'SCRIPT:', 'KEY RETENTION ELEMENTS',
         'NOTES:', 'RETENTION ELEMENTS:', 'ADJUSTMENTS:', 'OPTIMIZATION:', 'METRICS:',
         'NOTES', 'SCRIPT', 'DURATION', 'TYPE', 'KEY CONSIDERATIONS', 'RATIONALE:',
-        'END.', '**KEY CONSIDERATIONS', '**END**'
+        'END.', '**KEY CONSIDERATIONS', '**END**', 'VIDEO TITLE', 'TARGET DURATION'
     ]
     
     # Track if we're in a metadata section
@@ -2344,6 +2346,20 @@ def extract_clean_script(raw_script):
             
         # Skip lines that start with bold section markers
         if line.startswith('**[') and line.endswith(']**') or line.startswith('**SCENE'):
+            continue
+        
+        # Skip CHARACTER field descriptions (like "Text: 'some text'") 
+        # These are visual overlays, not spoken content
+        if line.startswith('**[CHARACTER:]**') or 'Text:' in line:
+            # Extract quoted content but mark it as CHARACTER content to avoid duplicates
+            character_quotes = re.findall(r'"([^"]+)"', line)
+            for quote in character_quotes:
+                seen_content.add(quote.strip().lower())  # Mark as seen (case insensitive)
+            continue
+        
+        # Skip camera, setting, lighting, movement, effects, transition descriptions
+        production_fields = ['CAMERA:', 'SETTING:', 'LIGHTING:', 'MOVEMENT:', 'EFFECTS:', 'TRANSITION:']
+        if any(field in line for field in production_fields):
             continue
         
         # Check for section headers - skip entire sections
@@ -2413,25 +2429,41 @@ def extract_clean_script(raw_script):
         line = re.sub(r'\(Person Speaking[^)]*\)', '', line, re.IGNORECASE)
         line = re.sub(r'\(Voiceover[^)]*\)', '', line, re.IGNORECASE)
         
-        # Clean up the line
-        line = line.strip()
+        # Extract quoted content (actual dialogue)
+        quoted_content = re.findall(r'"([^"]+)"', line)
+        for quote in quoted_content:
+            quote_clean = quote.strip()
+            quote_lower = quote_clean.lower()
+            
+            # Only add if we haven't seen this content before (avoid duplicates)
+            if quote_lower not in seen_content and len(quote_clean) > 3:
+                seen_content.add(quote_lower)
+                spoken_content.append(quote_clean)
         
-        # Only keep lines that have substantial spoken content
-        if line and len(line) > 3:
+        # Also process non-quoted spoken content
+        # Remove quotes and speaker directions to get remaining spoken content
+        line_no_quotes = re.sub(r'"[^"]*"', '', line)
+        line_no_quotes = line_no_quotes.strip()
+        
+        # Clean up the line
+        if line_no_quotes and len(line_no_quotes) > 3:
             # Remove markdown formatting
-            line = re.sub(r'\*\*([^*]+)\*\*', r'\1', line)  # Bold
-            line = re.sub(r'\*([^*]+)\*', r'\1', line)      # Italic
-            line = re.sub(r'__([^_]+)__', r'\1', line)      # Underline
+            line_no_quotes = re.sub(r'\*\*([^*]+)\*\*', r'\1', line_no_quotes)  # Bold
+            line_no_quotes = re.sub(r'\*([^*]+)\*', r'\1', line_no_quotes)      # Italic
+            line_no_quotes = re.sub(r'__([^_]+)__', r'\1', line_no_quotes)      # Underline
             
             # Remove any remaining isolated parentheses or brackets
-            line = re.sub(r'^\s*[\[\]()]+\s*$', '', line)
+            line_no_quotes = re.sub(r'^\s*[\[\]()]+\s*$', '', line_no_quotes)
             
             # Clean up extra spaces and normalize punctuation
-            line = re.sub(r'\s+', ' ', line).strip()
+            line_no_quotes = re.sub(r'\s+', ' ', line_no_quotes).strip()
             
-            # Only add if it's not just punctuation or whitespace
-            if line and not re.match(r'^[\s\[\]().,!?-]*$', line):
-                spoken_content.append(line)
+            # Only add if it's not just punctuation or whitespace and not a duplicate
+            if (line_no_quotes and 
+                not re.match(r'^[\s\[\]().,!?-]*$', line_no_quotes) and
+                line_no_quotes.lower() not in seen_content):
+                seen_content.add(line_no_quotes.lower())
+                spoken_content.append(line_no_quotes)
     
     # Join all spoken content
     final_script = ' '.join(spoken_content)
@@ -2456,7 +2488,15 @@ def extract_clean_script(raw_script):
     if len(final_script) < 20:
         quoted_content = re.findall(r'"([^"]+)"', raw_script)
         if quoted_content:
-            final_script = ' '.join(quoted_content)
+            # Remove duplicates while preserving order
+            unique_quotes = []
+            seen_fallback = set()
+            for quote in quoted_content:
+                quote_lower = quote.strip().lower()
+                if quote_lower not in seen_fallback:
+                    seen_fallback.add(quote_lower)
+                    unique_quotes.append(quote.strip())
+            final_script = ' '.join(unique_quotes)
         else:
             # Last resort: very basic cleanup
             fallback = raw_script
