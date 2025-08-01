@@ -188,74 +188,265 @@ class LegalKnowledgeBuilder:
                 
         return content
     
+    def _get_next_api_key(self) -> Optional[str]:
+        """Get next available CourtListener API key with rotation"""
+        if not self.courtlistener_api_keys:
+            return None
+        
+        # Get current key
+        current_key = self.courtlistener_api_keys[self.current_api_key_index]
+        
+        # Rotate to next key for next call
+        self.current_api_key_index = (self.current_api_key_index + 1) % len(self.courtlistener_api_keys)
+        
+        return current_key
+    
     async def _fetch_court_decisions(self) -> List[Dict[str, Any]]:
-        """Fetch court decisions using CourtListener API"""
+        """Fetch comprehensive court decisions using CourtListener API with expanded search strategy"""
         content = []
         
-        if not self.courtlistener_api_key:
-            logger.warning("CourtListener API key not available, skipping court decisions")
+        if not self.courtlistener_api_keys:
+            logger.warning("No CourtListener API keys available, skipping court decisions")
             return content
-            
+        
+        logger.info(f"🔑 Using {len(self.courtlistener_api_keys)} CourtListener API keys with rotation")
+        
         try:
-            async with httpx.AsyncClient() as client:
-                # Fetch recent Supreme Court decisions
-                headers = {"Authorization": f"Token {self.courtlistener_api_key}"}
+            async with httpx.AsyncClient(timeout=30.0) as client:
                 
-                # Search for various legal domains
-                search_queries = [
-                    "contract law",
-                    "employment law", 
-                    "intellectual property",
-                    "corporate law",
-                    "constitutional law",
-                    "civil procedure",
-                    "criminal procedure"
+                # EXPANDED SEARCH STRATEGY - 60 targeted queries organized by legal domain
+                
+                # CONTRACT LAW - 15 queries (target 3,000 docs)
+                contract_law_queries = [
+                    "breach of contract damages",
+                    "contract formation elements", 
+                    "specific performance remedy",
+                    "contract interpretation parol evidence",
+                    "unconscionable contract terms",
+                    "contract consideration adequacy",
+                    "contract modification statute frauds",
+                    "contract third party beneficiary",
+                    "contract assignment delegation",
+                    "contract discharge impossibility",
+                    "contract warranties express implied",
+                    "contract liquidated damages penalty",
+                    "contract rescission restitution",
+                    "contract capacity minors incapacity",
+                    "contract duress undue influence"
                 ]
                 
-                for query in search_queries:
-                    try:
-                        url = f"https://www.courtlistener.com/api/rest/v3/search/"
-                        params = {
-                            "q": query,
-                            "type": "o",  # Opinions
-                            "order_by": "score desc",
-                            "stat_Precedential": "on",
-                            "court": "scotus",  # Supreme Court
-                            "format": "json"
-                        }
-                        
-                        response = await client.get(url, headers=headers, params=params)
-                        if response.status_code == 200:
-                            data = response.json()
+                # EMPLOYMENT LAW - 12 queries (target 2,500 docs)
+                employment_law_queries = [
+                    "employment discrimination Title VII",
+                    "wrongful termination at-will employment",
+                    "wage hour violations FLSA overtime",
+                    "workplace harassment hostile environment",
+                    "employment retaliation whistleblower protection",
+                    "Americans with Disabilities Act reasonable accommodation",
+                    "Family Medical Leave Act FMLA interference",
+                    "employment non-compete agreements enforceability",
+                    "workplace safety OSHA violations",
+                    "employment classification independent contractor",
+                    "union organizing collective bargaining NLRA",
+                    "employment arbitration agreements enforceability"
+                ]
+                
+                # CONSTITUTIONAL LAW - 10 queries (target 2,000 docs)
+                constitutional_law_queries = [
+                    "First Amendment free speech restrictions",
+                    "Fourth Amendment search seizure warrant",
+                    "Due process substantive procedural",
+                    "Equal protection strict scrutiny",
+                    "Commerce Clause federal regulatory power",
+                    "Establishment Clause religious freedom",
+                    "Second Amendment right bear arms",
+                    "Fourteenth Amendment civil rights",
+                    "Takings Clause eminent domain compensation",
+                    "Supremacy Clause federal preemption"
+                ]
+                
+                # INTELLECTUAL PROPERTY - 8 queries (target 1,500 docs)
+                intellectual_property_queries = [
+                    "patent infringement claim construction",
+                    "trademark dilution likelihood confusion",
+                    "copyright fair use transformation",
+                    "trade secret misappropriation protection",
+                    "patent obviousness prior art",
+                    "trademark generic descriptive marks",
+                    "copyright derivative works authorization",
+                    "design patent infringement ordinary observer"
+                ]
+                
+                # CORPORATE LAW - 6 queries (target 1,200 docs)
+                corporate_law_queries = [
+                    "fiduciary duty business judgment rule",
+                    "securities fraud disclosure requirements",
+                    "merger acquisition shareholder rights",
+                    "corporate governance derivative suits",
+                    "insider trading material information",
+                    "corporate veil piercing alter ego"
+                ]
+                
+                # CIVIL PROCEDURE - 5 queries (target 1,000 docs)
+                civil_procedure_queries = [
+                    "personal jurisdiction minimum contacts",
+                    "class action certification requirements",
+                    "summary judgment material facts",
+                    "discovery privilege attorney-client",
+                    "forum non conveniens venue transfer"
+                ]
+                
+                # CRIMINAL LAW - 4 queries (target 800 docs)
+                criminal_law_queries = [
+                    "criminal intent mens rea elements",
+                    "criminal conspiracy agreement overt act",
+                    "criminal sentencing guidelines departures",
+                    "criminal evidence exclusionary rule"
+                ]
+                
+                # Combine all queries with domain labels
+                all_queries = [
+                    (query, "contract_law") for query in contract_law_queries
+                ] + [
+                    (query, "employment_labor_law") for query in employment_law_queries
+                ] + [
+                    (query, "constitutional_law") for query in constitutional_law_queries
+                ] + [
+                    (query, "intellectual_property") for query in intellectual_property_queries
+                ] + [
+                    (query, "corporate_regulatory") for query in corporate_law_queries
+                ] + [
+                    (query, "civil_criminal_procedure") for query in civil_procedure_queries
+                ] + [
+                    (query, "civil_criminal_procedure") for query in criminal_law_queries
+                ]
+                
+                logger.info(f"📚 Executing {len(all_queries)} targeted search queries for comprehensive legal document collection")
+                
+                # Expanded court coverage beyond just Supreme Court
+                courts = [
+                    ("scotus", "Supreme Court"),           # Supreme Court
+                    ("ca1", "1st Circuit Court"),         # 1st Circuit  
+                    ("ca2", "2nd Circuit Court"),         # 2nd Circuit
+                    ("ca3", "3rd Circuit Court"),         # 3rd Circuit
+                    ("ca4", "4th Circuit Court"),         # 4th Circuit
+                    ("ca5", "5th Circuit Court"),         # 5th Circuit
+                    ("ca6", "6th Circuit Court"),         # 6th Circuit
+                    ("ca7", "7th Circuit Court"),         # 7th Circuit
+                    ("ca8", "8th Circuit Court"),         # 8th Circuit
+                    ("ca9", "9th Circuit Court"),         # 9th Circuit
+                    ("ca10", "10th Circuit Court"),       # 10th Circuit
+                    ("ca11", "11th Circuit Court"),       # 11th Circuit
+                    ("cadc", "DC Circuit Court"),         # DC Circuit
+                    ("cafc", "Federal Circuit Court")     # Federal Circuit
+                ]
+                
+                query_count = 0
+                successful_queries = 0
+                total_documents = 0
+                
+                # Execute searches with enhanced rate limiting
+                for query, legal_domain in all_queries:
+                    for court_code, court_name in courts:
+                        try:
+                            query_count += 1
                             
-                            for result in data.get('results', [])[:5]:  # Limit to top 5 per query
-                                legal_doc = {
-                                    "id": f"court_{result.get('id')}",
-                                    "title": result.get('caseName', 'Unknown Case'),
-                                    "content": result.get('text', '') or result.get('snippet', ''),
-                                    "source": "CourtListener",
-                                    "source_url": result.get('absolute_url', ''),
-                                    "jurisdiction": "us_federal",
-                                    "legal_domain": self._categorize_content(query),
-                                    "document_type": "court_decision",
-                                    "court": result.get('court', 'Unknown Court'),
-                                    "date_filed": result.get('dateFiled', ''),
-                                    "precedential_status": result.get('status', ''),
-                                    "metadata": {
-                                        "citation": result.get('citation', ''),
-                                        "judges": result.get('judges', []),
-                                        "docket_number": result.get('docketNumber', '')
-                                    },
-                                    "created_at": datetime.utcnow().isoformat(),
-                                    "content_hash": self._generate_content_hash(result.get('text', '') or result.get('snippet', ''))
-                                }
-                                content.append(legal_doc)
-                        
-                        await asyncio.sleep(2)  # Rate limiting for API
-                        
-                    except Exception as e:
-                        logger.error(f"Error fetching court decisions for '{query}': {e}")
-                        continue
+                            # Get next API key with rotation
+                            api_key = self._get_next_api_key()
+                            if not api_key:
+                                logger.error("No API keys available")
+                                break
+                            
+                            headers = {"Authorization": f"Token {api_key}"}
+                            
+                            url = f"https://www.courtlistener.com/api/rest/v3/search/"
+                            params = {
+                                "q": query,
+                                "type": "o",  # Opinions
+                                "order_by": "score desc",
+                                "stat_Precedential": "on",
+                                "court": court_code,
+                                "format": "json"
+                            }
+                            
+                            logger.info(f"🔍 Query {query_count}: Searching '{query}' in {court_name} (Key #{self.current_api_key_index})")
+                            
+                            response = await client.get(url, headers=headers, params=params)
+                            
+                            if response.status_code == 200:
+                                data = response.json()
+                                results = data.get('results', [])
+                                
+                                # Increase results per query to reach target volume
+                                # Take top 10 results per query instead of 5
+                                for result in results[:10]:
+                                    try:
+                                        legal_doc = {
+                                            "id": f"court_{result.get('id')}_{court_code}",
+                                            "title": result.get('caseName', 'Unknown Case'),
+                                            "content": result.get('text', '') or result.get('snippet', ''),
+                                            "source": "CourtListener",
+                                            "source_url": result.get('absolute_url', ''),
+                                            "jurisdiction": "us_federal",
+                                            "legal_domain": legal_domain,  # Use categorized domain
+                                            "document_type": "court_decision",
+                                            "court": f"{court_name} ({court_code})",
+                                            "date_filed": result.get('dateFiled', ''),
+                                            "precedential_status": result.get('status', ''),
+                                            "metadata": {
+                                                "citation": result.get('citation', ''),
+                                                "judges": result.get('judges', []),
+                                                "docket_number": result.get('docketNumber', ''),
+                                                "search_query": query,
+                                                "target_domain": legal_domain
+                                            },
+                                            "created_at": datetime.utcnow().isoformat(),
+                                            "content_hash": self._generate_content_hash(result.get('text', '') or result.get('snippet', ''))
+                                        }
+                                        
+                                        # Only add if content is substantial
+                                        if len(legal_doc["content"].strip()) > 50:
+                                            content.append(legal_doc)
+                                            total_documents += 1
+                                        
+                                    except Exception as e:
+                                        logger.error(f"Error processing court result: {e}")
+                                        continue
+                                
+                                successful_queries += 1
+                                logger.info(f"✅ Query {query_count} successful: Found {len(results)} results, Added {len([r for r in results[:10] if len(str(r.get('text', '') or r.get('snippet', '')).strip()) > 50])} documents")
+                                        
+                            elif response.status_code == 429:
+                                logger.warning(f"⚠️ Rate limit hit for API key #{self.current_api_key_index}, rotating to next key")
+                                # Rate limit hit, key will be rotated on next call
+                                await asyncio.sleep(5)  # Wait longer on rate limit
+                                continue
+                                
+                            elif response.status_code == 401:
+                                logger.error(f"❌ API key #{self.current_api_key_index} unauthorized, rotating to next key")
+                                continue
+                                
+                            else:
+                                logger.warning(f"⚠️ Query {query_count} failed with status {response.status_code}")
+                            
+                            # Enhanced rate limiting - more conservative for high volume
+                            await asyncio.sleep(3)  # Increased from 2 to 3 seconds
+                            
+                        except Exception as e:
+                            logger.error(f"Error fetching court decisions for '{query}' in {court_name}: {e}")
+                            await asyncio.sleep(2)  # Brief pause on error
+                            continue
+                    
+                    # Progress logging every 10 queries
+                    if query_count % 10 == 0:
+                        logger.info(f"📊 Progress: {query_count} queries completed, {successful_queries} successful, {total_documents} documents collected")
+                
+                logger.info(f"🎉 Court decisions collection completed!")
+                logger.info(f"📈 Final Statistics:")
+                logger.info(f"   - Total Queries: {query_count}")
+                logger.info(f"   - Successful Queries: {successful_queries}")
+                logger.info(f"   - Documents Collected: {total_documents}")
+                logger.info(f"   - Success Rate: {(successful_queries/query_count)*100:.1f}%")
                         
         except Exception as e:
             logger.error(f"Error with CourtListener API: {e}")
