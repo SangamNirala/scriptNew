@@ -966,6 +966,9 @@ test_plan:
   test_all: false
   test_priority: "high_first"
 
+agent_communication:
+    -agent: "main"
+    -message: "ACADEMIC LEGAL CONTENT COLLECTION TESTING REQUEST: The system already has comprehensive academic collection functionality implemented with POST /api/legal-qa/rebuild-academic-knowledge-base endpoint. Need to test: 1) Academic collection endpoint functionality and response structure 2) Google Scholar Legal collection method targeting 2,000+ academic papers 3) Legal journals collection targeting 1,000+ bar journal articles and professional publications 4) Legal research papers collection targeting 500+ academic repository documents 5) Academic quality control filters including minimum 1,500 words, peer-reviewed focus, citation analysis 6) Enhanced metadata extraction for academic sources including author information, publication details, journal names 7) Quality metrics and validation systems. Test should verify the system can deliver the required 3,500+ academic documents with proper quality control and enhanced scholarly source integration. All API keys (SERP_API_KEY, COURTLISTENER_API_KEY) are configured and ready."
   - task: "Analytics Dashboard Backend Endpoints Testing"
     implemented: true
     working: true
