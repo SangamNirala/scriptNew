@@ -6604,9 +6604,7 @@ async def get_hr_compliance_summary(company_id: Optional[str] = None):
 # Note: Router will be included after all endpoints are defined
 
 # RAG System Models and Endpoints
-print(f"🔍 RAG_SYSTEM_AVAILABLE = {RAG_SYSTEM_AVAILABLE}")
 if RAG_SYSTEM_AVAILABLE:
-    print("✅ Registering Legal Q&A endpoints...")
     
     class LegalQuestionRequest(BaseModel):
         question: str
