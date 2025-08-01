@@ -2820,6 +2820,151 @@ async def get_plain_english_conversion(conversion_id: str):
         logging.error(f"Error fetching conversion: {e}")
         raise HTTPException(status_code=500, detail="Error fetching conversion")
 
+@api_router.post("/plain-english-conversions/{conversion_id}/export")
+async def export_legal_clauses(conversion_id: str, format: str = "pdf"):
+    """
+    Export legal clauses in standard formats (PDF, DOCX, JSON)
+    Ensures output is editable and exportable as required
+    """
+    try:
+        # Get the conversion data
+        conversion = await db.plain_english_conversions.find_one({"id": conversion_id})
+        if not conversion:
+            raise HTTPException(status_code=404, detail="Conversion not found")
+        
+        if format.lower() == "json":
+            # Return as JSON format
+            conversion = convert_objectid_to_str(conversion)
+            return {
+                "format": "json",
+                "data": conversion,
+                "export_date": datetime.utcnow().isoformat()
+            }
+        
+        elif format.lower() == "pdf":
+            # Generate PDF using reportlab
+            buffer = io.BytesIO()
+            doc = SimpleDocTemplate(buffer, pagesize=letter)
+            styles = getSampleStyleSheet()
+            story = []
+            
+            # Title
+            title_style = ParagraphStyle(
+                'CustomTitle',
+                parent=styles['Heading1'],
+                fontSize=16,
+                textColor='darkblue',
+                alignment=1
+            )
+            story.append(Paragraph("Legal Clauses - Plain English Conversion", title_style))
+            story.append(Spacer(1, 20))
+            
+            # Original text
+            story.append(Paragraph("<b>Original Plain English Input:</b>", styles['Heading3']))
+            story.append(Paragraph(conversion.get('original_text', ''), styles['Normal']))
+            story.append(Spacer(1, 20))
+            
+            # Generated clauses
+            story.append(Paragraph("<b>Generated Legal Clauses:</b>", styles['Heading3']))
+            story.append(Spacer(1, 10))
+            
+            for i, clause in enumerate(conversion.get('generated_clauses', []), 1):
+                # Clause title
+                story.append(Paragraph(f"<b>{i}. {clause.get('title', 'Untitled')}</b>", styles['Heading4']))
+                
+                # Clause content with HTML bold conversion
+                content = LegalMateAgents.convert_markdown_to_html_bold(clause.get('content', ''))
+                story.append(Paragraph(content, styles['Normal']))
+                story.append(Spacer(1, 10))
+                
+                # Explanation
+                story.append(Paragraph(f"<i>Explanation:</i> {clause.get('explanation', '')}", styles['Normal']))
+                story.append(Spacer(1, 15))
+            
+            # Metadata
+            story.append(Spacer(1, 20))
+            story.append(Paragraph("<b>Conversion Details:</b>", styles['Heading3']))
+            story.append(Paragraph(f"Jurisdiction: {conversion.get('jurisdiction', 'US')}", styles['Normal']))
+            story.append(Paragraph(f"Industry: {conversion.get('industry', 'General')}", styles['Normal']))
+            story.append(Paragraph(f"Confidence Score: {conversion.get('confidence_score', 0.8)*100:.1f}%", styles['Normal']))
+            story.append(Paragraph(f"Generated: {conversion.get('created_at', '')}", styles['Normal']))
+            
+            # Disclaimer
+            story.append(Spacer(1, 20))
+            disclaimer_style = ParagraphStyle(
+                'Disclaimer',
+                parent=styles['Normal'],
+                fontSize=8,
+                textColor='red'
+            )
+            story.append(Paragraph(
+                "<b>LEGAL DISCLAIMER:</b> This document was generated using AI and is for informational purposes only. "
+                "It does not constitute legal advice. Please consult with a qualified attorney before using these clauses in any legal agreement.",
+                disclaimer_style
+            ))
+            
+            doc.build(story)
+            buffer.seek(0)
+            
+            return StreamingResponse(
+                io.BytesIO(buffer.read()),
+                media_type="application/pdf",
+                headers={"Content-Disposition": f"attachment; filename=legal_clauses_{conversion_id}.pdf"}
+            )
+        
+        elif format.lower() == "docx":
+            # For DOCX format, return structured data that can be used by frontend
+            # to generate DOCX using libraries like docx.js or similar
+            docx_content = {
+                "format": "docx",
+                "title": "Legal Clauses - Plain English Conversion",
+                "sections": [
+                    {
+                        "heading": "Original Plain English Input",
+                        "content": conversion.get('original_text', '')
+                    },
+                    {
+                        "heading": "Generated Legal Clauses",
+                        "clauses": [
+                            {
+                                "number": i+1,
+                                "title": clause.get('title', 'Untitled'),
+                                "content": clause.get('content', ''),
+                                "explanation": clause.get('explanation', ''),
+                                "confidence": clause.get('confidence', 0.8)
+                            }
+                            for i, clause in enumerate(conversion.get('generated_clauses', []))
+                        ]
+                    },
+                    {
+                        "heading": "Conversion Details",
+                        "metadata": {
+                            "jurisdiction": conversion.get('jurisdiction', 'US'),
+                            "industry": conversion.get('industry', 'General'),
+                            "confidence_score": f"{conversion.get('confidence_score', 0.8)*100:.1f}%",
+                            "generated": conversion.get('created_at', '')
+                        }
+                    }
+                ],
+                "disclaimer": "This document was generated using AI and is for informational purposes only. It does not constitute legal advice. Please consult with a qualified attorney before using these clauses in any legal agreement.",
+                "export_date": datetime.utcnow().isoformat()
+            }
+            
+            return {
+                "format": "docx",
+                "data": docx_content,
+                "instructions": "Use this structured data with a DOCX generation library on the frontend"
+            }
+        
+        else:
+            raise HTTPException(status_code=400, detail="Unsupported format. Use 'pdf', 'docx', or 'json'")
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Export error: {e}")
+        raise HTTPException(status_code=500, detail=f"Error exporting clauses: {str(e)}")
+
 @api_router.get("/contracts", response_model=List[GeneratedContract])
 async def get_contracts():
     """Get all generated contracts"""
