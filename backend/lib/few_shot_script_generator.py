@@ -780,7 +780,7 @@ The smartest people I know don't have all the answers. They just ask questions t
         for example in examples:
             techniques = example.get("engagement_techniques", [])
             for technique in techniques:
-                technique_patterns[technique].append(example["id"])
+                technique_patterns[technique].append(str(example.get("_id", example.get("id", ""))))
         
         # Create engagement pattern templates
         for technique, example_ids in technique_patterns.items():
