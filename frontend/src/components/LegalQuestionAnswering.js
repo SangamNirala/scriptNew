@@ -250,6 +250,9 @@ const LegalQuestionAnswering = () => {
 
       case 'assistant':
         const confidenceInfo = formatConfidence(message.confidence);
+        const shouldShowMeta = shouldShowMetadata(message);
+        const formattedContent = convertMarkdownToHtml(message.content);
+        
         return (
           <div key={message.id} className="flex justify-start mb-6">
             <div className="flex items-start space-x-3 max-w-4xl">
@@ -258,38 +261,41 @@ const LegalQuestionAnswering = () => {
               </div>
               <div className="bg-white border border-gray-200 rounded-lg px-4 py-3 shadow-sm">
                 <div className="prose prose-sm max-w-none">
-                  <div className="whitespace-pre-wrap text-gray-800 leading-relaxed">
-                    {message.content}
-                  </div>
+                  <div 
+                    className="text-gray-800 leading-relaxed"
+                    dangerouslySetInnerHTML={{ __html: formattedContent }}
+                  />
                 </div>
                 
-                {/* Answer Metadata */}
-                <div className="mt-4 pt-3 border-t border-gray-100">
-                  <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500">
-                    <div className="flex items-center space-x-1">
-                      <CheckCircle className="w-3 h-3" />
-                      <span>Confidence:</span>
-                      <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${confidenceInfo.bg} ${confidenceInfo.color}`}>
-                        {confidenceInfo.label} ({Math.round(message.confidence * 100)}%)
-                      </span>
+                {/* Answer Metadata - Only show for actual legal questions */}
+                {shouldShowMeta && (
+                  <div className="mt-4 pt-3 border-t border-gray-100">
+                    <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500">
+                      <div className="flex items-center space-x-1">
+                        <CheckCircle className="w-3 h-3" />
+                        <span>Confidence:</span>
+                        <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${confidenceInfo.bg} ${confidenceInfo.color}`}>
+                          {confidenceInfo.label} ({Math.round(message.confidence * 100)}%)
+                        </span>
+                      </div>
+                      {message.retrievedDocuments > 0 && (
+                        <div className="flex items-center space-x-1">
+                          <FileText className="w-3 h-3" />
+                          <span>{message.retrievedDocuments} sources analyzed</span>
+                        </div>
+                      )}
+                      {message.modelUsed && message.modelUsed !== 'greeting_handler' && (
+                        <div className="flex items-center space-x-1">
+                          <Bot className="w-3 h-3" />
+                          <span>{message.modelUsed}</span>
+                        </div>
+                      )}
                     </div>
-                    {message.retrievedDocuments > 0 && (
-                      <div className="flex items-center space-x-1">
-                        <FileText className="w-3 h-3" />
-                        <span>{message.retrievedDocuments} sources analyzed</span>
-                      </div>
-                    )}
-                    {message.modelUsed && (
-                      <div className="flex items-center space-x-1">
-                        <Bot className="w-3 h-3" />
-                        <span>{message.modelUsed}</span>
-                      </div>
-                    )}
                   </div>
-                </div>
+                )}
 
-                {/* Sources */}
-                {message.sources && message.sources.length > 0 && (
+                {/* Sources - Only show for actual legal questions */}
+                {shouldShowMeta && message.sources && message.sources.length > 0 && (
                   <div className="mt-4 pt-3 border-t border-gray-100">
                     <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
                       <FileText className="w-4 h-4 mr-1" />
