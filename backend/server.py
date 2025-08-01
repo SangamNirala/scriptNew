@@ -6598,8 +6598,282 @@ async def get_hr_compliance_summary(company_id: Optional[str] = None):
         raise HTTPException(status_code=500, detail=f"Error generating HR compliance summary: {str(e)}")
 
 
-# Include the router in the main app
+# Include all API routes in the main app
 app.include_router(api_router)
+
+# RAG System Models and Endpoints
+if RAG_SYSTEM_AVAILABLE:
+    
+    class LegalQuestionRequest(BaseModel):
+        question: str
+        session_id: Optional[str] = None
+        jurisdiction: Optional[str] = None
+        legal_domain: Optional[str] = None
+    
+    class LegalQuestionResponse(BaseModel):
+        answer: str
+        confidence: float
+        sources: List[Dict[str, Any]]
+        session_id: str
+        retrieved_documents: int
+        timestamp: str
+        model_used: Optional[str] = None
+    
+    class ConversationHistoryResponse(BaseModel):
+        session_id: str
+        history: List[Dict[str, Any]]
+        total_exchanges: int
+    
+    class RAGSystemStatsResponse(BaseModel):
+        vector_db: str
+        embeddings_model: str
+        active_sessions: int
+        total_conversations: int
+        indexed_documents: Optional[int] = None
+    
+    class KnowledgeBaseStatsResponse(BaseModel):
+        total_documents: int
+        by_jurisdiction: Dict[str, int]
+        by_legal_domain: Dict[str, int]
+        by_document_type: Dict[str, int]
+        by_source: Dict[str, int]
+    
+    # ================================
+    # LEGAL QUESTION ANSWERING RAG ENDPOINTS
+    # ================================
+    
+    @api_router.post("/legal-qa/ask", response_model=LegalQuestionResponse)
+    async def ask_legal_question(request: LegalQuestionRequest):
+        """
+        Ask a legal question and get an AI-powered answer using RAG.
+        
+        This endpoint provides comprehensive legal information by:
+        1. Retrieving relevant legal documents from our knowledge base
+        2. Using AI to generate accurate, well-researched answers
+        3. Citing authoritative legal sources
+        4. Supporting multi-turn conversations with context
+        """
+        try:
+            # Get RAG system instance
+            rag_system = await get_rag_system()
+            
+            # Answer the legal question
+            result = await rag_system.answer_legal_question(
+                question=request.question,
+                session_id=request.session_id,
+                jurisdiction=request.jurisdiction,
+                legal_domain=request.legal_domain
+            )
+            
+            return LegalQuestionResponse(**result)
+            
+        except Exception as e:
+            logger.error(f"Error answering legal question: {e}")
+            raise HTTPException(
+                status_code=500, 
+                detail=f"Error processing legal question: {str(e)}"
+            )
+    
+    @api_router.get("/legal-qa/conversation/{session_id}", response_model=ConversationHistoryResponse)
+    async def get_conversation_history(session_id: str):
+        """Get conversation history for a specific session"""
+        try:
+            rag_system = await get_rag_system()
+            history = rag_system.get_conversation_history(session_id)
+            
+            return ConversationHistoryResponse(
+                session_id=session_id,
+                history=history,
+                total_exchanges=len(history)
+            )
+            
+        except Exception as e:
+            logger.error(f"Error getting conversation history: {e}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error retrieving conversation history: {str(e)}"
+            )
+    
+    @api_router.delete("/legal-qa/conversation/{session_id}")
+    async def clear_conversation_history(session_id: str):
+        """Clear conversation history for a specific session"""
+        try:
+            rag_system = await get_rag_system()
+            rag_system.clear_conversation_history(session_id)
+            
+            return {"message": f"Conversation history cleared for session {session_id}"}
+            
+        except Exception as e:
+            logger.error(f"Error clearing conversation history: {e}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error clearing conversation history: {str(e)}"
+            )
+    
+    @api_router.get("/legal-qa/stats", response_model=RAGSystemStatsResponse)
+    async def get_rag_system_stats():
+        """Get RAG system statistics and status"""
+        try:
+            rag_system = await get_rag_system()
+            stats = await rag_system.get_system_stats()
+            
+            return RAGSystemStatsResponse(**stats)
+            
+        except Exception as e:
+            logger.error(f"Error getting RAG system stats: {e}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error retrieving system stats: {str(e)}"
+            )
+    
+    @api_router.post("/legal-qa/initialize-knowledge-base")
+    async def initialize_knowledge_base():
+        """
+        Initialize or rebuild the legal knowledge base.
+        This endpoint triggers the comprehensive legal data collection process.
+        """
+        try:
+            logger.info("🚀 Starting legal knowledge base initialization...")
+            
+            # Initialize the RAG system
+            rag_system = await initialize_legal_rag()
+            
+            # Get knowledge base statistics
+            try:
+                with open("/app/legal_knowledge_base.json", 'r', encoding='utf-8') as f:
+                    knowledge_base = json.load(f)
+                
+                stats = {
+                    "total_documents": len(knowledge_base),
+                    "by_jurisdiction": {},
+                    "by_legal_domain": {},
+                    "by_document_type": {},
+                    "by_source": {}
+                }
+                
+                for doc in knowledge_base:
+                    # Count by jurisdiction
+                    jurisdiction = doc.get("jurisdiction", "unknown")
+                    stats["by_jurisdiction"][jurisdiction] = stats["by_jurisdiction"].get(jurisdiction, 0) + 1
+                    
+                    # Count by legal domain
+                    domain = doc.get("legal_domain", "unknown")
+                    stats["by_legal_domain"][domain] = stats["by_legal_domain"].get(domain, 0) + 1
+                    
+                    # Count by document type
+                    doc_type = doc.get("document_type", "unknown")
+                    stats["by_document_type"][doc_type] = stats["by_document_type"].get(doc_type, 0) + 1
+                    
+                    # Count by source
+                    source = doc.get("source", "unknown")
+                    stats["by_source"][source] = stats["by_source"].get(source, 0) + 1
+                
+            except Exception as e:
+                logger.warning(f"Could not load knowledge base stats: {e}")
+                stats = {"total_documents": 0, "message": "Knowledge base statistics not available"}
+            
+            return {
+                "message": "Legal knowledge base initialized successfully!",
+                "rag_system_ready": True,
+                "knowledge_base_stats": stats,
+                "timestamp": datetime.utcnow().isoformat()
+            }
+            
+        except Exception as e:
+            logger.error(f"Error initializing knowledge base: {e}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error initializing knowledge base: {str(e)}"
+            )
+    
+    @api_router.get("/legal-qa/knowledge-base/stats", response_model=KnowledgeBaseStatsResponse)
+    async def get_knowledge_base_stats():
+        """Get statistics about the legal knowledge base"""
+        try:
+            knowledge_base_path = "/app/legal_knowledge_base.json"
+            
+            if not os.path.exists(knowledge_base_path):
+                return KnowledgeBaseStatsResponse(
+                    total_documents=0,
+                    by_jurisdiction={},
+                    by_legal_domain={},
+                    by_document_type={},
+                    by_source={}
+                )
+            
+            with open(knowledge_base_path, 'r', encoding='utf-8') as f:
+                knowledge_base = json.load(f)
+            
+            stats = {
+                "total_documents": len(knowledge_base),
+                "by_jurisdiction": {},
+                "by_legal_domain": {},
+                "by_document_type": {},
+                "by_source": {}
+            }
+            
+            for doc in knowledge_base:
+                # Count by jurisdiction
+                jurisdiction = doc.get("jurisdiction", "unknown")
+                stats["by_jurisdiction"][jurisdiction] = stats["by_jurisdiction"].get(jurisdiction, 0) + 1
+                
+                # Count by legal domain
+                domain = doc.get("legal_domain", "unknown")
+                stats["by_legal_domain"][domain] = stats["by_legal_domain"].get(domain, 0) + 1
+                
+                # Count by document type
+                doc_type = doc.get("document_type", "unknown")
+                stats["by_document_type"][doc_type] = stats["by_document_type"].get(doc_type, 0) + 1
+                
+                # Count by source
+                source = doc.get("source", "unknown")
+                stats["by_source"][source] = stats["by_source"].get(source, 0) + 1
+            
+            return KnowledgeBaseStatsResponse(**stats)
+            
+        except Exception as e:
+            logger.error(f"Error getting knowledge base stats: {e}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error retrieving knowledge base stats: {str(e)}"
+            )
+    
+    @api_router.post("/legal-qa/rebuild-knowledge-base")
+    async def rebuild_knowledge_base():
+        """Rebuild the legal knowledge base from scratch"""
+        try:
+            logger.info("🔄 Rebuilding legal knowledge base...")
+            
+            # Import and run knowledge base builder
+            from legal_knowledge_builder import build_legal_knowledge_base
+            knowledge_base = await build_legal_knowledge_base()
+            
+            # Reinitialize RAG system with new knowledge base
+            rag_system = await get_rag_system()
+            await rag_system.ingest_knowledge_base("/app/legal_knowledge_base.json")
+            
+            return {
+                "message": "Legal knowledge base rebuilt successfully!",
+                "documents_processed": len(knowledge_base),
+                "timestamp": datetime.utcnow().isoformat()
+            }
+            
+        except Exception as e:
+            logger.error(f"Error rebuilding knowledge base: {e}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error rebuilding knowledge base: {str(e)}"
+            )
+
+else:
+    # Fallback endpoints when RAG system is not available
+    @api_router.post("/legal-qa/ask")
+    async def ask_legal_question_fallback(request: dict):
+        """Fallback endpoint when RAG system is not available"""
+        raise HTTPException(
+            status_code=503,
+            detail="Legal Question Answering system is currently unavailable. Please check system configuration."
+        )
 
 app.add_middleware(
     CORSMiddleware,
