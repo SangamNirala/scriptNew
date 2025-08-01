@@ -483,11 +483,75 @@ const PlainEnglishContractCreator = ({ onBack, contractTypes, jurisdictions }) =
                       <CardDescription>Full contract document with all clauses integrated</CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <div className="bg-gray-50 p-4 rounded border max-h-96 overflow-y-auto">
-                        <div className="font-mono text-sm whitespace-pre-wrap">
-                          {result.full_contract}
-                        </div>
-                      </div>
+                      <Tabs value={contractActiveTab} onValueChange={setContractActiveTab} className="w-full">
+                        <TabsList className="grid w-full grid-cols-2">
+                          <TabsTrigger value="edit">
+                            <Edit className="mr-2 h-4 w-4" />
+                            Edit Contract
+                          </TabsTrigger>
+                          <TabsTrigger value="preview">
+                            <Eye className="mr-2 h-4 w-4" />
+                            Preview
+                          </TabsTrigger>
+                        </TabsList>
+
+                        <TabsContent value="edit" className="mt-4">
+                          <div className="space-y-4">
+                            <Textarea
+                              value={editedContract}
+                              onChange={(e) => setEditedContract(e.target.value)}
+                              className="min-h-96 font-mono text-sm"
+                              placeholder="Edit your contract content here..."
+                            />
+                            <div className="flex gap-2">
+                              <Button
+                                onClick={() => setContractActiveTab('preview')}
+                                variant="outline"
+                                className="flex-1"
+                              >
+                                <Eye className="mr-2 h-4 w-4" />
+                                Preview Changes
+                              </Button>
+                              <Button
+                                onClick={() => downloadContractPDF()}
+                                disabled={isExporting}
+                                className="flex-1 bg-green-600 hover:bg-green-700"
+                              >
+                                <Download className="mr-2 h-4 w-4" />
+                                {isExporting ? 'Generating PDF...' : 'Download PDF'}
+                              </Button>
+                            </div>
+                          </div>
+                        </TabsContent>
+
+                        <TabsContent value="preview" className="mt-4">
+                          <div className="space-y-4">
+                            <div className="max-h-96 overflow-y-auto bg-gray-50 p-4 rounded border">
+                              <div className="font-mono text-sm whitespace-pre-wrap">
+                                {editedContract}
+                              </div>
+                            </div>
+                            <div className="flex gap-2">
+                              <Button
+                                onClick={() => setContractActiveTab('edit')}
+                                variant="outline"
+                                className="flex-1"
+                              >
+                                <Edit className="mr-2 h-4 w-4" />
+                                Edit Contract
+                              </Button>
+                              <Button
+                                onClick={() => downloadContractPDF()}
+                                disabled={isExporting}
+                                className="flex-1 bg-green-600 hover:bg-green-700"
+                              >
+                                <Download className="mr-2 h-4 w-4" />
+                                {isExporting ? 'Generating PDF...' : 'Download PDF'}
+                              </Button>
+                            </div>
+                          </div>
+                        </TabsContent>
+                      </Tabs>
                     </CardContent>
                   </Card>
                 )}
