@@ -28,6 +28,11 @@ from lib.script_performance_tracker import ScriptPerformanceTracker
 from lib.script_preview_generator import ScriptPreviewGenerator
 # Phase 4: Measurement & Optimization Components
 from lib.prompt_optimization_engine import PromptOptimizationEngine
+# Phase 5: Intelligent Quality Assurance & Auto-Optimization Components
+from lib.multi_model_validator import MultiModelValidator
+from lib.advanced_quality_metrics import AdvancedQualityMetrics
+from lib.quality_improvement_loop import QualityImprovementLoop
+from lib.intelligent_qa_system import IntelligentQASystem
 
 
 ROOT_DIR = Path(__file__).parent
