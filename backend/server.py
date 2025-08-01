@@ -6885,36 +6885,67 @@ if RAG_SYSTEM_AVAILABLE:
     
     @api_router.post("/legal-qa/rebuild-bulk-knowledge-base")
     async def rebuild_bulk_knowledge_base():
-        """Rebuild the legal knowledge base in BULK mode for large-scale collection (15,000+ documents)"""
+        """
+        Comprehensive bulk collection process for 15,000+ CourtListener legal documents
+        
+        Enhanced with:
+        - Court hierarchy prioritization (Supreme Court → Circuit → District)
+        - Quality control (1000+ words, precedential/published only)
+        - Intelligent document processing and metadata extraction
+        - Real-time progress tracking with ETA calculations
+        - Checkpoint/resume functionality for long operations
+        """
         try:
-            logger.info("🚀 Starting BULK knowledge base collection (target: 15,000+ documents)...")
+            logger.info("🚀 Starting COMPREHENSIVE BULK COLLECTION PROCESS (15,000+ documents)...")
             
             # Import and run knowledge base builder in bulk mode
-            from legal_knowledge_builder import build_bulk_knowledge_base
-            knowledge_base = await build_bulk_knowledge_base()
+            from legal_knowledge_builder import LegalKnowledgeBuilder, CollectionMode
+            
+            # Initialize builder with BULK mode
+            builder = LegalKnowledgeBuilder(CollectionMode.BULK)
+            
+            # Run the comprehensive bulk collection
+            knowledge_base = await builder.bulk_collect_court_decisions()
+            
+            # Save bulk knowledge base
+            builder.knowledge_base = knowledge_base
+            builder.save_knowledge_base("/app/legal_knowledge_base_bulk.json")
             
             # Reinitialize RAG system with new bulk knowledge base
             rag_system = await get_rag_system()
             await rag_system.ingest_knowledge_base("/app/legal_knowledge_base_bulk.json")
             
-            # Calculate statistics
-            total_docs = len(knowledge_base)
-            target_achievement = (total_docs / 15000) * 100
+            # Generate comprehensive statistics
+            stats = builder.get_knowledge_base_stats()
             
             return {
-                "message": "Legal knowledge base rebuilt successfully in BULK mode!",
+                "status": "completed",
                 "collection_mode": "BULK",
-                "documents_processed": total_docs,
-                "target_documents": 15000,
-                "target_achievement": f"{target_achievement:.1f}%",
-                "knowledge_base_file": "/app/legal_knowledge_base_bulk.json",
+                "documents_collected": len(knowledge_base),
+                "target_achievement": f"{(len(knowledge_base)/15000)*100:.1f}%",
+                "collection_time_hours": f"{(time.time() - builder.progress.start_time) / 3600:.1f}",
+                "court_hierarchy_breakdown": {
+                    "supreme_court": sum(court.collected_documents for court in builder.court_priorities if court.priority == 1),
+                    "circuit_courts": sum(court.collected_documents for court in builder.court_priorities if court.priority == 2),
+                    "district_courts": sum(court.collected_documents for court in builder.court_priorities if court.priority == 3)
+                },
+                "quality_metrics": {
+                    "total_processed": builder.quality_metrics.total_processed,
+                    "quality_pass_rate": f"{(len(knowledge_base)/max(builder.quality_metrics.total_processed, 1))*100:.1f}%",
+                    "average_word_count": f"{builder.quality_metrics.average_word_count:.0f}",
+                    "duplicates_filtered": builder.quality_metrics.duplicates_filtered
+                },
+                "legal_domain_distribution": stats.get("by_legal_domain", {}),
                 "features_enabled": [
-                    "Pagination (up to 500 results per query)",
-                    "Quality filters (500+ words, precedential status)",
-                    "Date range filtering (2015-2025)",
-                    "Intelligent rate limiting",
-                    "Batch processing (200 documents per batch)",
-                    "Enhanced error recovery"
+                    "Court Hierarchy Prioritization",
+                    "Enhanced Quality Control (1000+ words)",
+                    "Precedential/Published Opinions Only", 
+                    "Date Prioritization (2020-2025 primary)",
+                    "Duplicate Detection & Filtering",
+                    "Intelligent Metadata Extraction",
+                    "Legal Concept Tagging",
+                    "Real-time Progress Tracking",
+                    "Checkpoint/Resume Functionality"
                 ],
                 "timestamp": datetime.utcnow().isoformat()
             }
