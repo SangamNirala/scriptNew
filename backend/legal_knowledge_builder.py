@@ -62,7 +62,7 @@ class CollectionProgress:
 class LegalKnowledgeBuilder:
     """Comprehensive legal knowledge base builder for RAG system"""
     
-    def __init__(self):
+    def __init__(self, collection_mode: CollectionMode = CollectionMode.STANDARD):
         # Multiple CourtListener API keys for rotation
         self.courtlistener_api_keys = [
             os.environ.get('COURTLISTENER_API_KEY'),  # Original key from env
@@ -75,6 +75,16 @@ class LegalKnowledgeBuilder:
         self.courtlistener_api_keys = [key for key in self.courtlistener_api_keys if key]
         self.current_api_key_index = 0
         self.serp_api_key = os.environ.get('SERP_API_KEY')
+        
+        # Collection mode configuration
+        self.collection_mode = collection_mode
+        self.config = self._get_collection_config()
+        
+        # Rate limiting state for each API key
+        self.rate_limits = {i: RateLimitState() for i in range(len(self.courtlistener_api_keys))}
+        
+        # Collection progress tracking
+        self.progress = CollectionProgress()
         
         # Legal domain categories
         self.legal_domains = [
@@ -97,6 +107,38 @@ class LegalKnowledgeBuilder:
         # Knowledge base storage
         self.knowledge_base = []
         self.collected_sources = set()
+        
+    def _get_collection_config(self) -> Dict[str, Any]:
+        """Get configuration based on collection mode"""
+        if self.collection_mode == CollectionMode.BULK:
+            return {
+                "results_per_query": 500,  # Target 200-500 results per query
+                "max_pages_per_query": 25,  # Max pages to fetch per query (500/20 per page)
+                "batch_size": 200,  # Process in batches of 200
+                "min_content_length": 500,  # Minimum 500 words
+                "enable_pagination": True,
+                "enable_quality_filters": True,
+                "date_range": {
+                    "min": "2015-01-01",  # Include 2015-2019
+                    "max": "2025-12-31"   # Prioritize 2020-2025
+                },
+                "rate_limit_requests_per_minute": 50,  # Conservative rate limiting
+                "max_retries": 5,
+                "base_backoff_seconds": 2
+            }
+        else:  # STANDARD mode for backward compatibility
+            return {
+                "results_per_query": 10,  # Original behavior
+                "max_pages_per_query": 1,  # No pagination
+                "batch_size": 35,  # Original batch size
+                "min_content_length": 50,  # Original minimum
+                "enable_pagination": False,
+                "enable_quality_filters": False,
+                "date_range": None,
+                "rate_limit_requests_per_minute": 20,  # Original rate limit
+                "max_retries": 3,
+                "base_backoff_seconds": 3
+            }
         
     async def build_comprehensive_knowledge_base(self) -> List[Dict[str, Any]]:
         """Main method to build comprehensive legal knowledge base"""
