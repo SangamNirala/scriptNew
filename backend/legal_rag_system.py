@@ -606,12 +606,15 @@ INSTRUCTIONS:
 7. If information is insufficient, acknowledge limitations
 8. Provide practical guidance where appropriate
 9. Maintain professional legal writing style
+10. Use **bold text** for important headings and key legal terms
+11. Do NOT include confidence scores or "Key Legal Principles" sections in your response
+12. Focus on providing clear, direct answers without excessive metadata
 
 RESPONSE FORMAT:
 - Provide a detailed, well-structured answer
-- Include specific citations to source documents
-- Rate your confidence in the answer (0.0 to 1.0)
-- Identify key legal principles involved
+- Include specific citations to source documents when relevant
+- Use **bold formatting** for headings and important legal terms
+- Write in a professional but accessible tone
 
 Generate a comprehensive legal response:
 """
