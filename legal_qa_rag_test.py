@@ -329,14 +329,10 @@ class LegalQARAGTester:
         # Test 4: Knowledge Base Initialization (may take time)
         print("\n" + "="*60)
         print("⚠️  KNOWLEDGE BASE INITIALIZATION TEST")
-        print("This test may take several minutes. Continue? (y/n): ", end="")
-        user_input = input().strip().lower()
+        print("Running knowledge base initialization test (may take several minutes)...")
+        user_input = 'yes'  # Auto-run for testing
         
-        if user_input == 'y' or user_input == 'yes':
-            init_success = self.test_knowledge_base_initialization()
-        else:
-            print("⏭️  Skipping knowledge base initialization test")
-            init_success = True  # Don't count as failure
+        init_success = self.test_knowledge_base_initialization()
         
         # Final Results
         print("\n" + "="*80)
