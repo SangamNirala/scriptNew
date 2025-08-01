@@ -151,16 +151,25 @@ class LegalKnowledgeBuilder:
                 "results_per_query": 500,  # Target 200-500 results per query
                 "max_pages_per_query": 25,  # Max pages to fetch per query (500/20 per page)
                 "batch_size": 200,  # Process in batches of 200
-                "min_content_length": 500,  # Minimum 500 words
+                "min_content_length": 1000,  # Enhanced: minimum 1000 words
                 "enable_pagination": True,
                 "enable_quality_filters": True,
                 "date_range": {
-                    "min": "2015-01-01",  # Include 2015-2019
-                    "max": "2025-12-31"   # Prioritize 2020-2025
+                    "primary_min": "2020-01-01",  # Primary: 2020-2025
+                    "primary_max": "2025-12-31",
+                    "secondary_min": "2015-01-01",  # Secondary: 2015-2019
+                    "secondary_max": "2019-12-31"
                 },
+                "precedential_status": ["Precedential", "Published"],  # Only precedential/published
+                "excluded_keywords": ["procedural", "administrative", "order", "motion"],  # Exclude procedural orders
                 "rate_limit_requests_per_minute": 50,  # Conservative rate limiting
                 "max_retries": 5,
-                "base_backoff_seconds": 2
+                "base_backoff_seconds": 2,
+                "enable_parallel_processing": True,
+                "max_concurrent_requests": 3,  # Parallel requests per court
+                "checkpoint_enabled": True,
+                "quality_threshold": 0.7,  # Quality score threshold
+                "enable_enhanced_metadata": True
             }
         else:  # STANDARD mode for backward compatibility
             return {
@@ -173,8 +182,52 @@ class LegalKnowledgeBuilder:
                 "date_range": None,
                 "rate_limit_requests_per_minute": 20,  # Original rate limit
                 "max_retries": 3,
-                "base_backoff_seconds": 3
+                "base_backoff_seconds": 3,
+                "enable_parallel_processing": False,
+                "max_concurrent_requests": 1,
+                "checkpoint_enabled": False,
+                "quality_threshold": 0.3,
+                "enable_enhanced_metadata": False
             }
+        
+    def _initialize_court_priorities(self) -> List[CourtPriority]:
+        """Initialize court hierarchy with prioritization for bulk collection"""
+        if self.collection_mode == CollectionMode.BULK:
+            # Court hierarchy prioritization for 15,000 documents
+            return [
+                # Priority 1: Supreme Court decisions (5,000 docs target)
+                CourtPriority("scotus", "Supreme Court of the United States", 1, 5000),
+                
+                # Priority 2: Circuit Court decisions (8,000 docs target)
+                CourtPriority("ca1", "1st Circuit Court of Appeals", 2, 615),
+                CourtPriority("ca2", "2nd Circuit Court of Appeals", 2, 615),  
+                CourtPriority("ca3", "3rd Circuit Court of Appeals", 2, 615),
+                CourtPriority("ca4", "4th Circuit Court of Appeals", 2, 615),
+                CourtPriority("ca5", "5th Circuit Court of Appeals", 2, 615),
+                CourtPriority("ca6", "6th Circuit Court of Appeals", 2, 615),
+                CourtPriority("ca7", "7th Circuit Court of Appeals", 2, 615),
+                CourtPriority("ca8", "8th Circuit Court of Appeals", 2, 615),
+                CourtPriority("ca9", "9th Circuit Court of Appeals", 2, 615),
+                CourtPriority("ca10", "10th Circuit Court of Appeals", 2, 615),
+                CourtPriority("ca11", "11th Circuit Court of Appeals", 2, 615),
+                CourtPriority("cadc", "DC Circuit Court of Appeals", 2, 615),
+                CourtPriority("cafc", "Federal Circuit Court of Appeals", 2, 615),
+                
+                # Priority 3: District Court landmark cases (2,000 docs target)
+                CourtPriority("dcd", "D.C. District Court", 3, 400),
+                CourtPriority("nysd", "S.D. New York District Court", 3, 400),
+                CourtPriority("cand", "N.D. California District Court", 3, 400),
+                CourtPriority("nynd", "N.D. New York District Court", 3, 400),
+                CourtPriority("txsd", "S.D. Texas District Court", 3, 400),
+            ]
+        else:
+            # Standard mode - simplified court list
+            return [
+                CourtPriority("scotus", "Supreme Court", 1, 35),
+                CourtPriority("ca1", "1st Circuit", 2, 10),
+                CourtPriority("ca2", "2nd Circuit", 2, 10),
+                CourtPriority("ca9", "9th Circuit", 2, 10),
+            ]
         
     async def build_comprehensive_knowledge_base(self) -> List[Dict[str, Any]]:
         """Main method to build comprehensive legal knowledge base"""
