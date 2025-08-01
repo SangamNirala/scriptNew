@@ -1147,8 +1147,13 @@ function App() {
             </ResizeObserverErrorBoundary>
           )}
           
+          {/* Legal Question Answering */}
+          {showLegalQA && (
+            <LegalQuestionAnswering />
+          )}
+          
           {/* Classic Mode */}
-          {!useEnhancedWizard && !showAnalytics && !showPlainEnglishCreator && (
+          {!useEnhancedWizard && !showAnalytics && !showPlainEnglishCreator && !showLegalQA && (
             <>
               {currentStep < 4 && (
                 <div className="mb-8">
