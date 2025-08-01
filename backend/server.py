@@ -106,6 +106,14 @@ except ImportError as e:
     logger.warning(f"Legal RAG system not available: {e}")
     RAG_SYSTEM_AVAILABLE = False
 
+# Import Knowledge Integration System
+try:
+    from knowledge_integration_system import KnowledgeIntegrationSystem
+    INTEGRATION_SYSTEM_AVAILABLE = True
+except ImportError as e:
+    logger.warning(f"Knowledge Integration system not available: {e}")
+    INTEGRATION_SYSTEM_AVAILABLE = False
+
 
 # Define Models
 class ContractRequest(BaseModel):
