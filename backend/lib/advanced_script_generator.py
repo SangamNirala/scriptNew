@@ -79,9 +79,11 @@ class ChainOfThoughtScriptGenerator:
             )
             
             # Step 6: Quality Validation and Refinement
-            final_result = await self._validate_and_refine(
+            reasoning_chain["step_6"] = await self._validate_and_refine(
                 reasoning_chain["step_5"], reasoning_chain, enhanced_context
             )
+            
+            final_result = reasoning_chain["step_6"]
             
             return {
                 "generated_script": final_result["refined_script"],
