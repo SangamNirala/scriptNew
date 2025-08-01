@@ -235,7 +235,7 @@ const PlainEnglishContractCreator = ({ onBack, contractTypes, jurisdictions }) =
                             <SelectValue placeholder="Auto-detect or select type" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">Auto-detect from description</SelectItem>
+                            <SelectItem value="auto_detect">Auto-detect from description</SelectItem>
                             {contractTypes.map((type) => (
                               <SelectItem key={type.id} value={type.id}>
                                 {type.name}
