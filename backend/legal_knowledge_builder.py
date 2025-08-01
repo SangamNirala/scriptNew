@@ -2380,6 +2380,212 @@ class LegalKnowledgeBuilder:
             
         return content
     
+    # ========================================================================================
+    # Academic Legal Content Collection Methods
+    # ========================================================================================
+    
+    async def _fetch_google_scholar_legal(self) -> List[Dict[str, Any]]:
+        """Fetch academic legal papers from Google Scholar (Target: 2,000 docs)"""
+        logger.info("🎓 Collecting Google Scholar legal academic papers...")
+        content = []
+        
+        # Priority topics based on user requirements
+        scholar_queries = [
+            # Constitutional Law
+            "constitutional law interpretation Supreme Court site:scholar.google.com",
+            "constitutional rights legal analysis site:scholar.google.com",
+            "constitutional doctrine academic law review site:scholar.google.com",
+            "due process constitutional law scholarly article site:scholar.google.com",
+            "equal protection constitutional analysis site:scholar.google.com",
+            
+            # AI and Law / Tech Policy
+            "artificial intelligence law legal framework site:scholar.google.com",
+            "AI governance legal analysis site:scholar.google.com", 
+            "technology policy legal implications site:scholar.google.com",
+            "algorithmic accountability legal framework site:scholar.google.com",
+            "digital privacy law technology site:scholar.google.com",
+            "data protection legal analysis site:scholar.google.com",
+            
+            # Administrative Law
+            "administrative law agency rulemaking site:scholar.google.com",
+            "administrative procedure act legal analysis site:scholar.google.com",  
+            "regulatory compliance legal framework site:scholar.google.com",
+            "administrative agencies legal authority site:scholar.google.com",
+            "judicial review administrative decisions site:scholar.google.com",
+            
+            # Intellectual Property
+            "intellectual property law analysis site:scholar.google.com",
+            "patent law legal doctrine site:scholar.google.com",
+            "copyright law digital age site:scholar.google.com",
+            "trademark law analysis site:scholar.google.com",
+            "trade secret legal protection site:scholar.google.com",
+            
+            # Law Review Articles from Top Schools
+            "Harvard Law Review constitutional analysis site:scholar.google.com",
+            "Yale Law Journal legal doctrine site:scholar.google.com",
+            "Columbia Law Review administrative law site:scholar.google.com",
+            "Stanford Law Review technology law site:scholar.google.com",
+            "University of Chicago Law Review site:scholar.google.com",
+            "New York University Law Review site:scholar.google.com"
+        ]
+        
+        logger.info(f"📊 Executing {len(scholar_queries)} Google Scholar queries...")
+        
+        for i, query in enumerate(scholar_queries, 1):
+            try:
+                logger.info(f"🔍 Scholar Query {i}/{len(scholar_queries)}: {query[:60]}...")
+                
+                # Use Google Scholar specific search
+                results = await self._search_google_scholar_content(query)
+                filtered_results = self._apply_academic_filters(results, "google_scholar")
+                
+                content.extend(filtered_results)
+                logger.info(f"   ✅ Found {len(filtered_results)} qualifying academic papers")
+                
+                # Rate limiting
+                await asyncio.sleep(2)
+                
+            except Exception as e:
+                logger.error(f"Error in Google Scholar query '{query}': {e}")
+                continue
+        
+        logger.info(f"🎓 Google Scholar collection complete: {len(content)} documents")
+        return content
+    
+    async def _fetch_legal_journals(self) -> List[Dict[str, Any]]:
+        """Fetch bar journal articles and professional publications (Target: 1,000 docs)"""
+        logger.info("⚖️ Collecting legal journals and professional publications...")
+        content = []
+        
+        # Professional legal publication queries
+        journal_queries = [
+            # ABA Publications
+            "ABA Journal legal analysis professional development",
+            "American Bar Association publication legal practice",
+            "ABA Law Practice magazine article",
+            
+            # State Bar Journals
+            "California Lawyer magazine legal analysis",
+            "New York State Bar Journal article",
+            "Texas Bar Journal legal publication",
+            "Florida Bar Journal professional publication",
+            
+            # Practice Area Journals
+            "IP Law & Business intellectual property analysis",
+            "Corporate Counsel legal compliance analysis", 
+            "Employment Law Letter analysis",
+            "Administrative & Regulatory Law News",
+            "Constitutional Law Reporter analysis",
+            
+            # Professional Analysis
+            "legal practice management bar journal",
+            "attorney professional development analysis",
+            "law firm management legal publication",
+            "continuing legal education analysis",
+            
+            # Recent Legal Developments
+            "recent legal developments bar publication 2023",
+            "recent legal developments bar publication 2024", 
+            "legal trend analysis professional publication",
+            "emerging legal issues bar journal",
+            
+            # Specialty Publications
+            "legal technology bar publication analysis",
+            "law practice innovation legal journal",
+            "attorney ethics professional publication",
+            "legal risk management analysis"
+        ]
+        
+        logger.info(f"📊 Executing {len(journal_queries)} legal journal queries...")
+        
+        for i, query in enumerate(journal_queries, 1):
+            try:
+                logger.info(f"🔍 Journal Query {i}/{len(journal_queries)}: {query[:60]}...")
+                
+                results = await self._search_legal_content(query, 
+                                                        jurisdiction="us_federal",
+                                                        document_type="journal_article",
+                                                        source="Legal Journals")
+                filtered_results = self._apply_academic_filters(results, "legal_journal")
+                
+                content.extend(filtered_results)
+                logger.info(f"   ✅ Found {len(filtered_results)} qualifying journal articles")
+                
+                # Rate limiting
+                await asyncio.sleep(1.5)
+                
+            except Exception as e:
+                logger.error(f"Error in legal journal query '{query}': {e}")
+                continue
+        
+        logger.info(f"⚖️ Legal journals collection complete: {len(content)} documents")
+        return content
+    
+    async def _fetch_legal_research_papers(self) -> List[Dict[str, Any]]:
+        """Fetch legal research papers from academic repositories (Target: 500 docs)"""
+        logger.info("🔬 Collecting legal research papers from academic repositories...")
+        content = []
+        
+        # Academic research repository queries
+        research_queries = [
+            # SSRN Legal Research
+            "SSRN legal research paper constitutional law",
+            "SSRN legal research paper administrative law",
+            "SSRN legal research paper intellectual property",
+            "SSRN legal research paper AI law technology",
+            
+            # University Law School Research
+            "Harvard Law School research paper legal analysis",
+            "Yale Law School legal research publication",
+            "Stanford Law School research legal technology",
+            "Columbia Law School research constitutional law",
+            "NYU Law School research paper analysis",
+            "University of Chicago Law School research",
+            
+            # Legal Think Tank Reports
+            "Brookings Institution law policy research",
+            "American Enterprise Institute legal policy",
+            "Cato Institute legal research analysis",
+            "Heritage Foundation legal policy research",
+            
+            # Policy Research Organizations
+            "Congressional Research Service legal analysis",
+            "Government Accountability Office legal research",
+            "Federal Judicial Center research publication",
+            "Administrative Conference legal research",
+            
+            # International Legal Research (US-focused)
+            "American Law Institute research analysis",
+            "National Conference Commissioners Uniform State Laws",
+            "Federal Bar Association research publication",
+            "American College of Trial Lawyers research"
+        ]
+        
+        logger.info(f"📊 Executing {len(research_queries)} research paper queries...")
+        
+        for i, query in enumerate(research_queries, 1):
+            try:
+                logger.info(f"🔍 Research Query {i}/{len(research_queries)}: {query[:60]}...")
+                
+                results = await self._search_legal_content(query,
+                                                        jurisdiction="us_federal", 
+                                                        document_type="research_paper",
+                                                        source="Academic Repositories")
+                filtered_results = self._apply_academic_filters(results, "research_paper")
+                
+                content.extend(filtered_results)
+                logger.info(f"   ✅ Found {len(filtered_results)} qualifying research papers")
+                
+                # Rate limiting
+                await asyncio.sleep(1.5)
+                
+            except Exception as e:
+                logger.error(f"Error in research paper query '{query}': {e}")
+                continue
+        
+        logger.info(f"🔬 Legal research papers collection complete: {len(content)} documents")
+        return content
+    
     async def _fetch_full_content(self, url: str) -> Optional[str]:
         """Fetch full content from URL"""
         try:
