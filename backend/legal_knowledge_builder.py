@@ -3175,11 +3175,14 @@ if __name__ == "__main__":
             collection_mode = CollectionMode.STANDARD
         elif mode_arg in ['federal', 'f', 'federal_resources']:
             collection_mode = CollectionMode.FEDERAL_RESOURCES
+        elif mode_arg in ['academic', 'a', 'academic_legal']:
+            collection_mode = CollectionMode.ACADEMIC
         else:
-            print("Usage: python legal_knowledge_builder.py [standard|s|bulk|b|federal|f]")
-            print("  standard (s): Original 35 document collection")
-            print("  bulk (b):     15,000+ CourtListener documents")
-            print("  federal (f):  5,000+ Federal government resources")
+            print("Usage: python legal_knowledge_builder.py [standard|s|bulk|b|federal|f|academic|a]")
+            print("  standard (s):  Original 35 document collection")
+            print("  bulk (b):      15,000+ CourtListener documents")
+            print("  federal (f):   5,000+ Federal government resources")
+            print("  academic (a):  3,500+ Academic legal documents")
             print("Default: standard mode (backward compatible)")
             sys.exit(1)
     
