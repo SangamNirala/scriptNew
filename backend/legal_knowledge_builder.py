@@ -2239,7 +2239,7 @@ class LegalKnowledgeBuilder:
                         "id": f"search_{jurisdiction}_{document_type}_{i}_{int(time.time())}",
                         "title": title,
                         "content": content_text,
-                        "source": "Web Search",
+                        "source": source,
                         "source_url": url,
                         "jurisdiction": jurisdiction,
                         "legal_domain": self._categorize_content(query + " " + title + " " + snippet),
