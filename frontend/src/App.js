@@ -15,8 +15,9 @@ import { Calendar as CalendarComponent } from './components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from './components/ui/popover';
 import EnhancedContractWizard from './components/EnhancedContractWizard';
 import AnalyticsDashboard from './components/AnalyticsDashboard';
+import PlainEnglishContractCreator from './components/PlainEnglishContractCreator';
 import ResizeObserverErrorBoundary from './components/ResizeObserverErrorBoundary';
-import { FileText, Zap, Shield, Users, CheckCircle, AlertTriangle, Download, Eye, Calendar, Sparkles, Wand2, Clock, BarChart3 } from 'lucide-react';
+import { FileText, Zap, Shield, Users, CheckCircle, AlertTriangle, Download, Eye, Calendar, Sparkles, Wand2, Clock, BarChart3, MessageSquare } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
