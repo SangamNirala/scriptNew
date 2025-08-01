@@ -3302,6 +3302,31 @@ async def get_clause_recommendations(contract_type: str, industry: str = None, j
         logging.error(f"Clause recommendation error: {e}")
         raise HTTPException(status_code=500, detail=f"Error getting recommendations: {str(e)}")
 
+@api_router.post("/plain-english-to-legal", response_model=PlainEnglishResult)
+async def convert_plain_english_to_legal_clauses(request: PlainEnglishRequest):
+    """
+    Transform plain English user input into legally compliant contract clauses
+    using advanced NLP and domain-specific language models
+    """
+    try:
+        # Convert plain English to legal clauses using Gemini Pro
+        result = await LegalMateAgents.plain_english_to_legal_clauses(
+            plain_text=request.plain_text,
+            contract_type=request.contract_type,
+            jurisdiction=request.jurisdiction,
+            industry=request.industry,
+            output_format=request.output_format
+        )
+        
+        # Save the conversion result to database for tracking and improvement
+        await db.plain_english_conversions.insert_one(result.dict())
+        
+        return result
+        
+    except Exception as e:
+        logging.error(f"Plain English to Legal conversion error: {e}")
+        raise HTTPException(status_code=500, detail=f"Error converting plain English to legal clauses: {str(e)}")
+
 @api_router.post("/compare-contracts", response_model=ContractComparisonResult)
 async def compare_contracts(request: ContractComparisonRequest):
     """AI-powered contract comparison with diff highlighting"""
