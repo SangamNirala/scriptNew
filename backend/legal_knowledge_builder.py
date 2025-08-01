@@ -2586,6 +2586,255 @@ class LegalKnowledgeBuilder:
         logger.info(f"🔬 Legal research papers collection complete: {len(content)} documents")
         return content
     
+    async def _search_google_scholar_content(self, query: str) -> List[Dict[str, Any]]:
+        """Search Google Scholar for academic legal content"""
+        content = []
+        
+        if not self.serp_api_key or not SERPAPI_AVAILABLE:
+            logger.warning("SerpAPI not available for Google Scholar search, using fallback")
+            # Fallback to regular search with scholar-specific query
+            return await self._search_legal_content(query, 
+                                                  jurisdiction="us_federal",
+                                                  document_type="academic_paper",
+                                                  source="Google Scholar")
+        
+        try:
+            client = GoogleSearch(api_key=self.serp_api_key)
+            
+            # Google Scholar specific search parameters
+            params = {
+                "engine": "google_scholar",
+                "q": query,
+                "num": 20,  # Results per page
+                "start": 0,
+                "as_ylo": 2015,  # From 2015 onwards
+                "as_yhi": 2025,  # Up to 2025
+                "scisbd": 1,  # Sort by date
+                "hl": "en"
+            }
+            
+            results = client.search(params)
+            organic_results = results.get("organic_results", [])
+            
+            for result in organic_results:
+                try:
+                    title = result.get("title", "")
+                    snippet = result.get("snippet", "")
+                    link = result.get("link", "")
+                    
+                    # Extract publication info
+                    publication_info = result.get("publication_info", {})
+                    authors = publication_info.get("authors", [])
+                    venue = publication_info.get("summary", "")
+                    
+                    # Create academic document
+                    academic_doc = {
+                        "id": f"scholar_{hash(link)}",
+                        "title": title,
+                        "content": snippet,
+                        "source": "Google Scholar",
+                        "source_url": link,
+                        "jurisdiction": "us_federal",
+                        "legal_domain": self._categorize_content(snippet),
+                        "document_type": "academic_paper",
+                        "authors": authors,
+                        "venue": venue,
+                        "word_count": len(snippet.split()) if snippet else 0,
+                        "metadata": {
+                            "search_query": query,
+                            "publication_info": publication_info,
+                            "cited_by": result.get("inline_links", {}).get("cited_by", {}).get("total", 0),
+                            "related_pages": result.get("inline_links", {}).get("related_pages_link", "")
+                        },
+                        "created_at": datetime.utcnow().isoformat(),
+                        "content_hash": self._generate_content_hash(snippet)
+                    }
+                    
+                    content.append(academic_doc)
+                    
+                except Exception as e:
+                    logger.error(f"Error processing Google Scholar result: {e}")
+                    continue
+                    
+        except Exception as e:
+            logger.error(f"Error with Google Scholar search for '{query}': {e}")
+            
+        return content
+    
+    def _apply_academic_filters(self, results: List[Dict[str, Any]], source_type: str) -> List[Dict[str, Any]]:
+        """Apply academic-specific quality filters"""
+        filtered_results = []
+        
+        for doc in results:
+            # Basic quality checks
+            if not doc.get("content") or len(doc.get("content", "")) < 200:
+                continue
+                
+            title = doc.get("title", "").lower()
+            content = doc.get("content", "").lower()
+            
+            # Academic quality indicators
+            academic_indicators = [
+                "analysis", "research", "study", "examination", "review",
+                "legal doctrine", "jurisprudence", "constitutional", "statutory",
+                "case law", "precedent", "judicial", "court", "law review",
+                "legal framework", "policy", "regulation", "compliance"
+            ]
+            
+            # Check for academic quality indicators
+            indicator_count = sum(1 for indicator in academic_indicators 
+                                if indicator in title or indicator in content)
+            
+            if indicator_count < 2:  # Require at least 2 academic indicators
+                continue
+                
+            # Source-specific filters
+            if source_type == "google_scholar":
+                # Prefer peer-reviewed and law review articles
+                if any(term in title for term in ["law review", "journal", "quarterly", "annual"]):
+                    doc["academic_priority"] = "high"
+                else:
+                    doc["academic_priority"] = "medium"
+                    
+            elif source_type == "legal_journal":
+                # Professional publication filters
+                if any(term in title for term in ["bar journal", "legal publication", "professional"]):
+                    doc["academic_priority"] = "medium"
+                else:
+                    doc["academic_priority"] = "low"
+                    
+            elif source_type == "research_paper":
+                # Research paper filters
+                if any(term in title for term in ["research", "analysis", "study", "report"]):
+                    doc["academic_priority"] = "high"
+                else:
+                    doc["academic_priority"] = "medium"
+            
+            # Exclude non-academic content
+            excluded_terms = ["news", "blog", "press release", "advertisement", "commercial"]
+            if any(term in title or term in content[:200] for term in excluded_terms):
+                continue
+                
+            filtered_results.append(doc)
+        
+        return filtered_results
+    
+    def _apply_academic_quality_filters(self, content: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Apply comprehensive quality filters for academic content"""
+        logger.info("🔍 Applying academic quality filters...")
+        
+        filtered_content = []
+        quality_stats = {
+            "total_processed": len(content),
+            "passed_length_filter": 0,
+            "passed_academic_filter": 0,
+            "passed_priority_filter": 0,
+            "final_count": 0
+        }
+        
+        for doc in content:
+            # 1. Minimum content length (1500 chars for academic content)
+            if len(doc.get("content", "")) < 1500:
+                continue
+            quality_stats["passed_length_filter"] += 1
+            
+            # 2. Academic content validation
+            title = doc.get("title", "").lower()
+            content_text = doc.get("content", "").lower()
+            
+            # Strong academic indicators
+            strong_academic_terms = [
+                "constitutional law", "legal analysis", "jurisprudence", "legal doctrine",
+                "case law analysis", "statutory interpretation", "legal framework",
+                "judicial review", "legal precedent", "law review", "legal scholarship"
+            ]
+            
+            has_strong_academic = any(term in title or term in content_text 
+                                   for term in strong_academic_terms)
+            
+            if not has_strong_academic:
+                # Check for moderate academic indicators
+                moderate_academic_terms = [
+                    "legal", "court", "judicial", "statute", "regulation", "constitutional",
+                    "analysis", "research", "study", "examination", "policy"
+                ]
+                
+                moderate_count = sum(1 for term in moderate_academic_terms 
+                                   if term in title or term in content_text)
+                
+                if moderate_count < 3:  # Require at least 3 moderate indicators
+                    continue
+                    
+            quality_stats["passed_academic_filter"] += 1
+            
+            # 3. Priority-based selection
+            priority = doc.get("academic_priority", "low")
+            if priority in ["high", "medium"]:
+                quality_stats["passed_priority_filter"] += 1
+                filtered_content.append(doc)
+        
+        quality_stats["final_count"] = len(filtered_content)
+        
+        # Log quality statistics
+        logger.info(f"📊 Academic Quality Filter Results:")
+        logger.info(f"  Total Processed: {quality_stats['total_processed']}")
+        logger.info(f"  Passed Length Filter: {quality_stats['passed_length_filter']}")
+        logger.info(f"  Passed Academic Filter: {quality_stats['passed_academic_filter']}")
+        logger.info(f"  Passed Priority Filter: {quality_stats['passed_priority_filter']}")
+        logger.info(f"  Final Count: {quality_stats['final_count']}")
+        
+        return filtered_content
+    
+    def _log_academic_collection_summary(self, academic_content: List[Dict[str, Any]]):
+        """Log comprehensive summary of academic collection"""
+        logger.info("\n" + "="*80)
+        logger.info("🎓 ACADEMIC LEGAL CONTENT COLLECTION SUMMARY")
+        logger.info("="*80)
+        
+        total_docs = len(academic_content)
+        target_docs = self.config.get('target_documents', 3500)
+        achievement_rate = (total_docs / target_docs * 100) if target_docs > 0 else 0
+        
+        logger.info(f"📊 COLLECTION STATISTICS:")
+        logger.info(f"  Total Academic Documents: {total_docs:,}")
+        logger.info(f"  Target Documents: {target_docs:,}")
+        logger.info(f"  Achievement Rate: {achievement_rate:.1f}%")
+        
+        # Count by source
+        source_counts = {}
+        priority_counts = {}
+        domain_counts = {}
+        
+        for doc in academic_content:
+            source = doc.get('source', 'unknown')
+            priority = doc.get('academic_priority', 'unknown')
+            domain = doc.get('legal_domain', 'unknown')
+            
+            source_counts[source] = source_counts.get(source, 0) + 1
+            priority_counts[priority] = priority_counts.get(priority, 0) + 1
+            domain_counts[domain] = domain_counts.get(domain, 0) + 1
+        
+        logger.info(f"\n📚 DOCUMENTS BY SOURCE:")
+        for source, count in sorted(source_counts.items(), key=lambda x: x[1], reverse=True):
+            logger.info(f"  {source}: {count:,} documents")
+        
+        logger.info(f"\n⭐ DOCUMENTS BY PRIORITY:")
+        for priority, count in sorted(priority_counts.items(), key=lambda x: x[1], reverse=True):
+            logger.info(f"  {priority}: {count:,} documents")
+        
+        logger.info(f"\n⚖️ DOCUMENTS BY LEGAL DOMAIN:")
+        for domain, count in sorted(domain_counts.items(), key=lambda x: x[1], reverse=True)[:10]:
+            logger.info(f"  {domain}: {count:,} documents")
+        
+        # Quality metrics
+        avg_length = sum(len(doc.get('content', '')) for doc in academic_content) / len(academic_content) if academic_content else 0
+        
+        logger.info(f"\n📏 QUALITY METRICS:")
+        logger.info(f"  Average Document Length: {avg_length:.0f} characters")
+        logger.info(f"  Minimum Content Length: {self.config.get('min_content_length', 1500)} characters")
+        
+        logger.info("="*80)
+    
     async def _fetch_full_content(self, url: str) -> Optional[str]:
         """Fetch full content from URL"""
         try:
