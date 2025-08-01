@@ -177,8 +177,8 @@ const PlainEnglishContractCreator = ({ onBack, contractTypes, jurisdictions }) =
           content: editedContract,
           compliance_score: result.confidence_score ? (result.confidence_score * 100) : 85,
           created_at: result.created_at || new Date().toISOString(),
-          first_party_signature: null,
-          second_party_signature: null
+          first_party_signature: firstPartySignature ? firstPartySignature.split(',')[1] : null,
+          second_party_signature: secondPartySignature ? secondPartySignature.split(',')[1] : null
         }
       }, {
         responseType: 'blob'
