@@ -357,7 +357,12 @@ class LegalRAGSystem:
         """Retrieve relevant documents using vector similarity search"""
         try:
             # Generate question embedding
-            question_embedding = self.embeddings_model.encode([question], convert_to_numpy=True)
+            if self.embeddings_model is not None:
+                question_embedding = self.embeddings_model.encode([question], convert_to_numpy=True)
+            else:
+                # Fallback: random embedding
+                logger.warning("Using fallback random embedding for question")
+                question_embedding = np.random.rand(1, self.embedding_dimension).astype(np.float32)
             
             if self.vector_db == "supabase":
                 return await self._retrieve_from_supabase(question_embedding[0], jurisdiction, legal_domain)
