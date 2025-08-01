@@ -268,7 +268,7 @@ const PlainEnglishContractCreator = ({ onBack, contractTypes, jurisdictions }) =
                             <SelectValue placeholder="Select industry" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">General Business</SelectItem>
+                            <SelectItem value="general_business">General Business</SelectItem>
                             {industries.map((industry) => (
                               <SelectItem key={industry} value={industry}>
                                 {industry}
