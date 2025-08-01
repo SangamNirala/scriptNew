@@ -35,6 +35,8 @@ from lib.quality_improvement_loop import QualityImprovementLoop
 from lib.intelligent_qa_system import IntelligentQASystem
 # Advanced Script Generation Components
 from lib.advanced_script_generator import ChainOfThoughtScriptGenerator
+# STEP 2: Few-Shot Learning & Pattern Recognition System
+from lib.few_shot_script_generator import FewShotScriptGenerator, ContextProfile
 
 
 ROOT_DIR = Path(__file__).parent
