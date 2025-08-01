@@ -2263,6 +2263,7 @@ class LegalKnowledgeBuilder:
                         logger.debug(f"Skipping short content ({len(content_text)} chars < {min_length}): {title}")
                         continue
                         
+                    # Create base legal document
                     legal_doc = {
                         "id": f"search_{jurisdiction}_{document_type}_{i}_{int(time.time())}",
                         "title": title,
@@ -2280,6 +2281,20 @@ class LegalKnowledgeBuilder:
                         "created_at": datetime.utcnow().isoformat(),
                         "content_hash": self._generate_content_hash(content_text)
                     }
+                    
+                    # Add enhanced metadata for federal resources
+                    if self.collection_mode == CollectionMode.FEDERAL_RESOURCES:
+                        enhanced_metadata = self._extract_government_metadata(url, title, content_text)
+                        legal_doc["agency"] = enhanced_metadata.get("agency", "unknown")
+                        legal_doc["authority_level"] = enhanced_metadata.get("authority_level", "unknown")
+                        legal_doc["effective_date"] = enhanced_metadata.get("effective_date")
+                        legal_doc["citation"] = enhanced_metadata.get("citation")
+                        legal_doc["metadata"].update({
+                            "is_government_source": True,
+                            "government_domain": enhanced_metadata.get("domain"),
+                            "document_category": enhanced_metadata.get("category"),
+                            "legal_precedence": enhanced_metadata.get("precedence", "guidance")
+                        })
                     
                     content.append(legal_doc)
                     
