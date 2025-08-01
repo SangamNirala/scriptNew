@@ -2210,14 +2210,28 @@ class LegalKnowledgeBuilder:
             
         try:
             client = GoogleSearch(api_key=self.serp_api_key)
-            results = client.search({
-                "q": query,
-                "num": 10,  # Get top 10 results
-                "hl": "en",
-                "gl": "us"
-            })
             
-            for i, result in enumerate(results.get("organic_results", [])[:5]):  # Limit to top 5
+            # Adjust search parameters based on collection mode
+            if self.collection_mode == CollectionMode.FEDERAL_RESOURCES:
+                search_params = {
+                    "q": query,
+                    "num": self.config.get("results_per_query", 100),  # More results for federal resources
+                    "hl": "en",
+                    "gl": "us"
+                }
+                result_limit = min(self.config.get("results_per_query", 100), 20)  # Limit to 20 max per query
+            else:
+                search_params = {
+                    "q": query,
+                    "num": 10,  # Get top 10 results for standard/bulk
+                    "hl": "en",
+                    "gl": "us"
+                }
+                result_limit = 5  # Limit to top 5 for standard/bulk
+            
+            results = client.search(search_params)
+            
+            for i, result in enumerate(results.get("organic_results", [])[:result_limit]):
                 try:
                     # Extract and clean content
                     title = result.get("title", "")
@@ -2226,13 +2240,27 @@ class LegalKnowledgeBuilder:
                     
                     if not title or not snippet:
                         continue
+                    
+                    # For federal resources mode, validate government domains
+                    if self.collection_mode == CollectionMode.FEDERAL_RESOURCES:
+                        if not any(domain in url.lower() for domain in self.config.get("government_domains", [".gov"])):
+                            logger.debug(f"Skipping non-government URL: {url}")
+                            continue
+                        
+                        # Skip excluded content types
+                        if any(keyword in title.lower() or keyword in snippet.lower() 
+                               for keyword in self.config.get("excluded_keywords", [])):
+                            logger.debug(f"Skipping excluded content: {title}")
+                            continue
                         
                     # Try to fetch full content
                     full_content = await self._fetch_full_content(url)
                     content_text = full_content if full_content else snippet
                     
-                    # Skip if content too short
-                    if len(content_text.strip()) < 100:
+                    # Apply content length filter based on collection mode
+                    min_length = self.config.get("min_content_length", 100)
+                    if len(content_text.strip()) < min_length:
+                        logger.debug(f"Skipping short content ({len(content_text)} chars < {min_length}): {title}")
                         continue
                         
                     legal_doc = {
