@@ -3075,6 +3075,313 @@ async def analyze_quality_metrics(request: Dict[str, Any]):
 # END PHASE 4 ENDPOINTS  
 # =============================================================================
 
+# =============================================================================
+# PHASE 5: INTELLIGENT QUALITY ASSURANCE & AUTO-OPTIMIZATION ENDPOINTS
+# =============================================================================
+
+@api_router.post("/intelligent-qa-analysis", response_model=IntelligentQAResponse)
+async def intelligent_qa_analysis(request: IntelligentQARequest):
+    """
+    Phase 5: Comprehensive Intelligent QA Analysis
+    Multi-model validation, advanced metrics, automatic regeneration for low-quality scripts
+    """
+    try:
+        logger.info(f"Starting intelligent QA analysis for script length: {len(request.script)} characters")
+        
+        # Prepare metadata
+        metadata = {
+            "target_platform": request.target_platform,
+            "duration": request.duration,
+            "video_type": request.video_type
+        }
+        
+        # Run comprehensive QA analysis
+        qa_result = await intelligent_qa_system.comprehensive_qa_analysis(
+            script=request.script,
+            original_prompt=request.original_prompt,
+            metadata=metadata,
+            enable_regeneration=request.enable_regeneration
+        )
+        
+        # Convert to response format
+        return IntelligentQAResponse(
+            qa_id=qa_result.qa_id,
+            original_prompt=qa_result.original_prompt,
+            final_script=qa_result.final_script,
+            quality_analysis=qa_result.quality_analysis,
+            consensus_validation=qa_result.consensus_validation.__dict__,  # Convert dataclass to dict
+            improvement_cycle_data=qa_result.improvement_cycle_data,
+            quality_threshold_met=qa_result.quality_threshold_met,
+            regeneration_performed=qa_result.regeneration_performed,
+            total_processing_time=qa_result.total_processing_time,
+            recommendations=qa_result.recommendations,
+            confidence_score=qa_result.confidence_score
+        )
+        
+    except Exception as e:
+        logger.error(f"Error in intelligent QA analysis: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Intelligent QA analysis failed: {str(e)}")
+
+@api_router.post("/multi-model-validation", response_model=MultiModelValidationResponse)
+async def multi_model_validation(request: MultiModelValidationRequest):
+    """
+    Phase 5: Multi-Model Consensus Validation
+    Uses 3-5 AI models for consensus-based quality scoring
+    """
+    try:
+        logger.info(f"Starting multi-model validation for script length: {len(request.script)} characters")
+        
+        # Prepare metadata
+        metadata = {
+            "target_platform": request.target_platform,
+            "duration": request.duration,
+            "video_type": request.video_type
+        }
+        
+        # Run multi-model validation
+        validation_result = await multi_model_validator.validate_script_quality(request.script, metadata)
+        
+        # Convert individual results to dict format
+        individual_results = []
+        for result in validation_result.individual_results:
+            individual_results.append({
+                "model_name": result.model_name,
+                "model_provider": result.model_provider,
+                "quality_score": result.quality_score,
+                "detailed_scores": result.detailed_scores,
+                "reasoning": result.reasoning,
+                "response_time": result.response_time,
+                "success": result.success,
+                "error_message": result.error_message
+            })
+        
+        return MultiModelValidationResponse(
+            consensus_score=validation_result.consensus_score,
+            consensus_grade=validation_result.consensus_grade,
+            individual_results=individual_results,
+            agreement_level=validation_result.agreement_level,
+            confidence_score=validation_result.confidence_score,
+            quality_threshold_passed=validation_result.quality_threshold_passed,
+            regeneration_required=validation_result.regeneration_required,
+            improvement_suggestions=validation_result.improvement_suggestions
+        )
+        
+    except Exception as e:
+        logger.error(f"Error in multi-model validation: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Multi-model validation failed: {str(e)}")
+
+@api_router.post("/advanced-quality-metrics", response_model=AdvancedQualityMetricsResponse)
+async def advanced_quality_metrics_analysis(request: AdvancedQualityMetricsRequest):
+    """
+    Phase 5: Advanced Quality Metrics Framework
+    Comprehensive analysis including readability, engagement prediction, emotional intelligence, 
+    platform compliance, and conversion potential
+    """
+    try:
+        logger.info(f"Starting advanced quality metrics analysis for script length: {len(request.script)} characters")
+        
+        # Prepare metadata
+        metadata = {
+            "target_platform": request.target_platform,
+            "duration": request.duration,
+            "video_type": request.video_type
+        }
+        
+        # Run advanced quality metrics analysis
+        metrics_result = await advanced_quality_metrics.analyze_comprehensive_quality(request.script, metadata)
+        
+        return AdvancedQualityMetricsResponse(
+            composite_quality_score=metrics_result["composite_quality_score"],
+            quality_grade=metrics_result["quality_grade"],
+            detailed_metrics=metrics_result["detailed_metrics"],
+            quality_recommendations=metrics_result["quality_recommendations"],
+            analysis_metadata=metrics_result["analysis_metadata"]
+        )
+        
+    except Exception as e:
+        logger.error(f"Error in advanced quality metrics analysis: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Advanced quality metrics analysis failed: {str(e)}")
+
+@api_router.post("/quality-improvement-optimization", response_model=QualityImprovementResponse)
+async def quality_improvement_optimization(request: QualityImprovementRequest):
+    """
+    Phase 5: Quality Improvement Loop with Automatic Regeneration
+    Feedback-based script optimization with automatic regeneration for low-quality outputs
+    """
+    try:
+        logger.info(f"Starting quality improvement optimization for prompt: {request.original_prompt[:100]}...")
+        
+        # Prepare metadata
+        metadata = {
+            "target_platform": request.target_platform,
+            "duration": request.duration,
+            "video_type": request.video_type
+        }
+        
+        # Run quality improvement optimization
+        improvement_result = await quality_improvement_loop.optimize_script_with_feedback_loop(
+            request.original_prompt, metadata
+        )
+        
+        return QualityImprovementResponse(
+            cycle_id=improvement_result["cycle_id"],
+            original_score=improvement_result["original_score"],
+            final_score=improvement_result["final_score"],
+            improvement_achieved=improvement_result["improvement_achieved"],
+            quality_threshold_met=improvement_result["quality_threshold_met"],
+            cycles_completed=improvement_result["cycles_completed"],
+            final_script=improvement_result["final_script"],
+            validation_result=improvement_result["validation_result"].__dict__ if hasattr(improvement_result["validation_result"], '__dict__') else improvement_result["validation_result"],
+            strategy_used=improvement_result["strategy_used"],
+            improvements_attempted=improvement_result["improvements_attempted"],
+            learning_insights=improvement_result["learning_insights"]
+        )
+        
+    except Exception as e:
+        logger.error(f"Error in quality improvement optimization: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Quality improvement optimization failed: {str(e)}")
+
+@api_router.post("/ab-test-optimization", response_model=ABTestOptimizationResponse)
+async def ab_test_optimization(request: ABTestOptimizationRequest):
+    """
+    Phase 5: A/B Testing for Both Prompt Strategies AND AI Models
+    Tests different prompt strategies and AI models to find optimal combination
+    """
+    try:
+        logger.info(f"Starting A/B test optimization for prompt: {request.original_prompt[:100]}...")
+        
+        # Prepare metadata
+        metadata = {
+            "target_platform": request.target_platform,
+            "duration": request.duration,
+            "video_type": request.video_type
+        }
+        
+        # Run A/B test optimization
+        ab_test_result = await intelligent_qa_system.run_ab_test_optimization(
+            request.original_prompt, metadata
+        )
+        
+        if "error" in ab_test_result:
+            raise HTTPException(status_code=500, detail=ab_test_result["error"])
+        
+        return ABTestOptimizationResponse(
+            test_id=ab_test_result["test_id"],
+            best_performing_combination=ab_test_result["best_performing_combination"],
+            all_results=ab_test_result["all_results"],
+            statistical_analysis=ab_test_result["statistical_analysis"],
+            performance_improvement=ab_test_result["performance_improvement"],
+            recommendations=ab_test_result["recommendations"]
+        )
+        
+    except Exception as e:
+        logger.error(f"Error in A/B test optimization: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"A/B test optimization failed: {str(e)}")
+
+@api_router.post("/evolve-system-prompts")
+async def evolve_system_prompts():
+    """
+    Phase 5: Dynamic System Prompt Evolution
+    Evolves system prompts based on accumulated performance data
+    """
+    try:
+        logger.info("Starting system prompt evolution based on performance data")
+        
+        # Run system prompt evolution
+        evolution_result = await intelligent_qa_system.evolve_system_prompts()
+        
+        return {
+            "status": "SUCCESS",
+            "phase": "PHASE_5_PROMPT_EVOLUTION",
+            "evolution_result": evolution_result,
+            "evolution_timestamp": datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error in system prompt evolution: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"System prompt evolution failed: {str(e)}")
+
+@api_router.get("/qa-system-performance")
+async def get_qa_system_performance(days: int = 30):
+    """
+    Phase 5: QA System Performance Metrics
+    Get comprehensive performance metrics and system insights
+    """
+    try:
+        logger.info(f"Getting QA system performance metrics for last {days} days")
+        
+        # Get system performance
+        performance_result = await intelligent_qa_system.get_qa_system_performance(days)
+        
+        return {
+            "status": "SUCCESS",
+            "phase": "PHASE_5_SYSTEM_PERFORMANCE",
+            "performance_metrics": performance_result,
+            "query_timestamp": datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting QA system performance: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"QA system performance query failed: {str(e)}")
+
+@api_router.post("/generate-script-with-qa")
+async def generate_script_with_intelligent_qa(request: ScriptRequest):
+    """
+    Phase 5: Script Generation with Automatic Intelligent QA
+    Generates script and automatically runs intelligent QA with regeneration if needed
+    """
+    try:
+        logger.info(f"Generating script with intelligent QA for prompt: {request.prompt[:100]}...")
+        
+        # First generate the script using existing endpoint logic
+        script_response = await generate_script(request)
+        
+        # Run intelligent QA on the generated script
+        qa_request = IntelligentQARequest(
+            script=script_response.generated_script,
+            original_prompt=request.prompt,
+            target_platform="youtube",  # Default platform
+            duration=request.duration,
+            video_type=request.video_type,
+            enable_regeneration=True
+        )
+        
+        qa_result = await intelligent_qa_analysis(qa_request)
+        
+        # Return combined result
+        return {
+            "status": "SUCCESS",
+            "phase": "PHASE_5_SCRIPT_GENERATION_WITH_QA",
+            "script_generation": {
+                "id": script_response.id,
+                "original_prompt": script_response.original_prompt,
+                "generated_script": script_response.generated_script,
+                "video_type": script_response.video_type,
+                "duration": script_response.duration,
+                "created_at": script_response.created_at
+            },
+            "intelligent_qa": {
+                "qa_id": qa_result.qa_id,
+                "final_script": qa_result.final_script,
+                "quality_threshold_met": qa_result.quality_threshold_met,
+                "regeneration_performed": qa_result.regeneration_performed,
+                "consensus_score": qa_result.consensus_validation["consensus_score"],
+                "consensus_grade": qa_result.consensus_validation["consensus_grade"],
+                "confidence_score": qa_result.confidence_score,
+                "recommendations": qa_result.recommendations,
+                "processing_time": qa_result.total_processing_time
+            },
+            "generated_at": datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error in script generation with QA: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Script generation with QA failed: {str(e)}")
+
+# =============================================================================
+# END PHASE 5 ENDPOINTS
+# =============================================================================
+
 # Add CORS middleware BEFORE including router
 app.add_middleware(
     CORSMiddleware,
