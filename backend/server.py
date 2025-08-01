@@ -6879,6 +6879,9 @@ else:
             detail="Legal Question Answering system is currently unavailable. Please check system configuration."
         )
 
+# Include all API routes in the main app (after all endpoints are defined)
+app.include_router(api_router)
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
