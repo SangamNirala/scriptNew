@@ -3645,35 +3645,29 @@ async def initialize_contract_wizard(request: ContractWizardRequest):
         raise HTTPException(status_code=500, detail="Error initializing contract wizard")
 
 @api_router.post("/contract-wizard/suggestions")
-async def get_field_suggestions(
-    contract_type: str, 
-    field_name: str,
-    user_id: Optional[str] = None,
-    company_id: Optional[str] = None,
-    context: Dict[str, Any] = {}
-):
+async def get_field_suggestions(request: FieldSuggestionsRequest):
     """Get smart suggestions for a specific field"""
     try:
         # Get profiles
         user_profile = None
         company_profile = None
         
-        if user_id:
-            user_data = await db.user_profiles.find_one({"id": user_id})
+        if request.user_id:
+            user_data = await db.user_profiles.find_one({"id": request.user_id})
             if user_data:
                 user_profile = UserProfile(**convert_objectid_to_str(user_data))
         
-        if company_id:
-            company_data = await db.company_profiles.find_one({"id": company_id})
+        if request.company_id:
+            company_data = await db.company_profiles.find_one({"id": request.company_id})
             if company_data:
                 company_profile = CompanyProfile(**convert_objectid_to_str(company_data))
         
         suggestions = await generate_field_suggestions(
-            contract_type=contract_type,
-            field_name=field_name,
+            contract_type=request.contract_type,
+            field_name=request.field_name,
             user_profile=user_profile,
             company_profile=company_profile,
-            context=context
+            context=request.context
         )
         
         return {"suggestions": suggestions}
