@@ -3456,6 +3456,10 @@ async def build_academic_knowledge_base():
     """Build knowledge base in academic mode (3,500+ academic documents target)"""
     return await build_legal_knowledge_base(CollectionMode.ACADEMIC)
 
+async def build_academic_knowledge_base():
+    """Build knowledge base in academic mode (3,500+ academic documents target)"""
+    return await build_legal_knowledge_base(CollectionMode.ACADEMIC)
+
 
 if __name__ == "__main__":
     import sys
