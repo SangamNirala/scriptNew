@@ -1129,7 +1129,7 @@ function App() {
           )}
           
           {/* Classic Mode */}
-          {!useEnhancedWizard && !showAnalytics && (
+          {!useEnhancedWizard && !showAnalytics && !showPlainEnglishCreator && (
             <>
               {currentStep < 4 && (
                 <div className="mb-8">
