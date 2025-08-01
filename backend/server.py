@@ -281,6 +281,35 @@ class FieldSuggestionsRequest(BaseModel):
     company_id: Optional[str] = None
     context: Dict[str, Any] = Field(default_factory=dict)
 
+# Plain English Contract Creation Models
+class PlainEnglishRequest(BaseModel):
+    plain_text: str
+    contract_type: Optional[str] = None
+    jurisdiction: str = "US"
+    industry: Optional[str] = None
+    output_format: str = "legal_clauses"  # "legal_clauses", "full_contract", "json"
+
+class LegalClause(BaseModel):
+    clause_type: str
+    title: str
+    content: str
+    explanation: str
+    confidence: float = Field(ge=0, le=1)
+    suggestions: List[str] = Field(default_factory=list)
+
+class PlainEnglishResult(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    original_text: str
+    generated_clauses: List[LegalClause]
+    full_contract: Optional[str] = None
+    contract_type: Optional[str] = None
+    jurisdiction: str
+    industry: Optional[str] = None
+    confidence_score: float = Field(ge=0, le=1)
+    recommendations: List[str] = Field(default_factory=list)
+    legal_warnings: List[str] = Field(default_factory=list)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
 # New models for Smart Contract Analysis
 class ContractAnalysisRequest(BaseModel):
     contract_content: str
