@@ -2789,6 +2789,37 @@ async def generate_contract(request: ContractRequest):
         logging.error(f"Traceback: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=f"Error generating contract: {str(e)}")
 
+@api_router.get("/plain-english-conversions")
+async def get_plain_english_conversions():
+    """Get all plain English to legal clause conversions"""
+    try:
+        conversions = await db.plain_english_conversions.find().sort("created_at", -1).to_list(50)
+        # Convert ObjectId to string for JSON serialization
+        for conversion in conversions:
+            conversion = convert_objectid_to_str(conversion)
+        return {
+            "conversions": conversions,
+            "count": len(conversions)
+        }
+    except Exception as e:
+        logging.error(f"Error fetching plain English conversions: {e}")
+        raise HTTPException(status_code=500, detail=f"Error fetching conversions: {str(e)}")
+
+@api_router.get("/plain-english-conversions/{conversion_id}")
+async def get_plain_english_conversion(conversion_id: str):
+    """Get specific plain English conversion by ID"""
+    try:
+        conversion = await db.plain_english_conversions.find_one({"id": conversion_id})
+        if not conversion:
+            raise HTTPException(status_code=404, detail="Conversion not found")
+        conversion = convert_objectid_to_str(conversion)
+        return conversion
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error fetching conversion: {e}")
+        raise HTTPException(status_code=500, detail="Error fetching conversion")
+
 @api_router.get("/contracts", response_model=List[GeneratedContract])
 async def get_contracts():
     """Get all generated contracts"""
