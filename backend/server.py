@@ -7564,6 +7564,563 @@ else:
             detail="Knowledge Integration system is currently unavailable. Please check system configuration."
         )
 
+# Import Legal Concept Understanding System
+try:
+    from legal_concept_ontology import legal_ontology, LegalDomain, Jurisdiction, ConceptType
+    from legal_concept_extractor import legal_concept_extractor, ConceptExtractionResult
+    from contextual_legal_analyzer import contextual_legal_analyzer, LegalScenario, AnalysisType, ContextualAnalysisResult
+    LEGAL_CONCEPTS_AVAILABLE = True
+except ImportError as e:
+    logger.warning(f"Legal Concept Understanding system not available: {e}")
+    LEGAL_CONCEPTS_AVAILABLE = False
+
+# Legal Concept Understanding API Models
+class ConceptAnalysisRequest(BaseModel):
+    query: str
+    context: Optional[Dict[str, Any]] = None
+    extract_relationships: bool = True
+    include_reasoning: bool = True
+
+class ConceptAnalysisResponse(BaseModel):
+    identified_concepts: List[Dict[str, Any]]
+    concept_relationships: Dict[str, List[str]]
+    applicable_legal_standards: List[str]
+    confidence_scores: Dict[str, float]
+    reasoning_pathway: List[str]
+    jurisdiction_analysis: Dict[str, List[str]]
+    disambiguation_notes: List[str]
+    extraction_metadata: Dict[str, Any]
+
+class ApplicableLawRequest(BaseModel):
+    concepts: List[str]
+    jurisdiction: str = "US"
+    legal_domain: Optional[str] = None
+    scenario_context: Optional[str] = None
+
+class ApplicableLawResponse(BaseModel):
+    applicable_laws: List[Dict[str, Any]]
+    legal_tests: List[Dict[str, Any]]
+    evidence_requirements: List[str]
+    burden_of_proof: List[Dict[str, str]]
+    jurisdiction_specifics: Dict[str, Any]
+
+class LegalScenarioRequest(BaseModel):
+    facts: str
+    parties: List[str]
+    jurisdiction: str = "US"
+    legal_domain: str
+    issues: List[str] = []
+    requested_analysis: List[str] = ["formation_analysis"]
+
+class LegalScenarioResponse(BaseModel):
+    scenario_id: str
+    identified_concepts: List[Dict[str, Any]]
+    concept_interactions: Dict[str, List[Dict[str, Any]]]
+    applicable_laws: List[Dict[str, Any]]
+    reasoning_pathways: List[Dict[str, Any]]
+    legal_standards_applied: List[Dict[str, str]]
+    risk_assessment: Dict[str, Any]
+    recommended_actions: List[str]
+    alternative_theories: List[Dict[str, Any]]
+    jurisdiction_analysis: Dict[str, Any]
+
+# ================================
+# LEGAL CONCEPT UNDERSTANDING API ENDPOINTS
+# ================================
+
+@api_router.post("/legal-reasoning/analyze-concepts", response_model=ConceptAnalysisResponse)
+async def analyze_legal_concepts(request: ConceptAnalysisRequest):
+    """
+    Extract and analyze legal concepts from user query with advanced NLP processing.
+    
+    Uses hybrid AI approach:
+    - Groq for fast concept identification
+    - OpenAI GPT for deep NLP analysis and disambiguation  
+    - Gemini for contract-specific legal reasoning
+    """
+    
+    if not LEGAL_CONCEPTS_AVAILABLE:
+        raise HTTPException(
+            status_code=503,
+            detail="Legal Concept Understanding system is currently unavailable"
+        )
+    
+    try:
+        logger.info(f"Analyzing legal concepts for query: {request.query[:100]}...")
+        
+        # Extract concepts using the advanced extraction engine
+        extraction_result = await legal_concept_extractor.extract_concepts_from_query(
+            request.query, 
+            request.context
+        )
+        
+        return ConceptAnalysisResponse(
+            identified_concepts=extraction_result.identified_concepts,
+            concept_relationships=extraction_result.concept_relationships,
+            applicable_legal_standards=extraction_result.applicable_legal_standards,
+            confidence_scores=extraction_result.confidence_scores,
+            reasoning_pathway=extraction_result.reasoning_pathway,
+            jurisdiction_analysis=extraction_result.jurisdiction_analysis,
+            disambiguation_notes=extraction_result.disambiguation_notes,
+            extraction_metadata=extraction_result.extraction_metadata
+        )
+        
+    except Exception as e:
+        logger.error(f"Error analyzing legal concepts: {e}")
+        raise HTTPException(status_code=500, detail=f"Concept analysis failed: {str(e)}")
+
+@api_router.get("/legal-reasoning/concept-relationships/{concept_id}")
+async def get_concept_relationships(concept_id: str, max_depth: int = 2):
+    """
+    Get detailed relationship network for a specific legal concept.
+    
+    Returns hierarchical concept relationships, legal precedents, and applicable jurisdictions.
+    """
+    
+    if not LEGAL_CONCEPTS_AVAILABLE:
+        raise HTTPException(
+            status_code=503,
+            detail="Legal Concept Understanding system is currently unavailable"
+        )
+    
+    try:
+        # Get concept from ontology
+        concept = legal_ontology.get_concept(concept_id)
+        if not concept:
+            raise HTTPException(status_code=404, detail=f"Concept '{concept_id}' not found")
+        
+        # Get related concepts with strength scores
+        related_concepts = legal_ontology.find_related_concepts(concept_id, max_depth)
+        
+        # Get hierarchical structure
+        hierarchy = legal_ontology.get_concept_hierarchy(concept_id)
+        
+        # Get applicable tests for this concept
+        applicable_tests = legal_ontology.get_applicable_tests([concept_id])
+        
+        return {
+            "concept": {
+                "concept_id": concept.concept_id,
+                "name": concept.concept_name,
+                "domain": concept.legal_domain.value,
+                "type": concept.concept_type.value,
+                "definition": concept.definition,
+                "authority_level": concept.legal_authority_level,
+                "jurisdictions": [j.value for j in concept.applicable_jurisdictions],
+                "legal_tests": concept.legal_tests,
+                "precedent_cases": concept.precedent_cases,
+                "statutory_references": concept.statutory_references
+            },
+            "related_concepts": [
+                {
+                    "concept_id": rel[0],
+                    "relationship_strength": rel[1],
+                    "concept_details": legal_ontology.get_concept(rel[0]).__dict__ if legal_ontology.get_concept(rel[0]) else None
+                }
+                for rel in related_concepts
+            ],
+            "hierarchy": {
+                "parents": [
+                    {
+                        "concept_id": parent.concept_id,
+                        "name": parent.concept_name,
+                        "domain": parent.legal_domain.value
+                    } for parent in hierarchy.get("parents", []) if parent
+                ],
+                "children": [
+                    {
+                        "concept_id": child.concept_id,
+                        "name": child.concept_name,
+                        "domain": child.legal_domain.value
+                    } for child in hierarchy.get("children", []) if child
+                ]
+            },
+            "applicable_tests": applicable_tests,
+            "relationship_network_size": len(related_concepts),
+            "concept_authority": concept.legal_authority_level
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting concept relationships: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get concept relationships: {str(e)}")
+
+@api_router.post("/legal-reasoning/applicable-law", response_model=ApplicableLawResponse)
+async def find_applicable_law(request: ApplicableLawRequest):
+    """
+    Identify applicable laws, legal tests, and standards for given legal concepts.
+    
+    Provides jurisdiction-specific analysis and evidence requirements.
+    """
+    
+    if not LEGAL_CONCEPTS_AVAILABLE:
+        raise HTTPException(
+            status_code=503,
+            detail="Legal Concept Understanding system is currently unavailable"
+        )
+    
+    try:
+        logger.info(f"Finding applicable law for concepts: {request.concepts}")
+        
+        # Convert jurisdiction string to enum
+        try:
+            jurisdiction = Jurisdiction(request.jurisdiction.upper())
+        except ValueError:
+            jurisdiction = Jurisdiction.US  # Default fallback
+        
+        # Convert domain string to enum if provided
+        legal_domain = None
+        if request.legal_domain:
+            try:
+                legal_domain = LegalDomain(request.legal_domain.lower())
+            except ValueError:
+                pass
+        
+        # Create a legal scenario for analysis
+        scenario = LegalScenario(
+            scenario_id=str(uuid.uuid4()),
+            facts=request.scenario_context or "Legal concept analysis",
+            parties=["Party A", "Party B"],
+            jurisdiction=jurisdiction,
+            legal_domain=legal_domain or LegalDomain.CONTRACT_LAW,
+            issues=request.concepts,
+            requested_analysis=[AnalysisType.FORMATION_ANALYSIS],
+            context_metadata={"concepts": request.concepts}
+        )
+        
+        # Get applicable laws for concepts
+        concept_objects = []
+        for concept_id in request.concepts:
+            concept = legal_ontology.get_concept(concept_id)
+            if concept:
+                concept_objects.append({
+                    "concept_id": concept.concept_id,
+                    "name": concept.concept_name,
+                    "domain": concept.legal_domain.value,
+                    "jurisdictions": [j.value for j in concept.applicable_jurisdictions]
+                })
+        
+        # Use contextual analyzer to find applicable laws
+        applicable_laws = await contextual_legal_analyzer._identify_applicable_laws(
+            concept_objects, scenario
+        )
+        
+        # Get applicable legal tests
+        applicable_tests = legal_ontology.get_applicable_tests(request.concepts)
+        
+        # Get evidence requirements based on domain
+        evidence_requirements = []
+        if legal_domain and legal_domain in contextual_legal_analyzer.evidence_requirements:
+            evidence_requirements = contextual_legal_analyzer.evidence_requirements[legal_domain]
+        
+        # Get burden of proof information
+        burden_info = []
+        for concept_id in request.concepts:
+            concept = legal_ontology.get_concept(concept_id)
+            if concept and concept.legal_domain in [LegalDomain.CONTRACT_LAW]:
+                burden_info.append({
+                    "concept": concept_id,
+                    "burden": "preponderance",
+                    "on_party": "plaintiff",
+                    "standard": "more likely than not"
+                })
+        
+        # Jurisdiction-specific analysis
+        jurisdiction_specifics = {
+            "primary_jurisdiction": request.jurisdiction,
+            "applicable_concepts": len([c for c in concept_objects if request.jurisdiction.upper() in c.get("jurisdictions", [])]),
+            "cross_border_considerations": len([c for c in concept_objects if len(c.get("jurisdictions", [])) > 1]),
+            "local_law_research_needed": len(concept_objects) > len([c for c in concept_objects if request.jurisdiction.upper() in c.get("jurisdictions", [])])
+        }
+        
+        return ApplicableLawResponse(
+            applicable_laws=[
+                {
+                    "law_id": law.law_id,
+                    "law_name": law.law_name,
+                    "law_type": law.law_type,
+                    "jurisdiction": law.jurisdiction.value,
+                    "applicable_concepts": law.applicable_concepts,
+                    "authority_level": law.authority_level,
+                    "citation": law.citation,
+                    "key_provisions": law.key_provisions or []
+                }
+                for law in applicable_laws
+            ],
+            legal_tests=applicable_tests,
+            evidence_requirements=evidence_requirements,
+            burden_of_proof=burden_info,
+            jurisdiction_specifics=jurisdiction_specifics
+        )
+        
+    except Exception as e:
+        logger.error(f"Error finding applicable law: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to find applicable law: {str(e)}")
+
+@api_router.get("/legal-reasoning/concept-hierarchy")
+async def get_concept_hierarchy(domain: Optional[str] = None, jurisdiction: Optional[str] = None):
+    """
+    Get the complete legal concept hierarchy and taxonomy.
+    
+    Optionally filter by legal domain or jurisdiction.
+    """
+    
+    if not LEGAL_CONCEPTS_AVAILABLE:
+        raise HTTPException(
+            status_code=503,
+            detail="Legal Concept Understanding system is currently unavailable"
+        )
+    
+    try:
+        # Get ontology statistics
+        stats = legal_ontology.get_ontology_stats()
+        
+        # Filter concepts if domain specified
+        concepts_to_return = {}
+        if domain:
+            try:
+                domain_enum = LegalDomain(domain.lower())
+                domain_concepts = legal_ontology.get_concepts_by_domain(domain_enum)
+                concepts_to_return[domain] = [
+                    {
+                        "concept_id": concept.concept_id,
+                        "name": concept.concept_name,
+                        "type": concept.concept_type.value,
+                        "definition": concept.definition,
+                        "authority_level": concept.legal_authority_level,
+                        "jurisdictions": [j.value for j in concept.applicable_jurisdictions],
+                        "related_concepts": concept.related_concepts[:5],  # Limit for response size
+                        "legal_tests": concept.legal_tests
+                    }
+                    for concept in domain_concepts
+                ]
+            except ValueError:
+                raise HTTPException(status_code=400, detail=f"Invalid domain: {domain}")
+        
+        # Filter by jurisdiction if specified
+        elif jurisdiction:
+            try:
+                jurisdiction_enum = Jurisdiction(jurisdiction.upper())
+                jurisdiction_concepts = legal_ontology.get_concepts_by_jurisdiction(jurisdiction_enum)
+                concepts_to_return[jurisdiction] = [
+                    {
+                        "concept_id": concept.concept_id,
+                        "name": concept.concept_name,
+                        "domain": concept.legal_domain.value,
+                        "type": concept.concept_type.value,
+                        "definition": concept.definition,
+                        "authority_level": concept.legal_authority_level
+                    }
+                    for concept in jurisdiction_concepts
+                ]
+            except ValueError:
+                raise HTTPException(status_code=400, detail=f"Invalid jurisdiction: {jurisdiction}")
+        
+        else:
+            # Return high-level taxonomy without full concept details
+            concepts_to_return = {
+                "domains": list(stats["concepts_by_domain"].keys()),
+                "jurisdictions": list(stats["concepts_by_jurisdiction"].keys()),
+                "concept_types": list(stats["concept_types"].keys()),
+                "sample_concepts": {
+                    domain_name: [
+                        concept.concept_name 
+                        for concept in legal_ontology.get_concepts_by_domain(LegalDomain(domain_name))[:5]
+                    ]
+                    for domain_name in list(stats["concepts_by_domain"].keys())[:3]  # Show samples for first 3 domains
+                }
+            }
+        
+        return {
+            "ontology_statistics": stats,
+            "concept_hierarchy": concepts_to_return,
+            "available_domains": [domain.value for domain in LegalDomain],
+            "available_jurisdictions": [jurisdiction.value for jurisdiction in Jurisdiction],
+            "available_concept_types": [concept_type.value for concept_type in ConceptType],
+            "response_filtered_by": {
+                "domain": domain,
+                "jurisdiction": jurisdiction
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting concept hierarchy: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get concept hierarchy: {str(e)}")
+
+@api_router.post("/legal-reasoning/analyze-scenario")
+async def analyze_legal_scenario(request: LegalScenarioRequest):
+    """
+    Comprehensive contextual legal analysis of complex legal scenarios.
+    
+    Analyzes concept interactions, applicable law, and provides legal reasoning pathways.
+    """
+    
+    if not LEGAL_CONCEPTS_AVAILABLE:
+        raise HTTPException(
+            status_code=503,
+            detail="Legal Concept Understanding system is currently unavailable"
+        )
+    
+    try:
+        logger.info(f"Analyzing legal scenario with {len(request.parties)} parties")
+        
+        # Convert string enums to proper enums
+        try:
+            jurisdiction = Jurisdiction(request.jurisdiction.upper())
+        except ValueError:
+            jurisdiction = Jurisdiction.US
+        
+        try:
+            legal_domain = LegalDomain(request.legal_domain.lower())
+        except ValueError:
+            legal_domain = LegalDomain.CONTRACT_LAW
+        
+        # Convert analysis types
+        analysis_types = []
+        for analysis_str in request.requested_analysis:
+            try:
+                analysis_types.append(AnalysisType(analysis_str.lower()))
+            except ValueError:
+                analysis_types.append(AnalysisType.FORMATION_ANALYSIS)  # Default fallback
+        
+        # Create legal scenario
+        scenario = LegalScenario(
+            scenario_id=str(uuid.uuid4()),
+            facts=request.facts,
+            parties=request.parties,
+            jurisdiction=jurisdiction,
+            legal_domain=legal_domain,
+            issues=request.issues,
+            requested_analysis=analysis_types,
+            context_metadata={}
+        )
+        
+        # Perform comprehensive contextual analysis
+        analysis_result = await contextual_legal_analyzer.analyze_legal_scenario(scenario)
+        
+        # Convert result to response format
+        return LegalScenarioResponse(
+            scenario_id=analysis_result.scenario_id,
+            identified_concepts=analysis_result.identified_concepts,
+            concept_interactions=analysis_result.concept_interactions,
+            applicable_laws=[
+                {
+                    "law_id": law.law_id,
+                    "law_name": law.law_name,
+                    "law_type": law.law_type,
+                    "jurisdiction": law.jurisdiction.value,
+                    "authority_level": law.authority_level,
+                    "citation": law.citation
+                }
+                for law in analysis_result.applicable_laws
+            ],
+            reasoning_pathways=[
+                {
+                    "path_id": pathway.path_id,
+                    "starting_concepts": pathway.starting_concepts,
+                    "reasoning_steps": pathway.reasoning_steps,
+                    "applicable_tests": pathway.applicable_tests,
+                    "evidence_requirements": pathway.evidence_requirements,
+                    "burden_of_proof": pathway.burden_of_proof,
+                    "conclusion": pathway.conclusion,
+                    "confidence_level": pathway.confidence_level
+                }
+                for pathway in analysis_result.reasoning_pathways
+            ],
+            legal_standards_applied=analysis_result.legal_standards_applied,
+            risk_assessment=analysis_result.risk_assessment,
+            recommended_actions=analysis_result.recommended_actions,
+            alternative_theories=analysis_result.alternative_theories,
+            jurisdiction_analysis=analysis_result.jurisdiction_analysis
+        )
+        
+    except Exception as e:
+        logger.error(f"Error analyzing legal scenario: {e}")
+        raise HTTPException(status_code=500, detail=f"Scenario analysis failed: {str(e)}")
+
+@api_router.get("/legal-reasoning/search-concepts")
+async def search_legal_concepts(
+    query: str,
+    domains: Optional[str] = None,  # Comma-separated domain names
+    jurisdictions: Optional[str] = None,  # Comma-separated jurisdiction codes
+    limit: int = 20
+):
+    """
+    Search legal concepts by query with optional domain and jurisdiction filtering.
+    
+    Supports fuzzy matching and relevance scoring.
+    """
+    
+    if not LEGAL_CONCEPTS_AVAILABLE:
+        raise HTTPException(
+            status_code=503,
+            detail="Legal Concept Understanding system is currently unavailable"
+        )
+    
+    try:
+        # Parse domain filters
+        domain_filters = None
+        if domains:
+            domain_filters = []
+            for domain_str in domains.split(','):
+                try:
+                    domain_filters.append(LegalDomain(domain_str.strip().lower()))
+                except ValueError:
+                    pass  # Skip invalid domains
+        
+        # Parse jurisdiction filters
+        jurisdiction_filters = None
+        if jurisdictions:
+            jurisdiction_filters = []
+            for jurisdiction_str in jurisdictions.split(','):
+                try:
+                    jurisdiction_filters.append(Jurisdiction(jurisdiction_str.strip().upper()))
+                except ValueError:
+                    pass  # Skip invalid jurisdictions
+        
+        # Search concepts
+        search_results = legal_ontology.search_concepts(
+            query, 
+            domains=domain_filters,
+            jurisdictions=jurisdiction_filters
+        )
+        
+        # Limit results and format response
+        limited_results = search_results[:limit]
+        
+        return {
+            "query": query,
+            "total_matches": len(search_results),
+            "returned_results": len(limited_results),
+            "concepts": [
+                {
+                    "concept_id": concept.concept_id,
+                    "name": concept.concept_name,
+                    "domain": concept.legal_domain.value,
+                    "type": concept.concept_type.value,
+                    "definition": concept.definition,
+                    "relevance_score": score,
+                    "authority_level": concept.legal_authority_level,
+                    "jurisdictions": [j.value for j in concept.applicable_jurisdictions],
+                    "related_concepts_count": len(concept.related_concepts),
+                    "legal_tests_count": len(concept.legal_tests)
+                }
+                for concept, score in limited_results
+            ],
+            "search_filters": {
+                "domains": domains,
+                "jurisdictions": jurisdictions,
+                "limit": limit
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Error searching legal concepts: {e}")
+        raise HTTPException(status_code=500, detail=f"Concept search failed: {str(e)}")
+
 # Include all API routes in the main app (after all endpoints are defined)
 app.include_router(api_router)
 
