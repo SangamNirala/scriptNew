@@ -79,9 +79,9 @@ const PlainEnglishContractCreator = ({ onBack, contractTypes, jurisdictions }) =
     try {
       const response = await axios.post(`${API}/plain-english-to-legal`, {
         plain_text: inputText,
-        contract_type: selectedContractType || null,
+        contract_type: selectedContractType === 'auto_detect' ? null : selectedContractType || null,
         jurisdiction: selectedJurisdiction,
-        industry: selectedIndustry || null,
+        industry: selectedIndustry === 'general_business' ? null : selectedIndustry || null,
         output_format: outputFormat
       });
 
