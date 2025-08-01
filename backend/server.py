@@ -396,6 +396,40 @@ class LegalCaseSearchRequest(BaseModel):
     date_range: Optional[Dict[str, str]] = None  # {"start": "2020-01-01", "end": "2024-01-01"}
     max_results: int = Field(default=10, le=100)
 
+# Knowledge Base Integration Models (Days 12-14)
+class IntegrationRequest(BaseModel):
+    phase: str = Field(default="all", description="Phase to execute: 'phase1', 'phase2', 'phase3', 'phase4', or 'all'")
+    options: Dict[str, Any] = Field(default_factory=dict)
+
+class IntegrationProgress(BaseModel):
+    phase: str
+    status: str  # "running", "completed", "failed"
+    progress_percentage: float
+    documents_processed: int
+    documents_integrated: int
+    estimated_completion: Optional[str] = None
+    current_operation: str
+
+class IntegrationResult(BaseModel):
+    phase: str
+    success: bool
+    total_documents: int
+    processing_time_seconds: float
+    quality_metrics: Dict[str, Any]
+    performance_metrics: Dict[str, Any]
+    summary: str
+    details: Dict[str, Any]
+
+class QualityMetricsReport(BaseModel):
+    total_documents: int
+    quality_score_distribution: Dict[str, int]
+    completeness_score_distribution: Dict[str, int]
+    source_authority_distribution: Dict[str, int]
+    legal_domain_distribution: Dict[str, int]
+    validation_status_distribution: Dict[str, int]
+    duplicate_statistics: Dict[str, int]
+    performance_statistics: Dict[str, float]
+
 class LegalCase(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     title: str
