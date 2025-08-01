@@ -10,7 +10,7 @@ import time
 from datetime import datetime
 
 # Backend URL
-BACKEND_URL = "https://c77e7639-ed99-451a-be42-5500f50a7ffa.preview.emergentagent.com/api"
+BACKEND_URL = "https://26eacdda-b626-4083-882f-12e26aea3e2a.preview.emergentagent.com/api"
 
 class Phase1ComplianceTester:
     def __init__(self):
