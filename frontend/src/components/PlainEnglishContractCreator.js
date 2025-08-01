@@ -42,6 +42,11 @@ const PlainEnglishContractCreator = ({ onBack, contractTypes, jurisdictions }) =
   const [conversions, setConversions] = useState([]);
   const [contractActiveTab, setContractActiveTab] = useState('edit');
   const [editedContract, setEditedContract] = useState('');
+  
+  // Add signature state variables
+  const [firstPartySignature, setFirstPartySignature] = useState(null);
+  const [secondPartySignature, setSecondPartySignature] = useState(null);
+  const [uploadingSignature, setUploadingSignature] = useState(null);
 
   // Industry options
   const industries = [
