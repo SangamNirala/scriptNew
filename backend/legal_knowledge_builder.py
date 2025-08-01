@@ -573,35 +573,148 @@ class LegalKnowledgeBuilder:
             return None
     
     def _meets_quality_filters(self, document: Dict[str, Any]) -> bool:
-        """Check if document meets quality filters"""
+        """Enhanced quality filters with comprehensive checks"""
         if not self.config["enable_quality_filters"]:
             return len(document["content"].strip()) > 50  # Original minimum
         
-        # Minimum content length filter
+        self.quality_metrics.total_processed += 1
+        
+        # 1. Minimum content length filter (1000 words for bulk mode)
         if document["word_count"] < self.config["min_content_length"]:
             return False
+        self.quality_metrics.passed_length_filter += 1
         
-        # Precedential status filter - only published opinions
-        precedential_status = document.get("precedential_status", "").lower()
-        if precedential_status not in ["published", "precedential"]:
+        # 2. Precedential status filter - only published/precedential opinions
+        precedential_status = document.get("precedential_status", "").strip()
+        if precedential_status not in self.config["precedential_status"]:
             return False
+        self.quality_metrics.passed_status_filter += 1
         
-        # Date range filter
+        # 3. Content type filter - exclude procedural/administrative orders
+        title = document.get("title", "").lower()
+        content = document.get("content", "").lower()
+        
+        # Check for excluded keywords that indicate procedural orders
+        for keyword in self.config["excluded_keywords"]:
+            if keyword in title or keyword in content[:500]:  # Check first 500 chars
+                return False
+        self.quality_metrics.passed_content_filter += 1
+        
+        # 4. Date range filter with primary/secondary prioritization
         if self.config["date_range"]:
             date_filed = document.get("date_filed", "")
             if date_filed:
                 try:
                     doc_date = datetime.strptime(date_filed.split('T')[0], '%Y-%m-%d')
-                    min_date = datetime.strptime(self.config["date_range"]["min"], '%Y-%m-%d')
-                    max_date = datetime.strptime(self.config["date_range"]["max"], '%Y-%m-%d')
                     
-                    if not (min_date <= doc_date <= max_date):
+                    # Primary date range (2020-2025) - higher priority
+                    primary_min = datetime.strptime(self.config["date_range"]["primary_min"], '%Y-%m-%d')
+                    primary_max = datetime.strptime(self.config["date_range"]["primary_max"], '%Y-%m-%d')
+                    
+                    # Secondary date range (2015-2019) - lower priority  
+                    secondary_min = datetime.strptime(self.config["date_range"]["secondary_min"], '%Y-%m-%d')
+                    secondary_max = datetime.strptime(self.config["date_range"]["secondary_max"], '%Y-%m-%d')
+                    
+                    # Must be in either primary or secondary range
+                    in_primary = primary_min <= doc_date <= primary_max
+                    in_secondary = secondary_min <= doc_date <= secondary_max
+                    
+                    if not (in_primary or in_secondary):
                         return False
+                        
+                    # Mark priority level for later processing
+                    document["date_priority"] = "primary" if in_primary else "secondary"
+                    
                 except:
                     # If date parsing fails, don't filter based on date
                     pass
+        self.quality_metrics.passed_date_filter += 1
+        
+        # 5. Deduplication checks
+        case_id = document.get("metadata", {}).get("cluster_id") or document.get("id", "")
+        citation = document.get("metadata", {}).get("citation", "")
+        
+        # Check for duplicate case ID
+        if case_id and case_id in self.seen_case_ids:
+            self.quality_metrics.duplicates_filtered += 1
+            return False
+            
+        # Check for duplicate citation
+        if citation and citation in self.seen_citations:
+            self.quality_metrics.duplicates_filtered += 1
+            return False
+        
+        # Add to seen sets
+        if case_id:
+            self.seen_case_ids.add(case_id)
+        if citation:
+            self.seen_citations.add(citation)
+        
+        # 6. Calculate quality score
+        quality_score = self._calculate_quality_score(document)
+        document["quality_score"] = quality_score
+        
+        if quality_score < self.config["quality_threshold"]:
+            return False
+        
+        # Update quality metrics
+        self.quality_metrics.average_word_count = (
+            (self.quality_metrics.average_word_count * (self.quality_metrics.passed_date_filter - 1) + document["word_count"]) 
+            / self.quality_metrics.passed_date_filter
+        )
         
         return True
+    
+    def _calculate_quality_score(self, document: Dict[str, Any]) -> float:
+        """Calculate quality score for document (0.0 to 1.0)"""
+        score = 0.0
+        
+        # Word count score (30% weight)
+        word_count = document.get("word_count", 0)
+        if word_count >= 2000:
+            score += 0.3
+        elif word_count >= 1500:
+            score += 0.25
+        elif word_count >= 1000:
+            score += 0.2
+        elif word_count >= 500:
+            score += 0.1
+        
+        # Precedential status score (25% weight)
+        status = document.get("precedential_status", "").lower()
+        if status == "precedential":
+            score += 0.25
+        elif status == "published":
+            score += 0.2
+        
+        # Court level score (20% weight)
+        court = document.get("court", "").lower()
+        if "supreme court" in court:
+            score += 0.2
+        elif "circuit" in court:
+            score += 0.15
+        elif "district" in court:
+            score += 0.1
+        
+        # Date recency score (15% weight)
+        date_priority = document.get("date_priority", "")
+        if date_priority == "primary":  # 2020-2025
+            score += 0.15
+        elif date_priority == "secondary":  # 2015-2019
+            score += 0.1
+        
+        # Content richness score (10% weight)
+        content = document.get("content", "")
+        if content:
+            # Check for legal citations, structured content
+            citation_markers = ["U.S.", "F.2d", "F.3d", "S.Ct.", "§"]
+            citation_count = sum(1 for marker in citation_markers if marker in content)
+            if citation_count >= 3:
+                score += 0.1
+            elif citation_count >= 1:
+                score += 0.05
+        
+        return min(score, 1.0)  # Cap at 1.0
 
     async def _fetch_court_decisions(self) -> List[Dict[str, Any]]:
         """Fetch comprehensive court decisions using CourtListener API with enhanced pagination and bulk collection"""
