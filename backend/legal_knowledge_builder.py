@@ -2972,6 +2972,8 @@ async def build_legal_knowledge_base(collection_mode: CollectionMode = Collectio
         # Build the knowledge base based on collection mode
         if collection_mode == CollectionMode.FEDERAL_RESOURCES:
             knowledge_base = await builder.build_federal_resources_knowledge_base()
+        elif collection_mode == CollectionMode.ACADEMIC:
+            knowledge_base = await builder.build_academic_knowledge_base()
         else:
             knowledge_base = await builder.build_comprehensive_knowledge_base()
         
