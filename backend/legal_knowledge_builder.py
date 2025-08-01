@@ -2200,7 +2200,7 @@ class LegalKnowledgeBuilder:
         return content
     
     async def _search_legal_content(self, query: str, jurisdiction: str = "general", 
-                                  document_type: str = "statute") -> List[Dict[str, Any]]:
+                                  document_type: str = "statute", source: str = "Web Search") -> List[Dict[str, Any]]:
         """Search for legal content using SerpAPI"""
         content = []
         
