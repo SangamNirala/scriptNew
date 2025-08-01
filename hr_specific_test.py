@@ -5,7 +5,7 @@ import uuid
 from datetime import datetime, timedelta
 
 class HRSpecificEndpointTester:
-    def __init__(self, base_url="https://89fe9693-d9a3-475b-b0c8-12f5e1f9bf0b.preview.emergentagent.com"):
+    def __init__(self, base_url="https://e599aef9-a00e-4f23-89f6-19e189faae42.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.tests_run = 0
