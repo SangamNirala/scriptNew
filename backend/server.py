@@ -1302,6 +1302,41 @@ class LegalMateAgents:
         return content
 
     @staticmethod
+    def generate_intelligent_pdf_title(contract: Dict[str, Any]) -> str:
+        """Generate intelligent PDF title based on contract content and type"""
+        try:
+            contract_type = contract.get('contract_type', 'CONTRACT')
+            contract_content = contract.get('content', '')
+            
+            # Extract key information from contract content
+            title_hints = []
+            
+            # Look for specific patterns in the content
+            if 'employment' in contract_content.lower() or 'employee' in contract_content.lower():
+                title_hints.append('Employment')
+            elif 'service' in contract_content.lower() and 'agreement' in contract_content.lower():
+                title_hints.append('Service')
+            elif 'non-disclosure' in contract_content.lower() or 'confidential' in contract_content.lower():
+                title_hints.append('Confidentiality')
+            elif 'lease' in contract_content.lower() or 'rental' in contract_content.lower():
+                title_hints.append('Lease')
+            elif 'purchase' in contract_content.lower() or 'sale' in contract_content.lower():
+                title_hints.append('Purchase')
+            
+            # Generate intelligent title
+            if title_hints:
+                return f"{title_hints[0].upper()} {contract_type.upper()}"
+            else:
+                # Fallback to standard format with some intelligence
+                formatted_type = contract_type.replace('_', ' ').title()
+                return f"{formatted_type.upper()} AGREEMENT"
+                
+        except Exception as e:
+            logging.error(f"Error generating intelligent PDF title: {e}")
+            # Fallback to simple format
+            return f"{contract.get('contract_type', 'CONTRACT').upper()} AGREEMENT"
+
+    @staticmethod
     async def compliance_validator(contract_content: str, jurisdiction: str) -> Dict[str, Any]:
         """Validates contract compliance and assigns score"""
         
