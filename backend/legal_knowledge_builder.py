@@ -412,6 +412,337 @@ class LegalKnowledgeBuilder:
                 
         return content
     
+    # =================================================================
+    # FEDERAL RESOURCES COLLECTION METHODS (NEW - Day 8-9)
+    # =================================================================
+    
+    async def _fetch_cornell_legal_resources(self) -> List[Dict[str, Any]]:
+        """Fetch Cornell Law - Legal Information Institute resources (Target: 2,000 docs)"""
+        content = []
+        
+        # Cornell LII comprehensive queries focused on federal law
+        cornell_queries = [
+            # Federal Statutes by Legal Domain
+            "site:law.cornell.edu federal statutes contract law",
+            "site:law.cornell.edu federal statutes employment labor law",
+            "site:law.cornell.edu federal statutes intellectual property patents",
+            "site:law.cornell.edu federal statutes securities regulations",
+            "site:law.cornell.edu federal statutes banking financial",
+            "site:law.cornell.edu federal statutes criminal procedure",
+            "site:law.cornell.edu federal statutes civil procedure",
+            "site:law.cornell.edu federal statutes administrative law",
+            "site:law.cornell.edu federal statutes immigration",
+            "site:law.cornell.edu federal statutes taxation",
+            
+            # Constitutional Law Resources
+            "site:law.cornell.edu constitutional law amendments",
+            "site:law.cornell.edu constitutional law commerce clause",
+            "site:law.cornell.edu constitutional law due process",
+            "site:law.cornell.edu constitutional law equal protection",
+            "site:law.cornell.edu constitutional law first amendment",
+            "site:law.cornell.edu constitutional law fourth amendment",
+            
+            # Legal Definitions and Concepts
+            "site:law.cornell.edu legal definitions contract terms",
+            "site:law.cornell.edu legal definitions employment terms",
+            "site:law.cornell.edu legal definitions corporate terms",
+            "site:law.cornell.edu legal definitions criminal law",
+            "site:law.cornell.edu legal definitions civil procedure",
+            "site:law.cornell.edu legal definitions constitutional law",
+            
+            # Federal Code Sections
+            "site:law.cornell.edu USC federal code contract",
+            "site:law.cornell.edu USC federal code employment",
+            "site:law.cornell.edu USC federal code securities",
+            "site:law.cornell.edu USC federal code patent",
+            "site:law.cornell.edu USC federal code tax",
+            
+            # Legal Encyclopedia Entries
+            "site:law.cornell.edu wex federal law",
+            "site:law.cornell.edu wex employment law",
+            "site:law.cornell.edu wex securities law",
+            "site:law.cornell.edu wex patent law",
+            "site:law.cornell.edu wex administrative law"
+        ]
+        
+        logger.info(f"🎓 Processing {len(cornell_queries)} Cornell LII queries...")
+        
+        for i, query in enumerate(cornell_queries, 1):
+            try:
+                logger.info(f"  Query {i}/{len(cornell_queries)}: {query[:50]}...")
+                results = await self._search_legal_content(
+                    query, 
+                    jurisdiction="us_federal", 
+                    document_type="statute_regulation",
+                    source="cornell_lii"
+                )
+                content.extend(results)
+                
+                # Conservative rate limiting for government/educational sources
+                await asyncio.sleep(2)
+                
+            except Exception as e:
+                logger.error(f"Error fetching Cornell LII content for query '{query}': {e}")
+        
+        logger.info(f"✅ Cornell LII collection completed: {len(content)} documents")
+        return content
+    
+    async def _fetch_priority_federal_agency_content(self) -> List[Dict[str, Any]]:
+        """Fetch priority federal agency content (Target: 2,000 docs)
+        Focus: SEC, DOL, USPTO, IRS"""
+        content = []
+        
+        # SEC - Securities and Exchange Commission (Securities Law)
+        sec_queries = [
+            "site:sec.gov securities regulations disclosure requirements",
+            "site:sec.gov securities regulations compliance guidance",
+            "site:sec.gov securities regulations interpretive releases",
+            "site:sec.gov securities regulations enforcement actions",
+            "site:sec.gov investment advisor regulations",
+            "site:sec.gov broker dealer regulations",
+            "site:sec.gov public company reporting requirements",
+            "site:sec.gov proxy rules shareholder rights",
+            "site:sec.gov market structure regulations",
+            "site:sec.gov whistleblower program rules"
+        ]
+        
+        # DOL - Department of Labor (Employment and Labor Law)
+        dol_queries = [
+            "site:dol.gov wage hour compliance guidance FLSA",
+            "site:dol.gov workplace safety OSHA standards",
+            "site:dol.gov employee benefits ERISA regulations",
+            "site:dol.gov family medical leave FMLA",
+            "site:dol.gov workers compensation regulations",
+            "site:dol.gov employment discrimination guidance",
+            "site:dol.gov labor relations union regulations",
+            "site:dol.gov migrant worker protection laws",
+            "site:dol.gov apprenticeship training regulations",
+            "site:dol.gov unemployment insurance regulations"
+        ]
+        
+        # USPTO - Patent and Trademark Office (Patent Law and IP Policy)
+        uspto_queries = [
+            "site:uspto.gov patent examination guidelines MPEP",
+            "site:uspto.gov patent prosecution procedures",
+            "site:uspto.gov trademark examination guidelines",
+            "site:uspto.gov patent eligibility subject matter",
+            "site:uspto.gov patent interference proceedings",
+            "site:uspto.gov trademark opposition proceedings",
+            "site:uspto.gov patent reexamination procedures",
+            "site:uspto.gov intellectual property enforcement",
+            "site:uspto.gov patent cooperation treaty PCT",
+            "site:uspto.gov trademark Madrid protocol"
+        ]
+        
+        # IRS - Internal Revenue Service (Tax-Related Legal Guidance)
+        irs_queries = [
+            "site:irs.gov tax regulations business income",
+            "site:irs.gov tax regulations employment tax",
+            "site:irs.gov tax regulations estate gift",
+            "site:irs.gov revenue rulings corporate tax",
+            "site:irs.gov revenue procedures tax compliance",
+            "site:irs.gov private letter rulings guidance",
+            "site:irs.gov tax court decisions appeals",
+            "site:irs.gov international tax regulations",
+            "site:irs.gov retirement plans tax rules",
+            "site:irs.gov charitable organizations tax exempt"
+        ]
+        
+        # Process each agency separately for better tracking
+        agency_collections = [
+            ("SEC", sec_queries),
+            ("DOL", dol_queries), 
+            ("USPTO", uspto_queries),
+            ("IRS", irs_queries)
+        ]
+        
+        for agency_name, queries in agency_collections:
+            logger.info(f"🏢 Processing {agency_name} queries ({len(queries)} total)...")
+            agency_content = []
+            
+            for i, query in enumerate(queries, 1):
+                try:
+                    logger.info(f"  {agency_name} Query {i}/{len(queries)}: {query[:50]}...")
+                    results = await self._search_legal_content(
+                        query,
+                        jurisdiction="us_federal",
+                        document_type="regulation",
+                        source=f"federal_agency_{agency_name.lower()}"
+                    )
+                    agency_content.extend(results)
+                    
+                    # Conservative rate limiting for government sources
+                    await asyncio.sleep(2)
+                    
+                except Exception as e:
+                    logger.error(f"Error fetching {agency_name} content for query '{query}': {e}")
+            
+            logger.info(f"✅ {agency_name} collection completed: {len(agency_content)} documents")
+            content.extend(agency_content)
+        
+        logger.info(f"🎉 Priority federal agencies collection completed: {len(content)} total documents")
+        return content
+    
+    async def _fetch_government_legal_docs(self) -> List[Dict[str, Any]]:
+        """Fetch Federal Register and other government legal documents (Target: 1,000 docs)"""
+        content = []
+        
+        # Federal Register - Recent regulations (2020-2025 focus)
+        federal_register_queries = [
+            "site:federalregister.gov securities regulations 2020-2025",
+            "site:federalregister.gov employment regulations 2020-2025", 
+            "site:federalregister.gov patent regulations 2020-2025",
+            "site:federalregister.gov tax regulations 2020-2025",
+            "site:federalregister.gov administrative law 2020-2025",
+            "site:federalregister.gov environmental regulations 2020-2025",
+            "site:federalregister.gov financial regulations 2020-2025",
+            "site:federalregister.gov healthcare regulations 2020-2025"
+        ]
+        
+        # Congressional Research Service Reports (Legal Analysis)
+        crs_queries = [
+            "site:crsreports.congress.gov securities law analysis",
+            "site:crsreports.congress.gov employment law analysis",
+            "site:crsreports.congress.gov patent law analysis", 
+            "site:crsreports.congress.gov administrative law analysis",
+            "site:crsreports.congress.gov constitutional law analysis"
+        ]
+        
+        # Government Accountability Office Legal Decisions
+        gao_queries = [
+            "site:gao.gov legal decisions procurement law",
+            "site:gao.gov legal decisions employment law",
+            "site:gao.gov legal decisions administrative law",
+            "site:gao.gov legal decisions government contracts"
+        ]
+        
+        # Executive Orders with Legal Implications
+        executive_queries = [
+            "site:whitehouse.gov executive orders employment",
+            "site:whitehouse.gov executive orders regulatory reform",
+            "site:whitehouse.gov executive orders administrative procedure"
+        ]
+        
+        # Process each source type
+        source_collections = [
+            ("Federal Register", federal_register_queries),
+            ("Congressional Research", crs_queries),
+            ("GAO Legal Decisions", gao_queries),
+            ("Executive Orders", executive_queries)
+        ]
+        
+        for source_name, queries in source_collections:
+            logger.info(f"📋 Processing {source_name} queries ({len(queries)} total)...")
+            source_content = []
+            
+            for i, query in enumerate(queries, 1):
+                try:
+                    logger.info(f"  {source_name} Query {i}/{len(queries)}: {query[:50]}...")
+                    results = await self._search_legal_content(
+                        query,
+                        jurisdiction="us_federal",
+                        document_type="government_document",
+                        source=f"government_{source_name.lower().replace(' ', '_')}"
+                    )
+                    source_content.extend(results)
+                    
+                    # Conservative rate limiting
+                    await asyncio.sleep(2)
+                    
+                except Exception as e:
+                    logger.error(f"Error fetching {source_name} content for query '{query}': {e}")
+            
+            logger.info(f"✅ {source_name} collection completed: {len(source_content)} documents")
+            content.extend(source_content)
+        
+        logger.info(f"🏛️ Government legal documents collection completed: {len(content)} total documents")
+        return content
+    
+    def _deduplicate_government_content(self, content: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Enhanced deduplication for government sources"""
+        seen_urls = set()
+        seen_titles = set()
+        seen_content_hashes = set()
+        deduplicated = []
+        
+        duplicates_removed = 0
+        
+        for doc in content:
+            # Create unique identifiers
+            url = doc.get('source_url', '').lower()
+            title = doc.get('title', '').lower().strip()
+            content_hash = hash(doc.get('content', '')[:1000])  # First 1000 chars
+            
+            # Check for duplicates
+            is_duplicate = False
+            
+            if url and url in seen_urls:
+                is_duplicate = True
+            elif title and len(title) > 10 and title in seen_titles:
+                is_duplicate = True  
+            elif content_hash in seen_content_hashes:
+                is_duplicate = True
+            
+            if not is_duplicate:
+                # Add to seen sets
+                if url:
+                    seen_urls.add(url)
+                if title and len(title) > 10:
+                    seen_titles.add(title)
+                seen_content_hashes.add(content_hash)
+                
+                deduplicated.append(doc)
+            else:
+                duplicates_removed += 1
+        
+        logger.info(f"🔍 Deduplication completed: {duplicates_removed} duplicates removed")
+        logger.info(f"📊 Final collection: {len(deduplicated)} unique documents")
+        
+        return deduplicated
+    
+    async def _generate_federal_collection_summary(self):
+        """Generate comprehensive summary of federal resources collection"""
+        logger.info("\n" + "="*80)
+        logger.info("🏛️ FEDERAL LEGAL RESOURCES COLLECTION SUMMARY")
+        logger.info("="*80)
+        
+        total_docs = len(self.knowledge_base)
+        target_docs = self.config.get('target_documents', 5000)
+        achievement_rate = (total_docs / target_docs * 100) if target_docs > 0 else 0
+        
+        logger.info(f"📊 COLLECTION STATISTICS:")
+        logger.info(f"  Total Documents Collected: {total_docs:,}")
+        logger.info(f"  Target Documents: {target_docs:,}")
+        logger.info(f"  Achievement Rate: {achievement_rate:.1f}%")
+        
+        # Count by source
+        source_counts = {}
+        domain_counts = {}
+        
+        for doc in self.knowledge_base:
+            source = doc.get('source', 'unknown')
+            domain = doc.get('legal_domain', 'unknown')
+            
+            source_counts[source] = source_counts.get(source, 0) + 1
+            domain_counts[domain] = domain_counts.get(domain, 0) + 1
+        
+        logger.info(f"\n📚 DOCUMENTS BY SOURCE:")
+        for source, count in sorted(source_counts.items(), key=lambda x: x[1], reverse=True):
+            logger.info(f"  {source}: {count:,} documents")
+        
+        logger.info(f"\n⚖️ DOCUMENTS BY LEGAL DOMAIN:")
+        for domain, count in sorted(domain_counts.items(), key=lambda x: x[1], reverse=True):
+            logger.info(f"  {domain}: {count:,} documents")
+        
+        # Quality metrics
+        avg_length = sum(len(doc.get('content', '')) for doc in self.knowledge_base) / len(self.knowledge_base) if self.knowledge_base else 0
+        
+        logger.info(f"\n📏 QUALITY METRICS:")
+        logger.info(f"  Average Document Length: {avg_length:.0f} characters")
+        logger.info(f"  Minimum Content Length: {self.config.get('min_content_length', 800)} characters")
+        
+        logger.info("="*80)
+    
     def _get_next_api_key(self) -> Optional[str]:
         """Get next available CourtListener API key with intelligent selection"""
         if not self.courtlistener_api_keys:
