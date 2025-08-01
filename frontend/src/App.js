@@ -945,6 +945,7 @@ function App() {
             onClick={() => {
               setUseEnhancedWizard(true);
               setShowAnalytics(false);
+              setShowPlainEnglishCreator(false);
             }}
             className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-4 text-lg font-semibold rounded-lg transition-all duration-300 transform hover:scale-105"
           >
@@ -956,8 +957,23 @@ function App() {
           </Button>
           <Button
             onClick={() => {
+              setShowPlainEnglishCreator(true);
               setUseEnhancedWizard(false);
               setShowAnalytics(false);
+            }}
+            className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white px-8 py-4 text-lg font-semibold rounded-lg transition-all duration-300 transform hover:scale-105"
+          >
+            <MessageSquare className="h-5 w-5 mr-2" />
+            Plain English Creator
+            <Badge variant="secondary" className="ml-2 bg-green-400 text-green-900 text-xs">
+              AI-POWERED
+            </Badge>
+          </Button>
+          <Button
+            onClick={() => {
+              setUseEnhancedWizard(false);
+              setShowAnalytics(false);
+              setShowPlainEnglishCreator(false);
               setCurrentStep(1);
             }}
             variant="outline"
@@ -970,6 +986,7 @@ function App() {
             onClick={() => {
               setShowAnalytics(true);
               setUseEnhancedWizard(false);
+              setShowPlainEnglishCreator(false);
             }}
             variant="outline"
             className="border-white/30 text-white hover:bg-white/10 px-8 py-4 text-lg font-semibold rounded-lg"
