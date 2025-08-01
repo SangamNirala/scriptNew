@@ -58,6 +58,33 @@ class CollectionProgress:
     total_documents: int = 0
     failed_queries: List[str] = field(default_factory=list)
     last_checkpoint: Dict[str, Any] = field(default_factory=dict)
+    # Enhanced progress tracking
+    start_time: float = field(default_factory=time.time)
+    documents_by_court: Dict[str, int] = field(default_factory=dict)
+    quality_metrics: Dict[str, Any] = field(default_factory=dict)
+    eta_seconds: float = 0.0
+    average_doc_time: float = 0.0
+
+@dataclass
+class CourtPriority:
+    """Court priority configuration for hierarchical collection"""
+    code: str
+    name: str
+    priority: int  # 1=highest, 2=medium, 3=lowest
+    target_documents: int
+    collected_documents: int = 0
+    
+@dataclass
+class QualityMetrics:
+    """Track quality metrics for collection"""  
+    total_processed: int = 0
+    passed_length_filter: int = 0
+    passed_status_filter: int = 0
+    passed_date_filter: int = 0
+    passed_content_filter: int = 0
+    duplicates_filtered: int = 0
+    average_word_count: float = 0.0
+    quality_score_average: float = 0.0
 
 class LegalKnowledgeBuilder:
     """Comprehensive legal knowledge base builder for RAG system"""
