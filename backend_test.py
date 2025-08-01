@@ -3288,6 +3288,576 @@ class LegalMateAPITester:
         return success, response
 
     # ===================================================================
+    # PLAIN ENGLISH TO LEGAL CLAUSES API TESTS - NEW FEATURE
+    # ===================================================================
+    
+    def test_plain_english_to_legal_conversion(self):
+        """Test converting plain English to legal clauses"""
+        # Test with sample plain text as specified in the review request
+        plain_english_request = {
+            "plain_text": "I want to hire a freelancer to build a website for $5000. The project should take 3 months and include responsive design.",
+            "contract_type": "freelance_agreement",
+            "jurisdiction": "US",
+            "industry": "Technology",
+            "output_format": "legal_clauses"
+        }
+        
+        success, response = self.run_test(
+            "Convert Plain English to Legal Clauses",
+            "POST",
+            "plain-english-to-legal",
+            200,
+            plain_english_request,
+            timeout=60  # AI processing might take longer
+        )
+        
+        if success and response:
+            self.plain_english_conversion_id = response.get('id')
+            print(f"   Conversion ID: {self.plain_english_conversion_id}")
+            print(f"   Original Text: {response.get('original_text', '')[:100]}...")
+            
+            # Verify response structure matches PlainEnglishResult model
+            required_fields = ['id', 'original_text', 'generated_clauses', 'jurisdiction', 'confidence_score', 'recommendations', 'legal_warnings', 'created_at']
+            missing_fields = [field for field in required_fields if field not in response]
+            if missing_fields:
+                print(f"   ❌ Missing required fields: {missing_fields}")
+            else:
+                print(f"   ✅ All required PlainEnglishResult fields present")
+            
+            # Check generated clauses
+            generated_clauses = response.get('generated_clauses', [])
+            print(f"   Generated {len(generated_clauses)} legal clauses")
+            
+            for i, clause in enumerate(generated_clauses[:3]):  # Show first 3 clauses
+                print(f"     Clause {i+1}:")
+                print(f"       Type: {clause.get('clause_type')}")
+                print(f"       Title: {clause.get('title')}")
+                print(f"       Content: {clause.get('content', '')[:100]}...")
+                print(f"       Confidence: {clause.get('confidence', 0)*100:.1f}%")
+                print(f"       Suggestions: {len(clause.get('suggestions', []))}")
+            
+            # Verify confidence score
+            confidence_score = response.get('confidence_score', 0)
+            print(f"   Overall Confidence Score: {confidence_score*100:.1f}%")
+            
+            if 0 <= confidence_score <= 1:
+                print(f"   ✅ Valid confidence score range (0-1)")
+            else:
+                print(f"   ❌ Invalid confidence score: {confidence_score}")
+            
+            # Check recommendations and warnings
+            recommendations = response.get('recommendations', [])
+            legal_warnings = response.get('legal_warnings', [])
+            print(f"   Recommendations: {len(recommendations)}")
+            print(f"   Legal Warnings: {len(legal_warnings)}")
+            
+            # Verify jurisdiction and industry
+            if response.get('jurisdiction') == 'US':
+                print(f"   ✅ Correct jurisdiction: {response.get('jurisdiction')}")
+            else:
+                print(f"   ❌ Incorrect jurisdiction: {response.get('jurisdiction')}")
+            
+            if response.get('industry') == 'Technology':
+                print(f"   ✅ Correct industry: {response.get('industry')}")
+            else:
+                print(f"   ⚠️  Industry: {response.get('industry')} (expected Technology)")
+                
+        return success, response
+    
+    def test_plain_english_different_contract_types(self):
+        """Test plain English conversion with different contract types"""
+        test_cases = [
+            {
+                "plain_text": "We need a confidentiality agreement for sharing sensitive business information with a potential partner.",
+                "contract_type": "NDA",
+                "jurisdiction": "US",
+                "industry": "Business",
+                "output_format": "legal_clauses"
+            },
+            {
+                "plain_text": "I want to hire an employee for a full-time position with a salary of $80,000 per year.",
+                "contract_type": "employment_agreement", 
+                "jurisdiction": "CA",
+                "industry": "Technology",
+                "output_format": "full_contract"
+            },
+            {
+                "plain_text": "Two companies want to form a partnership to develop a new product together.",
+                "contract_type": "partnership_agreement",
+                "jurisdiction": "UK",
+                "industry": "Manufacturing",
+                "output_format": "json"
+            }
+        ]
+        
+        all_success = True
+        results = {}
+        
+        for i, test_case in enumerate(test_cases):
+            success, response = self.run_test(
+                f"Plain English Conversion - {test_case['contract_type']}",
+                "POST",
+                "plain-english-to-legal",
+                200,
+                test_case,
+                timeout=60
+            )
+            
+            if success and response:
+                generated_clauses = response.get('generated_clauses', [])
+                confidence_score = response.get('confidence_score', 0)
+                
+                print(f"   {test_case['contract_type']}: {len(generated_clauses)} clauses, {confidence_score*100:.1f}% confidence")
+                
+                # Verify contract type and jurisdiction are preserved
+                if response.get('jurisdiction') == test_case['jurisdiction']:
+                    print(f"   ✅ Jurisdiction preserved: {test_case['jurisdiction']}")
+                else:
+                    print(f"   ❌ Jurisdiction mismatch: expected {test_case['jurisdiction']}, got {response.get('jurisdiction')}")
+                    all_success = False
+                
+                # Check for full contract if requested
+                if test_case['output_format'] == 'full_contract':
+                    full_contract = response.get('full_contract')
+                    if full_contract and len(full_contract) > 500:  # Should be substantial
+                        print(f"   ✅ Full contract generated: {len(full_contract)} characters")
+                    else:
+                        print(f"   ⚠️  Full contract seems limited: {len(full_contract) if full_contract else 0} characters")
+                
+                results[test_case['contract_type']] = {
+                    "clauses_count": len(generated_clauses),
+                    "confidence": confidence_score,
+                    "conversion_id": response.get('id')
+                }
+            else:
+                all_success = False
+                results[test_case['contract_type']] = {"error": "Conversion failed"}
+        
+        print(f"   Summary: {results}")
+        return all_success, results
+    
+    def test_plain_english_different_jurisdictions(self):
+        """Test plain English conversion with different jurisdictions"""
+        base_text = "I want to hire a consultant to provide marketing services for 6 months at $3000 per month."
+        
+        jurisdictions_to_test = ["US", "UK", "CA", "AU", "EU"]
+        all_success = True
+        results = {}
+        
+        for jurisdiction in jurisdictions_to_test:
+            request_data = {
+                "plain_text": base_text,
+                "contract_type": "consulting_agreement",
+                "jurisdiction": jurisdiction,
+                "industry": "Marketing",
+                "output_format": "legal_clauses"
+            }
+            
+            success, response = self.run_test(
+                f"Plain English Conversion - {jurisdiction} Jurisdiction",
+                "POST",
+                "plain-english-to-legal",
+                200,
+                request_data,
+                timeout=60
+            )
+            
+            if success and response:
+                generated_clauses = response.get('generated_clauses', [])
+                confidence_score = response.get('confidence_score', 0)
+                legal_warnings = response.get('legal_warnings', [])
+                
+                print(f"   {jurisdiction}: {len(generated_clauses)} clauses, {confidence_score*100:.1f}% confidence, {len(legal_warnings)} warnings")
+                
+                # Verify jurisdiction-specific considerations
+                if response.get('jurisdiction') == jurisdiction:
+                    print(f"   ✅ Jurisdiction correctly set: {jurisdiction}")
+                else:
+                    print(f"   ❌ Jurisdiction mismatch: expected {jurisdiction}, got {response.get('jurisdiction')}")
+                    all_success = False
+                
+                results[jurisdiction] = {
+                    "clauses_count": len(generated_clauses),
+                    "confidence": confidence_score,
+                    "warnings_count": len(legal_warnings)
+                }
+            else:
+                all_success = False
+                results[jurisdiction] = {"error": "Conversion failed"}
+        
+        print(f"   Jurisdiction Results: {results}")
+        return all_success, results
+    
+    def test_get_plain_english_conversions_list(self):
+        """Test retrieving list of stored plain English conversions"""
+        success, response = self.run_test(
+            "Get Plain English Conversions List",
+            "GET",
+            "plain-english-conversions",
+            200
+        )
+        
+        if success and response:
+            conversions = response.get('conversions', [])
+            count = response.get('count', 0)
+            
+            print(f"   Found {count} stored conversions")
+            print(f"   Conversions list length: {len(conversions)}")
+            
+            if count == len(conversions):
+                print(f"   ✅ Count matches conversions list length")
+            else:
+                print(f"   ⚠️  Count mismatch: reported {count}, actual {len(conversions)}")
+            
+            # Check structure of conversions
+            if conversions:
+                first_conversion = conversions[0]
+                expected_fields = ['id', 'original_text', 'generated_clauses', 'jurisdiction', 'confidence_score', 'created_at']
+                missing_fields = [field for field in expected_fields if field not in first_conversion]
+                
+                if missing_fields:
+                    print(f"   ❌ Missing fields in conversion: {missing_fields}")
+                else:
+                    print(f"   ✅ Conversion structure valid")
+                
+                # Show sample conversions
+                for i, conversion in enumerate(conversions[:3]):  # Show first 3
+                    print(f"     Conversion {i+1}:")
+                    print(f"       ID: {conversion.get('id')}")
+                    print(f"       Text: {conversion.get('original_text', '')[:50]}...")
+                    print(f"       Clauses: {len(conversion.get('generated_clauses', []))}")
+                    print(f"       Jurisdiction: {conversion.get('jurisdiction')}")
+            else:
+                print(f"   ⚠️  No conversions found in database")
+                
+        return success, response
+    
+    def test_get_specific_plain_english_conversion(self):
+        """Test retrieving specific plain English conversion by ID"""
+        if not hasattr(self, 'plain_english_conversion_id') or not self.plain_english_conversion_id:
+            print("❌ No conversion ID available for specific retrieval test")
+            return False, {}
+        
+        success, response = self.run_test(
+            "Get Specific Plain English Conversion",
+            "GET",
+            f"plain-english-conversions/{self.plain_english_conversion_id}",
+            200
+        )
+        
+        if success and response:
+            print(f"   Retrieved Conversion ID: {response.get('id')}")
+            print(f"   Original Text: {response.get('original_text', '')[:100]}...")
+            print(f"   Generated Clauses: {len(response.get('generated_clauses', []))}")
+            print(f"   Jurisdiction: {response.get('jurisdiction')}")
+            print(f"   Confidence Score: {response.get('confidence_score', 0)*100:.1f}%")
+            
+            # Verify data consistency with original conversion
+            if response.get('id') == self.plain_english_conversion_id:
+                print(f"   ✅ Conversion ID matches requested ID")
+            else:
+                print(f"   ❌ Conversion ID mismatch")
+            
+            # Check for ObjectId serialization issues
+            if '_id' not in response:
+                print(f"   ✅ No MongoDB ObjectId serialization issues")
+            else:
+                print(f"   ❌ Found raw MongoDB ObjectId in response")
+                
+        return success, response
+    
+    def test_get_nonexistent_plain_english_conversion(self):
+        """Test retrieving non-existent plain English conversion"""
+        import uuid
+        nonexistent_id = str(uuid.uuid4())
+        
+        success, response = self.run_test(
+            "Get Non-existent Plain English Conversion",
+            "GET",
+            f"plain-english-conversions/{nonexistent_id}",
+            404
+        )
+        
+        if success:
+            print(f"   ✅ Correctly returned 404 for non-existent conversion ID")
+        
+        return success, response
+    
+    def test_export_legal_clauses_pdf(self):
+        """Test exporting legal clauses in PDF format"""
+        if not hasattr(self, 'plain_english_conversion_id') or not self.plain_english_conversion_id:
+            print("❌ No conversion ID available for PDF export test")
+            return False, {}
+        
+        export_data = {"format": "pdf"}
+        
+        success, response = self.run_test(
+            "Export Legal Clauses as PDF",
+            "POST",
+            f"plain-english-conversions/{self.plain_english_conversion_id}/export?format=pdf",
+            200,
+            None,  # No JSON body needed for PDF export
+            timeout=30
+        )
+        
+        if success:
+            # For PDF export, response should be binary data
+            if hasattr(response, 'content'):
+                content_length = len(response.content) if hasattr(response, 'content') else len(str(response))
+                print(f"   PDF Export Size: {content_length} bytes")
+                
+                # Check if it's a valid PDF (starts with %PDF)
+                if hasattr(response, 'content') and response.content.startswith(b'%PDF'):
+                    print(f"   ✅ Valid PDF format")
+                elif isinstance(response, str) and response.startswith('%PDF'):
+                    print(f"   ✅ Valid PDF format")
+                else:
+                    print(f"   ⚠️  PDF format validation inconclusive")
+                
+                if content_length > 1000:  # Should be reasonably sized
+                    print(f"   ✅ PDF has reasonable size for legal clauses")
+                else:
+                    print(f"   ⚠️  PDF seems small for legal clauses content")
+            else:
+                print(f"   ⚠️  PDF export response format unclear")
+                
+        return success, response
+    
+    def test_export_legal_clauses_json(self):
+        """Test exporting legal clauses in JSON format"""
+        if not hasattr(self, 'plain_english_conversion_id') or not self.plain_english_conversion_id:
+            print("❌ No conversion ID available for JSON export test")
+            return False, {}
+        
+        success, response = self.run_test(
+            "Export Legal Clauses as JSON",
+            "POST",
+            f"plain-english-conversions/{self.plain_english_conversion_id}/export?format=json",
+            200,
+            None,  # No JSON body needed
+            timeout=30
+        )
+        
+        if success and response:
+            print(f"   Export Format: {response.get('format')}")
+            print(f"   Export Date: {response.get('export_date')}")
+            
+            # Verify JSON export structure
+            if response.get('format') == 'json':
+                print(f"   ✅ Correct export format: JSON")
+            else:
+                print(f"   ❌ Incorrect export format: {response.get('format')}")
+            
+            # Check exported data
+            exported_data = response.get('data', {})
+            if exported_data:
+                print(f"   Exported Data Keys: {list(exported_data.keys())}")
+                
+                # Verify essential fields are present
+                essential_fields = ['id', 'original_text', 'generated_clauses', 'jurisdiction']
+                missing_fields = [field for field in essential_fields if field not in exported_data]
+                
+                if missing_fields:
+                    print(f"   ❌ Missing essential fields in export: {missing_fields}")
+                else:
+                    print(f"   ✅ All essential fields present in JSON export")
+                
+                # Check clauses in exported data
+                exported_clauses = exported_data.get('generated_clauses', [])
+                print(f"   Exported Clauses: {len(exported_clauses)}")
+            else:
+                print(f"   ❌ No data in JSON export")
+                
+        return success, response
+    
+    def test_export_legal_clauses_docx(self):
+        """Test exporting legal clauses in DOCX format (returns structured data)"""
+        if not hasattr(self, 'plain_english_conversion_id') or not self.plain_english_conversion_id:
+            print("❌ No conversion ID available for DOCX export test")
+            return False, {}
+        
+        success, response = self.run_test(
+            "Export Legal Clauses as DOCX",
+            "POST",
+            f"plain-english-conversions/{self.plain_english_conversion_id}/export?format=docx",
+            200,
+            None,  # No JSON body needed
+            timeout=30
+        )
+        
+        if success and response:
+            print(f"   Export Format: {response.get('format')}")
+            
+            # Verify DOCX export structure
+            if response.get('format') == 'docx':
+                print(f"   ✅ Correct export format: DOCX")
+            else:
+                print(f"   ❌ Incorrect export format: {response.get('format')}")
+            
+            # Check structured data for DOCX
+            docx_data = response.get('data', {})
+            if docx_data:
+                print(f"   DOCX Title: {docx_data.get('title')}")
+                
+                # Check sections
+                sections = docx_data.get('sections', [])
+                print(f"   DOCX Sections: {len(sections)}")
+                
+                for i, section in enumerate(sections):
+                    print(f"     Section {i+1}: {section.get('heading')}")
+                    
+                    # Check clauses section specifically
+                    if section.get('heading') == 'Generated Legal Clauses':
+                        clauses = section.get('clauses', [])
+                        print(f"       Clauses in DOCX: {len(clauses)}")
+                        
+                        if clauses:
+                            first_clause = clauses[0]
+                            required_clause_fields = ['number', 'title', 'content', 'explanation', 'confidence']
+                            missing_clause_fields = [field for field in required_clause_fields if field not in first_clause]
+                            
+                            if missing_clause_fields:
+                                print(f"       ❌ Missing clause fields: {missing_clause_fields}")
+                            else:
+                                print(f"       ✅ DOCX clause structure valid")
+                
+                # Check disclaimer
+                disclaimer = docx_data.get('disclaimer')
+                if disclaimer and len(disclaimer) > 50:
+                    print(f"   ✅ Legal disclaimer included in DOCX export")
+                else:
+                    print(f"   ⚠️  Legal disclaimer missing or too short")
+                
+                # Check instructions
+                instructions = response.get('instructions')
+                if instructions:
+                    print(f"   ✅ DOCX generation instructions provided")
+                else:
+                    print(f"   ⚠️  No DOCX generation instructions")
+            else:
+                print(f"   ❌ No structured data in DOCX export")
+                
+        return success, response
+    
+    def test_export_legal_clauses_invalid_format(self):
+        """Test exporting legal clauses with invalid format"""
+        if not hasattr(self, 'plain_english_conversion_id') or not self.plain_english_conversion_id:
+            print("❌ No conversion ID available for invalid format test")
+            return False, {}
+        
+        success, response = self.run_test(
+            "Export Legal Clauses with Invalid Format",
+            "POST",
+            f"plain-english-conversions/{self.plain_english_conversion_id}/export?format=invalid",
+            400,  # Should return bad request
+            None
+        )
+        
+        if success:
+            print(f"   ✅ Correctly returned 400 for invalid export format")
+        
+        return success, response
+    
+    def test_export_nonexistent_conversion(self):
+        """Test exporting non-existent conversion"""
+        import uuid
+        nonexistent_id = str(uuid.uuid4())
+        
+        success, response = self.run_test(
+            "Export Non-existent Conversion",
+            "POST",
+            f"plain-english-conversions/{nonexistent_id}/export?format=pdf",
+            404,
+            None
+        )
+        
+        if success:
+            print(f"   ✅ Correctly returned 404 for non-existent conversion")
+        
+        return success, response
+    
+    def test_plain_english_ai_processing_verification(self):
+        """Test that AI processing is working correctly with Gemini API"""
+        # Test with complex plain English that requires sophisticated processing
+        complex_request = {
+            "plain_text": "We want to create a partnership where Company A provides the technology platform and Company B provides marketing expertise. Profits will be split 60-40 based on contribution levels. The partnership should last for 2 years with an option to extend. Both parties need to maintain confidentiality about each other's business processes and customer data.",
+            "contract_type": "partnership_agreement",
+            "jurisdiction": "US",
+            "industry": "Technology",
+            "output_format": "legal_clauses"
+        }
+        
+        success, response = self.run_test(
+            "Complex Plain English AI Processing Test",
+            "POST",
+            "plain-english-to-legal",
+            200,
+            complex_request,
+            timeout=90  # Complex processing might take longer
+        )
+        
+        if success and response:
+            generated_clauses = response.get('generated_clauses', [])
+            confidence_score = response.get('confidence_score', 0)
+            recommendations = response.get('recommendations', [])
+            legal_warnings = response.get('legal_warnings', [])
+            
+            print(f"   Complex Processing Results:")
+            print(f"   Generated Clauses: {len(generated_clauses)}")
+            print(f"   Confidence Score: {confidence_score*100:.1f}%")
+            print(f"   Recommendations: {len(recommendations)}")
+            print(f"   Legal Warnings: {len(legal_warnings)}")
+            
+            # Verify AI identified key concepts
+            key_concepts_found = []
+            all_clause_content = ' '.join([clause.get('content', '') for clause in generated_clauses])
+            
+            expected_concepts = [
+                ('profit sharing', ['profit', 'split', '60', '40', 'contribution']),
+                ('confidentiality', ['confidential', 'business process', 'customer data']),
+                ('partnership duration', ['2 years', 'extend', 'term']),
+                ('technology platform', ['technology', 'platform']),
+                ('marketing expertise', ['marketing', 'expertise'])
+            ]
+            
+            for concept_name, keywords in expected_concepts:
+                if any(keyword.lower() in all_clause_content.lower() for keyword in keywords):
+                    key_concepts_found.append(concept_name)
+                    print(f"   ✅ AI identified: {concept_name}")
+                else:
+                    print(f"   ⚠️  AI may have missed: {concept_name}")
+            
+            if len(key_concepts_found) >= 3:  # Should identify at least 3 key concepts
+                print(f"   ✅ AI processing working correctly - identified {len(key_concepts_found)}/5 key concepts")
+            else:
+                print(f"   ❌ AI processing may have issues - only identified {len(key_concepts_found)}/5 key concepts")
+            
+            # Check clause quality
+            if generated_clauses:
+                avg_clause_length = sum(len(clause.get('content', '')) for clause in generated_clauses) / len(generated_clauses)
+                print(f"   Average Clause Length: {avg_clause_length:.0f} characters")
+                
+                if avg_clause_length > 100:  # Clauses should be substantial
+                    print(f"   ✅ Generated clauses have substantial content")
+                else:
+                    print(f"   ⚠️  Generated clauses seem brief")
+            
+            # Verify confidence and recommendations
+            if confidence_score > 0.6:  # Should have reasonable confidence for complex text
+                print(f"   ✅ AI has reasonable confidence in complex processing")
+            else:
+                print(f"   ⚠️  AI confidence seems low for complex processing")
+            
+            if recommendations:
+                print(f"   ✅ AI generated helpful recommendations")
+                for rec in recommendations[:2]:  # Show first 2 recommendations
+                    print(f"     - {rec}")
+            else:
+                print(f"   ⚠️  No AI recommendations generated")
+                
+        return success, response
+
+    # ===================================================================
     # BUSINESS INTELLIGENCE & ANALYTICS TESTS
     # ===================================================================
     
