@@ -2441,11 +2441,20 @@ async def build_legal_knowledge_base(collection_mode: CollectionMode = Collectio
     try:
         logger.info(f"🚀 Starting legal knowledge base building in {collection_mode.value.upper()} mode")
         
-        # Build the knowledge base
-        knowledge_base = await builder.build_comprehensive_knowledge_base()
+        # Build the knowledge base based on collection mode
+        if collection_mode == CollectionMode.FEDERAL_RESOURCES:
+            knowledge_base = await builder.build_federal_resources_knowledge_base()
+        else:
+            knowledge_base = await builder.build_comprehensive_knowledge_base()
         
         # Save to file with mode-specific filename
-        filename_suffix = "_bulk" if collection_mode == CollectionMode.BULK else "_standard"
+        if collection_mode == CollectionMode.BULK:
+            filename_suffix = "_bulk"
+        elif collection_mode == CollectionMode.FEDERAL_RESOURCES:
+            filename_suffix = "_federal"
+        else:
+            filename_suffix = "_standard"
+        
         filepath = f"/app/legal_knowledge_base{filename_suffix}.json"
         builder.save_knowledge_base(filepath)
         
@@ -2459,6 +2468,9 @@ async def build_legal_knowledge_base(collection_mode: CollectionMode = Collectio
         if collection_mode == CollectionMode.BULK:
             target_achievement = (stats['total_documents'] / 15000) * 100
             print(f"Target Achievement: {target_achievement:.1f}% of 15,000 documents")
+        elif collection_mode == CollectionMode.FEDERAL_RESOURCES:
+            target_achievement = (stats['total_documents'] / 5000) * 100
+            print(f"Target Achievement: {target_achievement:.1f}% of 5,000 federal documents")
         
         print(f"\n🎯 Collection Progress:")
         print(f"  Total Queries: {builder.progress.total_queries}")
