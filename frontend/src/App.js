@@ -993,6 +993,7 @@ function App() {
               setUseEnhancedWizard(false);
               setShowAnalytics(false);
               setShowPlainEnglishCreator(false);
+              setShowLegalQA(false);
               setCurrentStep(1);
             }}
             variant="outline"
