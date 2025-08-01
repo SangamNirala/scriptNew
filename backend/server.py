@@ -59,6 +59,12 @@ script_preview_generator = ScriptPreviewGenerator()
 # Phase 4: Initialize Measurement & Optimization Systems
 prompt_optimization_engine = PromptOptimizationEngine(db, GEMINI_API_KEY)
 
+# Phase 5: Initialize Intelligent Quality Assurance & Auto-Optimization Systems
+multi_model_validator = MultiModelValidator()
+advanced_quality_metrics = AdvancedQualityMetrics()
+quality_improvement_loop = QualityImprovementLoop(db, GEMINI_API_KEY)
+intelligent_qa_system = IntelligentQASystem(db, GEMINI_API_KEY)
+
 # Create the main app without a prefix
 app = FastAPI()
 
