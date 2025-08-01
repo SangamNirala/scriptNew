@@ -163,13 +163,15 @@ const PlainEnglishContractCreator = ({ onBack, contractTypes, jurisdictions }) =
     setIsExporting(true);
     try {
       const response = await axios.post(`${API}/contracts/download-pdf-edited`, {
-        contract_id: result.id,
-        edited_content: editedContract,
-        contract_type: selectedContractType === 'auto_detect' ? 'plain_english_contract' : selectedContractType,
-        jurisdiction: selectedJurisdiction,
-        parties: {
-          party1: { name: 'Party 1', type: 'individual' },
-          party2: { name: 'Party 2', type: 'individual' }
+        contract: {
+          id: result.id,
+          contract_type: selectedContractType === 'auto_detect' ? 'Plain English Contract' : selectedContractType,
+          jurisdiction: selectedJurisdiction,
+          content: editedContract,
+          compliance_score: result.confidence_score ? (result.confidence_score * 100) : 85,
+          created_at: result.created_at || new Date().toISOString(),
+          first_party_signature: null,
+          second_party_signature: null
         }
       }, {
         responseType: 'blob'
