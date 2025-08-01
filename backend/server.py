@@ -51,6 +51,9 @@ GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
 # Initialize Context Integration System for Phase 2
 context_system = ContextIntegrationSystem()
 
+# Initialize Advanced Script Generator
+advanced_script_generator = ChainOfThoughtScriptGenerator(GEMINI_API_KEY)
+
 # Phase 3: Initialize Advanced Analytics and Validation Systems
 advanced_context_engine = AdvancedContextEngine()
 script_quality_analyzer = ScriptQualityAnalyzer()
