@@ -741,7 +741,7 @@ The smartest people I know don't have all the answers. They just ask questions t
             if hook:
                 # Classify hook type
                 hook_type = self._classify_hook_type(hook)
-                hook_patterns[hook_type].append(example["id"])
+                hook_patterns[hook_type].append(str(example.get("_id", example.get("id", ""))))
         
         # Create hook pattern templates
         for hook_type, example_ids in hook_patterns.items():
