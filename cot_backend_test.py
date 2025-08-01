@@ -10,8 +10,8 @@ import time
 from datetime import datetime
 import sys
 
-# Get backend URL from frontend .env
-BACKEND_URL = "https://0b74c0a2-a3ae-4e97-b66a-b54e0c7876d1.preview.emergentagent.com/api"
+# Use local backend URL for testing
+BACKEND_URL = "http://localhost:8001/api"
 
 class CoTScriptTester:
     def __init__(self):
