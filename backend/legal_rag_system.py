@@ -62,9 +62,17 @@ class LegalRAGSystem:
         self.supabase_url = os.environ.get('SUPABASE_URL')
         self.supabase_key = os.environ.get('SUPABASE_ANON_KEY')
         
-        # Initialize AI clients
-        genai.configure(api_key=self.gemini_api_key)
-        self.groq_client = Groq(api_key=self.groq_api_key)
+        # Initialize AI clients (only if keys are available)
+        if self.gemini_api_key:
+            genai.configure(api_key=self.gemini_api_key)
+        else:
+            logger.warning("Gemini API key not available")
+            
+        if self.groq_api_key:
+            self.groq_client = Groq(api_key=self.groq_api_key)
+        else:
+            logger.warning("Groq API key not available")
+            self.groq_client = None
         
         # Vector database setup
         self.vector_db = None
