@@ -6956,6 +6956,129 @@ if RAG_SYSTEM_AVAILABLE:
                 status_code=500,
                 detail=f"Error rebuilding bulk knowledge base: {str(e)}"
             )
+    
+    @api_router.post("/legal-qa/rebuild-federal-resources-knowledge-base")
+    async def rebuild_federal_resources_knowledge_base():
+        """
+        Comprehensive federal legal resources collection process for 5,000+ government documents
+        
+        Target Sources:
+        - Cornell Law - Legal Information Institute (2,000 docs)
+        - Priority Federal Agencies: SEC, DOL, USPTO, IRS (2,000 docs)  
+        - Federal Register & Government Sources (1,000 docs)
+        
+        Enhanced with:
+        - Government-specific quality control (800+ words, .gov domains only)
+        - Priority agency focus (SEC, DOL, USPTO, IRS)
+        - Legal domain specialization (securities, employment, patent, administrative law)
+        - Enhanced metadata extraction for government sources
+        - Authority level classification and effective date tracking
+        """
+        try:
+            logger.info("🏛️ Starting FEDERAL LEGAL RESOURCES COLLECTION PROCESS (5,000+ documents)...")
+            
+            # Import and run knowledge base builder in federal resources mode
+            from legal_knowledge_builder import LegalKnowledgeBuilder, CollectionMode
+            
+            # Initialize builder with FEDERAL_RESOURCES mode
+            builder = LegalKnowledgeBuilder(CollectionMode.FEDERAL_RESOURCES)
+            
+            # Run the comprehensive federal resources collection
+            knowledge_base = await builder.build_federal_resources_knowledge_base()
+            
+            # Save federal resources knowledge base
+            builder.knowledge_base = knowledge_base
+            builder.save_knowledge_base("/app/legal_knowledge_base_federal.json")
+            
+            # Reinitialize RAG system with enhanced knowledge base (combine with existing)
+            rag_system = await get_rag_system()
+            await rag_system.ingest_knowledge_base("/app/legal_knowledge_base_federal.json")
+            
+            # Generate comprehensive statistics
+            stats = builder.get_knowledge_base_stats()
+            
+            # Count documents by source category
+            source_breakdown = {}
+            agency_breakdown = {}
+            domain_breakdown = {}
+            
+            for doc in knowledge_base:
+                source = doc.get('source', 'unknown')
+                agency = doc.get('agency', 'unknown') 
+                domain = doc.get('legal_domain', 'unknown')
+                
+                # Source category
+                if 'cornell' in source.lower():
+                    source_breakdown['Cornell LII'] = source_breakdown.get('Cornell LII', 0) + 1
+                elif 'federal_agency' in source.lower():
+                    source_breakdown['Federal Agencies'] = source_breakdown.get('Federal Agencies', 0) + 1
+                elif 'government' in source.lower():
+                    source_breakdown['Government Sources'] = source_breakdown.get('Government Sources', 0) + 1
+                else:
+                    source_breakdown['Other'] = source_breakdown.get('Other', 0) + 1
+                
+                # Agency breakdown
+                if agency != 'unknown':
+                    agency_breakdown[agency] = agency_breakdown.get(agency, 0) + 1
+                
+                # Domain breakdown  
+                if domain != 'unknown':
+                    domain_breakdown[domain] = domain_breakdown.get(domain, 0) + 1
+            
+            return {
+                "status": "completed",
+                "collection_mode": "FEDERAL_RESOURCES",
+                "documents_collected": len(knowledge_base),
+                "target_documents": 5000,
+                "target_achievement": f"{(len(knowledge_base)/5000)*100:.1f}%",
+                "collection_time_hours": f"{(time.time() - builder.progress.start_time) / 3600:.1f}",
+                "source_breakdown": source_breakdown,
+                "priority_agency_breakdown": {
+                    agency: count for agency, count in agency_breakdown.items() 
+                    if agency.upper() in ['SEC', 'DOL', 'USPTO', 'IRS']
+                },
+                "legal_domain_breakdown": domain_breakdown,
+                "quality_metrics": {
+                    "total_processed": builder.quality_metrics.total_processed,
+                    "quality_pass_rate": f"{(len(knowledge_base)/max(builder.quality_metrics.total_processed, 1))*100:.1f}%",
+                    "average_word_count": f"{builder.quality_metrics.average_word_count:.0f}",
+                    "duplicates_filtered": builder.quality_metrics.duplicates_filtered,
+                    "government_domains_only": True,
+                    "min_content_length": 800
+                },
+                "features_enabled": [
+                    "Government-Specific Quality Control (800+ words)",
+                    ".gov Domain Verification Only",
+                    "Priority Agency Focus (SEC, DOL, USPTO, IRS)",
+                    "Legal Domain Specialization",
+                    "Enhanced Government Metadata Extraction",
+                    "Authority Level Classification", 
+                    "Effective Date Tracking",
+                    "Recent Regulations Focus (2020-2025)",
+                    "Comprehensive Deduplication",
+                    "Real-time Progress Tracking"
+                ],
+                "target_breakdown": {
+                    "cornell_lii_target": 2000,
+                    "federal_agencies_target": 2000,
+                    "government_sources_target": 1000
+                },
+                "focus_areas": [
+                    "Securities Law (SEC)",
+                    "Employment & Labor Regulations (DOL)",
+                    "Patent Law & IP Policy (USPTO)",
+                    "Tax-Related Legal Guidance (IRS)",
+                    "Federal Rulemaking & Administrative Law"
+                ],
+                "timestamp": datetime.utcnow().isoformat()
+            }
+            
+        except Exception as e:
+            logger.error(f"Error rebuilding federal resources knowledge base: {e}", exc_info=True)  
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error rebuilding federal resources knowledge base: {str(e)}"
+            )
 
 else:
     # Fallback endpoints when RAG system is not available
