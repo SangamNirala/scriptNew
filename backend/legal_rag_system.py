@@ -224,7 +224,12 @@ class LegalRAGSystem:
                 doc_metadata.append(doc)
             
             # Generate embeddings
-            embeddings = self.embeddings_model.encode(texts, convert_to_numpy=True)
+            if self.embeddings_model is not None:
+                embeddings = self.embeddings_model.encode(texts, convert_to_numpy=True)
+            else:
+                # Fallback: create random embeddings (for demo purposes)
+                logger.warning("Using fallback random embeddings")
+                embeddings = np.random.rand(len(texts), self.embedding_dimension).astype(np.float32)
             
             # Store in vector database
             if self.vector_db == "supabase":
