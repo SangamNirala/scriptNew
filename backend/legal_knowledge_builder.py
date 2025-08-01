@@ -37,7 +37,17 @@ class LegalKnowledgeBuilder:
     """Comprehensive legal knowledge base builder for RAG system"""
     
     def __init__(self):
-        self.courtlistener_api_key = os.environ.get('COURTLISTENER_API_KEY')
+        # Multiple CourtListener API keys for rotation
+        self.courtlistener_api_keys = [
+            os.environ.get('COURTLISTENER_API_KEY'),  # Original key from env
+            'e7a714db2df7fb77b6065a9d69158dcb85fa1acd',  # Key 1
+            '7ec22683a2adf0f192e3219df2a9bdbe6c5aaa4a',  # Key 2
+            'cd364ff091a9aaef6a1989e054e2f8e215923f46',  # Key 3
+            '9c48f847b58da0ee5a42d52d7cbcf022d07c5d96'   # Key 4
+        ]
+        # Filter out None values and ensure we have valid keys
+        self.courtlistener_api_keys = [key for key in self.courtlistener_api_keys if key]
+        self.current_api_key_index = 0
         self.serp_api_key = os.environ.get('SERP_API_KEY')
         
         # Legal domain categories
