@@ -33,6 +33,8 @@ from lib.multi_model_validator import MultiModelValidator
 from lib.advanced_quality_metrics import AdvancedQualityMetrics
 from lib.quality_improvement_loop import QualityImprovementLoop
 from lib.intelligent_qa_system import IntelligentQASystem
+# Advanced Script Generation Components
+from lib.advanced_script_generator import ChainOfThoughtScriptGenerator
 
 
 ROOT_DIR = Path(__file__).parent
