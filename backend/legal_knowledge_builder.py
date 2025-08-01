@@ -3157,6 +3157,10 @@ async def build_federal_resources_knowledge_base():
     """Build knowledge base in federal resources mode (5,000+ government documents target)"""
     return await build_legal_knowledge_base(CollectionMode.FEDERAL_RESOURCES)
 
+async def build_academic_knowledge_base():
+    """Build knowledge base in academic mode (3,500+ academic documents target)"""
+    return await build_legal_knowledge_base(CollectionMode.ACADEMIC)
+
 
 if __name__ == "__main__":
     import sys
