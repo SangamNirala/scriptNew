@@ -40,6 +40,7 @@ class CollectionMode(Enum):
     """Collection modes for backward compatibility"""
     STANDARD = "standard"  # Original 35 document collection
     BULK = "bulk"         # New 15,000+ document collection
+    FEDERAL_RESOURCES = "federal_resources"  # 5,000+ federal government resources
 
 @dataclass
 class RateLimitState:
