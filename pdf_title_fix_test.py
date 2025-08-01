@@ -139,19 +139,21 @@ class PDFTitleFixTester:
         """Test the /api/contracts/download-pdf-edited endpoint"""
         print(f"\n🔍 Testing Edited PDF Download Endpoint...")
         
-        # Create sample edited contract data
+        # Create sample edited contract data (wrapped in "contract" field as expected by endpoint)
         edited_contract_data = {
-            "contract_type": "freelance_agreement",
-            "content": "FREELANCE WEB DEVELOPMENT AGREEMENT\n\nThis agreement is for web development services...",
-            "jurisdiction": "US",
-            "parties": {
-                "party1_name": "Client Company",
-                "party2_name": "Freelance Developer"
-            },
-            "terms": {
-                "payment_amount": "$10,000",
-                "project_duration": "3 months",
-                "scope": "E-commerce website development"
+            "contract": {
+                "contract_type": "freelance_agreement",
+                "content": "FREELANCE WEB DEVELOPMENT AGREEMENT\n\nThis agreement is for web development services...",
+                "jurisdiction": "US",
+                "parties": {
+                    "party1_name": "Client Company",
+                    "party2_name": "Freelance Developer"
+                },
+                "terms": {
+                    "payment_amount": "$10,000",
+                    "project_duration": "3 months",
+                    "scope": "E-commerce website development"
+                }
             }
         }
         
