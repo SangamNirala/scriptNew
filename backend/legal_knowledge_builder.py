@@ -354,6 +354,166 @@ class LegalKnowledgeBuilder:
             rate_state.consecutive_failures = 0
             return False
     
+    async def _fetch_paginated_results(self, client: httpx.AsyncClient, base_url: str, 
+                                     params: Dict[str, Any], headers: Dict[str, str],
+                                     query: str, legal_domain: str, court_info: tuple) -> List[Dict[str, Any]]:
+        """Fetch paginated results from CourtListener API"""
+        all_results = []
+        page_count = 0
+        next_url = base_url
+        
+        court_code, court_name = court_info
+        max_pages = self.config["max_pages_per_query"]
+        target_results = self.config["results_per_query"]
+        
+        while next_url and page_count < max_pages and len(all_results) < target_results:
+            try:
+                page_count += 1
+                
+                # Get API key for this request
+                api_key = self._get_next_api_key()
+                if not api_key:
+                    logger.warning("No API keys available, stopping pagination")
+                    break
+                    
+                # Find key index for rate limiting
+                key_index = next((i for i, k in enumerate(self.courtlistener_api_keys) if k == api_key), 0)
+                
+                # Wait for rate limiting
+                await self._wait_for_rate_limit(key_index)
+                
+                # Update headers with current API key
+                current_headers = {**headers, "Authorization": f"Token {api_key}"}
+                
+                # Make request
+                if page_count == 1:
+                    # First page uses base URL with params
+                    response = await client.get(next_url, headers=current_headers, params=params)
+                else:
+                    # Subsequent pages use the next URL directly
+                    response = await client.get(next_url, headers=current_headers)
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    results = data.get('results', [])
+                    
+                    if not results:
+                        logger.info(f"No more results for query '{query}' in {court_name} (page {page_count})")
+                        break
+                    
+                    # Process and filter results
+                    page_results = []
+                    for result in results:
+                        if len(all_results) >= target_results:
+                            break
+                            
+                        processed_result = await self._process_court_result(
+                            result, query, legal_domain, court_code, court_name
+                        )
+                        
+                        if processed_result and self._meets_quality_filters(processed_result):
+                            page_results.append(processed_result)
+                    
+                    all_results.extend(page_results)
+                    
+                    # Get next page URL
+                    next_url = data.get('next')
+                    
+                    logger.info(f"📄 Page {page_count}: Found {len(page_results)} quality results from {len(results)} total (Query: {query[:50]}...)")
+                    
+                    # Reset consecutive failures on success
+                    self.rate_limits[key_index].consecutive_failures = 0
+                    
+                elif response.status_code in [429, 500, 502, 503, 504]:
+                    # Handle retryable errors
+                    should_retry = await self._handle_api_error(key_index, response.status_code, response.text)
+                    if should_retry:
+                        logger.info(f"Retrying page {page_count} for query '{query}' in {court_name}")
+                        page_count -= 1  # Don't count this as a completed page
+                        continue
+                    else:
+                        logger.error(f"Max retries exceeded for query '{query}' in {court_name}")
+                        break
+                else:
+                    logger.warning(f"API request failed with status {response.status_code} for page {page_count}")
+                    await self._handle_api_error(key_index, response.status_code, response.text)
+                    break
+                    
+            except Exception as e:
+                logger.error(f"Error fetching page {page_count} for query '{query}' in {court_name}: {e}")
+                break
+        
+        logger.info(f"🎯 Pagination complete for '{query}' in {court_name}: {len(all_results)} results from {page_count} pages")
+        return all_results
+    
+    async def _process_court_result(self, result: Dict[str, Any], query: str, 
+                                  legal_domain: str, court_code: str, court_name: str) -> Optional[Dict[str, Any]]:
+        """Process a single court result with error handling"""
+        try:
+            legal_doc = {
+                "id": f"court_{result.get('id')}_{court_code}",
+                "title": result.get('caseName', 'Unknown Case'),
+                "content": result.get('text', '') or result.get('snippet', ''),
+                "source": "CourtListener",
+                "source_url": result.get('absolute_url', ''),
+                "jurisdiction": "us_federal",
+                "legal_domain": legal_domain,
+                "document_type": "court_decision",
+                "court": f"{court_name} ({court_code})",
+                "date_filed": result.get('dateFiled', ''),
+                "precedential_status": result.get('status', ''),
+                "word_count": len(result.get('text', '').split()) if result.get('text') else 0,
+                "metadata": {
+                    "citation": result.get('citation', ''),
+                    "judges": result.get('judges', []),
+                    "docket_number": result.get('docketNumber', ''),
+                    "search_query": query,
+                    "target_domain": legal_domain,
+                    "author": result.get('author', ''),
+                    "cluster_id": result.get('cluster', ''),
+                    "opinion_type": result.get('type', '')
+                },
+                "created_at": datetime.utcnow().isoformat(),
+                "content_hash": self._generate_content_hash(result.get('text', '') or result.get('snippet', ''))
+            }
+            
+            return legal_doc
+            
+        except Exception as e:
+            logger.error(f"Error processing court result: {e}")
+            return None
+    
+    def _meets_quality_filters(self, document: Dict[str, Any]) -> bool:
+        """Check if document meets quality filters"""
+        if not self.config["enable_quality_filters"]:
+            return len(document["content"].strip()) > 50  # Original minimum
+        
+        # Minimum content length filter
+        if document["word_count"] < self.config["min_content_length"]:
+            return False
+        
+        # Precedential status filter - only published opinions
+        precedential_status = document.get("precedential_status", "").lower()
+        if precedential_status not in ["published", "precedential"]:
+            return False
+        
+        # Date range filter
+        if self.config["date_range"]:
+            date_filed = document.get("date_filed", "")
+            if date_filed:
+                try:
+                    doc_date = datetime.strptime(date_filed.split('T')[0], '%Y-%m-%d')
+                    min_date = datetime.strptime(self.config["date_range"]["min"], '%Y-%m-%d')
+                    max_date = datetime.strptime(self.config["date_range"]["max"], '%Y-%m-%d')
+                    
+                    if not (min_date <= doc_date <= max_date):
+                        return False
+                except:
+                    # If date parsing fails, don't filter based on date
+                    pass
+        
+        return True
+
     async def _fetch_court_decisions(self) -> List[Dict[str, Any]]:
         """Fetch comprehensive court decisions using CourtListener API with expanded search strategy"""
         content = []
