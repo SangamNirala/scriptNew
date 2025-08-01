@@ -480,8 +480,8 @@ class LegalKnowledgeBuilder:
         """Search for legal content using SerpAPI"""
         content = []
         
-        if not self.serp_api_key:
-            logger.warning("SerpAPI key not available, skipping search")
+        if not self.serp_api_key or not SERPAPI_AVAILABLE:
+            logger.warning("SerpAPI not available or key missing, skipping search")
             return content
             
         try:
