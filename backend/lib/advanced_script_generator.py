@@ -7,7 +7,7 @@ import asyncio
 import logging
 from datetime import datetime
 from typing import Dict, List, Any, Optional
-from emergentintegrations import LlmChat, UserMessage
+from emergentintegrations.llm.chat import LlmChat, UserMessage
 import json
 import re
 
