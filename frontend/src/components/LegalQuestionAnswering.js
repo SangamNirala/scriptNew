@@ -214,8 +214,100 @@ const LegalQuestionAnswering = () => {
   const convertMarkdownToHtml = (text) => {
     if (!text) return '';
     
+    let html = text;
+    
     // Convert **text** to <strong>text</strong>
-    return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    
+    // Convert line breaks to <br> tags
+    html = html.replace(/\n/g, '<br>');
+    
+    // Convert numbered lists (1. item) to proper HTML lists
+    html = html.replace(/^(\d+)\.\s+(.+)$/gm, '<div class="mb-2"><span class="font-semibold text-gray-700">$1.</span> $2</div>');
+    
+    // Convert bullet points (* item) to proper HTML
+    html = html.replace(/^\*\s+(.+)$/gm, '<div class="mb-1 ml-4">• $1</div>');
+    
+    // Convert pipe tables to HTML tables
+    if (html.includes('|')) {
+      html = convertPipeTableToHtml(html);
+    }
+    
+    return html;
+  };
+
+  const convertPipeTableToHtml = (text) => {
+    const lines = text.split('<br>');
+    let inTable = false;
+    let tableRows = [];
+    let result = [];
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      
+      if (line.includes('|') && line.split('|').length > 2) {
+        // This looks like a table row
+        if (!inTable) {
+          inTable = true;
+          tableRows = [];
+        }
+        
+        const cells = line.split('|').map(cell => cell.trim()).filter(cell => cell !== '');
+        tableRows.push(cells);
+        
+        // Check if next line is a separator (like |---|---|)
+        if (i + 1 < lines.length && lines[i + 1].includes('---')) {
+          i++; // Skip the separator line
+        }
+      } else {
+        // Not a table row
+        if (inTable) {
+          // End of table, convert accumulated rows to HTML
+          result.push(convertTableRowsToHtml(tableRows));
+          tableRows = [];
+          inTable = false;
+        }
+        result.push(line);
+      }
+    }
+    
+    // Handle table at end of text
+    if (inTable && tableRows.length > 0) {
+      result.push(convertTableRowsToHtml(tableRows));
+    }
+    
+    return result.join('<br>');
+  };
+
+  const convertTableRowsToHtml = (rows) => {
+    if (rows.length === 0) return '';
+    
+    let html = '<table class="min-w-full mt-4 mb-4 border-collapse border border-gray-300">';
+    
+    // First row is header
+    if (rows.length > 0) {
+      html += '<thead><tr>';
+      rows[0].forEach(cell => {
+        html += `<th class="border border-gray-300 px-3 py-2 bg-gray-100 font-semibold text-left">${cell}</th>`;
+      });
+      html += '</tr></thead>';
+    }
+    
+    // Remaining rows are body
+    if (rows.length > 1) {
+      html += '<tbody>';
+      for (let i = 1; i < rows.length; i++) {
+        html += '<tr>';
+        rows[i].forEach(cell => {
+          html += `<td class="border border-gray-300 px-3 py-2">${cell}</td>`;
+        });
+        html += '</tr>';
+      }
+      html += '</tbody>';
+    }
+    
+    html += '</table>';
+    return html;
   };
 
   const shouldShowMetadata = (message) => {
