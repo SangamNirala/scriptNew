@@ -419,6 +419,45 @@ class LegalKnowledgeBuilder:
         
         return general_content
     
+    async def build_academic_knowledge_base(self) -> List[Dict[str, Any]]:
+        """Main method to build academic legal knowledge base with 3,500+ documents"""
+        logger.info("🎓 Starting academic legal content collection...")
+        logger.info(f"Target: {self.config['target_documents']:,} academic documents")
+        
+        academic_content = []
+        
+        # Phase 1: Google Scholar Legal (Target: 2,000 docs)
+        logger.info("📚 Phase 1: Collecting Google Scholar Legal Papers...")
+        scholar_content = await self._fetch_google_scholar_legal()
+        academic_content.extend(scholar_content)
+        logger.info(f"✅ Google Scholar: {len(scholar_content)} documents collected")
+        
+        # Phase 2: Legal Academic Databases (Target: 1,000 docs)
+        logger.info("⚖️ Phase 2: Collecting Legal Journals and Professional Publications...")
+        journal_content = await self._fetch_legal_journals()
+        academic_content.extend(journal_content)
+        logger.info(f"✅ Legal Journals: {len(journal_content)} documents collected")
+        
+        # Phase 3: Legal Research Repositories (Target: 500 docs)
+        logger.info("🔬 Phase 3: Collecting Legal Research Papers...")
+        research_content = await self._fetch_legal_research_papers()
+        academic_content.extend(research_content)
+        logger.info(f"✅ Research Papers: {len(research_content)} documents collected")
+        
+        # Phase 4: Quality Control and Deduplication
+        logger.info("🔍 Phase 4: Applying Quality Control and Deduplication...")
+        academic_content = self._apply_academic_quality_filters(academic_content)
+        academic_content = self._deduplicate_content(academic_content)
+        
+        # Final statistics
+        total_docs = len(academic_content)
+        logger.info(f"🎯 Academic Knowledge Base Complete: {total_docs:,} documents")
+        
+        # Generate collection summary
+        self._log_academic_collection_summary(academic_content)
+        
+        return academic_content
+    
     async def _fetch_federal_legal_content(self) -> List[Dict[str, Any]]:
         """Fetch US Federal legal content using multiple sources"""
         content = []
