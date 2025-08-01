@@ -515,21 +515,23 @@ class LegalKnowledgeBuilder:
         return True
 
     async def _fetch_court_decisions(self) -> List[Dict[str, Any]]:
-        """Fetch comprehensive court decisions using CourtListener API with expanded search strategy"""
+        """Fetch comprehensive court decisions using CourtListener API with enhanced pagination and bulk collection"""
         content = []
         
         if not self.courtlistener_api_keys:
             logger.warning("No CourtListener API keys available, skipping court decisions")
             return content
         
-        logger.info(f"🔑 Using {len(self.courtlistener_api_keys)} CourtListener API keys with rotation")
+        logger.info(f"🚀 Starting CourtListener collection in {self.collection_mode.value.upper()} mode")
+        logger.info(f"🔑 Using {len(self.courtlistener_api_keys)} API keys with intelligent rotation")
+        logger.info(f"📊 Target: {self.config['results_per_query']} results per query, {self.config['max_pages_per_query']} max pages")
         
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
                 
                 # EXPANDED SEARCH STRATEGY - 60 targeted queries organized by legal domain
                 
-                # CONTRACT LAW - 15 queries (target 3,000 docs)
+                # CONTRACT LAW - 15 queries (target 3,000 docs in bulk mode)
                 contract_law_queries = [
                     "breach of contract damages",
                     "contract formation elements", 
@@ -548,7 +550,7 @@ class LegalKnowledgeBuilder:
                     "contract duress undue influence"
                 ]
                 
-                # EMPLOYMENT LAW - 12 queries (target 2,500 docs)
+                # EMPLOYMENT LAW - 12 queries (target 2,500 docs in bulk mode)
                 employment_law_queries = [
                     "employment discrimination Title VII",
                     "wrongful termination at-will employment",
@@ -564,7 +566,7 @@ class LegalKnowledgeBuilder:
                     "employment arbitration agreements enforceability"
                 ]
                 
-                # CONSTITUTIONAL LAW - 10 queries (target 2,000 docs)
+                # CONSTITUTIONAL LAW - 10 queries (target 2,000 docs in bulk mode)
                 constitutional_law_queries = [
                     "First Amendment free speech restrictions",
                     "Fourth Amendment search seizure warrant",
@@ -578,7 +580,7 @@ class LegalKnowledgeBuilder:
                     "Supremacy Clause federal preemption"
                 ]
                 
-                # INTELLECTUAL PROPERTY - 8 queries (target 1,500 docs)
+                # INTELLECTUAL PROPERTY - 8 queries (target 1,500 docs in bulk mode)
                 intellectual_property_queries = [
                     "patent infringement claim construction",
                     "trademark dilution likelihood confusion",
@@ -590,7 +592,7 @@ class LegalKnowledgeBuilder:
                     "design patent infringement ordinary observer"
                 ]
                 
-                # CORPORATE LAW - 6 queries (target 1,200 docs)
+                # CORPORATE LAW - 6 queries (target 1,200 docs in bulk mode)
                 corporate_law_queries = [
                     "fiduciary duty business judgment rule",
                     "securities fraud disclosure requirements",
@@ -600,7 +602,7 @@ class LegalKnowledgeBuilder:
                     "corporate veil piercing alter ego"
                 ]
                 
-                # CIVIL PROCEDURE - 5 queries (target 1,000 docs)
+                # CIVIL PROCEDURE - 5 queries (target 1,000 docs in bulk mode)
                 civil_procedure_queries = [
                     "personal jurisdiction minimum contacts",
                     "class action certification requirements",
@@ -609,7 +611,7 @@ class LegalKnowledgeBuilder:
                     "forum non conveniens venue transfer"
                 ]
                 
-                # CRIMINAL LAW - 4 queries (target 800 docs)
+                # CRIMINAL LAW - 4 queries (target 800 docs in bulk mode)
                 criminal_law_queries = [
                     "criminal intent mens rea elements",
                     "criminal conspiracy agreement overt act",
@@ -634,6 +636,9 @@ class LegalKnowledgeBuilder:
                     (query, "civil_criminal_procedure") for query in criminal_law_queries
                 ]
                 
+                # Update progress tracking
+                self.progress.total_queries = len(all_queries)
+                
                 logger.info(f"📚 Executing {len(all_queries)} targeted search queries for comprehensive legal document collection")
                 
                 # Expanded court coverage beyond just Supreme Court
@@ -655,114 +660,117 @@ class LegalKnowledgeBuilder:
                 ]
                 
                 query_count = 0
-                successful_queries = 0
-                total_documents = 0
+                batch_results = []
                 
-                # Execute searches with enhanced rate limiting
+                # Execute searches with enhanced pagination and batch processing
                 for query, legal_domain in all_queries:
                     for court_code, court_name in courts:
                         try:
                             query_count += 1
+                            self.progress.completed_queries = query_count
                             
-                            # Get next API key with rotation
-                            api_key = self._get_next_api_key()
-                            if not api_key:
-                                logger.error("No API keys available")
-                                break
-                            
-                            headers = {"Authorization": f"Token {api_key}"}
-                            
-                            url = f"https://www.courtlistener.com/api/rest/v3/search/"
+                            # Base URL and parameters for CourtListener API
+                            base_url = "https://www.courtlistener.com/api/rest/v3/search/"
                             params = {
                                 "q": query,
                                 "type": "o",  # Opinions
                                 "order_by": "score desc",
-                                "stat_Precedential": "on",
                                 "court": court_code,
                                 "format": "json"
                             }
                             
-                            logger.info(f"🔍 Query {query_count}: Searching '{query}' in {court_name} (Key #{self.current_api_key_index})")
+                            # Add quality filters if enabled
+                            if self.config["enable_quality_filters"]:
+                                params.update({
+                                    "stat_Precedential": "on",  # Only precedential/published opinions
+                                })
+                                
+                                # Add date range filter
+                                if self.config["date_range"]:
+                                    params["filed_after"] = self.config["date_range"]["min"]
+                                    params["filed_before"] = self.config["date_range"]["max"]
                             
-                            response = await client.get(url, headers=headers, params=params)
+                            logger.info(f"🔍 Query {query_count}/{self.progress.total_queries * len(courts)}: '{query}' in {court_name}")
                             
-                            if response.status_code == 200:
-                                data = response.json()
-                                results = data.get('results', [])
-                                
-                                # Increase results per query to reach target volume
-                                # Take top 10 results per query instead of 5
-                                for result in results[:10]:
-                                    try:
-                                        legal_doc = {
-                                            "id": f"court_{result.get('id')}_{court_code}",
-                                            "title": result.get('caseName', 'Unknown Case'),
-                                            "content": result.get('text', '') or result.get('snippet', ''),
-                                            "source": "CourtListener",
-                                            "source_url": result.get('absolute_url', ''),
-                                            "jurisdiction": "us_federal",
-                                            "legal_domain": legal_domain,  # Use categorized domain
-                                            "document_type": "court_decision",
-                                            "court": f"{court_name} ({court_code})",
-                                            "date_filed": result.get('dateFiled', ''),
-                                            "precedential_status": result.get('status', ''),
-                                            "metadata": {
-                                                "citation": result.get('citation', ''),
-                                                "judges": result.get('judges', []),
-                                                "docket_number": result.get('docketNumber', ''),
-                                                "search_query": query,
-                                                "target_domain": legal_domain
-                                            },
-                                            "created_at": datetime.utcnow().isoformat(),
-                                            "content_hash": self._generate_content_hash(result.get('text', '') or result.get('snippet', ''))
-                                        }
-                                        
-                                        # Only add if content is substantial
-                                        if len(legal_doc["content"].strip()) > 50:
-                                            content.append(legal_doc)
-                                            total_documents += 1
-                                        
-                                    except Exception as e:
-                                        logger.error(f"Error processing court result: {e}")
-                                        continue
-                                
-                                successful_queries += 1
-                                logger.info(f"✅ Query {query_count} successful: Found {len(results)} results, Added {len([r for r in results[:10] if len(str(r.get('text', '') or r.get('snippet', '')).strip()) > 50])} documents")
-                                        
-                            elif response.status_code == 429:
-                                logger.warning(f"⚠️ Rate limit hit for API key #{self.current_api_key_index}, rotating to next key")
-                                # Rate limit hit, key will be rotated on next call
-                                await asyncio.sleep(5)  # Wait longer on rate limit
-                                continue
-                                
-                            elif response.status_code == 401:
-                                logger.error(f"❌ API key #{self.current_api_key_index} unauthorized, rotating to next key")
-                                continue
-                                
+                            headers = {"Accept": "application/json"}
+                            
+                            # Fetch results with pagination
+                            if self.config["enable_pagination"]:
+                                results = await self._fetch_paginated_results(
+                                    client, base_url, params, headers, query, legal_domain, (court_code, court_name)
+                                )
                             else:
-                                logger.warning(f"⚠️ Query {query_count} failed with status {response.status_code}")
+                                # Standard mode: single page, limited results
+                                api_key = self._get_next_api_key()
+                                if api_key:
+                                    headers["Authorization"] = f"Token {api_key}"
+                                    response = await client.get(base_url, headers=headers, params=params)
+                                    
+                                    if response.status_code == 200:
+                                        data = response.json()
+                                        raw_results = data.get('results', [])[:self.config["results_per_query"]]
+                                        
+                                        results = []
+                                        for result in raw_results:
+                                            processed = await self._process_court_result(
+                                                result, query, legal_domain, court_code, court_name
+                                            )
+                                            if processed and self._meets_quality_filters(processed):
+                                                results.append(processed)
+                                    else:
+                                        results = []
+                                else:
+                                    results = []
                             
-                            # Enhanced rate limiting - more conservative for high volume
-                            await asyncio.sleep(3)  # Increased from 2 to 3 seconds
+                            # Add results to batch
+                            batch_results.extend(results)
+                            self.progress.total_documents += len(results)
+                            
+                            if results:
+                                self.progress.successful_queries += 1
+                                logger.info(f"✅ Query {query_count} successful: Added {len(results)} quality documents")
+                            else:
+                                logger.info(f"❌ Query {query_count} failed or no results")
+                                self.progress.failed_queries.append(f"{query} in {court_name}")
+                            
+                            # Process batch when it reaches the configured size
+                            if len(batch_results) >= self.config["batch_size"]:
+                                content.extend(batch_results)
+                                logger.info(f"📦 Batch processed: {len(batch_results)} documents added to collection")
+                                batch_results = []
+                            
+                            # Progress logging every 50 queries
+                            if query_count % 50 == 0:
+                                success_rate = (self.progress.successful_queries / query_count) * 100
+                                logger.info(f"📊 Progress: {query_count} queries completed, {self.progress.successful_queries} successful ({success_rate:.1f}%), {self.progress.total_documents} documents collected")
                             
                         except Exception as e:
-                            logger.error(f"Error fetching court decisions for '{query}' in {court_name}: {e}")
-                            await asyncio.sleep(2)  # Brief pause on error
+                            logger.error(f"Error processing query '{query}' in {court_name}: {e}")
+                            self.progress.failed_queries.append(f"{query} in {court_name} - Error: {str(e)}")
                             continue
-                    
-                    # Progress logging every 10 queries
-                    if query_count % 10 == 0:
-                        logger.info(f"📊 Progress: {query_count} queries completed, {successful_queries} successful, {total_documents} documents collected")
+                
+                # Process remaining batch
+                if batch_results:
+                    content.extend(batch_results)
+                    logger.info(f"📦 Final batch processed: {len(batch_results)} documents added to collection")
+                
+                # Final statistics
+                success_rate = (self.progress.successful_queries / query_count) * 100 if query_count > 0 else 0
                 
                 logger.info(f"🎉 Court decisions collection completed!")
                 logger.info(f"📈 Final Statistics:")
+                logger.info(f"   - Collection Mode: {self.collection_mode.value.upper()}")
                 logger.info(f"   - Total Queries: {query_count}")
-                logger.info(f"   - Successful Queries: {successful_queries}")
-                logger.info(f"   - Documents Collected: {total_documents}")
-                logger.info(f"   - Success Rate: {(successful_queries/query_count)*100:.1f}%")
+                logger.info(f"   - Successful Queries: {self.progress.successful_queries}")
+                logger.info(f"   - Success Rate: {success_rate:.1f}%")
+                logger.info(f"   - Documents Collected: {len(content)}")
+                logger.info(f"   - Target Achievement: {(len(content)/15000)*100:.1f}%" if self.collection_mode == CollectionMode.BULK else "N/A")
+                
+                if self.progress.failed_queries:
+                    logger.warning(f"⚠️ {len(self.progress.failed_queries)} queries failed")
                         
         except Exception as e:
-            logger.error(f"Error with CourtListener API: {e}")
+            logger.error(f"Critical error in CourtListener API collection: {e}")
             
         return content
     
