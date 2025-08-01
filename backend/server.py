@@ -264,6 +264,90 @@ class OptimizationHistoryResponse(BaseModel):
     success_patterns: List[str]
     optimization_insights: List[str]
 
+# Phase 5: Intelligent Quality Assurance Models
+class IntelligentQARequest(BaseModel):
+    script: str
+    original_prompt: Optional[str] = ""
+    target_platform: Optional[str] = "youtube"
+    duration: Optional[str] = "medium"
+    video_type: Optional[str] = "general"
+    enable_regeneration: Optional[bool] = True
+
+class MultiModelValidationRequest(BaseModel):
+    script: str
+    target_platform: Optional[str] = "youtube"
+    duration: Optional[str] = "medium"
+    video_type: Optional[str] = "general"
+
+class AdvancedQualityMetricsRequest(BaseModel):
+    script: str
+    target_platform: Optional[str] = "youtube"
+    duration: Optional[str] = "medium"
+    video_type: Optional[str] = "general"
+
+class QualityImprovementRequest(BaseModel):
+    original_prompt: str
+    target_platform: Optional[str] = "youtube"
+    duration: Optional[str] = "medium"
+    video_type: Optional[str] = "general"
+
+class ABTestOptimizationRequest(BaseModel):
+    original_prompt: str
+    target_platform: Optional[str] = "youtube"
+    duration: Optional[str] = "medium"
+    video_type: Optional[str] = "general"
+
+class IntelligentQAResponse(BaseModel):
+    qa_id: str
+    original_prompt: str
+    final_script: str
+    quality_analysis: Dict[str, Any]
+    consensus_validation: Dict[str, Any]
+    improvement_cycle_data: Optional[Dict[str, Any]]
+    quality_threshold_met: bool
+    regeneration_performed: bool
+    total_processing_time: float
+    recommendations: List[str]
+    confidence_score: float
+
+class MultiModelValidationResponse(BaseModel):
+    consensus_score: float
+    consensus_grade: str
+    individual_results: List[Dict[str, Any]]
+    agreement_level: str
+    confidence_score: float
+    quality_threshold_passed: bool
+    regeneration_required: bool
+    improvement_suggestions: List[str]
+
+class AdvancedQualityMetricsResponse(BaseModel):
+    composite_quality_score: float
+    quality_grade: str
+    detailed_metrics: Dict[str, Any]
+    quality_recommendations: List[str]
+    analysis_metadata: Dict[str, Any]
+
+class QualityImprovementResponse(BaseModel):
+    cycle_id: str
+    original_score: float
+    final_score: float
+    improvement_achieved: float
+    quality_threshold_met: bool
+    cycles_completed: int
+    final_script: str
+    validation_result: Dict[str, Any]
+    strategy_used: str
+    improvements_attempted: int
+    learning_insights: List[str]
+
+class ABTestOptimizationResponse(BaseModel):
+    test_id: str
+    best_performing_combination: Dict[str, Any]
+    all_results: List[Dict[str, Any]]
+    statistical_analysis: Dict[str, Any]
+    performance_improvement: float
+    recommendations: List[str]
+
 # Add your routes to the router instead of directly to app
 @api_router.get("/")
 async def root():
