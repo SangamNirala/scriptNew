@@ -172,6 +172,34 @@ class LegalKnowledgeBuilder:
                 "quality_threshold": 0.7,  # Quality score threshold
                 "enable_enhanced_metadata": True
             }
+        elif self.collection_mode == CollectionMode.FEDERAL_RESOURCES:
+            return {
+                "results_per_query": 100,  # Target 50-100 results per federal source query
+                "max_pages_per_query": 10,  # Reasonable pagination for government sources
+                "batch_size": 100,  # Process in batches of 100
+                "min_content_length": 800,  # Minimum 800 words for substantive government docs
+                "enable_pagination": True,
+                "enable_quality_filters": True,
+                "date_range": {
+                    "primary_min": "2020-01-01",  # Focus on recent regulations 2020-2025
+                    "primary_max": "2025-12-31",
+                    "secondary_min": "2015-01-01",  # Secondary: 2015-2019
+                    "secondary_max": "2019-12-31"
+                },
+                "government_domains": [".gov"],  # Only official government domains
+                "excluded_keywords": ["news", "press release", "announcement", "event"],  # Exclude non-legal content
+                "rate_limit_requests_per_minute": 30,  # Conservative for government sources
+                "max_retries": 5,
+                "base_backoff_seconds": 2,
+                "enable_parallel_processing": True,
+                "max_concurrent_requests": 2,  # Conservative parallel processing
+                "checkpoint_enabled": True,
+                "quality_threshold": 0.8,  # Higher quality threshold for government sources
+                "enable_enhanced_metadata": True,
+                "target_documents": 5000,  # Target 5,000+ federal documents
+                "priority_agencies": ["SEC", "DOL", "USPTO", "IRS"],  # Priority federal agencies
+                "focus_domains": ["securities_law", "employment_law", "patent_law", "administrative_law"]
+            }
         else:  # STANDARD mode for backward compatibility
             return {
                 "results_per_query": 10,  # Original behavior
