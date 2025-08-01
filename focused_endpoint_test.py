@@ -5,7 +5,7 @@ import uuid
 from datetime import datetime
 
 class FocusedEndpointTester:
-    def __init__(self, base_url="https://d527467e-d286-44e1-80dd-a5d65cee7daf.preview.emergentagent.com"):
+    def __init__(self, base_url="https://bda63b11-47a5-4a57-b5b0-e558393120cb.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.tests_run = 0
