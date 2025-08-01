@@ -211,6 +211,27 @@ const LegalQuestionAnswering = () => {
     return { label: 'LOW', color: 'text-red-600', bg: 'bg-red-100' };
   };
 
+  const convertMarkdownToHtml = (text) => {
+    if (!text) return '';
+    
+    // Convert **text** to <strong>text</strong>
+    return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  };
+
+  const shouldShowMetadata = (message) => {
+    // Don't show metadata for simple greetings (handled by greeting_handler)
+    if (message.modelUsed === 'greeting_handler') {
+      return false;
+    }
+    
+    // Don't show metadata if there are no sources and confidence is exactly 1.0 (likely a greeting)
+    if (message.confidence === 1.0 && (!message.sources || message.sources.length === 0) && (!message.retrievedDocuments || message.retrievedDocuments === 0)) {
+      return false;
+    }
+    
+    return true;
+  };
+
   const renderMessage = (message) => {
     switch (message.type) {
       case 'user':
