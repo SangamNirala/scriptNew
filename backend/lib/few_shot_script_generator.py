@@ -843,7 +843,7 @@ The smartest people I know don't have all the answers. They just ask questions t
                     },
                     effectiveness_score=avg_metrics.get("overall_score", 7.0),
                     applicable_contexts=[platform],
-                    example_scripts=[ex["id"] for ex in platform_examples],
+                    example_scripts=[str(ex.get("_id", ex.get("id", ""))) for ex in platform_examples],
                     usage_guidelines={
                         "content_format": self._get_content_format(platform),
                         "posting_strategy": self._get_posting_strategy(platform),
