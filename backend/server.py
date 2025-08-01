@@ -169,6 +169,26 @@ class PromptEnhancementResponse(BaseModel):
     industry_insights: List[str]
     enhancement_methodology: str
 
+# Chain-of-Thought Script Generation Models
+class CoTScriptRequest(BaseModel):
+    prompt: str
+    video_type: Optional[str] = "general"
+    duration: Optional[str] = "medium"
+    industry_focus: Optional[str] = "general"
+    target_platform: Optional[str] = "youtube"
+    include_reasoning_chain: Optional[bool] = True
+
+class CoTScriptResponse(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    original_prompt: str
+    generated_script: str
+    video_type: str
+    duration: str
+    reasoning_chain: Optional[Dict[str, Any]] = None
+    final_analysis: Optional[Dict[str, Any]] = None
+    generation_metadata: Dict[str, Any]
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
 class TextToSpeechRequest(BaseModel):
     text: str
     voice_name: Optional[str] = "en-US-AriaNeural"
