@@ -367,6 +367,60 @@ class LegalRAGSystem:
                 "error": str(e)
             }
     
+    def _is_simple_greeting(self, question: str) -> bool:
+        """Check if the question is a simple greeting or small talk"""
+        question_lower = question.lower().strip()
+        
+        # Common greetings and simple phrases
+        simple_greetings = [
+            "hello", "hi", "hey", "good morning", "good afternoon", "good evening",
+            "how are you", "what's up", "greetings", "salutations", "howdy",
+            "good day", "nice to meet you", "pleasure to meet you", "thanks", "thank you",
+            "goodbye", "bye", "see you", "farewell", "take care", "have a good day",
+            "yes", "no", "ok", "okay", "sure", "alright", "got it", "understood",
+            "test", "testing", "can you hear me", "are you there", "are you working"
+        ]
+        
+        # Check if the question is just a simple greeting
+        for greeting in simple_greetings:
+            if question_lower == greeting or question_lower.startswith(greeting + " ") or question_lower.endswith(" " + greeting):
+                return True
+        
+        # Check if it's a very short question (likely not legal)
+        if len(question.split()) <= 3 and not any(legal_word in question_lower for legal_word in 
+                                                 ["law", "legal", "court", "contract", "sue", "rights", "liability"]):
+            return True
+            
+        return False
+    
+    async def _handle_simple_greeting(self, question: str, session_id: str) -> Dict[str, Any]:
+        """Handle simple greetings without legal complexity"""
+        question_lower = question.lower().strip()
+        
+        # Generate appropriate responses for different types of greetings
+        if any(greeting in question_lower for greeting in ["hello", "hi", "hey", "good morning", "good afternoon", "good evening"]):
+            response = "Hello! I'm your legal AI assistant. I'm here to help answer your legal questions and provide information based on legal sources. How can I assist you with your legal inquiry today?"
+        elif any(phrase in question_lower for phrase in ["how are you", "what's up"]):
+            response = "I'm doing well, thank you for asking! I'm ready to help you with any legal questions you might have. What legal topic would you like to explore today?"
+        elif any(phrase in question_lower for phrase in ["thanks", "thank you"]):
+            response = "You're very welcome! I'm here whenever you need legal information or guidance. Feel free to ask me any legal questions."
+        elif any(phrase in question_lower for phrase in ["goodbye", "bye", "see you", "farewell"]):
+            response = "Goodbye! Remember, if you have any legal questions in the future, I'm here to help. Take care!"
+        elif any(phrase in question_lower for phrase in ["test", "testing", "can you hear me", "are you there", "are you working"]):
+            response = "Yes, I'm here and working perfectly! I'm your legal AI assistant, ready to help with legal questions and provide information from authoritative legal sources. What would you like to know?"
+        else:
+            response = "Hello! I'm your legal AI assistant. I specialize in providing legal information and answering legal questions based on authoritative sources. How can I help you with your legal inquiry today?"
+        
+        return {
+            "answer": response,
+            "confidence": 1.0,
+            "sources": [],
+            "session_id": session_id,
+            "model_used": "greeting_handler",
+            "retrieved_documents": 0,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+    
     async def _retrieve_relevant_documents(self, question: str, jurisdiction: str = None, 
                                          legal_domain: str = None) -> List[Dict[str, Any]]:
         """Retrieve relevant documents using vector similarity search"""
