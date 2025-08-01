@@ -92,6 +92,17 @@ app = FastAPI()
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
 
+# Setup logger
+logger = logging.getLogger(__name__)
+
+# Import RAG system after initializing basic components
+try:
+    from legal_rag_system import get_rag_system, initialize_legal_rag
+    RAG_SYSTEM_AVAILABLE = True
+except ImportError as e:
+    logger.warning(f"Legal RAG system not available: {e}")
+    RAG_SYSTEM_AVAILABLE = False
+
 
 # Define Models
 class ContractRequest(BaseModel):
