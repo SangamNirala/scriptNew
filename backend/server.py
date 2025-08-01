@@ -2187,6 +2187,62 @@ Generate a script so comprehensive that when input into AI video generation tool
         logger.error(f"Error generating AI video script: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error generating AI video script: {str(e)}")
 
+@api_router.post("/generate-script-cot", response_model=CoTScriptResponse)
+async def generate_script_with_chain_of_thought(request: CoTScriptRequest):
+    """
+    Advanced Script Generation with Chain-of-Thought Reasoning
+    
+    This endpoint uses advanced Chain-of-Thought reasoning to generate high-quality scripts
+    through a systematic 6-step process:
+    1. Analysis and Understanding
+    2. Audience and Context Mapping  
+    3. Narrative Architecture Design
+    4. Engagement Strategy Planning
+    5. Content Development
+    6. Quality Validation and Refinement
+    """
+    try:
+        # Get enhanced context if available
+        enhanced_context = await context_system.get_enhanced_context(
+            prompt=request.prompt,
+            industry=request.industry_focus,
+            platform=request.target_platform
+        )
+        
+        # Generate script using Chain-of-Thought reasoning
+        result = await advanced_script_generator.generate_script_with_reasoning(
+            prompt=request.prompt,
+            video_type=request.video_type,
+            duration=request.duration,
+            enhanced_context=enhanced_context
+        )
+        
+        # Create response object
+        script_response = CoTScriptResponse(
+            original_prompt=request.prompt,
+            generated_script=result["generated_script"],
+            video_type=request.video_type or "general",
+            duration=request.duration or "medium",
+            reasoning_chain=result["reasoning_chain"] if request.include_reasoning_chain else None,
+            final_analysis=result["final_analysis"],
+            generation_metadata=result["generation_metadata"]
+        )
+        
+        # Store in database with enhanced metadata
+        script_dict = script_response.dict()
+        script_dict['generation_method'] = 'chain_of_thought'
+        script_dict['context_quality_score'] = enhanced_context.get('metadata', {}).get('context_quality_score', 0.5)
+        script_dict['reasoning_steps_completed'] = len(result["reasoning_chain"])
+        script_dict['validation_score'] = result["final_analysis"].get("validation_score", 5.0)
+        
+        await db.scripts.insert_one(script_dict)
+        
+        return script_response
+        
+    except Exception as e:
+        logger.error(f"Error in Chain-of-Thought script generation: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error generating CoT script: {str(e)}")
+
 # Voice and TTS Endpoints
 
 def extract_clean_script(raw_script):
