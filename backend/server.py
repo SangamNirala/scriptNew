@@ -1516,6 +1516,251 @@ class LegalMateAgents:
         )
 
     @staticmethod
+    async def plain_english_to_legal_clauses(plain_text: str, contract_type: str = None, jurisdiction: str = "US", industry: str = None, output_format: str = "legal_clauses") -> PlainEnglishResult:
+        """
+        Advanced NLP engine that transforms plain English user input into legally compliant contract clauses
+        using Google Gemini Pro trained on legal corpora
+        """
+        
+        transformation_prompt = f"""
+        You are an expert legal language processing AI specializing in transforming plain English into legally compliant contract clauses.
+        
+        TASK: Convert the following plain English description into professional legal contract clauses.
+        
+        PLAIN ENGLISH INPUT:
+        "{plain_text}"
+        
+        CONTEXT:
+        - Contract Type: {contract_type or "General"}
+        - Jurisdiction: {jurisdiction}
+        - Industry: {industry or "General Business"}
+        - Output Format: {output_format}
+        
+        REQUIREMENTS:
+        1. Transform each key concept from the plain English into proper legal clauses
+        2. Use appropriate legal terminology and structure
+        3. Ensure jurisdiction compliance for {jurisdiction}
+        4. Include industry-specific considerations for {industry or "general business"}
+        5. Provide confidence scores and explanations for each clause
+        
+        OUTPUT FORMAT - Return valid JSON:
+        {{
+            "generated_clauses": [
+                {{
+                    "clause_type": "Type of clause (e.g., 'Payment Terms', 'Scope of Work', 'Confidentiality')",
+                    "title": "Professional clause title",
+                    "content": "Complete legal clause text with proper formatting and legal language",
+                    "explanation": "Plain English explanation of what this clause means and why it's needed",
+                    "confidence": 0.95,
+                    "suggestions": ["Alternative wording options", "Additional considerations"]
+                }}
+            ],
+            "full_contract": "If requested, a complete contract incorporating all clauses with proper structure",
+            "contract_type": "Identified or suggested contract type based on the input",
+            "confidence_score": 0.90,
+            "recommendations": [
+                "Consider adding a termination clause",
+                "May want to specify jurisdiction for disputes"
+            ],
+            "legal_warnings": [
+                "This clause may need review by local counsel",
+                "Consider state-specific requirements"
+            ]
+        }}
+        
+        LEGAL LANGUAGE GUIDELINES:
+        - Use precise legal terminology
+        - Include "WHEREAS" clauses where appropriate
+        - Use "shall" instead of "will" for obligations
+        - Include proper definitions for key terms  
+        - Structure clauses with numbered sections
+        - Add standard legal formatting (bold headings, proper indentation)
+        - Include boilerplate language where necessary
+        
+        EXAMPLES OF TRANSFORMATIONS:
+        Plain English: "I want to hire someone to build a website for $5000"
+        Legal Clause: "**SCOPE OF WORK**: Contractor shall design, develop, and deliver a fully functional website according to specifications outlined in Exhibit A. **COMPENSATION**: Client shall pay Contractor the sum of Five Thousand Dollars ($5,000) upon completion and delivery of the website."
+        
+        Plain English: "Both parties should keep things confidential"
+        Legal Clause: "**CONFIDENTIALITY**: Each party acknowledges that it may have access to confidential information of the other party. Each party agrees to maintain in confidence all such confidential information and not to disclose such information to third parties without prior written consent."
+        
+        Be thorough but practical. Focus on creating legally sound clauses that capture the intent of the plain English input.
+        """
+        
+        try:
+            # Use Gemini Pro for advanced legal language processing
+            model = genai.GenerativeModel('gemini-1.5-pro')
+            response = model.generate_content(
+                transformation_prompt,
+                generation_config=genai.types.GenerationConfig(
+                    max_output_tokens=4000,
+                    temperature=0.1,  # Low temperature for consistent legal language
+                )
+            )
+            
+            # Extract JSON from response
+            json_match = re.search(r'\{.*\}', response.text, re.DOTALL)
+            if json_match:
+                result_data = json.loads(json_match.group())
+                
+                # Create structured LegalClause objects
+                legal_clauses = []
+                for clause_data in result_data.get('generated_clauses', []):
+                    legal_clause = LegalClause(
+                        clause_type=clause_data.get('clause_type', 'General'),
+                        title=clause_data.get('title', 'Untitled Clause'),
+                        content=clause_data.get('content', ''),
+                        explanation=clause_data.get('explanation', 'No explanation provided'),
+                        confidence=clause_data.get('confidence', 0.8),
+                        suggestions=clause_data.get('suggestions', [])
+                    )
+                    legal_clauses.append(legal_clause)
+                
+                # Generate full contract if requested
+                full_contract = None
+                if output_format == "full_contract":
+                    full_contract = LegalMateAgents.generate_full_contract_from_clauses(
+                        legal_clauses, contract_type, jurisdiction, plain_text
+                    )
+                
+                return PlainEnglishResult(
+                    original_text=plain_text,
+                    generated_clauses=legal_clauses,
+                    full_contract=full_contract or result_data.get('full_contract'),
+                    contract_type=result_data.get('contract_type', contract_type),
+                    jurisdiction=jurisdiction,
+                    industry=industry,
+                    confidence_score=result_data.get('confidence_score', 0.85),
+                    recommendations=result_data.get('recommendations', []),
+                    legal_warnings=result_data.get('legal_warnings', [])
+                )
+                
+        except Exception as e:
+            logging.error(f"Plain English to Legal Clauses conversion error: {e}")
+        
+        # Fallback processing if AI fails
+        return LegalMateAgents.create_fallback_legal_clauses(plain_text, contract_type, jurisdiction, industry)
+
+    @staticmethod 
+    def generate_full_contract_from_clauses(clauses: List[LegalClause], contract_type: str = None, jurisdiction: str = "US", original_text: str = "") -> str:
+        """Generate a complete contract document from individual clauses"""
+        
+        contract_header = f"""
+**{(contract_type or 'LEGAL AGREEMENT').upper()}**
+
+**Date of Execution:** [Date of Execution]
+
+This agreement is entered into between the parties as described herein.
+
+**RECITALS**
+
+WHEREAS, the parties desire to enter into this agreement based on the following understanding: "{original_text[:200]}...";
+
+NOW, THEREFORE, in consideration of the mutual covenants contained herein, the parties agree as follows:
+
+"""
+        
+        # Add numbered clauses
+        contract_body = ""
+        for i, clause in enumerate(clauses, 1):
+            contract_body += f"""
+**{i}. {clause.title.upper()}**
+
+{clause.content}
+
+"""
+
+        # Add standard closing clauses
+        contract_footer = f"""
+**GOVERNING LAW**
+
+This agreement shall be governed by and construed in accordance with the laws of {jurisdiction}.
+
+**ENTIRE AGREEMENT**
+
+This agreement constitutes the entire agreement between the parties and supersedes all prior negotiations, representations, or agreements relating to the subject matter hereof.
+
+**SIGNATURES**
+
+IN WITNESS WHEREOF, the parties have executed this agreement as of the Effective Date.
+
+**FIRST PARTY:**
+
+[First Party Signature Placeholder]
+_________________________________
+First Party Name
+
+**SECOND PARTY:**
+
+[Second Party Signature Placeholder] 
+_________________________________
+Second Party Name
+"""
+        
+        return contract_header + contract_body + contract_footer
+
+    @staticmethod
+    def create_fallback_legal_clauses(plain_text: str, contract_type: str = None, jurisdiction: str = "US", industry: str = None) -> PlainEnglishResult:
+        """Create basic legal clauses when AI processing fails"""
+        
+        # Basic keyword analysis for fallback
+        keywords = plain_text.lower()
+        clauses = []
+        
+        if any(word in keywords for word in ['pay', 'payment', 'money', 'cost', 'fee', 'price']):
+            clauses.append(LegalClause(
+                clause_type="Payment Terms",
+                title="Payment and Compensation",
+                content="The parties shall agree upon payment terms as specified in the original agreement description.",
+                explanation="This clause addresses the financial obligations mentioned in your request.",
+                confidence=0.6,
+                suggestions=["Specify exact payment amounts", "Define payment schedule", "Add late payment penalties"]
+            ))
+        
+        if any(word in keywords for word in ['work', 'service', 'deliver', 'provide', 'create']):
+            clauses.append(LegalClause(
+                clause_type="Scope of Work", 
+                title="Services and Deliverables",
+                content="The service provider shall perform the work as described in the parties' agreement.",
+                explanation="This clause defines what work or services will be provided.",
+                confidence=0.6,
+                suggestions=["Detail specific deliverables", "Set completion timelines", "Define acceptance criteria"]
+            ))
+        
+        if any(word in keywords for word in ['confidential', 'secret', 'private', 'nda']):
+            clauses.append(LegalClause(
+                clause_type="Confidentiality",
+                title="Non-Disclosure and Confidentiality", 
+                content="The parties agree to maintain confidentiality of all information shared in connection with this agreement.",
+                explanation="This clause protects sensitive information shared between parties.",
+                confidence=0.7,
+                suggestions=["Define what constitutes confidential information", "Set confidentiality duration", "Add return of materials clause"]
+            ))
+        
+        # Always add a general terms clause
+        if not clauses:
+            clauses.append(LegalClause(
+                clause_type="General Terms",
+                title="Agreement Terms",
+                content="The parties agree to the terms and conditions as described in their mutual understanding.",
+                explanation="This is a general clause covering the basic agreement between parties.",
+                confidence=0.5,
+                suggestions=["Provide more specific details", "Add termination conditions", "Include dispute resolution"]
+            ))
+        
+        return PlainEnglishResult(
+            original_text=plain_text,
+            generated_clauses=clauses,
+            full_contract=None,
+            contract_type=contract_type or "General Agreement",
+            jurisdiction=jurisdiction,
+            industry=industry,
+            confidence_score=0.6,
+            recommendations=["Consider providing more specific details for better legal clause generation", "Review with legal counsel"],
+            legal_warnings=["This is a basic conversion. Professional legal review recommended."]
+        )
+
+    @staticmethod
     async def clause_recommender(contract_type: str, industry: str = None, jurisdiction: str = "US") -> List[ClauseRecommendation]:
         """AI-powered clause recommendation engine"""
         
