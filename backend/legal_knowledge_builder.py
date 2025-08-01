@@ -2498,6 +2498,105 @@ async def build_legal_knowledge_base(collection_mode: CollectionMode = Collectio
         return []
 
 
+        
+    def _extract_government_metadata(self, url: str, title: str, content: str) -> Dict[str, Any]:
+        """Extract enhanced metadata for government sources"""
+        metadata = {
+            "agency": "unknown",
+            "authority_level": "unknown", 
+            "effective_date": None,
+            "citation": None,
+            "domain": None,
+            "category": "guidance",
+            "precedence": "guidance"
+        }
+        
+        # Extract domain
+        if url:
+            from urllib.parse import urlparse
+            parsed = urlparse(url)
+            metadata["domain"] = parsed.netloc.lower()
+        
+        # Identify agency based on domain and content
+        domain = metadata["domain"] or ""
+        
+        if "sec.gov" in domain:
+            metadata["agency"] = "SEC"
+            metadata["authority_level"] = "federal_agency"
+            metadata["category"] = "securities_regulation"
+            metadata["precedence"] = "regulation" if "regulation" in title.lower() else "guidance"
+        elif "dol.gov" in domain:
+            metadata["agency"] = "DOL"
+            metadata["authority_level"] = "federal_agency"
+            metadata["category"] = "employment_regulation"
+            metadata["precedence"] = "regulation" if "regulation" in title.lower() else "guidance"
+        elif "uspto.gov" in domain:
+            metadata["agency"] = "USPTO"
+            metadata["authority_level"] = "federal_agency"
+            metadata["category"] = "patent_regulation"
+            metadata["precedence"] = "regulation" if "regulation" in title.lower() else "guidance"
+        elif "irs.gov" in domain:
+            metadata["agency"] = "IRS"
+            metadata["authority_level"] = "federal_agency"
+            metadata["category"] = "tax_regulation"
+            metadata["precedence"] = "regulation" if "regulation" in title.lower() else "guidance"
+        elif "law.cornell.edu" in domain:
+            metadata["agency"] = "Cornell_LII"
+            metadata["authority_level"] = "educational"
+            metadata["category"] = "legal_resource"
+            metadata["precedence"] = "reference"
+        elif "federalregister.gov" in domain:
+            metadata["agency"] = "Federal_Register"
+            metadata["authority_level"] = "federal_government"
+            metadata["category"] = "federal_regulation"
+            metadata["precedence"] = "regulation"
+        elif "crsreports.congress.gov" in domain:
+            metadata["agency"] = "Congressional_Research_Service"
+            metadata["authority_level"] = "congressional"
+            metadata["category"] = "research_report"
+            metadata["precedence"] = "analysis"
+        elif "gao.gov" in domain:
+            metadata["agency"] = "GAO"
+            metadata["authority_level"] = "federal_accountability"
+            metadata["category"] = "legal_decision"
+            metadata["precedence"] = "decision"
+        elif "whitehouse.gov" in domain:
+            metadata["agency"] = "Executive_Branch"
+            metadata["authority_level"] = "executive"
+            metadata["category"] = "executive_order"
+            metadata["precedence"] = "executive_order"
+        
+        # Extract citation patterns (basic implementation)
+        citation_patterns = [
+            r'\b\d+\s+CFR\s+\d+',  # Code of Federal Regulations
+            r'\b\d+\s+USC\s+\d+',  # United States Code
+            r'\b\d+\s+Fed\.\s*Reg\.\s+\d+',  # Federal Register
+            r'\bPub\.\s*L\.\s*\d+-\d+',  # Public Law
+        ]
+        
+        for pattern in citation_patterns:
+            import re
+            match = re.search(pattern, content)
+            if match:
+                metadata["citation"] = match.group(0)
+                break
+        
+        # Extract dates (basic implementation)
+        date_patterns = [
+            r'\b\d{1,2}/\d{1,2}/\d{4}\b',  # MM/DD/YYYY
+            r'\b\d{4}-\d{2}-\d{2}\b',      # YYYY-MM-DD
+            r'\b(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},?\s+\d{4}\b'
+        ]
+        
+        for pattern in date_patterns:
+            import re
+            match = re.search(pattern, content)
+            if match:
+                metadata["effective_date"] = match.group(0)
+                break
+        
+        return metadata
+
 # Convenience functions for different collection modes
 async def build_standard_knowledge_base():
     """Build knowledge base in standard mode (backward compatible)"""
@@ -2506,6 +2605,10 @@ async def build_standard_knowledge_base():
 async def build_bulk_knowledge_base():
     """Build knowledge base in bulk mode (15,000+ documents target)"""
     return await build_legal_knowledge_base(CollectionMode.BULK)
+
+async def build_federal_resources_knowledge_base():
+    """Build knowledge base in federal resources mode (5,000+ government documents target)"""
+    return await build_legal_knowledge_base(CollectionMode.FEDERAL_RESOURCES)
 
 
 if __name__ == "__main__":
