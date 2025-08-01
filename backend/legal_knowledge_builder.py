@@ -23,7 +23,7 @@ from pathlib import Path
 
 # SerpAPI - handle import gracefully
 try:
-    from serpapi import GoogleSearch
+    from serpapi import Client as GoogleSearch
     SERPAPI_AVAILABLE = True
 except ImportError:
     SERPAPI_AVAILABLE = False
