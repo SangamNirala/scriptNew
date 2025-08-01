@@ -257,17 +257,102 @@ class LegalKnowledgeBuilder:
         return content
     
     def _get_next_api_key(self) -> Optional[str]:
-        """Get next available CourtListener API key with rotation"""
+        """Get next available CourtListener API key with intelligent selection"""
         if not self.courtlistener_api_keys:
             return None
         
-        # Get current key
-        current_key = self.courtlistener_api_keys[self.current_api_key_index]
+        current_time = time.time()
         
-        # Rotate to next key for next call
-        self.current_api_key_index = (self.current_api_key_index + 1) % len(self.courtlistener_api_keys)
+        # Find the key with least recent usage and no active backoff
+        best_key_index = None
+        best_score = float('inf')
         
-        return current_key
+        for i, key in enumerate(self.courtlistener_api_keys):
+            rate_state = self.rate_limits[i]
+            
+            # Skip if key is in backoff period
+            if current_time < rate_state.backoff_until:
+                continue
+                
+            # Calculate score based on usage and time since last request
+            time_since_last = current_time - rate_state.last_request_time
+            usage_penalty = rate_state.requests_made * 0.1
+            failure_penalty = rate_state.consecutive_failures * 2
+            
+            score = usage_penalty + failure_penalty - time_since_last
+            
+            if score < best_score:
+                best_score = score
+                best_key_index = i
+        
+        # If no key available (all in backoff), wait for shortest backoff
+        if best_key_index is None:
+            min_backoff = min(state.backoff_until for state in self.rate_limits.values())
+            wait_time = max(0, min_backoff - current_time)
+            logger.warning(f"All API keys in backoff. Waiting {wait_time:.1f}s")
+            return None
+            
+        # Update state for selected key
+        self.rate_limits[best_key_index].last_request_time = current_time
+        self.rate_limits[best_key_index].requests_made += 1
+        
+        return self.courtlistener_api_keys[best_key_index]
+    
+    async def _wait_for_rate_limit(self, key_index: int):
+        """Wait for rate limiting based on requests per minute limit"""
+        if key_index not in self.rate_limits:
+            return
+            
+        rate_state = self.rate_limits[key_index]
+        current_time = time.time()
+        
+        # Calculate required wait time based on rate limit
+        requests_per_minute = self.config["rate_limit_requests_per_minute"]
+        min_interval = 60.0 / requests_per_minute  # seconds between requests
+        
+        time_since_last = current_time - rate_state.last_request_time
+        if time_since_last < min_interval:
+            wait_time = min_interval - time_since_last
+            # Add small jitter to avoid thundering herd
+            jitter = random.uniform(0, 0.5)
+            await asyncio.sleep(wait_time + jitter)
+    
+    async def _handle_api_error(self, key_index: int, status_code: int, response_text: str = "") -> bool:
+        """Handle API errors with exponential backoff. Returns True if should retry."""
+        if key_index not in self.rate_limits:
+            return False
+            
+        rate_state = self.rate_limits[key_index]
+        current_time = time.time()
+        
+        if status_code == 429:  # Rate limit exceeded
+            rate_state.consecutive_failures += 1
+            # Exponential backoff with jitter
+            backoff_time = self.config["base_backoff_seconds"] * (2 ** rate_state.consecutive_failures)
+            jitter = random.uniform(0.5, 1.5)
+            rate_state.backoff_until = current_time + (backoff_time * jitter)
+            
+            logger.warning(f"Rate limit hit for key #{key_index}. Backing off for {backoff_time:.1f}s")
+            return rate_state.consecutive_failures <= self.config["max_retries"]
+            
+        elif status_code in [500, 502, 503, 504]:  # Server errors
+            rate_state.consecutive_failures += 1
+            backoff_time = self.config["base_backoff_seconds"] * rate_state.consecutive_failures
+            rate_state.backoff_until = current_time + backoff_time
+            
+            logger.warning(f"Server error {status_code} for key #{key_index}. Backing off for {backoff_time:.1f}s")
+            return rate_state.consecutive_failures <= self.config["max_retries"]
+            
+        elif status_code == 401:  # Unauthorized
+            logger.error(f"API key #{key_index} unauthorized. Removing from rotation.")
+            # Don't retry with this key
+            rate_state.backoff_until = current_time + 86400  # 24 hour backoff
+            return False
+            
+        else:
+            # Reset consecutive failures on success or other errors
+            rate_state.consecutive_failures = 0
+            return False
     
     async def _fetch_court_decisions(self) -> List[Dict[str, Any]]:
         """Fetch comprehensive court decisions using CourtListener API with expanded search strategy"""
