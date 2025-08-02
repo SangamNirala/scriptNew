@@ -124,6 +124,15 @@ except ImportError as e:
     logger.warning(f"Legal Updates Monitoring system not available: {e}")
     LEGAL_UPDATES_SYSTEM_AVAILABLE = False
 
+# Import Legal Accuracy Validation & Expert Review System
+try:
+    from legal_accuracy_validation_system import get_validation_system
+    from expert_review_system import get_expert_review_system
+    VALIDATION_SYSTEM_AVAILABLE = True
+except ImportError as e:
+    logger.warning(f"Legal Accuracy Validation system not available: {e}")
+    VALIDATION_SYSTEM_AVAILABLE = False
+
 
 # Define Models
 class ContractRequest(BaseModel):
