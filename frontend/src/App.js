@@ -992,6 +992,18 @@ function App() {
           </Button>
           <Button
             onClick={() => {
+              setShowVoiceAgent(true);
+            }}
+            className="bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-700 hover:to-cyan-700 text-white px-8 py-4 text-lg font-semibold rounded-lg transition-all duration-300 transform hover:scale-105"
+          >
+            <Mic className="h-5 w-5 mr-2" />
+            AI Voice Agent
+            <Badge variant="secondary" className="ml-2 bg-cyan-400 text-cyan-900 text-xs">
+              VOICE-POWERED
+            </Badge>
+          </Button>
+          <Button
+            onClick={() => {
               setUseEnhancedWizard(false);
               setShowAnalytics(false);
               setShowPlainEnglishCreator(false);
