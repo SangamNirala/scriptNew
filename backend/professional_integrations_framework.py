@@ -515,37 +515,53 @@ class ProfessionalIntegrationsFramework:
         }
     
     async def execute_integration_action(self, integration_id: str, action: str, params: Dict[str, Any] = None) -> Dict[str, Any]:
-        """Execute a specific action using an integration"""
+        """Execute an action using a specific integration"""
         
         if integration_id not in self.integrations:
             raise ValueError(f"Integration {integration_id} not found")
         
+        # Auto-activate integration if not active
         if integration_id not in self.active_connections:
-            raise ValueError(f"Integration {integration_id} is not active")
+            logger.info(f"Auto-activating integration {integration_id} for action execution")
+            activation_result = await self.activate_integration(integration_id)
+            if not activation_result.get("success"):
+                raise ValueError(f"Failed to activate integration {integration_id}: {activation_result.get('error', 'Unknown error')}")
         
         integration = self.integrations[integration_id]
         client = self.active_connections[integration_id]
         
+        start_time = datetime.utcnow()
         try:
             # Route action to appropriate handler based on integration type
             if integration.integration_type == IntegrationType.LEGAL_PRACTICE_MANAGEMENT:
-                return await self._handle_practice_management_action(integration, client, action, params)
+                result = await self._handle_practice_management_action(integration, client, action, params or {})
             elif integration.integration_type == IntegrationType.DOCUMENT_MANAGEMENT:
-                return await self._handle_document_management_action(integration, client, action, params)
+                result = await self._handle_document_management_action(integration, client, action, params or {})
             elif integration.integration_type == IntegrationType.LEGAL_RESEARCH:
-                return await self._handle_legal_research_action(integration, client, action, params)
+                result = await self._handle_legal_research_action(integration, client, action, params or {})
             elif integration.integration_type == IntegrationType.WORKFLOW_AUTOMATION:
-                return await self._handle_workflow_automation_action(integration, client, action, params)
+                result = await self._handle_workflow_automation_action(integration, client, action, params or {})
             else:
                 raise ValueError(f"Unsupported integration type: {integration.integration_type.value}")
+            
+            # Add execution time to result
+            execution_time = (datetime.utcnow() - start_time).total_seconds()
+            result["execution_time"] = execution_time
+            result["integration_id"] = integration_id
+            result["action"] = action
+            
+            return result
                 
         except Exception as e:
             logger.error(f"Error executing action {action} on {integration_id}: {str(e)}")
+            execution_time = (datetime.utcnow() - start_time).total_seconds()
             return {
                 "success": False,
                 "error": str(e),
                 "integration_id": integration_id,
-                "action": action
+                "action": action,
+                "execution_time": execution_time,
+                "results": []
             }
     
     async def _handle_practice_management_action(self, integration: IntegrationConfig, client: httpx.AsyncClient, action: str, params: Dict[str, Any]) -> Dict[str, Any]:
