@@ -6941,6 +6941,97 @@ if RAG_SYSTEM_AVAILABLE:
                 detail=f"Error clearing conversation history: {str(e)}"
             )
     
+    
+    # ================================
+    # VOICE AGENT SPECIFIC ENDPOINTS
+    # ================================
+    
+    @api_router.post("/legal-qa/voice-ask", response_model=VoiceAgentResponse)
+    async def voice_agent_ask(request: VoiceAgentRequest):
+        """
+        Voice Agent specific endpoint for legal questions.
+        
+        This endpoint is optimized for voice assistants and provides:
+        1. Automatic voice session ID generation with format: voice_session_<timestamp>_<random>
+        2. Voice-optimized response formatting
+        3. Session metadata for voice context
+        4. Multi-turn conversation support with voice session persistence
+        """
+        try:
+            # Get RAG system instance
+            rag_system = await get_rag_system()
+            
+            # Handle voice session ID generation
+            voice_session_id = request.voice_session_id
+            if not voice_session_id:
+                voice_session_id = generate_voice_session_id()
+            elif not validate_voice_session_format(voice_session_id):
+                # If provided session ID is not in voice format, generate new one
+                voice_session_id = generate_voice_session_id()
+            
+            # Answer the legal question using the voice session
+            result = await rag_system.answer_legal_question(
+                question=request.question,
+                session_id=voice_session_id,
+                jurisdiction=request.jurisdiction,
+                legal_domain=request.legal_domain
+            )
+            
+            # Create voice-optimized response
+            voice_response = VoiceAgentResponse(
+                answer=result["answer"],
+                confidence=result["confidence"],
+                sources=result["sources"],
+                voice_session_id=voice_session_id,
+                retrieved_documents=result["retrieved_documents"],
+                timestamp=result["timestamp"],
+                model_used=result.get("model_used"),
+                is_voice_session=True,
+                session_metadata={
+                    "client_type": request.client_type,
+                    "session_format": "voice_session_<timestamp>_<random>",
+                    "multi_turn_enabled": True,
+                    "voice_optimized": True
+                }
+            )
+            
+            return voice_response
+            
+        except Exception as e:
+            logger.error(f"Error in voice agent ask: {e}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error processing voice agent request: {str(e)}"
+            )
+    
+    @api_router.get("/legal-qa/voice-session/{voice_session_id}/status")
+    async def get_voice_session_status(voice_session_id: str):
+        """Get status and metadata for a voice session"""
+        try:
+            if not validate_voice_session_format(voice_session_id):
+                raise HTTPException(
+                    status_code=400,
+                    detail="Invalid voice session ID format. Expected: voice_session_<timestamp>_<random>"
+                )
+            
+            rag_system = await get_rag_system()
+            history = rag_system.get_conversation_history(voice_session_id)
+            
+            return {
+                "voice_session_id": voice_session_id,
+                "is_active": len(history) > 0,
+                "total_exchanges": len(history),
+                "session_format_valid": True,
+                "created_timestamp": voice_session_id.split("_")[2] if "_" in voice_session_id else None,
+                "last_activity": history[-1]["timestamp"] if history else None
+            }
+            
+        except Exception as e:
+            logger.error(f"Error getting voice session status: {e}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error retrieving voice session status: {str(e)}"
+            )
     @api_router.get("/legal-qa/stats", response_model=RAGSystemStatsResponse)
     async def get_rag_system_stats():
         """Get RAG system statistics and status"""
