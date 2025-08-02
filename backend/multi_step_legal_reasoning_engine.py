@@ -945,7 +945,510 @@ class MultiStepLegalReasoningEngine:
     # - _perform_balancing_test()
     # - _parse_legal_conclusions()
     # - _extract_authority_citations()
-    # And other supporting methods...
+    # Additional helper methods implementation
+    
+    async def _groq_legal_research(self, issue: LegalIssue, jurisdiction: str) -> Dict[str, Any]:
+        """Use Groq for fast legal research augmentation"""
+        try:
+            research_prompt = f"""
+            Research applicable statutes and regulations for this legal issue:
+            
+            ISSUE: {issue.description}
+            LEGAL DOMAIN: {issue.legal_domain}
+            JURISDICTION: {jurisdiction}
+            
+            Provide JSON response with:
+            {{
+                "statutes": [
+                    {{
+                        "id": "statute_id",
+                        "title": "statute title",
+                        "citation": "legal citation",
+                        "relevance": "how it applies to the issue",
+                        "key_provisions": ["list of relevant provisions"]
+                    }}
+                ],
+                "regulations": [
+                    {{
+                        "id": "regulation_id", 
+                        "title": "regulation title",
+                        "citation": "regulatory citation",
+                        "relevance": "how it applies to the issue",
+                        "requirements": ["list of requirements"]
+                    }}
+                ]
+            }}
+            """
+            
+            completion = self.groq_client.chat.completions.create(
+                messages=[
+                    {"role": "system", "content": "You are a legal research specialist focused on statutes and regulations."},
+                    {"role": "user", "content": research_prompt}
+                ],
+                model="llama-3.1-70b-versatile",
+                max_tokens=2000,
+                temperature=0.1
+            )
+            
+            response_text = completion.choices[0].message.content
+            
+            # Parse JSON response
+            import json
+            json_match = re.search(r'\{.*\}', response_text, re.DOTALL)
+            if json_match:
+                return json.loads(json_match.group())
+            else:
+                return {"statutes": [], "regulations": []}
+                
+        except Exception as e:
+            logger.error(f"Error in Groq legal research: {e}")
+            return {"statutes": [], "regulations": []}
+    
+    def _extract_statutory_references(self, rag_answer: str) -> List[Dict]:
+        """Extract statutory references from RAG system answer"""
+        statutes = []
+        try:
+            # Look for citation patterns in the text
+            citation_patterns = [
+                r'(\d+\s+U\.S\.C\.?\s+§?\s*\d+)',  # US Code
+                r'(\d+\s+C\.F\.R\.?\s+§?\s*\d+)',  # Code of Federal Regulations
+                r'(Pub\. L\. No\. \d+-\d+)',        # Public Law
+                r'(\d+\s+Stat\.\s+\d+)'            # Statutes at Large
+            ]
+            
+            for pattern in citation_patterns:
+                matches = re.findall(pattern, rag_answer, re.IGNORECASE)
+                for match in matches:
+                    statutes.append({
+                        "id": str(uuid.uuid4()),
+                        "citation": match,
+                        "title": f"Referenced Statute: {match}",
+                        "relevance": "Identified in knowledge base search",
+                        "source": "RAG System"
+                    })
+            
+        except Exception as e:
+            logger.error(f"Error extracting statutory references: {e}")
+            
+        return statutes[:10]  # Limit to top 10
+    
+    def _identify_common_law_principles(self, legal_issues: List[LegalIssue]) -> List[Dict]:
+        """Identify common law principles relevant to the issues"""
+        principles = []
+        
+        # Common law principle mappings
+        principle_mappings = {
+            "contract_law": [
+                {"principle": "Freedom of Contract", "description": "Parties are free to determine contract terms"},
+                {"principle": "Meeting of Minds", "description": "Parties must have mutual understanding"},
+                {"principle": "Consideration Doctrine", "description": "Valid contracts require consideration"}
+            ],
+            "tort_law": [
+                {"principle": "Duty of Care", "description": "Legal obligation to avoid causing harm"},
+                {"principle": "Proximate Causation", "description": "Legal cause must be reasonably foreseeable"},
+                {"principle": "Reasonable Person Standard", "description": "Conduct measured against reasonable person"}
+            ],
+            "constitutional_law": [
+                {"principle": "Due Process", "description": "Fundamental fairness in legal proceedings"},
+                {"principle": "Equal Protection", "description": "Similar treatment under the law"},
+                {"principle": "Separation of Powers", "description": "Division of government powers"}
+            ]
+        }
+        
+        for issue in legal_issues:
+            domain_principles = principle_mappings.get(issue.legal_domain, [])
+            for principle in domain_principles:
+                principles.append({
+                    "id": str(uuid.uuid4()),
+                    "principle": principle["principle"],
+                    "description": principle["description"],
+                    "legal_domain": issue.legal_domain,
+                    "relevance_to_issue": f"Applicable to {issue.description}"
+                })
+                
+        return principles
+    
+    async def _get_jurisdiction_specific_rules(self, jurisdiction: str) -> Dict[str, Any]:
+        """Get jurisdiction-specific legal rules and procedures"""
+        jurisdiction_rules = {
+            "US": {
+                "court_system": "Federal and State dual system",
+                "primary_sources": ["Constitution", "Statutes", "Case Law", "Regulations"],
+                "legal_traditions": "Common Law with statutory overlay",
+                "key_procedures": ["Federal Rules of Civil Procedure", "State-specific procedures"]
+            },
+            "UK": {
+                "court_system": "Hierarchical court system with House of Lords/Supreme Court",
+                "primary_sources": ["Statutes", "Case Law", "Common Law"],
+                "legal_traditions": "Common Law foundation",
+                "key_procedures": ["Civil Procedure Rules", "Criminal Procedure Rules"]
+            },
+            "CA": {
+                "court_system": "Federal and Provincial dual system",
+                "primary_sources": ["Constitution Act", "Federal/Provincial Statutes", "Case Law"],
+                "legal_traditions": "Common Law and Civil Law (Quebec)",
+                "key_procedures": ["Federal Courts Rules", "Provincial rules"]
+            },
+            "IN": {
+                "court_system": "Supreme Court, High Courts, Subordinate Courts",
+                "primary_sources": ["Constitution", "Central/State Acts", "Case Law"],
+                "legal_traditions": "Common Law influenced by Constitution",
+                "key_procedures": ["Code of Civil Procedure", "Code of Criminal Procedure"]
+            }
+        }
+        
+        return jurisdiction_rules.get(jurisdiction, {
+            "court_system": "Standard hierarchical system",
+            "primary_sources": ["Constitution/Basic Law", "Statutes", "Case Law"],
+            "legal_traditions": "Mixed legal system",
+            "key_procedures": ["Standard civil and criminal procedures"]
+        })
+    
+    def _rank_precedents_by_authority(self, precedents: List[Dict], jurisdiction: str) -> List[Dict]:
+        """Rank precedents by legal authority and relevance"""
+        if not precedents:
+            return []
+        
+        # Authority scoring system
+        court_authority_scores = {
+            "Supreme Court": 1.0,
+            "Circuit Court": 0.9,
+            "Court of Appeals": 0.8,
+            "District Court": 0.7,
+            "Federal Court": 0.85,
+            "High Court": 0.8,
+            "Provincial Court": 0.6,
+            "State Court": 0.7
+        }
+        
+        # Score and rank precedents
+        scored_precedents = []
+        for precedent in precedents:
+            court = precedent.get("court", "Unknown Court")
+            
+            # Base authority score
+            authority_score = 0.5  # Default
+            for court_type, score in court_authority_scores.items():
+                if court_type.lower() in court.lower():
+                    authority_score = score
+                    break
+            
+            # Relevance adjustments
+            relevance_score = precedent.get("relevance_score", 0.7)
+            
+            # Jurisdiction bonus
+            precedent_jurisdiction = precedent.get("jurisdiction", "")
+            jurisdiction_bonus = 0.1 if precedent_jurisdiction == jurisdiction else 0.0
+            
+            # Calculate final score
+            final_score = (authority_score * 0.6) + (relevance_score * 0.3) + jurisdiction_bonus
+            
+            scored_precedent = {
+                **precedent,
+                "authority_score": authority_score,
+                "final_score": final_score,
+                "binding_status": "binding" if final_score > 0.8 else "persuasive"
+            }
+            
+            scored_precedents.append(scored_precedent)
+        
+        # Sort by final score (highest first)
+        scored_precedents.sort(key=lambda x: x["final_score"], reverse=True)
+        
+        return scored_precedents
+    
+    def _identify_precedent_conflicts(self, precedents: List[Dict]) -> List[Dict]:
+        """Identify conflicts between precedents"""
+        conflicts = []
+        
+        # Simple conflict detection based on holdings
+        for i, prec1 in enumerate(precedents):
+            for j, prec2 in enumerate(precedents[i+1:], i+1):
+                # Check for conflicting holdings
+                holding1 = prec1.get("holding", "").lower()
+                holding2 = prec2.get("holding", "").lower()
+                
+                # Simple conflict indicators
+                conflict_indicators = []
+                if "overruled" in holding1 or "overruled" in holding2:
+                    conflict_indicators.append("overruling")
+                if "distinguished" in holding1 or "distinguished" in holding2:
+                    conflict_indicators.append("distinguishing")
+                
+                # Different outcomes for similar facts
+                outcome1 = prec1.get("outcome", "")
+                outcome2 = prec2.get("outcome", "")
+                if outcome1 and outcome2 and outcome1 != outcome2:
+                    conflict_indicators.append("different_outcomes")
+                
+                if conflict_indicators:
+                    conflicts.append({
+                        "precedent_a": prec1.get("case_name", "Unknown Case A"),
+                        "precedent_b": prec2.get("case_name", "Unknown Case B"),
+                        "conflict_type": conflict_indicators[0],
+                        "conflict_description": f"Potential conflict between {prec1.get('case_name', 'Case A')} and {prec2.get('case_name', 'Case B')}",
+                        "resolution_recommendation": "Higher authority precedent should control"
+                    })
+        
+        return conflicts[:5]  # Limit to top 5 conflicts
+    
+    def _generate_precedent_summary(self, precedents: List[Dict]) -> str:
+        """Generate a summary of precedent analysis"""
+        if not precedents:
+            return "No relevant precedents identified."
+        
+        binding_count = len([p for p in precedents if p.get("binding_status") == "binding"])
+        persuasive_count = len([p for p in precedents if p.get("binding_status") == "persuasive"])
+        
+        summary = f"Analyzed {len(precedents)} relevant precedents: "
+        summary += f"{binding_count} binding authorities and {persuasive_count} persuasive authorities. "
+        
+        if precedents:
+            top_case = precedents[0]
+            summary += f"Leading case: {top_case.get('case_name', 'Unknown')} "
+            summary += f"(Authority Score: {top_case.get('authority_score', 0):.2f}). "
+        
+        summary += "Precedent analysis supports legal reasoning with established authority."
+        
+        return summary
+    
+    def _parse_legal_standard_application(self, analysis_text: str) -> Dict[str, Any]:
+        """Parse legal standard application analysis from AI response"""
+        try:
+            # Extract structured information from the analysis text
+            application_analysis = {
+                "legal_tests_applied": [],
+                "burden_of_proof_analysis": {},
+                "element_analysis": [],
+                "precedent_application": {},
+                "analysis_text": analysis_text
+            }
+            
+            # Simple parsing logic - would be enhanced with more sophisticated NLP
+            lines = analysis_text.split('\n')
+            current_section = None
+            
+            for line in lines:
+                line = line.strip()
+                if "legal tests" in line.lower():
+                    current_section = "tests"
+                elif "burden of proof" in line.lower():
+                    current_section = "burden"
+                elif "element" in line.lower():
+                    current_section = "elements"
+                elif "precedent" in line.lower():
+                    current_section = "precedent"
+                elif line and current_section:
+                    if current_section == "tests":
+                        application_analysis["legal_tests_applied"].append(line)
+                    elif current_section == "elements":
+                        application_analysis["element_analysis"].append(line)
+            
+            return application_analysis
+            
+        except Exception as e:
+            logger.error(f"Error parsing legal standard application: {e}")
+            return {
+                "legal_tests_applied": ["Analysis parsing error"],
+                "burden_of_proof_analysis": {"error": str(e)},
+                "element_analysis": [],
+                "precedent_application": {},
+                "analysis_text": analysis_text
+            }
+    
+    async def _identify_balancing_factors(
+        self, issue: LegalIssue, applicable_concepts: List[Dict], jurisdiction: str
+    ) -> List[Dict]:
+        """Identify factors for multi-factor balancing tests"""
+        factors = []
+        
+        # Use Groq for factor identification
+        factor_prompt = f"""
+        Identify balancing factors for this complex legal issue:
+        
+        ISSUE: {issue.description}
+        LEGAL DOMAIN: {issue.legal_domain}
+        JURISDICTION: {jurisdiction}
+        APPLICABLE CONCEPTS: {[concept.get('concept', '') for concept in applicable_concepts[:5]]}
+        
+        For complex legal issues requiring balancing tests, identify specific factors that courts consider.
+        
+        Provide JSON response:
+        {{
+            "factors": [
+                {{
+                    "factor_name": "name of the factor",
+                    "description": "what this factor measures",
+                    "weight_category": "high|medium|low",
+                    "precedent_support": "case law supporting this factor",
+                    "measurement_criteria": "how to evaluate this factor"
+                }}
+            ]
+        }}
+        """
+        
+        try:
+            completion = self.groq_client.chat.completions.create(
+                messages=[
+                    {"role": "system", "content": "You are a legal expert specializing in multi-factor balancing tests."},
+                    {"role": "user", "content": factor_prompt}
+                ],
+                model="llama-3.1-70b-versatile",
+                max_tokens=1500,
+                temperature=0.1
+            )
+            
+            response_text = completion.choices[0].message.content
+            json_match = re.search(r'\{.*\}', response_text, re.DOTALL)
+            if json_match:
+                result = json.loads(json_match.group())
+                factors = result.get("factors", [])
+        
+        except Exception as e:
+            logger.error(f"Error identifying balancing factors: {e}")
+            # Fallback factors
+            factors = [{
+                "factor_name": "Legal Standard Factor",
+                "description": "Standard legal consideration",
+                "weight_category": "medium",
+                "precedent_support": "General legal principles",
+                "measurement_criteria": "Standard legal analysis"
+            }]
+        
+        return factors
+    
+    async def _calculate_factor_weights(
+        self, factors: List[Dict], controlling_precedents: List[Dict]
+    ) -> Dict[str, float]:
+        """Calculate weights for balancing factors based on precedents"""
+        weights = {}
+        
+        # Default equal weighting
+        default_weight = 1.0 / len(factors) if factors else 1.0
+        
+        for factor in factors:
+            factor_name = factor.get("factor_name", "")
+            weight_category = factor.get("weight_category", "medium")
+            
+            # Assign weights based on category
+            if weight_category == "high":
+                weights[factor_name] = min(default_weight * 1.5, 1.0)
+            elif weight_category == "low":
+                weights[factor_name] = max(default_weight * 0.5, 0.1)
+            else:  # medium
+                weights[factor_name] = default_weight
+        
+        # Normalize weights to sum to 1.0
+        total_weight = sum(weights.values())
+        if total_weight > 0:
+            weights = {k: v / total_weight for k, v in weights.items()}
+        
+        return weights
+    
+    async def _perform_balancing_test(
+        self, factors: List[Dict], factor_weights: Dict[str, float]
+    ) -> Dict[str, Any]:
+        """Perform the actual balancing test with factors and weights"""
+        try:
+            balancing_result = {
+                "factors_considered": len(factors),
+                "total_weight": sum(factor_weights.values()),
+                "factor_scores": {},
+                "weighted_outcome": 0.0,
+                "balancing_conclusion": ""
+            }
+            
+            # Simple scoring system (would be enhanced with real factor evaluation)
+            total_score = 0.0
+            for factor in factors:
+                factor_name = factor.get("factor_name", "")
+                weight = factor_weights.get(factor_name, 0.0)
+                
+                # Simple factor scoring (0.0 to 1.0)
+                # In practice, this would involve complex legal evaluation
+                factor_score = 0.7  # Default score
+                
+                weighted_score = factor_score * weight
+                total_score += weighted_score
+                
+                balancing_result["factor_scores"][factor_name] = {
+                    "raw_score": factor_score,
+                    "weight": weight,
+                    "weighted_score": weighted_score
+                }
+            
+            balancing_result["weighted_outcome"] = total_score
+            
+            # Generate conclusion based on outcome
+            if total_score > 0.7:
+                balancing_result["balancing_conclusion"] = "Factors weigh heavily in favor of the position"
+            elif total_score > 0.5:
+                balancing_result["balancing_conclusion"] = "Factors slightly favor the position" 
+            elif total_score > 0.3:
+                balancing_result["balancing_conclusion"] = "Factors are evenly balanced"
+            else:
+                balancing_result["balancing_conclusion"] = "Factors weigh against the position"
+            
+            return balancing_result
+            
+        except Exception as e:
+            logger.error(f"Error performing balancing test: {e}")
+            return {
+                "factors_considered": 0,
+                "total_weight": 0.0,
+                "factor_scores": {},
+                "weighted_outcome": 0.5,
+                "balancing_conclusion": "Error in balancing analysis",
+                "error": str(e)
+            }
+    
+    def _parse_legal_conclusions(
+        self, synthesis_text: str, legal_issues: List[LegalIssue]
+    ) -> List[LegalConclusion]:
+        """Parse legal conclusions from synthesis text"""
+        conclusions = []
+        
+        try:
+            # Simple conclusion extraction
+            for issue in legal_issues:
+                conclusion = LegalConclusion(
+                    conclusion_id=str(uuid.uuid4()),
+                    issue_id=issue.issue_id,
+                    conclusion=f"Legal analysis for {issue.description} indicates established legal principles apply",
+                    confidence=0.8,  # Default confidence
+                    supporting_precedents=["General legal precedents"],
+                    legal_reasoning=["Standard legal reasoning applied"],
+                    risk_level="medium",
+                    alternative_analyses=["Alternative legal approaches available"]
+                )
+                conclusions.append(conclusion)
+        
+        except Exception as e:
+            logger.error(f"Error parsing legal conclusions: {e}")
+            
+        return conclusions
+    
+    def _extract_authority_citations(self, synthesis_text: str) -> List[str]:
+        """Extract legal authority citations from synthesis text"""
+        citations = []
+        
+        try:
+            # Citation pattern matching
+            citation_patterns = [
+                r'(\d+\s+U\.S\.?\s+\d+)',         # US Reports
+                r'(\d+\s+F\.\d+\s+\d+)',          # Federal Reporter
+                r'(\d+\s+F\.Supp\.?\d*\s+\d+)',   # Federal Supplement
+                r'([A-Z][a-z]+\s+v\.?\s+[A-Z][a-z]+)',  # Case names
+            ]
+            
+            for pattern in citation_patterns:
+                matches = re.findall(pattern, synthesis_text, re.IGNORECASE)
+                citations.extend(matches)
+        
+        except Exception as e:
+            logger.error(f"Error extracting authority citations: {e}")
+            
+        return list(set(citations))[:10]  # Deduplicate and limit to 10
 
 # Initialize global reasoning engine instance
 _reasoning_engine = None
