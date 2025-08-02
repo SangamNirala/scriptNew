@@ -6867,20 +6867,36 @@ if RAG_SYSTEM_AVAILABLE:
         2. Using AI to generate accurate, well-researched answers
         3. Citing authoritative legal sources
         4. Supporting multi-turn conversations with context
+        5. Supporting Voice Agent functionality with voice session management
         """
         try:
             # Get RAG system instance
             rag_system = await get_rag_system()
             
+            # Handle Voice Agent session ID logic
+            session_id = request.session_id
+            is_voice = request.is_voice or False
+            
+            # Generate voice session ID if this is a voice request without session
+            if is_voice and not session_id:
+                session_id = generate_voice_session_id()
+            elif is_voice and session_id and not is_voice_session(session_id):
+                # Convert regular session to voice session format
+                session_id = generate_voice_session_id()
+            
             # Answer the legal question
             result = await rag_system.answer_legal_question(
                 question=request.question,
-                session_id=request.session_id,
+                session_id=session_id,
                 jurisdiction=request.jurisdiction,
                 legal_domain=request.legal_domain
             )
             
-            return LegalQuestionResponse(**result)
+            # Enhance response with voice session information
+            response_data = {**result}
+            response_data["is_voice_session"] = is_voice or is_voice_session(session_id or "")
+            
+            return LegalQuestionResponse(**response_data)
             
         except Exception as e:
             logger.error(f"Error answering legal question: {e}")
