@@ -124,6 +124,17 @@ except ImportError as e:
     logger.warning(f"Legal Updates Monitoring system not available: {e}")
     LEGAL_UPDATES_SYSTEM_AVAILABLE = False
 
+# Import Production Optimization Systems
+try:
+    from performance_optimization_system import initialize_performance_system, get_performance_system
+    from analytics_system import initialize_analytics_system, get_analytics_system
+    from scalability_system import initialize_scalability_system, get_scalability_system
+    from production_monitoring_system import initialize_monitoring_system, get_monitoring_system
+    PRODUCTION_SYSTEMS_AVAILABLE = True
+except ImportError as e:
+    logger.warning(f"Production optimization systems not available: {e}")
+    PRODUCTION_SYSTEMS_AVAILABLE = False
+
 # Import Legal Accuracy Validation & Expert Review System
 try:
     from legal_accuracy_validation_system import get_validation_system
