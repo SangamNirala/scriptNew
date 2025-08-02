@@ -426,6 +426,28 @@ class LegalCaseSearchRequest(BaseModel):
     date_range: Optional[Dict[str, str]] = None  # {"start": "2020-01-01", "end": "2024-01-01"}
     max_results: int = Field(default=10, le=100)
 
+# Production Optimization Models
+class ProductionSystemsRequest(BaseModel):
+    action: str  # "initialize", "status", "metrics", "scale", "monitor"
+    parameters: Dict[str, Any] = Field(default_factory=dict)
+
+class ProductionMetricsResponse(BaseModel):
+    cache_metrics: Dict[str, Any]
+    performance_metrics: Dict[str, Any]
+    scalability_metrics: Dict[str, Any]
+    system_health: Dict[str, Any]
+    analytics_summary: Dict[str, Any]
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+
+class ProductionStatusResponse(BaseModel):
+    systems_status: Dict[str, str]
+    overall_health: str
+    active_sessions: int
+    concurrent_requests: int
+    cache_hit_rate: float
+    average_response_time: float
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+
 # Legal Accuracy Validation Models
 class ComprehensiveValidationRequest(BaseModel):
     analysis_content: str
