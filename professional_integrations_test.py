@@ -217,7 +217,11 @@ class ProfessionalIntegrationsAPITester:
                     print(f"   ✅ Found expected field: {field}")
                     if field == 'api_key':
                         self.generated_api_key = response[field]
-                        print(f"   Generated API key: {self.generated_api_key[:20]}...")
+                        # Fix: Ensure api_key is a string before slicing
+                        if isinstance(self.generated_api_key, str) and len(self.generated_api_key) > 20:
+                            print(f"   Generated API key: {self.generated_api_key[:20]}...")
+                        else:
+                            print(f"   Generated API key: {self.generated_api_key}")
                 else:
                     print(f"   ⚠️  Missing expected field: {field}")
             
