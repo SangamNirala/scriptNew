@@ -617,11 +617,12 @@ class ProfessionalIntegrationsAPITester:
     def test_marketplace_search(self):
         """Test POST /api/marketplace/search - Search marketplace apps"""
         search_data = {
-            "query": "legal research",
-            "category": "research_tools",
+            "category": "legal_research",
+            "search_query": "legal research",
             "pricing_model": "subscription",
             "min_rating": 4.0,
-            "max_results": 10
+            "tags": ["research", "ai"],
+            "limit": 10
         }
         
         success, response = self.run_test(
