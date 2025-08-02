@@ -2603,6 +2603,343 @@ class LegalMateAPITester:
         """Test getting list of contract comparisons"""
         return self.run_test("Contract Comparisons List", "GET", "contract-comparisons", 200)
 
+    def test_partnership_application_standardized_validation(self):
+        """Test Partnership Application endpoint with standardized partner type validation"""
+        print("\n🔍 Testing Partnership Application Endpoint - Standardized Validation...")
+        
+        # Test data template
+        base_application_data = {
+            "company_name": "Test Partnership Company",
+            "contact_name": "John Partnership",
+            "contact_email": "john@testpartnership.com",
+            "contact_phone": "+1-555-0123",
+            "business_description": "We provide innovative technology solutions for legal industry",
+            "website": "https://testpartnership.com",
+            "years_in_business": 5,
+            "geographic_regions": ["North America", "Europe"],
+            "specializations": ["Legal Technology", "AI Solutions"],
+            "partnership_goals": "Expand market reach and provide integrated solutions"
+        }
+        
+        # Test cases for different partner type formats
+        partner_type_test_cases = [
+            # Exact enum values
+            {"partner_type": "technology_partner", "description": "Exact enum: technology_partner", "should_pass": True},
+            {"partner_type": "integration_partner", "description": "Exact enum: integration_partner", "should_pass": True},
+            {"partner_type": "reseller_partner", "description": "Exact enum: reseller_partner", "should_pass": True},
+            {"partner_type": "legal_service_provider", "description": "Exact enum: legal_service_provider", "should_pass": True},
+            {"partner_type": "software_vendor", "description": "Exact enum: software_vendor", "should_pass": True},
+            {"partner_type": "consultant", "description": "Exact enum: consultant", "should_pass": True},
+            {"partner_type": "trainer", "description": "Exact enum: trainer", "should_pass": True},
+            {"partner_type": "channel_partner", "description": "Exact enum: channel_partner", "should_pass": True},
+            
+            # Friendly aliases
+            {"partner_type": "Technology", "description": "Friendly alias: Technology", "should_pass": True},
+            {"partner_type": "Integration", "description": "Friendly alias: Integration", "should_pass": True},
+            {"partner_type": "Reseller", "description": "Friendly alias: Reseller", "should_pass": True},
+            {"partner_type": "Legal Service Provider", "description": "Friendly alias: Legal Service Provider", "should_pass": True},
+            {"partner_type": "Software Vendor", "description": "Friendly alias: Software Vendor", "should_pass": True},
+            {"partner_type": "Consultant", "description": "Friendly alias: Consultant", "should_pass": True},
+            {"partner_type": "Trainer", "description": "Friendly alias: Trainer", "should_pass": True},
+            {"partner_type": "Channel Partner", "description": "Friendly alias: Channel Partner", "should_pass": True},
+            
+            # Case-insensitive handling
+            {"partner_type": "TECHNOLOGY_PARTNER", "description": "All caps: TECHNOLOGY_PARTNER", "should_pass": True},
+            {"partner_type": "INTEGRATION_PARTNER", "description": "All caps: INTEGRATION_PARTNER", "should_pass": True},
+            {"partner_type": "TECHNOLOGY", "description": "All caps friendly: TECHNOLOGY", "should_pass": True},
+            {"partner_type": "INTEGRATION", "description": "All caps friendly: INTEGRATION", "should_pass": True},
+            
+            # Mixed case versions
+            {"partner_type": "Technology_Partner", "description": "Mixed case: Technology_Partner", "should_pass": True},
+            {"partner_type": "Integration_Partner", "description": "Mixed case: Integration_Partner", "should_pass": True},
+            {"partner_type": "technology", "description": "Lowercase friendly: technology", "should_pass": True},
+            {"partner_type": "integration", "description": "Lowercase friendly: integration", "should_pass": True},
+            
+            # Edge cases - should fail
+            {"partner_type": "invalid_partner", "description": "Invalid type: invalid_partner", "should_pass": False},
+            {"partner_type": "random_type", "description": "Invalid type: random_type", "should_pass": False},
+            {"partner_type": "", "description": "Empty string", "should_pass": False},
+        ]
+        
+        passed_tests = 0
+        total_tests = len(partner_type_test_cases)
+        
+        for test_case in partner_type_test_cases:
+            # Create test data with specific partner type
+            test_data = base_application_data.copy()
+            test_data["partner_type"] = test_case["partner_type"]
+            
+            expected_status = 200 if test_case["should_pass"] else 400
+            
+            self.tests_run += 1
+            print(f"\n   Testing: {test_case['description']}")
+            print(f"   Partner Type: '{test_case['partner_type']}'")
+            print(f"   Expected: {'PASS' if test_case['should_pass'] else 'FAIL'}")
+            
+            try:
+                url = f"{self.api_url}/partnerships/apply"
+                response = requests.post(url, json=test_data, headers={'Content-Type': 'application/json'}, timeout=30)
+                
+                print(f"   Status: {response.status_code}")
+                
+                if response.status_code == expected_status:
+                    self.tests_passed += 1
+                    passed_tests += 1
+                    print(f"   ✅ PASSED - Got expected status {expected_status}")
+                    
+                    if test_case["should_pass"] and response.status_code == 200:
+                        try:
+                            response_data = response.json()
+                            if 'application_id' in response_data:
+                                print(f"   ✅ Application created with ID: {response_data['application_id']}")
+                            if 'partner_type' in response_data:
+                                print(f"   ✅ Partner type in response: {response_data['partner_type']}")
+                        except:
+                            pass
+                else:
+                    print(f"   ❌ FAILED - Expected {expected_status}, got {response.status_code}")
+                    try:
+                        error_data = response.json()
+                        print(f"   Error: {error_data}")
+                    except:
+                        print(f"   Error: {response.text}")
+                        
+            except Exception as e:
+                print(f"   ❌ FAILED - Error: {str(e)}")
+        
+        print(f"\n   Partnership Application Tests: {passed_tests}/{total_tests} passed")
+        return passed_tests == total_tests
+
+    def test_partnership_search_standardized_validation(self):
+        """Test Partnership Search endpoint with standardized partner type validation"""
+        print("\n🔍 Testing Partnership Search Endpoint - Standardized Validation...")
+        
+        # Test cases for different partner type formats
+        partner_type_test_cases = [
+            # Exact enum values
+            {"partner_type": "technology_partner", "description": "Exact enum: technology_partner", "should_pass": True},
+            {"partner_type": "integration_partner", "description": "Exact enum: integration_partner", "should_pass": True},
+            {"partner_type": "reseller_partner", "description": "Exact enum: reseller_partner", "should_pass": True},
+            {"partner_type": "legal_service_provider", "description": "Exact enum: legal_service_provider", "should_pass": True},
+            {"partner_type": "software_vendor", "description": "Exact enum: software_vendor", "should_pass": True},
+            {"partner_type": "consultant", "description": "Exact enum: consultant", "should_pass": True},
+            {"partner_type": "trainer", "description": "Exact enum: trainer", "should_pass": True},
+            {"partner_type": "channel_partner", "description": "Exact enum: channel_partner", "should_pass": True},
+            
+            # Friendly aliases
+            {"partner_type": "Technology", "description": "Friendly alias: Technology", "should_pass": True},
+            {"partner_type": "Integration", "description": "Friendly alias: Integration", "should_pass": True},
+            {"partner_type": "Reseller", "description": "Friendly alias: Reseller", "should_pass": True},
+            {"partner_type": "Legal Service Provider", "description": "Friendly alias: Legal Service Provider", "should_pass": True},
+            {"partner_type": "Software Vendor", "description": "Friendly alias: Software Vendor", "should_pass": True},
+            {"partner_type": "Consultant", "description": "Friendly alias: Consultant", "should_pass": True},
+            {"partner_type": "Trainer", "description": "Friendly alias: Trainer", "should_pass": True},
+            {"partner_type": "Channel Partner", "description": "Friendly alias: Channel Partner", "should_pass": True},
+            
+            # Case-insensitive handling
+            {"partner_type": "TECHNOLOGY_PARTNER", "description": "All caps: TECHNOLOGY_PARTNER", "should_pass": True},
+            {"partner_type": "INTEGRATION_PARTNER", "description": "All caps: INTEGRATION_PARTNER", "should_pass": True},
+            {"partner_type": "TECHNOLOGY", "description": "All caps friendly: TECHNOLOGY", "should_pass": True},
+            {"partner_type": "INTEGRATION", "description": "All caps friendly: INTEGRATION", "should_pass": True},
+            
+            # Mixed case versions
+            {"partner_type": "Technology_Partner", "description": "Mixed case: Technology_Partner", "should_pass": True},
+            {"partner_type": "Integration_Partner", "description": "Mixed case: Integration_Partner", "should_pass": True},
+            {"partner_type": "technology", "description": "Lowercase friendly: technology", "should_pass": True},
+            {"partner_type": "integration", "description": "Lowercase friendly: integration", "should_pass": True},
+            
+            # Edge cases - should fail
+            {"partner_type": "invalid_partner", "description": "Invalid type: invalid_partner", "should_pass": False},
+            {"partner_type": "random_type", "description": "Invalid type: random_type", "should_pass": False},
+            {"partner_type": "", "description": "Empty string", "should_pass": False},
+            
+            # Special case - no partner_type parameter (should return all partners)
+            {"partner_type": None, "description": "No partner_type parameter (should return all)", "should_pass": True},
+        ]
+        
+        passed_tests = 0
+        total_tests = len(partner_type_test_cases)
+        
+        for test_case in partner_type_test_cases:
+            expected_status = 200 if test_case["should_pass"] else 400
+            
+            self.tests_run += 1
+            print(f"\n   Testing: {test_case['description']}")
+            print(f"   Partner Type: '{test_case['partner_type']}'")
+            print(f"   Expected: {'PASS' if test_case['should_pass'] else 'FAIL'}")
+            
+            try:
+                # Build URL with query parameters
+                url = f"{self.api_url}/partnerships/search"
+                params = {}
+                
+                if test_case["partner_type"] is not None:
+                    params["partner_type"] = test_case["partner_type"]
+                
+                # Add other optional parameters for more realistic search
+                params.update({
+                    "region": "North America",
+                    "limit": 10
+                })
+                
+                response = requests.get(url, params=params, timeout=30)
+                
+                print(f"   Status: {response.status_code}")
+                
+                if response.status_code == expected_status:
+                    self.tests_passed += 1
+                    passed_tests += 1
+                    print(f"   ✅ PASSED - Got expected status {expected_status}")
+                    
+                    if test_case["should_pass"] and response.status_code == 200:
+                        try:
+                            response_data = response.json()
+                            if 'partners' in response_data:
+                                partners_count = len(response_data['partners'])
+                                print(f"   ✅ Found {partners_count} partners")
+                                
+                                # Check if partners have the expected type (if specific type was searched)
+                                if test_case["partner_type"] and test_case["partner_type"] != "":
+                                    for partner in response_data['partners'][:3]:  # Check first 3 partners
+                                        if 'partner_type' in partner:
+                                            print(f"   ✅ Partner type in result: {partner['partner_type']}")
+                                            break
+                            if 'total_count' in response_data:
+                                print(f"   ✅ Total partners available: {response_data['total_count']}")
+                        except Exception as e:
+                            print(f"   ⚠️  Could not parse response: {str(e)}")
+                else:
+                    print(f"   ❌ FAILED - Expected {expected_status}, got {response.status_code}")
+                    try:
+                        error_data = response.json()
+                        print(f"   Error: {error_data}")
+                    except:
+                        print(f"   Error: {response.text}")
+                        
+            except Exception as e:
+                print(f"   ❌ FAILED - Error: {str(e)}")
+        
+        print(f"\n   Partnership Search Tests: {passed_tests}/{total_tests} passed")
+        return passed_tests == total_tests
+
+    def test_partnership_endpoints_consistency(self):
+        """Test that both Partnership endpoints accept the same partner type formats consistently"""
+        print("\n🔍 Testing Partnership Endpoints Consistency...")
+        
+        # Test cases that should work on BOTH endpoints
+        consistency_test_cases = [
+            {"partner_type": "technology_partner", "description": "Exact enum: technology_partner"},
+            {"partner_type": "Technology", "description": "Friendly alias: Technology"},
+            {"partner_type": "TECHNOLOGY_PARTNER", "description": "All caps: TECHNOLOGY_PARTNER"},
+            {"partner_type": "legal_service_provider", "description": "Exact enum: legal_service_provider"},
+            {"partner_type": "Legal Service Provider", "description": "Friendly alias: Legal Service Provider"},
+            {"partner_type": "LEGAL_SERVICE_PROVIDER", "description": "All caps: LEGAL_SERVICE_PROVIDER"},
+        ]
+        
+        base_application_data = {
+            "company_name": "Consistency Test Company",
+            "contact_name": "Jane Consistency",
+            "contact_email": "jane@consistency.com",
+            "contact_phone": "+1-555-0456",
+            "business_description": "Testing consistency between endpoints",
+            "website": "https://consistency.com",
+            "years_in_business": 3,
+            "geographic_regions": ["North America"],
+            "specializations": ["Testing"],
+            "partnership_goals": "Ensure consistent validation"
+        }
+        
+        consistency_results = []
+        
+        for test_case in consistency_test_cases:
+            print(f"\n   Testing consistency for: {test_case['description']}")
+            
+            # Test Application endpoint
+            app_data = base_application_data.copy()
+            app_data["partner_type"] = test_case["partner_type"]
+            
+            try:
+                app_url = f"{self.api_url}/partnerships/apply"
+                app_response = requests.post(app_url, json=app_data, headers={'Content-Type': 'application/json'}, timeout=30)
+                app_success = app_response.status_code == 200
+                print(f"   Application endpoint: {app_response.status_code} ({'PASS' if app_success else 'FAIL'})")
+            except Exception as e:
+                app_success = False
+                print(f"   Application endpoint: ERROR - {str(e)}")
+            
+            # Test Search endpoint
+            try:
+                search_url = f"{self.api_url}/partnerships/search"
+                search_params = {"partner_type": test_case["partner_type"], "limit": 5}
+                search_response = requests.get(search_url, params=search_params, timeout=30)
+                search_success = search_response.status_code == 200
+                print(f"   Search endpoint: {search_response.status_code} ({'PASS' if search_success else 'FAIL'})")
+            except Exception as e:
+                search_success = False
+                print(f"   Search endpoint: ERROR - {str(e)}")
+            
+            # Check consistency
+            consistent = app_success == search_success
+            if consistent and app_success:
+                print(f"   ✅ CONSISTENT - Both endpoints accept '{test_case['partner_type']}'")
+                consistency_results.append(True)
+            elif consistent and not app_success:
+                print(f"   ✅ CONSISTENT - Both endpoints reject '{test_case['partner_type']}'")
+                consistency_results.append(True)
+            else:
+                print(f"   ❌ INCONSISTENT - Application: {'PASS' if app_success else 'FAIL'}, Search: {'PASS' if search_success else 'FAIL'}")
+                consistency_results.append(False)
+        
+        self.tests_run += 1
+        consistent_count = sum(consistency_results)
+        total_consistency_tests = len(consistency_results)
+        
+        if consistent_count == total_consistency_tests:
+            self.tests_passed += 1
+            print(f"\n   ✅ CONSISTENCY TEST PASSED - {consistent_count}/{total_consistency_tests} partner types handled consistently")
+            return True
+        else:
+            print(f"\n   ❌ CONSISTENCY TEST FAILED - Only {consistent_count}/{total_consistency_tests} partner types handled consistently")
+            return False
+
+    def run_partnership_tests_only(self):
+        """Run only the Partnership endpoint tests for focused testing"""
+        print("🎯 Starting Partnership Endpoints Focused Testing...")
+        print(f"   Base URL: {self.base_url}")
+        print(f"   API URL: {self.api_url}")
+        print("=" * 80)
+        
+        # Reset counters for focused testing
+        self.tests_run = 0
+        self.tests_passed = 0
+        
+        # Partnership Endpoints Tests
+        app_result = self.test_partnership_application_standardized_validation()
+        search_result = self.test_partnership_search_standardized_validation()
+        consistency_result = self.test_partnership_endpoints_consistency()
+        
+        # Final Results
+        print("\n" + "=" * 80)
+        print("🏁 PARTNERSHIP TESTING COMPLETE")
+        print(f"   Tests Run: {self.tests_run}")
+        print(f"   Tests Passed: {self.tests_passed}")
+        print(f"   Tests Failed: {self.tests_run - self.tests_passed}")
+        print(f"   Success Rate: {(self.tests_passed/self.tests_run)*100:.1f}%")
+        
+        # Summary of key results
+        print(f"\n📊 PARTNERSHIP ENDPOINTS SUMMARY:")
+        print(f"   Partnership Application Validation: {'✅ PASS' if app_result else '❌ FAIL'}")
+        print(f"   Partnership Search Validation: {'✅ PASS' if search_result else '❌ FAIL'}")
+        print(f"   Endpoints Consistency: {'✅ PASS' if consistency_result else '❌ FAIL'}")
+        
+        if self.tests_passed == self.tests_run:
+            print("🎉 ALL PARTNERSHIP TESTS PASSED!")
+            print("✅ Both endpoints now accept the same partner type formats consistently")
+        else:
+            print("⚠️  Some partnership tests failed. Please review the output above.")
+        
+        return self.tests_passed == self.tests_run
+
     def test_real_signature_images(self):
         """Test signature functionality with real signature images provided by user"""
         print("\n🖼️  TESTING WITH REAL SIGNATURE IMAGES")
