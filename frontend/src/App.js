@@ -996,6 +996,7 @@ function App() {
           <Button
             onClick={() => {
               console.log('Voice Agent button clicked!');
+              alert('Voice Agent button clicked! Opening voice modal...');
               setShowVoiceAgent(true);
             }}
             className="bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-700 hover:to-cyan-700 text-white px-8 py-4 text-lg font-semibold rounded-lg transition-all duration-300 transform hover:scale-105"
