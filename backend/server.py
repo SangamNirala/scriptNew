@@ -9797,3 +9797,6 @@ async def trigger_manual_monitoring():
 # ====================================================================================================
 # END LEGAL UPDATES MONITORING API ENDPOINTS
 # ====================================================================================================
+
+# Include all API routes in the main app (after ALL endpoints are defined)
+app.include_router(api_router)
