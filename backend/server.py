@@ -11466,9 +11466,13 @@ async def execute_integration_action(request: IntegrationActionRequest):
             request.parameters
         )
         
+        # Return flattened response with expected fields
         return {
-            "success": True,
-            "result": result,
+            "success": result.get("success", True),
+            "action_type": request.action,
+            "results": result.get("results", []),
+            "execution_time": result.get("execution_time", 0.0),
+            "integration_id": request.integration_id,
             "timestamp": datetime.utcnow().isoformat()
         }
         
