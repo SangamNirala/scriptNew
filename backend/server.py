@@ -11438,9 +11438,13 @@ async def activate_integration(request: IntegrationActivationRequest):
             request.config_overrides
         )
         
+        # Return flattened response with expected fields
         return {
-            "success": True,
-            "result": result,
+            "success": result.get("success", True),
+            "integration_name": result.get("name", ""),
+            "status": result.get("status", "active"),
+            "capabilities": result.get("capabilities", {}),
+            "integration_id": result.get("integration_id", request.integration_id),
             "timestamp": datetime.utcnow().isoformat()
         }
         
