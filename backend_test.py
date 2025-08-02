@@ -2839,16 +2839,18 @@ class LegalMateAPITester:
         ]
         
         base_application_data = {
-            "company_name": "Consistency Test Company",
+            "organization_name": "Consistency Test Company",
             "contact_name": "Jane Consistency",
             "contact_email": "jane@consistency.com",
-            "contact_phone": "+1-555-0456",
-            "business_description": "Testing consistency between endpoints",
-            "website": "https://consistency.com",
-            "years_in_business": 3,
-            "geographic_regions": ["North America"],
-            "specializations": ["Testing"],
-            "partnership_goals": "Ensure consistent validation"
+            "business_info": {
+                "contact_phone": "+1-555-0456",
+                "business_description": "Testing consistency between endpoints",
+                "website": "https://consistency.com",
+                "years_in_business": 3,
+                "geographic_regions": ["North America"],
+                "specializations": ["Testing"],
+                "partnership_goals": "Ensure consistent validation"
+            }
         }
         
         consistency_results = []
