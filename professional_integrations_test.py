@@ -1087,26 +1087,17 @@ class ProfessionalIntegrationsAPITester:
 
     def test_integrations_client_communication(self):
         """Test POST /api/integrations/client-communication - Client communication"""
-        communication_data = {
-            "client_id": "client-123",
-            "communication_type": "legal_advice",
-            "subject": "Contract Review Results",
-            "client_question": "What are the main risks in this partnership agreement and should we proceed?",
-            "context": {
-                "contract_type": "partnership_agreement",
-                "key_concerns": ["liability allocation", "termination clauses", "intellectual property rights"],
-                "client_industry": "technology"
-            },
-            "tone": "professional",
-            "include_disclaimers": True
-        }
+        # This endpoint uses query parameters
+        import urllib.parse
+        client_query = "What are the main risks in this partnership agreement and should we proceed?"
+        encoded_query = urllib.parse.quote(client_query)
+        endpoint = f"integrations/client-communication?client_query={encoded_query}&communication_type=email&tone=professional&include_disclaimers=true"
         
         success, response = self.run_test(
             "Client Communication Generation", 
             "POST", 
-            "integrations/client-communication", 
-            200, 
-            communication_data,
+            endpoint, 
+            200,
             timeout=60
         )
         
