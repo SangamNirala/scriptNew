@@ -263,6 +263,7 @@ class LegalWorkflowAutomation:
         
         # Legal Research Workflow Template
         legal_research_template = WorkflowTemplate(
+            template_id="legal_research",  # Set specific template ID
             name="Comprehensive Legal Research",
             description="Systematic legal research workflow with AI enhancement",
             workflow_type=WorkflowType.LEGAL_RESEARCH,
