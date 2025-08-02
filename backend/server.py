@@ -11405,11 +11405,21 @@ async def get_integrations_status(integration_id: str = None):
         integrations_framework = get_integrations_framework()
         status = await integrations_framework.get_integration_status(integration_id)
         
-        return {
-            "success": True,
-            "status": status,
-            "timestamp": datetime.utcnow().isoformat()
-        }
+        # Return status directly with additional metadata
+        if integration_id:
+            # For single integration, return the integration data directly
+            return {
+                "success": True,
+                **status,
+                "timestamp": datetime.utcnow().isoformat()
+            }
+        else:
+            # For all integrations, return the expected structure
+            return {
+                "success": True,
+                **status,  # This includes total_integrations, active_integrations, integrations
+                "timestamp": datetime.utcnow().isoformat()
+            }
         
     except Exception as e:
         logger.error(f"Error getting integrations status: {e}")
