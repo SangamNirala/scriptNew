@@ -1011,6 +1011,7 @@ function App() {
               setShowAnalytics(false);
               setShowPlainEnglishCreator(false);
               setShowLegalQA(false);
+              setShowVoiceAgent(false);
               setCurrentStep(1);
             }}
             variant="outline"
