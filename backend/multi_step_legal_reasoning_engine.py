@@ -8,6 +8,7 @@ Days 19-21 Implementation: Industry-Leading Legal AI Capabilities
 
 import asyncio
 import json
+import re
 import uuid
 from datetime import datetime
 from typing import List, Dict, Any, Optional, Tuple
