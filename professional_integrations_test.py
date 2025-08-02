@@ -304,10 +304,9 @@ class ProfessionalIntegrationsAPITester:
     def test_enterprise_sso_authenticate(self):
         """Test POST /api/enterprise/sso/authenticate - SSO authentication with 6 providers"""
         sso_data = {
-            "provider": "Google Workspace",
-            "token": "mock-sso-token-12345",
-            "organization_domain": "testlegalfirm.com",
-            "user_email": "john.doe@testlegalfirm.com"
+            "provider_id": "google_workspace",
+            "auth_code": "mock-auth-code-12345",
+            "state": "test-state-token"
         }
         
         success, response = self.run_test(
