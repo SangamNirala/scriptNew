@@ -9296,8 +9296,7 @@ async def multi_jurisdiction_legal_analysis(request: MultiJurisdictionAnalysisRe
         logger.error(f"Error in multi-jurisdiction analysis: {e}")
         raise HTTPException(status_code=500, detail=f"Error performing multi-jurisdiction analysis: {str(e)}")
 
-# Include all API routes in the main app (after all endpoints are defined)
-app.include_router(api_router)
+# Router will be included after ALL endpoints are defined
 
 app.add_middleware(
     CORSMiddleware,
