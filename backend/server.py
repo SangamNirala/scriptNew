@@ -12394,7 +12394,12 @@ async def legal_billing_optimization_analytics(
         
         return {
             "success": True,
-            "billing_analytics": billing_analytics,
+            "firm_id": billing_analytics["firm_id"],
+            "billing_analytics": billing_analytics.get("billing_metrics", {}),
+            "optimization_opportunities": billing_analytics.get("optimization_opportunities", []),
+            "revenue_projections": billing_analytics.get("revenue_projections", {}),
+            "benchmarks": billing_analytics.get("benchmarks", {}),
+            "full_billing_analytics": billing_analytics,  # Complete data for reference
             "timestamp": datetime.utcnow().isoformat()
         }
         
