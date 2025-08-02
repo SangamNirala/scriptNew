@@ -12268,7 +12268,12 @@ async def law_firm_dashboard_analytics(
         
         return {
             "success": True,
-            "dashboard_data": dashboard_data,
+            "firm_id": dashboard_data["firm_id"],
+            "performance_metrics": dashboard_data.get("performance_analytics", {}),
+            "case_statistics": dashboard_data.get("firm_metrics", {}),
+            "revenue_analytics": {"revenue": dashboard_data["firm_metrics"]["revenue"], "billable_hours": dashboard_data["firm_metrics"]["billable_hours"]},
+            "operational_insights": {"recommendations": dashboard_data.get("recommendations", []), "trends": dashboard_data.get("trends", [])},
+            "dashboard_data": dashboard_data,  # Full dashboard data for reference
             "timestamp": datetime.utcnow().isoformat()
         }
         
