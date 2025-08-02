@@ -931,21 +931,14 @@ class ProfessionalIntegrationsAPITester:
 
     def test_integrations_legal_research(self):
         """Test POST /api/integrations/legal-research - Professional legal research"""
-        research_data = {
-            "query": "breach of contract remedies",
-            "jurisdiction": "US",
-            "analysis_depth": "comprehensive",
-            "databases": ["courtlistener", "google_scholar", "legal_information_institute"],
-            "max_results": 25,
-            "include_analysis": True
-        }
+        # This endpoint uses query parameters, not request body
+        endpoint = "integrations/legal-research?query=breach of contract remedies&jurisdiction=US&analysis_depth=comprehensive&include_citations=true"
         
         success, response = self.run_test(
             "Professional Legal Research", 
             "POST", 
-            "integrations/legal-research", 
-            200, 
-            research_data,
+            endpoint, 
+            200,
             timeout=60  # Legal research might take longer
         )
         
