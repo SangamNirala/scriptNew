@@ -1173,6 +1173,11 @@ function App() {
             <LegalQuestionAnswering />
           )}
           
+          {/* Voice Agent */}
+          {showVoiceAgent && (
+            <VoiceAgent onClose={() => setShowVoiceAgent(false)} />
+          )}
+          
           {/* Classic Mode */}
           {!useEnhancedWizard && !showAnalytics && !showPlainEnglishCreator && !showLegalQA && (
             <>
