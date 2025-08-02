@@ -703,13 +703,13 @@ class ProfessionalIntegrationsAPITester:
         
         install_data = {
             "app_id": self.app_id,
-            "organization_id": "test-org-123",
-            "configuration": {
+            "user_id": "test-user-123",
+            "law_firm_id": "test-firm-123",
+            "installation_config": {
                 "api_access_level": "full",
                 "data_sharing": "limited",
                 "notification_preferences": "email"
-            },
-            "billing_plan": "professional"
+            }
         }
         
         success, response = self.run_test(
