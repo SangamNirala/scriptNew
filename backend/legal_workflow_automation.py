@@ -151,6 +151,7 @@ class LegalWorkflowAutomation:
         
         # Client Onboarding Workflow Template
         client_onboarding_template = WorkflowTemplate(
+            template_id="client_onboarding",  # Set specific template ID
             name="Client Onboarding Process",
             description="Comprehensive client onboarding workflow for new legal matters",
             workflow_type=WorkflowType.CLIENT_ONBOARDING,
