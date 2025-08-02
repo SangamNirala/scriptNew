@@ -24,7 +24,43 @@ const LegalQuestionAnswering = () => {
   
   const messagesEndRef = useRef(null);
 
-  const legalDomains = [
+  const communicationModes = [
+    { 
+      id: 'auto_detect', 
+      label: 'Auto-Detect', 
+      icon: Zap, 
+      description: 'Automatically adapt to your expertise level',
+      color: 'bg-purple-100 text-purple-700 border-purple-200'
+    },
+    { 
+      id: 'legal_professional', 
+      label: 'Legal Professional', 
+      icon: Scale, 
+      description: 'Technical language, comprehensive citations, detailed analysis',
+      color: 'bg-blue-100 text-blue-700 border-blue-200'
+    },
+    { 
+      id: 'business_executive', 
+      label: 'Business Executive', 
+      icon: Briefcase, 
+      description: 'Strategic insights, risk assessments, actionable recommendations',
+      color: 'bg-green-100 text-green-700 border-green-200'
+    },
+    { 
+      id: 'general_consumer', 
+      label: 'General Consumer', 
+      icon: Users, 
+      description: 'Plain English explanations, step-by-step guidance, practical advice',
+      color: 'bg-orange-100 text-orange-700 border-orange-200'
+    },
+    { 
+      id: 'academic_student', 
+      label: 'Academic/Student', 
+      icon: GraduationCap, 
+      description: 'Educational explanations, legal concepts, learning-focused responses',
+      color: 'bg-indigo-100 text-indigo-700 border-indigo-200'
+    }
+  ];
     { value: '', label: 'All Legal Areas' },
     { value: 'contract_law', label: 'Contract Law' },
     { value: 'employment_labor_law', label: 'Employment & Labor Law' },
