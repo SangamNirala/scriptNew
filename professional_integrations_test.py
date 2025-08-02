@@ -746,14 +746,14 @@ class ProfessionalIntegrationsAPITester:
         
         review_data = {
             "app_id": self.app_id,
-            "rating": 4.5,
+            "user_id": "test-user-123",
+            "rating": 4,  # Changed to integer
             "title": "Excellent legal research capabilities",
             "review_text": "This app has significantly improved our legal research workflow. The AI-powered search is very accurate and the integration with our existing systems was seamless.",
+            "law_firm_name": "Test Legal Firm LLC",
             "use_case": "Contract analysis and case law research",
             "pros": ["Fast search", "Accurate results", "Easy integration"],
-            "cons": ["Could use more customization options"],
-            "reviewer_role": "Senior Associate",
-            "firm_size": "medium"
+            "cons": ["Could use more customization options"]
         }
         
         success, response = self.run_test(
