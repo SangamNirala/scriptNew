@@ -207,6 +207,7 @@ class LegalWorkflowAutomation:
         
         # Contract Review Workflow Template
         contract_review_template = WorkflowTemplate(
+            template_id="contract_review",  # Set specific template ID
             name="Contract Review and Analysis",
             description="Comprehensive contract review workflow with AI assistance",
             workflow_type=WorkflowType.CONTRACT_REVIEW,
