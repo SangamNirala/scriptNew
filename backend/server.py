@@ -145,6 +145,18 @@ except ImportError as e:
     logger.warning(f"Legal Accuracy Validation system not available: {e}")
     VALIDATION_SYSTEM_AVAILABLE = False
 
+# Import Professional Integrations & API Ecosystem
+try:
+    from professional_integrations_framework import get_integrations_framework
+    from professional_api_ecosystem import get_api_ecosystem
+    from enterprise_integration_features import get_enterprise_features
+    from legal_workflow_automation import get_workflow_automation
+    from marketplace_partnership_ecosystem import get_marketplace_ecosystem
+    PROFESSIONAL_INTEGRATIONS_AVAILABLE = True
+except ImportError as e:
+    logger.warning(f"Professional integrations system not available: {e}")
+    PROFESSIONAL_INTEGRATIONS_AVAILABLE = False
+
 
 # Define Models
 class ContractRequest(BaseModel):
