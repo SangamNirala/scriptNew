@@ -8683,6 +8683,609 @@ def _suggest_conflict_resolution(precedent_a, precedent_b, conflict_indicators: 
     
     return resolution
 
+# ====================================================================================================
+# MULTI-STEP LEGAL REASONING ENGINE - DAY 19-21 IMPLEMENTATION
+# Comprehensive Legal Analysis System integrating all components
+# ====================================================================================================
+
+# Import the Multi-Step Legal Reasoning Engine
+try:
+    from multi_step_legal_reasoning_engine import (
+        get_reasoning_engine, 
+        MultiStepLegalReasoningEngine,
+        ComprehensiveLegalAnalysis,
+        UserType,
+        ReasoningStep,
+        ReasoningStepResult,
+        LegalIssue,
+        LegalConclusion
+    )
+    REASONING_ENGINE_AVAILABLE = True
+    logger.info("Multi-Step Legal Reasoning Engine imported successfully")
+except ImportError as e:
+    logger.warning(f"Multi-Step Legal Reasoning Engine not available: {e}")
+    REASONING_ENGINE_AVAILABLE = False
+
+# Multi-Step Legal Reasoning Models
+class ComprehensiveAnalysisRequest(BaseModel):
+    query: str
+    jurisdiction: str = "US"
+    legal_domain: Optional[str] = None
+    user_type: str = "business_user"  # "legal_professional", "business_user", "consumer", "academic"
+    context: Optional[Dict[str, Any]] = Field(default_factory=dict)
+
+class RiskAssessmentRequest(BaseModel):
+    legal_scenario: str
+    jurisdiction: str = "US"
+    legal_domains: List[str] = Field(default_factory=list)
+    context: Optional[Dict[str, Any]] = Field(default_factory=dict)
+
+class MultiJurisdictionAnalysisRequest(BaseModel):
+    query: str
+    primary_jurisdiction: str = "US"
+    comparison_jurisdictions: List[str] = Field(default_factory=lambda: ["UK", "CA"])
+    legal_domain: Optional[str] = None
+    context: Optional[Dict[str, Any]] = Field(default_factory=dict)
+
+class LegalIssueResponse(BaseModel):
+    issue_id: str
+    description: str
+    legal_domain: str
+    jurisdiction: str
+    priority: str
+    related_concepts: List[str]
+    complexity_score: float
+
+class LegalConclusionResponse(BaseModel):
+    conclusion_id: str
+    issue_id: str
+    conclusion: str
+    confidence: float
+    supporting_precedents: List[str]
+    legal_reasoning: List[str]
+    risk_level: str
+    alternative_analyses: List[str]
+
+class ReasoningStepResponse(BaseModel):
+    step: str
+    analysis: Dict[str, Any]
+    confidence: float
+    sources: List[str]
+    reasoning: str
+    execution_time: float
+
+class ComprehensiveAnalysisResponse(BaseModel):
+    analysis_id: str
+    query: str
+    jurisdiction: str
+    user_type: str
+    legal_issues: List[LegalIssueResponse]
+    applicable_concepts: List[Dict[str, Any]]
+    controlling_precedents: List[Dict[str, Any]]
+    applicable_statutes: List[Dict[str, Any]]
+    legal_reasoning_chain: List[ReasoningStepResponse]
+    risk_assessment: Dict[str, Any]
+    legal_conclusions: List[LegalConclusionResponse]
+    alternative_analyses: List[Dict[str, Any]]
+    confidence_score: float
+    expert_validation_status: str
+    execution_time: float
+    created_at: datetime
+
+class RiskAssessmentResponse(BaseModel):
+    assessment_id: str
+    legal_scenario: str
+    jurisdiction: str
+    overall_risk_level: str
+    risk_probability: str
+    risk_impact: str
+    risk_categories: List[str]
+    detailed_risks: List[Dict[str, Any]]
+    mitigation_strategies: List[str]
+    compliance_concerns: List[str]
+    recommended_actions: List[str]
+    confidence_score: float
+    created_at: datetime
+
+class MultiJurisdictionComparisonResponse(BaseModel):
+    comparison_id: str
+    query: str
+    primary_jurisdiction: str
+    comparison_jurisdictions: List[str]
+    jurisdictional_analysis: Dict[str, Any]
+    legal_conflicts: List[Dict[str, Any]]
+    harmonization_opportunities: List[str]
+    forum_shopping_considerations: List[str]
+    choice_of_law_recommendations: List[str]
+    enforcement_analysis: Dict[str, Any]
+    practical_implications: List[str]
+    confidence_score: float
+    created_at: datetime
+
+# PHASE 1: Core Multi-Step Legal Reasoning Endpoints (3 Essential Endpoints)
+
+@api_router.post("/legal-reasoning/comprehensive-analysis", response_model=ComprehensiveAnalysisResponse)
+async def comprehensive_legal_analysis(request: ComprehensiveAnalysisRequest):
+    """
+    🎯 IRAC-Based Comprehensive Legal Analysis - Master Reasoning Engine
+    
+    Performs sophisticated 7-step legal reasoning process:
+    1. Query Analysis & Issue Spotting
+    2. Legal Concept Identification  
+    3. Applicable Law Research
+    4. Precedent Analysis
+    5. Legal Standard Application
+    6. Multi-Factor Analysis
+    7. Conclusion Synthesis with Authority Citations
+    
+    Integrates all existing systems (Concept Understanding, Precedent Analysis, RAG)
+    for industry-leading legal analysis capabilities.
+    """
+    if not REASONING_ENGINE_AVAILABLE:
+        raise HTTPException(status_code=503, detail="Multi-Step Legal Reasoning Engine not available")
+    
+    try:
+        start_time = datetime.utcnow()
+        
+        # Initialize the reasoning engine
+        reasoning_engine = await get_reasoning_engine(
+            gemini_api_key=os.environ['GEMINI_API_KEY'],
+            groq_api_key=os.environ['GROQ_API_KEY'],
+            openrouter_api_key=os.environ['OPENROUTER_API_KEY']
+        )
+        
+        if not reasoning_engine.systems_initialized:
+            raise HTTPException(status_code=503, detail="Legal reasoning systems not properly initialized")
+        
+        # Convert user_type string to enum
+        try:
+            user_type = UserType(request.user_type)
+        except ValueError:
+            user_type = UserType.BUSINESS_USER  # Default fallback
+        
+        # Perform comprehensive legal analysis
+        analysis = await reasoning_engine.comprehensive_legal_analysis(
+            query=request.query,
+            jurisdiction=request.jurisdiction,
+            legal_domain=request.legal_domain,
+            user_type=user_type,
+            context=request.context
+        )
+        
+        execution_time = (datetime.utcnow() - start_time).total_seconds()
+        
+        # Convert internal models to response models
+        legal_issues_response = [
+            LegalIssueResponse(
+                issue_id=issue.issue_id,
+                description=issue.description,
+                legal_domain=issue.legal_domain,
+                jurisdiction=issue.jurisdiction,
+                priority=issue.priority,
+                related_concepts=issue.related_concepts,
+                complexity_score=issue.complexity_score
+            ) for issue in analysis.legal_issues
+        ]
+        
+        reasoning_chain_response = [
+            ReasoningStepResponse(
+                step=step.step.value,
+                analysis=step.analysis,
+                confidence=step.confidence,
+                sources=step.sources,
+                reasoning=step.reasoning,
+                execution_time=step.execution_time
+            ) for step in analysis.legal_reasoning_chain
+        ]
+        
+        legal_conclusions_response = [
+            LegalConclusionResponse(
+                conclusion_id=conclusion.conclusion_id,
+                issue_id=conclusion.issue_id,
+                conclusion=conclusion.conclusion,
+                confidence=conclusion.confidence,
+                supporting_precedents=conclusion.supporting_precedents,
+                legal_reasoning=conclusion.legal_reasoning,
+                risk_level=conclusion.risk_level,
+                alternative_analyses=conclusion.alternative_analyses
+            ) for conclusion in analysis.legal_conclusions
+        ]
+        
+        response = ComprehensiveAnalysisResponse(
+            analysis_id=analysis.analysis_id,
+            query=request.query,
+            jurisdiction=request.jurisdiction,
+            user_type=request.user_type,
+            legal_issues=legal_issues_response,
+            applicable_concepts=analysis.applicable_concepts,
+            controlling_precedents=analysis.controlling_precedents,
+            applicable_statutes=analysis.applicable_statutes,
+            legal_reasoning_chain=reasoning_chain_response,
+            risk_assessment=analysis.risk_assessment,
+            legal_conclusions=legal_conclusions_response,
+            alternative_analyses=analysis.alternative_analyses,
+            confidence_score=analysis.confidence_score,
+            expert_validation_status=analysis.expert_validation_status,
+            execution_time=execution_time,
+            created_at=analysis.created_at
+        )
+        
+        # Store analysis in database for future reference
+        try:
+            analysis_doc = response.dict()
+            analysis_doc['_id'] = analysis.analysis_id
+            await db.comprehensive_legal_analyses.insert_one(analysis_doc)
+            logger.info(f"Stored comprehensive legal analysis: {analysis.analysis_id}")
+        except Exception as db_error:
+            logger.error(f"Error storing analysis in database: {db_error}")
+            # Continue without database storage
+        
+        return response
+        
+    except Exception as e:
+        logger.error(f"Error in comprehensive legal analysis: {e}")
+        raise HTTPException(status_code=500, detail=f"Error performing legal analysis: {str(e)}")
+
+@api_router.post("/legal-reasoning/risk-assessment", response_model=RiskAssessmentResponse)
+async def legal_risk_assessment(request: RiskAssessmentRequest):
+    """
+    ⚖️ Advanced Legal Risk Assessment Engine
+    
+    Performs sophisticated risk analysis using multi-step reasoning:
+    - Litigation risk analysis based on precedent patterns
+    - Compliance risk evaluation using regulatory knowledge  
+    - Legal strategy recommendations with precedent support
+    - Alternative legal approaches and outcomes analysis
+    """
+    if not REASONING_ENGINE_AVAILABLE:
+        raise HTTPException(status_code=503, detail="Multi-Step Legal Reasoning Engine not available")
+    
+    try:
+        start_time = datetime.utcnow()
+        
+        # Initialize the reasoning engine
+        reasoning_engine = await get_reasoning_engine(
+            gemini_api_key=os.environ['GEMINI_API_KEY'],
+            groq_api_key=os.environ['GROQ_API_KEY'],
+            openrouter_api_key=os.environ['OPENROUTER_API_KEY']
+        )
+        
+        if not reasoning_engine.systems_initialized:
+            raise HTTPException(status_code=503, detail="Legal reasoning systems not properly initialized")
+        
+        # Perform comprehensive analysis first to get base data
+        analysis = await reasoning_engine.comprehensive_legal_analysis(
+            query=request.legal_scenario,
+            jurisdiction=request.jurisdiction,
+            legal_domain=request.legal_domains[0] if request.legal_domains else None,
+            user_type=UserType.LEGAL_PROFESSIONAL,  # Use professional mode for risk assessment
+            context=request.context
+        )
+        
+        # Enhanced risk assessment using Groq for speed
+        risk_prompt = f"""
+        As a legal risk assessment expert, analyze this legal scenario for comprehensive risk evaluation:
+        
+        SCENARIO: {request.legal_scenario}
+        JURISDICTION: {request.jurisdiction}
+        LEGAL DOMAINS: {request.legal_domains}
+        
+        IDENTIFIED LEGAL ISSUES:
+        {[issue.description for issue in analysis.legal_issues]}
+        
+        APPLICABLE PRECEDENTS:
+        {[p.get('case_name', '') for p in analysis.controlling_precedents[:5]]}
+        
+        Provide comprehensive risk assessment in JSON format:
+        {{
+            "overall_risk_level": "low|medium|high|critical",
+            "risk_probability": "low|medium|high",
+            "risk_impact": "low|medium|high|severe",
+            "risk_categories": ["litigation", "compliance", "financial", "operational", "reputational"],
+            "detailed_risks": [
+                {{
+                    "risk_type": "specific risk category",
+                    "description": "detailed risk description",
+                    "probability": "low|medium|high",
+                    "impact": "low|medium|high|severe",
+                    "precedent_basis": "supporting case law or regulation",
+                    "indicators": ["list of risk indicators"],
+                    "timeframe": "immediate|short_term|long_term"
+                }}
+            ],
+            "mitigation_strategies": ["list of specific mitigation approaches"],
+            "compliance_concerns": ["regulatory or statutory compliance issues"],
+            "recommended_actions": ["immediate actionable steps"],
+            "monitoring_indicators": ["metrics to track"],
+            "contingency_planning": ["backup strategies if risks materialize"]
+        }}
+        
+        Focus on precedent-based risk analysis and provide specific, actionable guidance.
+        """
+        
+        completion = groq_client.chat.completions.create(
+            messages=[
+                {"role": "system", "content": "You are a senior legal risk analyst with expertise in precedent-based risk assessment."},
+                {"role": "user", "content": risk_prompt}
+            ],
+            model="llama-3.1-70b-versatile",
+            max_tokens=3000,
+            temperature=0.1
+        )
+        
+        risk_text = completion.choices[0].message.content
+        
+        # Parse JSON response
+        try:
+            json_match = re.search(r'\{.*\}', risk_text, re.DOTALL)
+            if json_match:
+                risk_data = json.loads(json_match.group())
+            else:
+                raise ValueError("No JSON found in response")
+        except Exception as parse_error:
+            logger.warning(f"Error parsing risk assessment JSON: {parse_error}")
+            # Fallback risk assessment
+            risk_data = {
+                "overall_risk_level": "medium",
+                "risk_probability": "medium", 
+                "risk_impact": "medium",
+                "risk_categories": ["litigation", "compliance"],
+                "detailed_risks": [{
+                    "risk_type": "general_legal",
+                    "description": "Standard legal risks identified",
+                    "probability": "medium",
+                    "impact": "medium",
+                    "precedent_basis": "General legal principles",
+                    "indicators": ["Contractual ambiguities", "Regulatory uncertainty"],
+                    "timeframe": "short_term"
+                }],
+                "mitigation_strategies": ["Legal review", "Contract clarification"],
+                "compliance_concerns": ["General regulatory compliance"],
+                "recommended_actions": ["Consult legal counsel", "Document review"],
+                "monitoring_indicators": ["Regulatory changes", "Case law developments"],
+                "contingency_planning": ["Alternative dispute resolution", "Legal action preparation"]
+            }
+        
+        execution_time = (datetime.utcnow() - start_time).total_seconds()
+        
+        response = RiskAssessmentResponse(
+            assessment_id=str(uuid.uuid4()),
+            legal_scenario=request.legal_scenario,
+            jurisdiction=request.jurisdiction,
+            overall_risk_level=risk_data.get("overall_risk_level", "medium"),
+            risk_probability=risk_data.get("risk_probability", "medium"),
+            risk_impact=risk_data.get("risk_impact", "medium"),
+            risk_categories=risk_data.get("risk_categories", []),
+            detailed_risks=risk_data.get("detailed_risks", []),
+            mitigation_strategies=risk_data.get("mitigation_strategies", []),
+            compliance_concerns=risk_data.get("compliance_concerns", []),
+            recommended_actions=risk_data.get("recommended_actions", []),
+            confidence_score=analysis.confidence_score * 0.9,  # Slightly lower confidence for risk predictions
+            created_at=datetime.utcnow()
+        )
+        
+        # Store risk assessment in database
+        try:
+            assessment_doc = response.dict()
+            assessment_doc['_id'] = response.assessment_id
+            await db.legal_risk_assessments.insert_one(assessment_doc)
+            logger.info(f"Stored legal risk assessment: {response.assessment_id}")
+        except Exception as db_error:
+            logger.error(f"Error storing risk assessment: {db_error}")
+        
+        return response
+        
+    except Exception as e:
+        logger.error(f"Error in legal risk assessment: {e}")
+        raise HTTPException(status_code=500, detail=f"Error performing risk assessment: {str(e)}")
+
+@api_router.post("/legal-reasoning/multi-jurisdiction-analysis", response_model=MultiJurisdictionComparisonResponse)
+async def multi_jurisdiction_legal_analysis(request: MultiJurisdictionAnalysisRequest):
+    """
+    🌍 Multi-Jurisdiction Legal Analysis Engine
+    
+    Performs sophisticated cross-jurisdictional legal analysis:
+    - Multi-party legal disputes with conflicting interests
+    - Cross-jurisdictional legal issues (federal vs. state law)
+    - Multi-domain legal problems (contract + employment + IP issues)
+    - Choice of law and forum selection analysis
+    - Enforcement considerations across jurisdictions
+    """
+    if not REASONING_ENGINE_AVAILABLE:
+        raise HTTPException(status_code=503, detail="Multi-Step Legal Reasoning Engine not available")
+    
+    try:
+        start_time = datetime.utcnow()
+        
+        # Initialize the reasoning engine
+        reasoning_engine = await get_reasoning_engine(
+            gemini_api_key=os.environ['GEMINI_API_KEY'],
+            groq_api_key=os.environ['GROQ_API_KEY'],
+            openrouter_api_key=os.environ['OPENROUTER_API_KEY']
+        )
+        
+        if not reasoning_engine.systems_initialized:
+            raise HTTPException(status_code=503, detail="Legal reasoning systems not properly initialized")
+        
+        # Perform analysis for primary jurisdiction
+        primary_analysis = await reasoning_engine.comprehensive_legal_analysis(
+            query=request.query,
+            jurisdiction=request.primary_jurisdiction,
+            legal_domain=request.legal_domain,
+            user_type=UserType.LEGAL_PROFESSIONAL,
+            context=request.context
+        )
+        
+        # Perform analysis for comparison jurisdictions
+        comparison_analyses = {}
+        for jurisdiction in request.comparison_jurisdictions:
+            try:
+                comp_analysis = await reasoning_engine.comprehensive_legal_analysis(
+                    query=request.query,
+                    jurisdiction=jurisdiction,
+                    legal_domain=request.legal_domain,
+                    user_type=UserType.LEGAL_PROFESSIONAL,
+                    context=request.context
+                )
+                comparison_analyses[jurisdiction] = comp_analysis
+            except Exception as e:
+                logger.warning(f"Error analyzing jurisdiction {jurisdiction}: {e}")
+                comparison_analyses[jurisdiction] = None
+        
+        # Multi-jurisdiction comparative analysis using Gemini Pro
+        jurisdictions_str = ", ".join([request.primary_jurisdiction] + request.comparison_jurisdictions)
+        
+        comparison_prompt = f"""
+        As a comparative legal expert, analyze this legal scenario across multiple jurisdictions:
+        
+        LEGAL SCENARIO: {request.query}
+        PRIMARY JURISDICTION: {request.primary_jurisdiction}
+        COMPARISON JURISDICTIONS: {request.comparison_jurisdictions}
+        LEGAL DOMAIN: {request.legal_domain or "Multi-domain"}
+        
+        PRIMARY JURISDICTION ANALYSIS:
+        Issues: {[issue.description for issue in primary_analysis.legal_issues]}
+        Precedents: {[p.get('case_name', '') for p in primary_analysis.controlling_precedents[:3]]}
+        
+        COMPARISON JURISDICTION ANALYSES:
+        {json.dumps({k: {"issues": [issue.description for issue in v.legal_issues] if v else [], "precedents": [p.get('case_name', '') for p in v.controlling_precedents[:3]] if v else []} for k, v in comparison_analyses.items()}, indent=2)}
+        
+        Provide comprehensive multi-jurisdiction analysis in JSON format:
+        {{
+            "jurisdictional_analysis": {{
+                "{request.primary_jurisdiction}": {{
+                    "legal_framework": "description of legal framework",
+                    "key_statutes": ["list of relevant statutes"],
+                    "leading_cases": ["list of key precedents"],
+                    "legal_standards": ["applicable legal tests"],
+                    "practical_advantages": ["litigation or business advantages"],
+                    "potential_drawbacks": ["limitations or disadvantages"]
+                }},
+                // Similar analysis for each comparison jurisdiction
+            }},
+            "legal_conflicts": [
+                {{
+                    "conflict_type": "statutory|precedent|procedural|substantive",
+                    "jurisdictions_involved": ["list of conflicting jurisdictions"],
+                    "conflict_description": "detailed description of the legal conflict",
+                    "resolution_approach": "how to resolve or manage the conflict",
+                    "precedent_hierarchy": "which jurisdiction's law should prevail"
+                }}
+            ],
+            "harmonization_opportunities": ["areas where jurisdictions align"],
+            "forum_shopping_considerations": [
+                {{
+                    "jurisdiction": "jurisdiction name",
+                    "advantages": ["list of procedural/substantive advantages"],
+                    "likelihood_of_jurisdiction": "high|medium|low",
+                    "strategic_considerations": "strategic factors to consider"
+                }}
+            ],
+            "choice_of_law_recommendations": [
+                {{
+                    "scenario": "specific legal scenario",
+                    "recommended_jurisdiction": "jurisdiction with most favorable law",
+                    "reasoning": "legal basis for recommendation",
+                    "alternatives": ["alternative jurisdiction options"]
+                }}
+            ],
+            "enforcement_analysis": {{
+                "cross_border_enforcement": "analysis of enforcement across jurisdictions",
+                "treaty_considerations": "relevant international treaties or agreements",
+                "recognition_issues": "potential recognition and enforcement issues",
+                "practical_enforcement_steps": ["steps to ensure enforceability"]
+            }},
+            "practical_implications": [
+                {{
+                    "implication": "specific practical consideration",
+                    "affected_jurisdictions": ["jurisdictions where this applies"],
+                    "business_impact": "impact on business operations or legal strategy",
+                    "mitigation_strategies": ["how to address or mitigate this implication"]
+                }}
+            ]
+        }}
+        
+        Focus on practical, actionable comparative analysis with specific citations and strategic recommendations.
+        """
+        
+        model = genai.GenerativeModel('gemini-1.5-pro')
+        response_gen = model.generate_content(
+            comparison_prompt,
+            generation_config=genai.types.GenerationConfig(
+                max_output_tokens=5000,
+                temperature=0.1,
+            )
+        )
+        
+        comparison_text = response_gen.text
+        
+        # Parse JSON response
+        try:
+            json_match = re.search(r'\{.*\}', comparison_text, re.DOTALL)
+            if json_match:
+                comparison_data = json.loads(json_match.group())
+            else:
+                raise ValueError("No JSON found in response")
+        except Exception as parse_error:
+            logger.warning(f"Error parsing multi-jurisdiction analysis JSON: {parse_error}")
+            # Fallback analysis
+            comparison_data = {
+                "jurisdictional_analysis": {
+                    request.primary_jurisdiction: {
+                        "legal_framework": "Primary jurisdiction legal framework",
+                        "key_statutes": ["General statutes applicable"],
+                        "leading_cases": ["Leading precedents identified"],
+                        "legal_standards": ["Standard legal tests apply"],
+                        "practical_advantages": ["Familiar jurisdiction"],
+                        "potential_drawbacks": ["Standard limitations"]
+                    }
+                },
+                "legal_conflicts": [],
+                "harmonization_opportunities": ["General legal principles"],
+                "forum_shopping_considerations": [],
+                "choice_of_law_recommendations": [],
+                "enforcement_analysis": {
+                    "cross_border_enforcement": "Standard enforcement mechanisms available",
+                    "treaty_considerations": "International agreements may apply",
+                    "recognition_issues": "Standard recognition principles apply",
+                    "practical_enforcement_steps": ["Follow standard enforcement procedures"]
+                },
+                "practical_implications": []
+            }
+        
+        execution_time = (datetime.utcnow() - start_time).total_seconds()
+        
+        response = MultiJurisdictionComparisonResponse(
+            comparison_id=str(uuid.uuid4()),
+            query=request.query,
+            primary_jurisdiction=request.primary_jurisdiction,
+            comparison_jurisdictions=request.comparison_jurisdictions,
+            jurisdictional_analysis=comparison_data.get("jurisdictional_analysis", {}),
+            legal_conflicts=comparison_data.get("legal_conflicts", []),
+            harmonization_opportunities=comparison_data.get("harmonization_opportunities", []),
+            forum_shopping_considerations=comparison_data.get("forum_shopping_considerations", []),
+            choice_of_law_recommendations=comparison_data.get("choice_of_law_recommendations", []),
+            enforcement_analysis=comparison_data.get("enforcement_analysis", {}),
+            practical_implications=comparison_data.get("practical_implications", []),
+            confidence_score=primary_analysis.confidence_score * 0.8,  # Lower confidence for cross-jurisdictional analysis
+            created_at=datetime.utcnow()
+        )
+        
+        # Store multi-jurisdiction analysis in database
+        try:
+            analysis_doc = response.dict()
+            analysis_doc['_id'] = response.comparison_id
+            await db.multi_jurisdiction_analyses.insert_one(analysis_doc)
+            logger.info(f"Stored multi-jurisdiction analysis: {response.comparison_id}")
+        except Exception as db_error:
+            logger.error(f"Error storing multi-jurisdiction analysis: {db_error}")
+        
+        return response
+        
+    except Exception as e:
+        logger.error(f"Error in multi-jurisdiction analysis: {e}")
+        raise HTTPException(status_code=500, detail=f"Error performing multi-jurisdiction analysis: {str(e)}")
+
 # Include all API routes in the main app (after all endpoints are defined)
 app.include_router(api_router)
 
