@@ -114,6 +114,16 @@ except ImportError as e:
     logger.warning(f"Knowledge Integration system not available: {e}")
     INTEGRATION_SYSTEM_AVAILABLE = False
 
+# Import Legal Updates Monitoring System
+try:
+    from legal_updates_monitor import initialize_legal_updates_monitor
+    from legal_updates_validator import initialize_legal_update_validator, knowledge_freshness_tracker
+    from legal_updates_scheduler import initialize_legal_updates_scheduler, in_app_notification_service, MonitoringConfig, MonitoringSchedule
+    LEGAL_UPDATES_SYSTEM_AVAILABLE = True
+except ImportError as e:
+    logger.warning(f"Legal Updates Monitoring system not available: {e}")
+    LEGAL_UPDATES_SYSTEM_AVAILABLE = False
+
 
 # Define Models
 class ContractRequest(BaseModel):
