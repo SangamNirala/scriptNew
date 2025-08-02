@@ -1217,11 +1217,11 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Academic Legal Content Collection - Backend Academic Collection Endpoint"
-    - "Academic Legal Content Collection - Google Scholar Legal Collection"
-    - "Academic Legal Content Collection - Legal Journals Collection"
-    - "Academic Legal Content Collection - Research Papers Collection"
-    - "Academic Legal Content Collection - Quality Metrics and Validation"
+    - "Production Optimization - Performance Optimization System"
+    - "Production Optimization - Analytics System"
+    - "Production Optimization - Scalability System"
+    - "Production Optimization - Monitoring System"
+    - "Production Optimization - Production API Endpoints"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
