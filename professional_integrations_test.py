@@ -339,7 +339,7 @@ class ProfessionalIntegrationsAPITester:
     def test_enterprise_compliance_check(self):
         """Test GET /api/enterprise/compliance/check - Compliance checking across frameworks"""
         # Test with query parameters for specific compliance frameworks
-        endpoint = "enterprise/compliance/check?frameworks=SOC2,HIPAA,GDPR&organization_id=test-org-123"
+        endpoint = "enterprise/compliance/check?framework=SOC2&organization_id=test-org-123"
         
         success, response = self.run_test(
             "Enterprise Compliance Check", 
