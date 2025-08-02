@@ -375,6 +375,7 @@ class LegalWorkflowAutomation:
         
         # Case Management Workflow Template
         case_management_template = WorkflowTemplate(
+            template_id="case_management",  # Set specific template ID
             name="Litigation Case Management",
             description="Comprehensive litigation case management workflow",
             workflow_type=WorkflowType.CASE_MANAGEMENT,
