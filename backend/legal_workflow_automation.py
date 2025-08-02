@@ -319,6 +319,7 @@ class LegalWorkflowAutomation:
         
         # Document Generation Workflow Template
         document_generation_template = WorkflowTemplate(
+            template_id="document_generation",  # Set specific template ID
             name="Automated Legal Document Generation",
             description="AI-powered legal document generation workflow",
             workflow_type=WorkflowType.DOCUMENT_GENERATION,
