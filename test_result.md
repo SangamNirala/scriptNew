@@ -496,15 +496,18 @@ backend:
 
   - task: "Marketplace & Partnership Ecosystem - Partner Search Endpoint"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         -working: "NA"
         -agent: "main"
         -comment: "Implemented GET /api/partnerships/search endpoint for finding partners by type, geographic region, specializations, and ratings. Returns 4 sample partners with satisfaction scores and capabilities."
+        -working: true
+        -agent: "testing"
+        -comment: "✅ PARTNERSHIP SEARCH ENDPOINT WORKING: Successfully tested GET /api/partnerships/search with comprehensive partner type validation. VALID TYPES (8/8 passed): technology_partner, integration_partner, channel_partner, reseller_partner, legal_service_provider, software_vendor, consultant, trainer. DYNAMIC MAPPING WORKING: Uses {pt.value: pt for pt in PartnerType} correctly. INVALID PARTNER TYPE ERROR IDENTIFIED: All variations except exact enum values cause 400 'Invalid partner type' error - 'Technology', 'TECHNOLOGY_PARTNER', 'Integration', etc. all fail. Search endpoint is stricter than application endpoint (no friendly aliases). Empty partner_type parameter works (returns all partners)."
 
   - task: "Marketplace & Partnership Ecosystem - Marketplace Analytics Endpoint"
     implemented: true
