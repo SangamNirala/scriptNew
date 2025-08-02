@@ -9314,6 +9314,82 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+# Global instances for legal updates system
+legal_updates_monitor_instance = None
+legal_update_validator_instance = None
+legal_updates_scheduler_instance = None
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize systems on startup"""
+    global legal_updates_monitor_instance, legal_update_validator_instance, legal_updates_scheduler_instance
+    
+    try:
+        logger.info("🚀 Starting LegalMate AI Legal Updates Monitoring System...")
+        
+        if LEGAL_UPDATES_SYSTEM_AVAILABLE:
+            # Initialize legal updates monitor
+            courtlistener_api_key = os.environ.get('COURTLISTENER_API_KEY')
+            if courtlistener_api_key:
+                legal_updates_monitor_instance = initialize_legal_updates_monitor(courtlistener_api_key)
+                logger.info("✅ Legal Updates Monitor initialized")
+                
+                # Initialize legal update validator
+                gemini_api_key = os.environ.get('GEMINI_API_KEY')
+                groq_api_key = os.environ.get('GROQ_API_KEY')
+                if gemini_api_key and groq_api_key:
+                    legal_update_validator_instance = initialize_legal_update_validator(gemini_api_key, groq_api_key)
+                    logger.info("✅ Legal Update Validator initialized")
+                    
+                    # Initialize scheduler with 6-hour monitoring
+                    monitoring_config = MonitoringConfig(
+                        schedule=MonitoringSchedule.EVERY_6_HOURS,
+                        enable_email_alerts=True,
+                        enable_in_app_notifications=True
+                    )
+                    
+                    legal_updates_scheduler_instance = initialize_legal_updates_scheduler(
+                        legal_updates_monitor_instance,
+                        legal_update_validator_instance,
+                        monitoring_config
+                    )
+                    
+                    # Start background monitoring
+                    legal_updates_scheduler_instance.start_monitoring()
+                    logger.info("✅ Legal Updates Scheduler started with 6-hour monitoring")
+                else:
+                    logger.warning("⚠️ AI API keys not found - Legal Updates Validator not initialized")
+            else:
+                logger.warning("⚠️ CourtListener API key not found - Legal Updates Monitor not initialized")
+        else:
+            logger.warning("⚠️ Legal Updates Monitoring system not available")
+            
+        logger.info("🎉 LegalMate AI startup completed successfully!")
+        
+    except Exception as e:
+        logger.error(f"❌ Error during startup: {e}")
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
-    client.close()
+    """Cleanup on shutdown"""
+    global legal_updates_scheduler_instance
+    
+    try:
+        # Stop legal updates monitoring
+        if legal_updates_scheduler_instance:
+            legal_updates_scheduler_instance.stop_monitoring()
+            logger.info("✅ Legal Updates Monitoring stopped")
+        
+        # Close database connection
+        client.close()
+        logger.info("✅ Database connection closed")
+        
+    except Exception as e:
+        logger.error(f"❌ Error during shutdown: {e}")
