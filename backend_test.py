@@ -5154,6 +5154,327 @@ class LegalMateAPITester:
         print("🔍 LEGAL UPDATES MONITORING SYSTEM TESTS COMPLETE")
         print("=" * 80)
 
+    def test_production_optimization_endpoints(self):
+        """Test all production optimization and performance analytics endpoints"""
+        print("\n🏭 TESTING PRODUCTION OPTIMIZATION & PERFORMANCE ANALYTICS SYSTEM")
+        print("=" * 80)
+        
+        # Test production status endpoint
+        self.test_production_status()
+        
+        # Test production metrics endpoint
+        self.test_production_metrics()
+        
+        # Test analytics report generation
+        self.test_analytics_report_generation()
+        
+        # Test cache invalidation
+        self.test_cache_invalidation()
+        
+        # Test active sessions endpoint
+        self.test_active_sessions()
+        
+        # Test system health endpoint
+        self.test_system_health()
+        
+        # Test performance optimization
+        self.test_performance_optimization()
+        
+        # Test competitive analysis
+        self.test_competitive_analysis()
+
+    def test_production_status(self):
+        """Test production status endpoint"""
+        success, response = self.run_test(
+            "Production System Status", 
+            "GET", 
+            "production/status", 
+            200
+        )
+        
+        if success and isinstance(response, dict):
+            # Verify response structure
+            expected_fields = ['systems_status', 'overall_health', 'active_sessions', 
+                             'concurrent_requests', 'cache_hit_rate', 'average_response_time']
+            
+            missing_fields = [field for field in expected_fields if field not in response]
+            if not missing_fields:
+                print("   ✅ All required fields present in production status response")
+                
+                # Check systems status
+                systems_status = response.get('systems_status', {})
+                print(f"   📊 Systems Status: {systems_status}")
+                print(f"   🏥 Overall Health: {response.get('overall_health', 'unknown')}")
+                print(f"   👥 Active Sessions: {response.get('active_sessions', 0)}")
+                print(f"   📈 Cache Hit Rate: {response.get('cache_hit_rate', 0):.1f}%")
+                
+            else:
+                print(f"   ⚠️  Missing fields in response: {missing_fields}")
+        
+        return success, response
+
+    def test_production_metrics(self):
+        """Test production metrics endpoint"""
+        success, response = self.run_test(
+            "Production Metrics (24h)", 
+            "GET", 
+            "production/metrics?hours=24", 
+            200
+        )
+        
+        if success and isinstance(response, dict):
+            # Verify response structure
+            expected_fields = ['cache_metrics', 'performance_metrics', 'scalability_metrics', 
+                             'system_health', 'analytics_summary']
+            
+            missing_fields = [field for field in expected_fields if field not in response]
+            if not missing_fields:
+                print("   ✅ All required metrics sections present")
+                
+                # Check cache metrics
+                cache_metrics = response.get('cache_metrics', {})
+                if cache_metrics:
+                    print(f"   💾 Cache Hit Rate: {cache_metrics.get('hit_rate_percentage', 0):.1f}%")
+                    print(f"   💾 Cache Size: {cache_metrics.get('cache_size', 0)} items")
+                
+                # Check system health
+                system_health = response.get('system_health', {})
+                if system_health:
+                    print(f"   🏥 System Health: {system_health.get('overall_status', 'unknown')}")
+                
+            else:
+                print(f"   ⚠️  Missing metrics sections: {missing_fields}")
+        
+        return success, response
+
+    def test_analytics_report_generation(self):
+        """Test analytics report generation endpoint"""
+        # Test with default parameters
+        success, response = self.run_test(
+            "Analytics Report Generation (Default)", 
+            "POST", 
+            "production/analytics/report", 
+            200,
+            {}
+        )
+        
+        if success and isinstance(response, dict):
+            if 'report' in response and 'success' in response:
+                print("   ✅ Analytics report generated successfully")
+                
+                report = response.get('report', {})
+                if 'report_period' in report:
+                    period = report['report_period']
+                    print(f"   📅 Report Period: {period.get('duration_days', 0)} days")
+                
+                # Check report sections
+                expected_sections = ['legal_ai_performance', 'usage_analytics', 
+                                   'system_performance', 'user_engagement']
+                present_sections = [section for section in expected_sections if section in report]
+                print(f"   📊 Report Sections: {len(present_sections)}/{len(expected_sections)} present")
+                
+            else:
+                print("   ⚠️  Invalid report structure")
+        
+        # Test with custom date range
+        custom_data = {
+            "start_date": "2025-01-01T00:00:00Z",
+            "end_date": "2025-01-07T23:59:59Z",
+            "report_type": "weekly"
+        }
+        
+        success_custom, response_custom = self.run_test(
+            "Analytics Report Generation (Custom Range)", 
+            "POST", 
+            "production/analytics/report", 
+            200,
+            custom_data
+        )
+        
+        return success and success_custom, {"default": response, "custom": response_custom}
+
+    def test_cache_invalidation(self):
+        """Test cache invalidation endpoint"""
+        # Test namespace invalidation
+        success1, response1 = self.run_test(
+            "Cache Invalidation (Namespace)", 
+            "POST", 
+            "production/cache/invalidate?namespace=test_namespace", 
+            200
+        )
+        
+        if success1 and isinstance(response1, dict):
+            if response1.get('success') and 'message' in response1:
+                print("   ✅ Cache namespace invalidation successful")
+                print(f"   💾 Message: {response1.get('message', '')}")
+            else:
+                print("   ⚠️  Invalid cache invalidation response")
+        
+        # Test specific key invalidation
+        success2, response2 = self.run_test(
+            "Cache Invalidation (Specific Key)", 
+            "POST", 
+            "production/cache/invalidate?namespace=test_namespace&key=test_key", 
+            200
+        )
+        
+        if success2 and isinstance(response2, dict):
+            if response2.get('success') and 'message' in response2:
+                print("   ✅ Cache key invalidation successful")
+            else:
+                print("   ⚠️  Invalid cache key invalidation response")
+        
+        return success1 and success2, {"namespace": response1, "key": response2}
+
+    def test_active_sessions(self):
+        """Test active sessions endpoint"""
+        success, response = self.run_test(
+            "Active Sessions Information", 
+            "GET", 
+            "production/sessions", 
+            200
+        )
+        
+        if success and isinstance(response, dict):
+            if response.get('success') and 'session_statistics' in response:
+                print("   ✅ Active sessions data retrieved successfully")
+                
+                session_stats = response.get('session_statistics', {})
+                load_balancing = response.get('load_balancing', {})
+                
+                print(f"   👥 Session Statistics: {len(session_stats)} metrics")
+                print(f"   ⚖️  Load Balancing: {len(load_balancing)} complexity levels")
+                
+                # Check for expected session metrics
+                if 'active_sessions' in session_stats:
+                    print(f"   📊 Active Sessions: {session_stats.get('active_sessions', 0)}")
+                if 'max_concurrent_users' in session_stats:
+                    print(f"   🎯 Max Concurrent Users: {session_stats.get('max_concurrent_users', 0)}")
+                
+            else:
+                print("   ⚠️  Invalid sessions response structure")
+        
+        return success, response
+
+    def test_system_health(self):
+        """Test system health endpoint"""
+        success, response = self.run_test(
+            "System Health Check", 
+            "GET", 
+            "production/health", 
+            200
+        )
+        
+        if success and isinstance(response, dict):
+            if response.get('success') and 'system_status' in response:
+                print("   ✅ System health check completed successfully")
+                
+                system_status = response.get('system_status', {})
+                component_health = response.get('component_health', {})
+                
+                print(f"   🏥 Overall Status: {system_status.get('overall_status', 'unknown')}")
+                print(f"   📊 Health Percentage: {system_status.get('health_percentage', 0):.1f}%")
+                print(f"   🔧 Components Checked: {len(component_health)}")
+                
+                # Check individual component health
+                healthy_components = 0
+                for component, health in component_health.items():
+                    if isinstance(health, dict) and health.get('status') == 'healthy':
+                        healthy_components += 1
+                
+                print(f"   ✅ Healthy Components: {healthy_components}/{len(component_health)}")
+                
+            else:
+                print("   ⚠️  Invalid health check response structure")
+        
+        return success, response
+
+    def test_performance_optimization(self):
+        """Test performance optimization endpoint"""
+        success, response = self.run_test(
+            "Performance Optimization", 
+            "GET", 
+            "production/performance/optimize", 
+            200
+        )
+        
+        if success and isinstance(response, dict):
+            if response.get('success') and 'optimization_results' in response:
+                print("   ✅ Performance optimization completed successfully")
+                
+                optimization_results = response.get('optimization_results', {})
+                
+                # Check optimization components
+                expected_optimizations = ['cache_optimization', 'analytics_processing', 'query_optimization']
+                completed_optimizations = [opt for opt, status in optimization_results.items() 
+                                         if status == 'completed']
+                
+                print(f"   🚀 Optimizations Completed: {len(completed_optimizations)}/{len(expected_optimizations)}")
+                
+                for opt, status in optimization_results.items():
+                    status_icon = "✅" if status == "completed" else "⚠️"
+                    print(f"   {status_icon} {opt.replace('_', ' ').title()}: {status}")
+                
+            else:
+                print("   ⚠️  Invalid optimization response structure")
+        
+        return success, response
+
+    def test_competitive_analysis(self):
+        """Test competitive analysis endpoint"""
+        success, response = self.run_test(
+            "Competitive Analysis", 
+            "GET", 
+            "production/competitive/analysis", 
+            200
+        )
+        
+        if success and isinstance(response, dict):
+            if response.get('success') and 'competitive_analysis' in response:
+                print("   ✅ Competitive analysis generated successfully")
+                
+                analysis = response.get('competitive_analysis', {})
+                
+                # Check analysis components
+                expected_sections = ['our_platform', 'industry_leaders', 'competitive_advantages', 
+                                   'performance_comparison']
+                present_sections = [section for section in expected_sections if section in analysis]
+                
+                print(f"   📊 Analysis Sections: {len(present_sections)}/{len(expected_sections)} present")
+                
+                # Check our platform metrics
+                our_platform = analysis.get('our_platform', {})
+                if our_platform:
+                    accuracy = our_platform.get('accuracy_rate', 0)
+                    response_time = our_platform.get('average_response_time', 0)
+                    kb_size = our_platform.get('knowledge_base_size', 0)
+                    
+                    print(f"   🎯 Our Accuracy: {accuracy:.1%}")
+                    print(f"   ⚡ Our Response Time: {response_time}s")
+                    print(f"   📚 Knowledge Base: {kb_size:,} documents")
+                
+                # Check competitive advantages
+                advantages = analysis.get('competitive_advantages', [])
+                print(f"   🏆 Competitive Advantages: {len(advantages)} identified")
+                
+            else:
+                print("   ⚠️  Invalid competitive analysis response structure")
+        
+        return success, response
+
+    def run_production_optimization_tests(self):
+        """Run all Production Optimization & Performance Analytics System tests"""
+        print("\n" + "=" * 80)
+        print("🏭 PRODUCTION OPTIMIZATION & PERFORMANCE ANALYTICS SYSTEM TESTS")
+        print("=" * 80)
+        
+        # Test all production optimization endpoints
+        self.test_production_optimization_endpoints()
+        
+        print("\n" + "=" * 80)
+        print("🏭 PRODUCTION OPTIMIZATION & PERFORMANCE ANALYTICS SYSTEM TESTS COMPLETE")
+        print("=" * 80)
+
 def main():
     print("🚀 Starting LegalMate AI Backend API Tests")
     print("=" * 60)
