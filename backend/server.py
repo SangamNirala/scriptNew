@@ -10033,7 +10033,7 @@ async def get_accuracy_metrics():
         validation_system = await get_validation_system()
         db = validation_system.db
         
-        if not db:
+        if db is None:
             return {"error": "Database not available"}
         
         # Get validation statistics
