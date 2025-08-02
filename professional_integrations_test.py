@@ -1012,25 +1012,20 @@ class ProfessionalIntegrationsAPITester:
 
     def test_integrations_legal_memoranda(self):
         """Test POST /api/integrations/legal-memoranda - Legal memo generation"""
-        memo_data = {
-            "topic": "Contract termination rights and obligations",
-            "client_facts": "Client wants to terminate a 3-year service agreement after 18 months due to vendor performance issues. Contract has a 30-day notice clause but no specific performance standards.",
-            "legal_questions": [
-                "What are the grounds for early termination?",
-                "What notice requirements must be met?",
-                "What are the potential liability issues?"
-            ],
-            "jurisdiction": "US",
-            "citation_format": "bluebook",
-            "analysis_depth": "comprehensive"
-        }
+        # This endpoint uses query parameters
+        import urllib.parse
+        legal_issue = "Contract termination rights and obligations"
+        facts = "Client wants to terminate a 3-year service agreement after 18 months due to vendor performance issues. Contract has a 30-day notice clause but no specific performance standards."
+        
+        encoded_issue = urllib.parse.quote(legal_issue)
+        encoded_facts = urllib.parse.quote(facts)
+        endpoint = f"integrations/legal-memoranda?legal_issue={encoded_issue}&facts={encoded_facts}&jurisdiction=US&memo_type=research&citation_style=bluebook&length=standard"
         
         success, response = self.run_test(
             "Legal Memoranda Generation", 
             "POST", 
-            "integrations/legal-memoranda", 
-            200, 
-            memo_data,
+            endpoint, 
+            200,
             timeout=90  # Memo generation might take longer
         )
         
