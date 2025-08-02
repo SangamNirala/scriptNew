@@ -143,6 +143,104 @@ const LegalQuestionAnswering = () => {
     }
   };
 
+  // Advanced UX Functions
+  const analyzeUserSophistication = async (queryText) => {
+    try {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/ux/user-sophistication-analysis?` + 
+        new URLSearchParams({
+          query_text: queryText,
+          user_context: JSON.stringify(userProfile),
+          previous_queries: JSON.stringify(messages.filter(m => m.type === 'user').map(m => m.content).slice(-5))
+        }));
+      
+      if (response.ok) {
+        const result = await response.json();
+        setDetectedSophistication(result);
+        
+        // If in auto-detect mode, update communication mode
+        if (communicationMode === 'auto_detect') {
+          setCommunicationMode(result.sophistication_level);
+        }
+        
+        return result;
+      }
+    } catch (error) {
+      console.error('Error analyzing user sophistication:', error);
+    }
+    return null;
+  };
+
+  const generateAdaptiveResponse = async (content, userSophisticationLevel) => {
+    try {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/ux/adaptive-response`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          content: content,
+          user_sophistication_level: userSophisticationLevel,
+          legal_domain: selectedDomain,
+          jurisdiction: selectedJurisdiction,
+          context: userProfile
+        })
+      });
+
+      if (response.ok) {
+        return await response.json();
+      }
+    } catch (error) {
+      console.error('Error generating adaptive response:', error);
+    }
+    return null;
+  };
+
+  const loadPersonalizedRecommendations = async () => {
+    try {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/ux/personalized-recommendations?` +
+        new URLSearchParams({
+          user_id: sessionId,
+          legal_history: JSON.stringify(messages.filter(m => m.type === 'user').map(m => ({ query: m.content, timestamp: m.timestamp }))),
+          industry: userProfile.industry || '',
+          jurisdiction: selectedJurisdiction,
+          interests: JSON.stringify([selectedDomain])
+        }));
+
+      if (response.ok) {
+        const result = await response.json();
+        setPersonalizedRecommendations(result.recommendations || []);
+      }
+    } catch (error) {
+      console.error('Error loading personalized recommendations:', error);
+    }
+  };
+
+  const generateInteractiveGuidance = async (legalIssue) => {
+    try {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/ux/interactive-guidance`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          legal_issue: legalIssue,
+          user_sophistication_level: communicationMode === 'auto_detect' ? 'general_consumer' : communicationMode,
+          user_goals: ['understand_legal_options', 'get_practical_guidance'],
+          jurisdiction: selectedJurisdiction
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setInteractiveGuidance(result);
+        return result;
+      }
+    } catch (error) {
+      console.error('Error generating interactive guidance:', error);
+    }
+    return null;
+  };
+
   const initializeKnowledgeBase = async () => {
     setIsInitializing(true);
     try {
