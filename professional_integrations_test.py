@@ -786,15 +786,18 @@ class ProfessionalIntegrationsAPITester:
     def test_partnerships_apply(self):
         """Test POST /api/partnerships/apply - Partner application"""
         partnership_data = {
+            "organization_name": "Legal Tech Innovations LLC",
             "partner_type": "Technology",
-            "company_name": "Legal Tech Innovations LLC",
+            "contact_name": "John Smith",
             "contact_email": "partnerships@legaltechinnovations.com",
-            "contact_phone": "+1-555-0123",
-            "business_description": "We develop AI-powered legal research and document analysis tools for law firms and corporate legal departments.",
-            "integration_capabilities": ["API integration", "Webhook support", "SSO authentication"],
-            "target_market": "Mid-size to large law firms",
-            "geographic_regions": ["North America", "Europe"],
-            "specializations": ["Contract analysis", "Legal research", "Compliance monitoring"]
+            "business_info": {
+                "contact_phone": "+1-555-0123",
+                "business_description": "We develop AI-powered legal research and document analysis tools for law firms and corporate legal departments.",
+                "integration_capabilities": ["API integration", "Webhook support", "SSO authentication"],
+                "target_market": "Mid-size to large law firms",
+                "geographic_regions": ["North America", "Europe"],
+                "specializations": ["Contract analysis", "Legal research", "Compliance monitoring"]
+            }
         }
         
         success, response = self.run_test(
