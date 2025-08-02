@@ -2609,16 +2609,18 @@ class LegalMateAPITester:
         
         # Test data template
         base_application_data = {
-            "company_name": "Test Partnership Company",
+            "organization_name": "Test Partnership Company",
             "contact_name": "John Partnership",
             "contact_email": "john@testpartnership.com",
-            "contact_phone": "+1-555-0123",
-            "business_description": "We provide innovative technology solutions for legal industry",
-            "website": "https://testpartnership.com",
-            "years_in_business": 5,
-            "geographic_regions": ["North America", "Europe"],
-            "specializations": ["Legal Technology", "AI Solutions"],
-            "partnership_goals": "Expand market reach and provide integrated solutions"
+            "business_info": {
+                "contact_phone": "+1-555-0123",
+                "business_description": "We provide innovative technology solutions for legal industry",
+                "website": "https://testpartnership.com",
+                "years_in_business": 5,
+                "geographic_regions": ["North America", "Europe"],
+                "specializations": ["Legal Technology", "AI Solutions"],
+                "partnership_goals": "Expand market reach and provide integrated solutions"
+            }
         }
         
         # Test cases for different partner type formats
