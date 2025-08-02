@@ -124,7 +124,7 @@ class ProfessionalIntegrationsFramework:
         # Document Management (Free Alternatives)
         free_doc_mgmt_configs = [
             {
-                "integration_id": "google_drive_legal",
+                "integration_id": "google_drive",  # Updated to match test expectation
                 "name": "Google Drive Legal Documents",
                 "integration_type": IntegrationType.DOCUMENT_MANAGEMENT,
                 "provider": "Google Drive",
