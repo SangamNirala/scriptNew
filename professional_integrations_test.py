@@ -187,11 +187,16 @@ class ProfessionalIntegrationsAPITester:
     def test_api_ecosystem_generate_key(self):
         """Test POST /api/api-ecosystem/generate-key - Generate professional API keys"""
         key_data = {
+            "name": "Test Legal Firm API Key",
+            "description": "API key for contract analysis and legal research automation",
             "access_level": "professional",
-            "organization_name": "Test Legal Firm LLC",
-            "contact_email": "admin@testlegalfirm.com",
-            "intended_use": "Contract analysis and legal research automation",
-            "rate_limit": 1000
+            "organization_id": "test-org-123",
+            "law_firm_name": "Test Legal Firm LLC",
+            "expires_in_days": 365,
+            "rate_limits": {
+                "requests_per_minute": 100,
+                "requests_per_day": 1000
+            }
         }
         
         success, response = self.run_test(
