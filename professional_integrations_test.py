@@ -1054,7 +1054,7 @@ class ProfessionalIntegrationsAPITester:
     def test_integrations_law_firm_dashboard(self):
         """Test GET /api/integrations/law-firm-dashboard - Law firm analytics"""
         # Test with query parameters
-        endpoint = "integrations/law-firm-dashboard?firm_id=test-firm-123&time_period=30d&include_metrics=performance,revenue,cases"
+        endpoint = "integrations/law-firm-dashboard?law_firm_id=test-firm-123&include_benchmarks=true"
         
         success, response = self.run_test(
             "Law Firm Dashboard Analytics", 
