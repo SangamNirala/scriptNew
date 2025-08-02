@@ -84,16 +84,54 @@ const LegalQuestionAnswering = () => {
     { value: 'IN', label: 'India' }
   ];
 
-  const sampleQuestions = [
-    "What are the key elements of a valid contract under US law?",
-    "How does employment at-will doctrine work in different states?",
-    "What is the difference between copyright and trademark protection?",
-    "What are the requirements for forming an LLC in California?",
-    "How does the doctrine of consideration apply in contract law?",
-    "What are the main types of intellectual property protection?",
-    "What are the legal requirements for terminating an employee?",
-    "How do non-compete agreements work in different jurisdictions?"
-  ];
+  const sampleQuestions = {
+    legal_professional: [
+      "What are the elements required to establish a prima facie case of breach of fiduciary duty under Delaware law?",
+      "How does the business judgment rule apply to director liability in merger transactions?",
+      "What is the statutory framework for establishing personal jurisdiction under Federal Rule 4(k)?",
+      "Analyze the application of the doctrine of forum non conveniens in international contract disputes",
+      "What are the procedural requirements for a Rule 12(b)(6) motion to dismiss for failure to state a claim?"
+    ],
+    business_executive: [
+      "What are the key legal risks in cross-border M&A transactions and how can they be mitigated?",
+      "How should we structure our employee stock option plan to minimize tax implications?",
+      "What compliance requirements apply to our SaaS business operating in multiple states?",
+      "What are the essential terms for our partnership agreement with international suppliers?",
+      "How can we protect our intellectual property when expanding into new markets?"
+    ],
+    general_consumer: [
+      "What are my rights as a tenant if my landlord wants to evict me?",
+      "How do I handle a car accident insurance claim that's being denied?",
+      "What should I do if I'm being harassed by debt collectors?",
+      "Can I get out of a contract I signed with a home improvement company?",
+      "What are the steps to create a simple will for my family?"
+    ],
+    academic_student: [
+      "Explain the difference between criminal law and civil law with examples",
+      "What is the historical development of the Fourth Amendment's search and seizure protections?",
+      "How do common law and statutory law interact in the American legal system?",
+      "What are the foundational principles of contract formation under the UCC?",
+      "Analyze the evolution of due process rights from the 14th Amendment to modern applications"
+    ],
+    auto_detect: [
+      "What are the key elements of a valid contract under US law?",
+      "How does employment at-will doctrine work in different states?",
+      "What is the difference between copyright and trademark protection?",
+      "What are the requirements for forming an LLC in California?",
+      "How does the doctrine of consideration apply in contract law?",
+      "What are the main types of intellectual property protection?",
+      "What are the legal requirements for terminating an employee?",
+      "How do non-compete agreements work in different jurisdictions?"
+    ]
+  };
+
+  const getCurrentSampleQuestions = () => {
+    const currentMode = communicationMode === 'auto_detect' ? 
+      (detectedSophistication?.sophistication_level || 'auto_detect') : 
+      communicationMode;
+    
+    return sampleQuestions[currentMode] || sampleQuestions.auto_detect;
+  };
 
   useEffect(() => {
     // Generate session ID
