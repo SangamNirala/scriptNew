@@ -4704,6 +4704,454 @@ class LegalMateAPITester:
         # Test comprehensive workflow
         self.test_knowledge_integration_comprehensive_workflow()
 
+    # ===================================================================
+    # LEGAL UPDATES MONITORING SYSTEM TESTS - NEW FEATURE
+    # ===================================================================
+    
+    def test_legal_updates_monitor_status(self):
+        """Test GET /api/legal-updates/monitor-status endpoint"""
+        success, response = self.run_test(
+            "Legal Updates Monitor Status",
+            "GET",
+            "legal-updates/monitor-status",
+            200,
+            timeout=30
+        )
+        
+        if success and response:
+            print(f"   Status: {response.get('status')}")
+            print(f"   Monitoring Active: {response.get('monitoring_active')}")
+            print(f"   Last Check: {response.get('last_check')}")
+            print(f"   Total Updates Found: {response.get('total_updates_found', 0)}")
+            print(f"   Success Rate: {response.get('success_rate', 0):.1f}%")
+            
+            # Verify response structure
+            required_fields = [
+                'status', 'monitoring_active', 'total_updates_found', 
+                'updates_by_source', 'updates_by_priority', 'success_rate',
+                'monitored_sources', 'knowledge_base_freshness', 'timestamp'
+            ]
+            missing_fields = [field for field in required_fields if field not in response]
+            if missing_fields:
+                print(f"   ⚠️  Missing required fields: {missing_fields}")
+            else:
+                print(f"   ✅ All required monitor status fields present")
+            
+            # Check knowledge base freshness
+            freshness = response.get('knowledge_base_freshness', {})
+            if freshness:
+                print(f"   Knowledge Base Freshness: {freshness.get('overall_freshness', 'unknown')}")
+            
+        return success, response
+    
+    def test_legal_updates_recent_updates(self):
+        """Test GET /api/legal-updates/recent-updates endpoint"""
+        # Test with default parameters
+        success1, response1 = self.run_test(
+            "Legal Updates Recent Updates (Default)",
+            "GET",
+            "legal-updates/recent-updates",
+            200,
+            timeout=45
+        )
+        
+        if success1 and response1:
+            updates = response1.get('updates', [])
+            total_found = response1.get('total_found', 0)
+            filters = response1.get('filters_applied', {})
+            summary = response1.get('summary', {})
+            
+            print(f"   Found {len(updates)} recent updates (total: {total_found})")
+            print(f"   Filters Applied: {filters}")
+            print(f"   Priority Summary: {summary}")
+            
+            # Verify response structure
+            required_fields = ['updates', 'total_found', 'filters_applied', 'search_timeframe', 'summary']
+            missing_fields = [field for field in required_fields if field not in response1]
+            if missing_fields:
+                print(f"   ⚠️  Missing required fields: {missing_fields}")
+            else:
+                print(f"   ✅ All required recent updates fields present")
+            
+            # Check update structure if updates exist
+            if updates:
+                first_update = updates[0]
+                update_fields = ['update_id', 'title', 'source', 'update_type', 'priority_level', 'publication_date']
+                missing_update_fields = [field for field in update_fields if field not in first_update]
+                if missing_update_fields:
+                    print(f"   ⚠️  Update missing fields: {missing_update_fields}")
+                else:
+                    print(f"   ✅ Update structure valid")
+                    print(f"   Sample Update: {first_update.get('title', 'N/A')[:50]}...")
+        
+        # Test with parameters
+        success2, response2 = self.run_test(
+            "Legal Updates Recent Updates (With Parameters)",
+            "GET",
+            "legal-updates/recent-updates?hours=48&priority=high&limit=10",
+            200,
+            timeout=45
+        )
+        
+        if success2 and response2:
+            updates = response2.get('updates', [])
+            filters = response2.get('filters_applied', {})
+            print(f"   Filtered Updates: {len(updates)} (filters: {filters})")
+        
+        return success1 and success2, {"default": response1, "filtered": response2}
+    
+    def test_legal_updates_impact_analysis(self):
+        """Test POST /api/legal-updates/impact-analysis endpoint"""
+        # Test with sample update IDs
+        analysis_request = {
+            "update_ids": ["update_001", "update_002", "update_003"]
+        }
+        
+        success, response = self.run_test(
+            "Legal Updates Impact Analysis",
+            "POST",
+            "legal-updates/impact-analysis",
+            200,
+            analysis_request,
+            timeout=60
+        )
+        
+        if success and response:
+            analysis_results = response.get('analysis_results', [])
+            total_analyzed = response.get('total_updates_analyzed', 0)
+            overall_summary = response.get('overall_impact_summary', {})
+            
+            print(f"   Analyzed {total_analyzed} updates")
+            print(f"   Analysis Results: {len(analysis_results)} detailed analyses")
+            print(f"   Overall Impact Summary: {overall_summary}")
+            
+            # Verify response structure
+            required_fields = ['analysis_results', 'total_updates_analyzed', 'overall_impact_summary', 'analysis_timestamp']
+            missing_fields = [field for field in required_fields if field not in response]
+            if missing_fields:
+                print(f"   ⚠️  Missing required fields: {missing_fields}")
+            else:
+                print(f"   ✅ All required impact analysis fields present")
+            
+            # Check analysis result structure
+            if analysis_results:
+                first_result = analysis_results[0]
+                result_fields = ['update_id', 'impact_level', 'affected_domains', 'knowledge_base_changes_required', 'confidence_score']
+                missing_result_fields = [field for field in result_fields if field not in first_result]
+                if missing_result_fields:
+                    print(f"   ⚠️  Analysis result missing fields: {missing_result_fields}")
+                else:
+                    print(f"   ✅ Analysis result structure valid")
+                    print(f"   Sample Impact Level: {first_result.get('impact_level')}")
+                    print(f"   Sample Confidence: {first_result.get('confidence_score', 0):.2f}")
+        
+        return success, response
+    
+    def test_legal_updates_integrate_update(self):
+        """Test PUT /api/legal-updates/integrate-update endpoint"""
+        # Test integration request
+        integration_request = {
+            "update_id": "test_update_001",
+            "integration_mode": "automatic"
+        }
+        
+        success, response = self.run_test(
+            "Legal Updates Integrate Update",
+            "PUT",
+            "legal-updates/integrate-update",
+            200,
+            integration_request,
+            timeout=60
+        )
+        
+        if success and response:
+            update_id = response.get('update_id')
+            integration_status = response.get('integration_status')
+            changes_applied = response.get('changes_applied', [])
+            kb_version = response.get('knowledge_base_version')
+            
+            print(f"   Update ID: {update_id}")
+            print(f"   Integration Status: {integration_status}")
+            print(f"   Changes Applied: {len(changes_applied)} changes")
+            print(f"   Knowledge Base Version: {kb_version}")
+            
+            # Verify response structure
+            required_fields = [
+                'update_id', 'integration_status', 'integration_mode', 'changes_applied',
+                'knowledge_base_version', 'integration_timestamp', 'affected_domains',
+                'validation_passed', 'rollback_available'
+            ]
+            missing_fields = [field for field in required_fields if field not in response]
+            if missing_fields:
+                print(f"   ⚠️  Missing required fields: {missing_fields}")
+            else:
+                print(f"   ✅ All required integration fields present")
+            
+            # Check changes applied structure
+            if changes_applied:
+                first_change = changes_applied[0]
+                change_fields = ['change_type', 'description']
+                missing_change_fields = [field for field in change_fields if field not in first_change]
+                if missing_change_fields:
+                    print(f"   ⚠️  Change missing fields: {missing_change_fields}")
+                else:
+                    print(f"   ✅ Change structure valid")
+                    print(f"   Sample Change: {first_change.get('change_type')} - {first_change.get('description', '')[:50]}...")
+        
+        return success, response
+    
+    def test_legal_updates_knowledge_base_freshness(self):
+        """Test GET /api/legal-updates/knowledge-base-freshness endpoint"""
+        success, response = self.run_test(
+            "Legal Updates Knowledge Base Freshness",
+            "GET",
+            "legal-updates/knowledge-base-freshness",
+            200,
+            timeout=30
+        )
+        
+        if success and response:
+            overall_status = response.get('overall_freshness_status')
+            freshness_score = response.get('freshness_score', 0)
+            total_domains = response.get('total_legal_domains', 0)
+            distribution = response.get('freshness_distribution', {})
+            recommendations = response.get('recommendations', [])
+            
+            print(f"   Overall Freshness Status: {overall_status}")
+            print(f"   Freshness Score: {freshness_score}")
+            print(f"   Total Legal Domains: {total_domains}")
+            print(f"   Distribution: {distribution}")
+            print(f"   Recommendations: {len(recommendations)} items")
+            
+            # Verify response structure
+            required_fields = [
+                'overall_freshness_status', 'freshness_score', 'total_legal_domains',
+                'freshness_distribution', 'domain_details', 'recommendations',
+                'knowledge_base_stats', 'report_timestamp'
+            ]
+            missing_fields = [field for field in required_fields if field not in response]
+            if missing_fields:
+                print(f"   ⚠️  Missing required fields: {missing_fields}")
+            else:
+                print(f"   ✅ All required freshness fields present")
+            
+            # Validate freshness score range
+            if 0 <= freshness_score <= 1:
+                print(f"   ✅ Valid freshness score range (0-1)")
+            else:
+                print(f"   ❌ Invalid freshness score: {freshness_score}")
+            
+            # Check knowledge base stats
+            kb_stats = response.get('knowledge_base_stats', {})
+            if kb_stats:
+                total_monitored = kb_stats.get('total_updates_monitored', 0)
+                print(f"   Total Updates Monitored: {total_monitored}")
+        
+        return success, response
+    
+    def test_legal_updates_notifications(self):
+        """Test GET /api/legal-updates/notifications endpoint"""
+        # Test with default limit
+        success1, response1 = self.run_test(
+            "Legal Updates Notifications (Default)",
+            "GET",
+            "legal-updates/notifications",
+            200,
+            timeout=30
+        )
+        
+        if success1 and response1:
+            notifications = response1.get('notifications', [])
+            total_count = response1.get('total_count', 0)
+            unread_count = response1.get('unread_count', 0)
+            
+            print(f"   Found {len(notifications)} notifications (total: {total_count})")
+            print(f"   Unread Count: {unread_count}")
+            
+            # Verify response structure
+            required_fields = ['notifications', 'total_count', 'unread_count', 'timestamp']
+            missing_fields = [field for field in required_fields if field not in response1]
+            if missing_fields:
+                print(f"   ⚠️  Missing required fields: {missing_fields}")
+            else:
+                print(f"   ✅ All required notification fields present")
+            
+            # Check notification structure if notifications exist
+            if notifications:
+                first_notification = notifications[0]
+                print(f"   Sample Notification: {first_notification}")
+        
+        # Test with custom limit
+        success2, response2 = self.run_test(
+            "Legal Updates Notifications (Custom Limit)",
+            "GET",
+            "legal-updates/notifications?limit=5",
+            200,
+            timeout=30
+        )
+        
+        if success2 and response2:
+            notifications = response2.get('notifications', [])
+            print(f"   Custom Limit Notifications: {len(notifications)} (max 5)")
+        
+        return success1 and success2, {"default": response1, "custom": response2}
+    
+    def test_legal_updates_mark_notification_read(self):
+        """Test POST /api/legal-updates/notifications/{notification_id}/read endpoint"""
+        # Test with sample notification ID
+        test_notification_id = "test_notification_001"
+        
+        success, response = self.run_test(
+            "Legal Updates Mark Notification Read",
+            "POST",
+            f"legal-updates/notifications/{test_notification_id}/read",
+            200,
+            timeout=30
+        )
+        
+        if success and response:
+            status = response.get('status')
+            message = response.get('message')
+            notification_id = response.get('notification_id')
+            
+            print(f"   Status: {status}")
+            print(f"   Message: {message}")
+            print(f"   Notification ID: {notification_id}")
+            
+            # Verify response structure
+            required_fields = ['status', 'message', 'notification_id', 'timestamp']
+            missing_fields = [field for field in required_fields if field not in response]
+            if missing_fields:
+                print(f"   ⚠️  Missing required fields: {missing_fields}")
+            else:
+                print(f"   ✅ All required mark read fields present")
+            
+            # Verify notification ID matches
+            if notification_id == test_notification_id:
+                print(f"   ✅ Notification ID matches request")
+            else:
+                print(f"   ❌ Notification ID mismatch: expected {test_notification_id}, got {notification_id}")
+        
+        return success, response
+    
+    def test_legal_updates_trigger_monitoring(self):
+        """Test POST /api/legal-updates/trigger-monitoring endpoint"""
+        success, response = self.run_test(
+            "Legal Updates Trigger Manual Monitoring",
+            "POST",
+            "legal-updates/trigger-monitoring",
+            200,
+            timeout=90  # Manual monitoring might take longer
+        )
+        
+        if success and response:
+            status = response.get('status')
+            message = response.get('message')
+            updates_found = response.get('updates_found', 0)
+            processing_time = response.get('processing_time_seconds', 0)
+            updates_by_source = response.get('updates_by_source', {})
+            updates_by_priority = response.get('updates_by_priority', {})
+            
+            print(f"   Status: {status}")
+            print(f"   Message: {message}")
+            print(f"   Updates Found: {updates_found}")
+            print(f"   Processing Time: {processing_time:.2f} seconds")
+            print(f"   Updates by Source: {updates_by_source}")
+            print(f"   Updates by Priority: {updates_by_priority}")
+            
+            # Verify response structure
+            required_fields = [
+                'status', 'message', 'updates_found', 'processing_time_seconds',
+                'updates_by_source', 'updates_by_priority', 'timestamp'
+            ]
+            missing_fields = [field for field in required_fields if field not in response]
+            if missing_fields:
+                print(f"   ⚠️  Missing required fields: {missing_fields}")
+            else:
+                print(f"   ✅ All required trigger monitoring fields present")
+            
+            # Verify processing completed successfully
+            if status == "completed":
+                print(f"   ✅ Manual monitoring completed successfully")
+            else:
+                print(f"   ⚠️  Manual monitoring status: {status}")
+        
+        return success, response
+    
+    def test_legal_updates_error_handling(self):
+        """Test error handling for Legal Updates endpoints"""
+        print(f"\n🛡️ Testing Legal Updates Error Handling...")
+        
+        # Test impact analysis with missing update_ids
+        success1, response1 = self.run_test(
+            "Impact Analysis - Missing update_ids",
+            "POST",
+            "legal-updates/impact-analysis",
+            400,  # Expecting bad request
+            {}  # Empty request body
+        )
+        
+        if success1:
+            print(f"   ✅ Impact analysis correctly handles missing update_ids")
+        
+        # Test integration with missing update_id
+        success2, response2 = self.run_test(
+            "Integration - Missing update_id",
+            "PUT",
+            "legal-updates/integrate-update",
+            400,  # Expecting bad request
+            {}  # Empty request body
+        )
+        
+        if success2:
+            print(f"   ✅ Integration correctly handles missing update_id")
+        
+        # Test mark notification read with invalid ID
+        success3, response3 = self.run_test(
+            "Mark Notification Read - Invalid ID",
+            "POST",
+            "legal-updates/notifications/invalid_id_12345/read",
+            200,  # Service might handle gracefully
+            timeout=30
+        )
+        
+        if success3:
+            print(f"   ✅ Mark notification read handles invalid IDs gracefully")
+        
+        return success1 and success2 and success3, {
+            "impact_analysis": response1,
+            "integration": response2,
+            "notification": response3
+        }
+    
+    def run_legal_updates_monitoring_tests(self):
+        """Run all Legal Updates Monitoring System tests"""
+        print("\n" + "=" * 80)
+        print("🔍 LEGAL UPDATES MONITORING SYSTEM TESTS - NEW FEATURE")
+        print("=" * 80)
+        
+        # Test main endpoints
+        print("\n📊 Testing Main Legal Updates API Endpoints...")
+        self.test_legal_updates_monitor_status()
+        self.test_legal_updates_recent_updates()
+        self.test_legal_updates_impact_analysis()
+        self.test_legal_updates_integrate_update()
+        self.test_legal_updates_knowledge_base_freshness()
+        
+        # Test additional endpoints
+        print("\n🔔 Testing Additional Legal Updates Endpoints...")
+        self.test_legal_updates_notifications()
+        self.test_legal_updates_mark_notification_read()
+        self.test_legal_updates_trigger_monitoring()
+        
+        # Test error handling
+        print("\n🛡️ Testing Legal Updates Error Handling...")
+        self.test_legal_updates_error_handling()
+        
+        print("\n" + "=" * 80)
+        print("🔍 LEGAL UPDATES MONITORING SYSTEM TESTS COMPLETE")
+        print("=" * 80)
+
 def main():
     print("🚀 Starting LegalMate AI Backend API Tests")
     print("=" * 60)
