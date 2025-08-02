@@ -1130,7 +1130,7 @@ class ProfessionalIntegrationsAPITester:
     def test_integrations_billing_optimization(self):
         """Test GET /api/integrations/billing-optimization - Billing optimization"""
         # Test with query parameters
-        endpoint = "integrations/billing-optimization?firm_id=test-firm-123&analysis_period=90d&include_projections=true"
+        endpoint = "integrations/billing-optimization?law_firm_id=test-firm-123&analysis_period=quarterly&include_recommendations=true"
         
         success, response = self.run_test(
             "Billing Optimization Analytics", 
