@@ -533,12 +533,71 @@ const LegalQuestionAnswering = () => {
                 <Scale className="w-4 h-4 text-purple-600" />
               </div>
               <div className="bg-white border border-gray-200 rounded-lg px-4 py-3 shadow-sm">
+                {/* Communication Mode Indicator */}
+                {message.communicationMode && message.communicationMode !== 'general_consumer' && (
+                  <div className="flex items-center mb-2 pb-2 border-b border-gray-100">
+                    <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      message.communicationMode === 'legal_professional' ? 'bg-blue-100 text-blue-700' :
+                      message.communicationMode === 'business_executive' ? 'bg-green-100 text-green-700' :
+                      message.communicationMode === 'academic_student' ? 'bg-indigo-100 text-indigo-700' :
+                      'bg-gray-100 text-gray-700'
+                    }`}>
+                      {message.communicationMode.replace('_', ' ')} mode
+                    </div>
+                    {message.sophisticationAnalysis && (
+                      <span className="ml-2 text-xs text-gray-500">
+                        (Auto-detected with {Math.round(message.sophisticationAnalysis.confidence_score * 100)}% confidence)
+                      </span>
+                    )}
+                  </div>
+                )}
+
                 <div className="prose prose-sm max-w-none">
                   <div 
                     className="text-gray-800 leading-relaxed"
                     dangerouslySetInnerHTML={{ __html: formattedContent }}
                   />
                 </div>
+
+                {/* Interactive Elements from Adaptive Response */}
+                {message.adaptiveResponse && message.adaptiveResponse.interactive_elements.length > 0 && (
+                  <div className="mt-4 pt-3 border-t border-gray-100">
+                    <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
+                      <Lightbulb className="w-4 h-4 mr-1" />
+                      Interactive Tools:
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {message.adaptiveResponse.interactive_elements.slice(0, 3).map((element, index) => (
+                        <button
+                          key={index}
+                          className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-xs hover:bg-blue-100 transition-colors"
+                          onClick={() => console.log('Interactive element clicked:', element)}
+                        >
+                          {element.description}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Follow-up Suggestions */}
+                {message.adaptiveResponse && message.adaptiveResponse.follow_up_suggestions.length > 0 && (
+                  <div className="mt-4 pt-3 border-t border-gray-100">
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">Suggested follow-up questions:</h4>
+                    <div className="space-y-1">
+                      {message.adaptiveResponse.follow_up_suggestions.map((suggestion, index) => (
+                        <button
+                          key={index}
+                          onClick={() => handleSampleQuestion(suggestion)}
+                          className="block w-full text-left text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-50 p-2 rounded transition-colors"
+                          disabled={isLoading}
+                        >
+                          💡 {suggestion}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 
                 {/* Answer Metadata - Only show for actual legal questions */}
                 {shouldShowMeta && (
@@ -561,6 +620,12 @@ const LegalQuestionAnswering = () => {
                         <div className="flex items-center space-x-1">
                           <Bot className="w-3 h-3" />
                           <span>{message.modelUsed}</span>
+                        </div>
+                      )}
+                      {message.adaptiveResponse && (
+                        <div className="flex items-center space-x-1">
+                          <Zap className="w-3 h-3" />
+                          <span>Adaptive response</span>
                         </div>
                       )}
                     </div>
