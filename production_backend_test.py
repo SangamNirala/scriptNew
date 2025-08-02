@@ -11,7 +11,7 @@ import time
 from datetime import datetime, timedelta
 
 class ProductionSystemTester:
-    def __init__(self, base_url="https://f2add665-62cd-4265-8e6d-76a037f430d3.preview.emergentagent.com"):
+    def __init__(self, base_url="https://b960a015-79f0-4cdc-8cdd-68f0a3fa83b9.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.tests_run = 0
