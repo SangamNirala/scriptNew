@@ -292,6 +292,16 @@ const LegalQuestionAnswering = () => {
     setIsLoading(true);
 
     try {
+      // Analyze user sophistication if in auto-detect mode
+      if (communicationMode === 'auto_detect') {
+        await analyzeUserSophistication(question);
+      }
+
+      // Get the effective communication mode
+      const effectiveMode = communicationMode === 'auto_detect' ? 
+        (detectedSophistication?.sophistication_level || 'general_consumer') : 
+        communicationMode;
+
       const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/legal-qa/ask`, {
         method: 'POST',
         headers: {
@@ -308,18 +318,44 @@ const LegalQuestionAnswering = () => {
       if (response.ok) {
         const result = await response.json();
         
+        // Generate adaptive response based on user sophistication
+        let adaptedContent = result.answer;
+        let adaptiveResponse = null;
+        
+        if (effectiveMode !== 'general_consumer') {
+          adaptiveResponse = await generateAdaptiveResponse(result.answer, effectiveMode);
+          if (adaptiveResponse) {
+            adaptedContent = adaptiveResponse.adapted_content;
+          }
+        }
+        
         const assistantMessage = {
           id: Date.now() + 1,
           type: 'assistant',
-          content: result.answer,
+          content: adaptedContent,
+          originalContent: result.answer,
           confidence: result.confidence,
           sources: result.sources || [],
           retrievedDocuments: result.retrieved_documents,
           modelUsed: result.model_used,
-          timestamp: result.timestamp
+          timestamp: result.timestamp,
+          communicationMode: effectiveMode,
+          adaptiveResponse: adaptiveResponse,
+          sophisticationAnalysis: detectedSophistication
         };
 
         setMessages(prev => [...prev, assistantMessage]);
+
+        // Load personalized recommendations after answering
+        if (messages.length > 2) { // After a few interactions
+          loadPersonalizedRecommendations();
+        }
+
+        // Generate interactive guidance for complex legal issues
+        if (question.length > 100 && (question.includes('what should I do') || question.includes('help me with'))) {
+          setTimeout(() => generateInteractiveGuidance(question), 1000);
+        }
+
       } else {
         const errorData = await response.json();
         throw new Error(errorData.detail || 'Failed to get answer');
