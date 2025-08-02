@@ -12,6 +12,16 @@ const LegalQuestionAnswering = () => {
   const [knowledgeBaseStats, setKnowledgeBaseStats] = useState(null);
   const [showInitializationPanel, setShowInitializationPanel] = useState(false);
   const [isInitializing, setIsInitializing] = useState(false);
+  
+  // Advanced UX Features
+  const [communicationMode, setCommunicationMode] = useState('auto_detect'); // auto_detect, legal_professional, business_executive, general_consumer, academic_student
+  const [detectedSophistication, setDetectedSophistication] = useState(null);
+  const [userProfile, setUserProfile] = useState({});
+  const [showPersonalizedRecommendations, setShowPersonalizedRecommendations] = useState(false);
+  const [personalizedRecommendations, setPersonalizedRecommendations] = useState([]);
+  const [interactiveGuidance, setInteractiveGuidance] = useState(null);
+  const [showAdvancedFeatures, setShowAdvancedFeatures] = useState(false);
+  
   const messagesEndRef = useRef(null);
 
   const legalDomains = [
