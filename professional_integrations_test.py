@@ -974,21 +974,16 @@ class ProfessionalIntegrationsAPITester:
         This agreement shall be governed by the laws of California.
         """
         
-        analysis_data = {
-            "contract_content": contract_content,
-            "contract_type": "service_agreement",
-            "jurisdiction": "US",
-            "analysis_type": "comprehensive",
-            "include_risk_assessment": True,
-            "include_compliance_check": True
-        }
+        # This endpoint uses query parameters
+        import urllib.parse
+        encoded_content = urllib.parse.quote(contract_content.strip())
+        endpoint = f"integrations/contract-analysis?contract_content={encoded_content}&contract_type=service_agreement&jurisdiction=US&analysis_level=comprehensive&include_recommendations=true"
         
         success, response = self.run_test(
             "Enterprise Contract Analysis", 
             "POST", 
-            "integrations/contract-analysis", 
-            200, 
-            analysis_data,
+            endpoint, 
+            200,
             timeout=60
         )
         
