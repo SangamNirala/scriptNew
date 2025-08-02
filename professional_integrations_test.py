@@ -110,13 +110,12 @@ class ProfessionalIntegrationsAPITester:
     def test_integrations_activate(self):
         """Test POST /api/integrations/activate - Activate specific integrations with config overrides"""
         activation_data = {
-            "integration_name": "Google Drive",
+            "integration_id": "google_drive",
             "config_overrides": {
                 "folder_path": "/legal_documents",
                 "sync_enabled": True,
                 "access_level": "read_write"
-            },
-            "organization_id": "test-org-123"
+            }
         }
         
         success, response = self.run_test(
