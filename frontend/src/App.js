@@ -17,8 +17,9 @@ import EnhancedContractWizard from './components/EnhancedContractWizard';
 import AnalyticsDashboard from './components/AnalyticsDashboard';
 import PlainEnglishContractCreator from './components/PlainEnglishContractCreator';
 import LegalQuestionAnswering from './components/LegalQuestionAnswering';
+import VoiceAgent from './components/VoiceAgent';
 import ResizeObserverErrorBoundary from './components/ResizeObserverErrorBoundary';
-import { FileText, Zap, Shield, Users, CheckCircle, AlertTriangle, Download, Eye, Calendar, Sparkles, Wand2, Clock, BarChart3, MessageSquare, Scale } from 'lucide-react';
+import { FileText, Zap, Shield, Users, CheckCircle, AlertTriangle, Download, Eye, Calendar, Sparkles, Wand2, Clock, BarChart3, MessageSquare, Scale, Mic } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
