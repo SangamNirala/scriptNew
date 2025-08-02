@@ -11891,6 +11891,83 @@ async def submit_app_review(request: AppReviewSubmissionRequest):
         logger.error(f"Error submitting app review: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+def get_standardized_partner_type(partner_type_input: str):
+    """
+    Standardized partner type validation function for consistent handling across all partnership endpoints.
+    Accepts exact enum values, friendly aliases, and case-insensitive variations.
+    """
+    from marketplace_partnership_ecosystem import PartnerType
+    
+    if not partner_type_input:
+        return None
+    
+    # Comprehensive case-insensitive partner type mapping
+    partner_type_mapping = {}
+    
+    # Add all enum values in various formats
+    for pt in PartnerType:
+        enum_value = pt.value  # e.g., "technology_partner"
+        
+        # Exact enum values (case-insensitive)
+        partner_type_mapping[enum_value.lower()] = pt
+        partner_type_mapping[enum_value.upper()] = pt
+        partner_type_mapping[enum_value] = pt
+        
+        # All caps enum format (e.g., "TECHNOLOGY_PARTNER")
+        enum_caps = enum_value.replace("_", "_").upper()
+        partner_type_mapping[enum_caps] = pt
+        
+        # Friendly names (case-insensitive)
+        friendly_name = enum_value.replace("_", " ").title()
+        partner_type_mapping[friendly_name.lower()] = pt
+        partner_type_mapping[friendly_name.upper()] = pt
+        partner_type_mapping[friendly_name] = pt
+        
+        # Single word friendly names for common types
+        if enum_value == "technology_partner":
+            partner_type_mapping["technology"] = pt
+            partner_type_mapping["Technology"] = pt
+            partner_type_mapping["TECHNOLOGY"] = pt
+        elif enum_value == "integration_partner":
+            partner_type_mapping["integration"] = pt
+            partner_type_mapping["Integration"] = pt
+            partner_type_mapping["INTEGRATION"] = pt
+        elif enum_value == "reseller_partner":
+            partner_type_mapping["reseller"] = pt
+            partner_type_mapping["Reseller"] = pt
+            partner_type_mapping["RESELLER"] = pt
+        elif enum_value == "consultant":
+            partner_type_mapping["consultant"] = pt
+            partner_type_mapping["Consultant"] = pt
+            partner_type_mapping["CONSULTANT"] = pt
+        elif enum_value == "trainer":
+            partner_type_mapping["trainer"] = pt
+            partner_type_mapping["Trainer"] = pt
+            partner_type_mapping["TRAINER"] = pt
+    
+    # Special cases for complex names (case-insensitive)
+    partner_type_mapping["legal service provider"] = PartnerType.LEGAL_SERVICE_PROVIDER
+    partner_type_mapping["Legal Service Provider"] = PartnerType.LEGAL_SERVICE_PROVIDER
+    partner_type_mapping["LEGAL SERVICE PROVIDER"] = PartnerType.LEGAL_SERVICE_PROVIDER
+    partner_type_mapping["software vendor"] = PartnerType.SOFTWARE_VENDOR
+    partner_type_mapping["Software Vendor"] = PartnerType.SOFTWARE_VENDOR
+    partner_type_mapping["SOFTWARE VENDOR"] = PartnerType.SOFTWARE_VENDOR
+    partner_type_mapping["channel partner"] = PartnerType.CHANNEL_PARTNER
+    partner_type_mapping["Channel Partner"] = PartnerType.CHANNEL_PARTNER
+    partner_type_mapping["CHANNEL PARTNER"] = PartnerType.CHANNEL_PARTNER
+    
+    # Look up the partner type (case-insensitive)
+    normalized_input = partner_type_input.strip()
+    if normalized_input in partner_type_mapping:
+        return partner_type_mapping[normalized_input]
+    
+    # If exact match not found, try case-insensitive search
+    for key, value in partner_type_mapping.items():
+        if key.lower() == normalized_input.lower():
+            return value
+    
+    return None
+
 @api_router.post("/partnerships/apply")
 async def create_partner_application(request: PartnerApplicationRequest):
     """Create a new partner application"""
@@ -11898,31 +11975,10 @@ async def create_partner_application(request: PartnerApplicationRequest):
         if not PROFESSIONAL_INTEGRATIONS_AVAILABLE:
             raise HTTPException(status_code=503, detail="Professional integrations system not available")
         
-        from marketplace_partnership_ecosystem import PartnerType
-        
-        # Flexible partner type mapping
-        partner_type_mapping = {
-            # Exact enum value matches
-            "technology_partner": PartnerType.TECHNOLOGY_PARTNER,
-            "integration_partner": PartnerType.INTEGRATION_PARTNER,
-            "channel_partner": PartnerType.CHANNEL_PARTNER,
-            "reseller_partner": PartnerType.RESELLER_PARTNER,
-            "legal_service_provider": PartnerType.LEGAL_SERVICE_PROVIDER,
-            "software_vendor": PartnerType.SOFTWARE_VENDOR,
-            "consultant": PartnerType.CONSULTANT,
-            "trainer": PartnerType.TRAINER,
-            # Friendly aliases
-            "Technology": PartnerType.TECHNOLOGY_PARTNER,
-            "Integration": PartnerType.INTEGRATION_PARTNER,
-            "Reseller": PartnerType.RESELLER_PARTNER,
-            "Legal Service Provider": PartnerType.LEGAL_SERVICE_PROVIDER,
-            "Software Vendor": PartnerType.SOFTWARE_VENDOR,
-            "Consultant": PartnerType.CONSULTANT
-        }
-        if request.partner_type not in partner_type_mapping:
+        # Use standardized partner type validation
+        partner_type_enum = get_standardized_partner_type(request.partner_type)
+        if partner_type_enum is None:
             raise HTTPException(status_code=400, detail="Invalid partner type")
-        
-        partner_type_enum = partner_type_mapping[request.partner_type]
         
         marketplace_ecosystem = get_marketplace_ecosystem()
         application_result = marketplace_ecosystem.create_partner_application(
