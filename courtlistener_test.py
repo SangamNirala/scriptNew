@@ -7,7 +7,7 @@ from datetime import datetime
 import os
 
 class CourtListenerAPITester:
-    def __init__(self, base_url="https://ba59628b-3e07-4800-8062-c55b92bc2065.preview.emergentagent.com"):
+    def __init__(self, base_url="https://c15d65b1-9a3c-4a89-9f42-f7d88d684f7b.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.tests_run = 0
