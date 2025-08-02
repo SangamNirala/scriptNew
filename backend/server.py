@@ -6770,6 +6770,7 @@ if RAG_SYSTEM_AVAILABLE:
         session_id: Optional[str] = None
         jurisdiction: Optional[str] = None
         legal_domain: Optional[str] = None
+        is_voice: Optional[bool] = False  # Voice Agent flag
     
     class LegalQuestionResponse(BaseModel):
         answer: str
@@ -6779,6 +6780,26 @@ if RAG_SYSTEM_AVAILABLE:
         retrieved_documents: int
         timestamp: str
         model_used: Optional[str] = None
+        is_voice_session: Optional[bool] = False  # Indicates if this is a voice session
+    
+    # Voice Agent specific models
+    class VoiceAgentRequest(BaseModel):
+        question: str
+        voice_session_id: Optional[str] = None  # Voice specific session ID
+        jurisdiction: Optional[str] = None
+        legal_domain: Optional[str] = None
+        client_type: Optional[str] = "voice_assistant"
+        
+    class VoiceAgentResponse(BaseModel):
+        answer: str
+        confidence: float
+        sources: List[Dict[str, Any]]
+        voice_session_id: str
+        retrieved_documents: int
+        timestamp: str
+        model_used: Optional[str] = None
+        is_voice_session: bool = True
+        session_metadata: Optional[Dict[str, Any]] = None
     
     class ConversationHistoryResponse(BaseModel):
         session_id: str
