@@ -1089,9 +1089,17 @@ const LegalQuestionAnswering = () => {
 
           {/* Sample Questions */}
           <div className="bg-white rounded-lg border p-4">
-            <h3 className="font-semibold text-gray-900 mb-4">Sample Questions</h3>
+            <h3 className="font-semibold text-gray-900 mb-4 flex items-center justify-between">
+              <span>Sample Questions</span>
+              <span className="text-xs text-gray-500">
+                {communicationMode === 'auto_detect' ? 
+                  (detectedSophistication?.sophistication_level.replace('_', ' ') || 'General') :
+                  communicationMode.replace('_', ' ')
+                } mode
+              </span>
+            </h3>
             <div className="space-y-2">
-              {sampleQuestions.slice(0, 6).map((question, index) => (
+              {getCurrentSampleQuestions().slice(0, 6).map((question, index) => (
                 <button
                   key={index}
                   onClick={() => handleSampleQuestion(question)}
