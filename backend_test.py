@@ -26,6 +26,8 @@ class LegalMateAPITester:
                 response = requests.get(url, headers=headers, timeout=timeout)
             elif method == 'POST':
                 response = requests.post(url, json=data, headers=headers, timeout=timeout)
+            elif method == 'PUT':
+                response = requests.put(url, json=data, headers=headers, timeout=timeout)
 
             print(f"   Status: {response.status_code}")
             
