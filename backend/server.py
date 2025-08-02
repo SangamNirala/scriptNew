@@ -9421,11 +9421,19 @@ legal_updates_scheduler_instance = None
 
 @app.on_event("startup")
 async def startup_event():
-    """Initialize systems on startup"""
+    """Initialize systems on application startup"""
     global legal_updates_monitor_instance, legal_update_validator_instance, legal_updates_scheduler_instance
     
     try:
-        logger.info("🚀 Starting LegalMate AI Legal Updates Monitoring System...")
+        # Initialize existing systems
+        if RAG_SYSTEM_AVAILABLE:
+            initialize_legal_rag()
+            logger.info("Legal RAG system initialized")
+        
+        if VALIDATION_SYSTEM_AVAILABLE:
+            get_validation_system()
+            get_expert_review_system()
+            logger.info("Legal validation systems initialized")
         
         if LEGAL_UPDATES_SYSTEM_AVAILABLE:
             # Initialize legal updates monitor
@@ -9461,13 +9469,19 @@ async def startup_event():
                     logger.warning("⚠️ AI API keys not found - Legal Updates Validator not initialized")
             else:
                 logger.warning("⚠️ CourtListener API key not found - Legal Updates Monitor not initialized")
-        else:
-            logger.warning("⚠️ Legal Updates Monitoring system not available")
-            
-        logger.info("🎉 LegalMate AI startup completed successfully!")
+        
+        # Initialize Production Optimization Systems
+        if PRODUCTION_SYSTEMS_AVAILABLE:
+            await initialize_performance_system(db)
+            await initialize_analytics_system(db)
+            await initialize_scalability_system(db, max_concurrent_users=100)
+            await initialize_monitoring_system(db)
+            logger.info("🚀 Production optimization systems initialized successfully")
+        
+        logger.info("🎯 All systems initialized - Legal AI Platform ready for enterprise production")
         
     except Exception as e:
-        logger.error(f"❌ Error during startup: {e}")
+        logger.error(f"Error during startup: {e}")
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
