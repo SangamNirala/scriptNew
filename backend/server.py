@@ -6822,6 +6822,38 @@ if RAG_SYSTEM_AVAILABLE:
         by_source: Dict[str, int]
     
     # ================================
+    # VOICE AGENT UTILITY FUNCTIONS
+    # ================================
+    
+    def generate_voice_session_id() -> str:
+        """Generate voice session ID with format: voice_session_<timestamp>_<random>"""
+        timestamp = int(time.time())
+        random_suffix = random.randint(1000, 9999)
+        return f"voice_session_{timestamp}_{random_suffix}"
+    
+    def is_voice_session(session_id: str) -> bool:
+        """Check if session ID is a voice session"""
+        return session_id and session_id.startswith("voice_session_")
+    
+    def validate_voice_session_format(session_id: str) -> bool:
+        """Validate voice session ID format"""
+        if not session_id or not session_id.startswith("voice_session_"):
+            return False
+        
+        try:
+            parts = session_id.split("_")
+            if len(parts) != 4:  # voice, session, timestamp, random
+                return False
+            
+            # Validate timestamp is numeric
+            int(parts[2])
+            # Validate random suffix is numeric
+            int(parts[3])
+            return True
+        except (ValueError, IndexError):
+            return False
+
+    # ================================
     # LEGAL QUESTION ANSWERING RAG ENDPOINTS
     # ================================
     
