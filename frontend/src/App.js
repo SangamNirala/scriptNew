@@ -309,6 +309,7 @@ function App() {
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [showPlainEnglishCreator, setShowPlainEnglishCreator] = useState(false);
   const [showLegalQA, setShowLegalQA] = useState(false);
+  const [showVoiceAgent, setShowVoiceAgent] = useState(false);
 
   useEffect(() => {
     loadContractTypes();
