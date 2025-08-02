@@ -11616,12 +11616,17 @@ async def check_compliance(framework: str, user_id: str = None, organization_id:
         
         from enterprise_integration_features import ComplianceFramework
         
-        # Map string to enum
+        # Map string to enum (flexible mapping)
         framework_mapping = {
             "soc2_type2": ComplianceFramework.SOC2_TYPE2,
+            "soc2": ComplianceFramework.SOC2_TYPE2,  # Alias for SOC2
+            "SOC2": ComplianceFramework.SOC2_TYPE2,  # Case insensitive
             "iso27001": ComplianceFramework.ISO27001,
+            "ISO27001": ComplianceFramework.ISO27001,  # Case insensitive
             "hipaa": ComplianceFramework.HIPAA,
+            "HIPAA": ComplianceFramework.HIPAA,  # Case insensitive
             "gdpr": ComplianceFramework.GDPR,
+            "GDPR": ComplianceFramework.GDPR,  # Case insensitive
             "attorney_client_privilege": ComplianceFramework.ATTORNEY_CLIENT_PRIVILEGE
         }
         
