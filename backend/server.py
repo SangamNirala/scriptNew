@@ -11509,9 +11509,16 @@ async def generate_api_key(request: APIKeyGenerationRequest):
             expires_in_days=request.expires_in_days
         )
         
+        # Flatten response with expected fields
+        key_data = api_key.dict()
         return {
             "success": True,
-            "api_key": api_key.dict(),
+            "api_key": key_data.get("key", ""),
+            "access_level": request.access_level,
+            "rate_limit": key_data.get("rate_limits", {}),
+            "expires_at": key_data.get("expires_at", ""),
+            "organization_id": key_data.get("organization_id", ""),
+            "api_key_details": key_data,  # Full details for reference
             "timestamp": datetime.utcnow().isoformat()
         }
         
