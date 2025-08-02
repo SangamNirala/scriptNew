@@ -467,9 +467,10 @@ class ProfessionalIntegrationsAPITester:
         """Test POST /api/workflows/create - Create workflow from template"""
         workflow_data = {
             "template_id": "client_onboarding",
-            "client_name": "Test Client Corp",
+            "law_firm_id": "test-firm-123",
+            "created_by": "jane.smith@testfirm.com",
+            "client_id": "client-123",
             "matter_id": "MATTER-2025-001",
-            "assigned_attorney": "jane.smith@testfirm.com",
             "custom_parameters": {
                 "client_type": "corporate",
                 "practice_area": "contract_law",
