@@ -11553,7 +11553,7 @@ async def get_api_documentation():
         raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.get("/api-ecosystem/usage-analytics")
-async def get_usage_analytics(api_key: str = None, organization_id: str = None, days: int = 30):
+async def get_usage_analytics(api_key: str = None, organization_id: str = None, days: int = 30, time_period: str = "30d"):
     """Get usage analytics for API keys or organizations"""
     try:
         if not PROFESSIONAL_INTEGRATIONS_AVAILABLE:
@@ -11566,9 +11566,15 @@ async def get_usage_analytics(api_key: str = None, organization_id: str = None, 
             days=days
         )
         
+        # Flatten response with expected fields
         return {
             "success": True,
-            "analytics": analytics,
+            "time_period": time_period,
+            "total_requests": analytics.get("total_requests", 0),
+            "success_rate": analytics.get("success_rate", 0.0),
+            "average_response_time": analytics.get("average_response_time", 0.0),
+            "usage_by_endpoint": analytics.get("usage_by_endpoint", {}),
+            "analytics": analytics,  # Full analytics for reference
             "timestamp": datetime.utcnow().isoformat()
         }
         
