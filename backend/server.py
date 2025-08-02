@@ -12193,7 +12193,13 @@ Based on the analysis of applicable law and precedent in {jurisdiction}, [brief 
         
         return {
             "success": True,
-            "memo_result": memo_result,
+            "memo_id": memo_result["memo_id"],
+            "title": f"Legal Memorandum: {legal_issue}",
+            "executive_summary": f"Analysis of {legal_issue} under {jurisdiction} law",
+            "legal_analysis": memo_result["memo_content"],
+            "conclusions": f"Based on the analysis, [conclusions would be provided for {legal_issue}]",
+            "citations": memo_result["citations"],
+            "memo_result": memo_result,  # Full memo data for reference
             "timestamp": datetime.utcnow().isoformat()
         }
         
