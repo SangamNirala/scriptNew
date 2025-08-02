@@ -12008,14 +12008,12 @@ async def search_partners(
         if not PROFESSIONAL_INTEGRATIONS_AVAILABLE:
             raise HTTPException(status_code=503, detail="Professional integrations system not available")
         
-        from marketplace_partnership_ecosystem import PartnerType
-        
+        # Use standardized partner type validation
         partner_type_enum = None
         if partner_type:
-            partner_type_mapping = {pt.value: pt for pt in PartnerType}
-            if partner_type not in partner_type_mapping:
+            partner_type_enum = get_standardized_partner_type(partner_type)
+            if partner_type_enum is None:
                 raise HTTPException(status_code=400, detail="Invalid partner type")
-            partner_type_enum = partner_type_mapping[partner_type]
         
         marketplace_ecosystem = get_marketplace_ecosystem()
         search_results = marketplace_ecosystem.search_partners(
