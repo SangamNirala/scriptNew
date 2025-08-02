@@ -73,7 +73,7 @@ psutil>=5.9.0
 
 # Professional Integration Dependencies for Legal Industry
 bcrypt>=4.0.0
-python-ldap3>=2.9.0
+ldap3>=2.9.0
 xmltodict>=0.13.0
 pycryptodome>=3.19.0
-python-saml>=1.15.0
+python3-saml>=1.15.0
