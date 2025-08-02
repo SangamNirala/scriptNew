@@ -11900,7 +11900,25 @@ async def create_partner_application(request: PartnerApplicationRequest):
         
         from marketplace_partnership_ecosystem import PartnerType
         
-        partner_type_mapping = {pt.value: pt for pt in PartnerType}
+        # Flexible partner type mapping
+        partner_type_mapping = {
+            # Exact enum value matches
+            "technology_partner": PartnerType.TECHNOLOGY_PARTNER,
+            "integration_partner": PartnerType.INTEGRATION_PARTNER,
+            "channel_partner": PartnerType.CHANNEL_PARTNER,
+            "reseller_partner": PartnerType.RESELLER_PARTNER,
+            "legal_service_provider": PartnerType.LEGAL_SERVICE_PROVIDER,
+            "software_vendor": PartnerType.SOFTWARE_VENDOR,
+            "consultant": PartnerType.CONSULTANT,
+            "trainer": PartnerType.TRAINER,
+            # Friendly aliases
+            "Technology": PartnerType.TECHNOLOGY_PARTNER,
+            "Integration": PartnerType.INTEGRATION_PARTNER,
+            "Reseller": PartnerType.RESELLER_PARTNER,
+            "Legal Service Provider": PartnerType.LEGAL_SERVICE_PROVIDER,
+            "Software Vendor": PartnerType.SOFTWARE_VENDOR,
+            "Consultant": PartnerType.CONSULTANT
+        }
         if request.partner_type not in partner_type_mapping:
             raise HTTPException(status_code=400, detail="Invalid partner type")
         
