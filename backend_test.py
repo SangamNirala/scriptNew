@@ -5739,6 +5739,19 @@ def main():
     
     print("🔍"*60)
     
+    # NEW: Production Optimization & Performance Analytics System Tests
+    print("\n" + "🏭"*60)
+    print("🏭 PRODUCTION OPTIMIZATION & PERFORMANCE ANALYTICS SYSTEM TESTING - NEW FEATURE")
+    print("🏭"*60)
+    
+    # Production Optimization Tests
+    print("\n" + "🚀"*30)
+    print("🚀 PRODUCTION OPTIMIZATION TESTING")
+    print("🚀"*30)
+    tester.run_production_optimization_tests()
+    
+    print("🏭"*60)
+    
     # Print final results
     print("\n" + "="*60)
     print("📊 TEST RESULTS SUMMARY")
