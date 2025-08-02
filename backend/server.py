@@ -415,6 +415,58 @@ class LegalCaseSearchRequest(BaseModel):
     date_range: Optional[Dict[str, str]] = None  # {"start": "2020-01-01", "end": "2024-01-01"}
     max_results: int = Field(default=10, le=100)
 
+# Legal Accuracy Validation Models
+class ComprehensiveValidationRequest(BaseModel):
+    analysis_content: str
+    legal_domain: str
+    jurisdiction: str = "US"
+
+class ValidationLevelResult(BaseModel):
+    level: str
+    status: str
+    confidence: float
+    details: Dict[str, Any]
+    sources_checked: List[str]
+    issues_found: List[str]
+    recommendations: List[str]
+    execution_time: float
+
+class ComprehensiveValidationResponse(BaseModel):
+    validation_id: str
+    analysis_id: str
+    overall_status: str
+    confidence_score: float
+    validation_levels: List[ValidationLevelResult]
+    expert_review_required: bool
+    expert_review_id: Optional[str]
+    recommendations: List[str]
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+
+class ConfidenceScoreRequest(BaseModel):
+    validation_id: str
+
+class ConfidenceScoreResponse(BaseModel):
+    validation_id: str
+    overall_confidence_score: float
+    confidence_factors: Dict[str, float]
+    factor_weights: Dict[str, float]
+    validation_summary: Dict[str, Any]
+
+class ExpertReviewRequest(BaseModel):
+    analysis_id: str
+    content: str
+    legal_domain: str
+    validation_issues: List[str]
+    complexity_score: float
+
+class ExpertReviewResponse(BaseModel):
+    success: bool
+    review_id: str
+    assigned_expert: Dict[str, Any]
+    priority: str
+    status: str
+    estimated_completion: Optional[str] = None
+
 # Knowledge Base Integration Models (Days 12-14)
 class IntegrationRequest(BaseModel):
     phase: str = Field(default="all", description="Phase to execute: 'phase1', 'phase2', 'phase3', 'phase4', or 'all'")
