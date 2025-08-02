@@ -11536,9 +11536,15 @@ async def get_api_documentation():
         api_ecosystem = get_api_ecosystem()
         documentation = api_ecosystem.get_api_documentation()
         
+        # Flatten response with expected fields
         return {
             "success": True,
-            "documentation": documentation,
+            "authentication": documentation.get("authentication", {}),
+            "rate_limits": documentation.get("rate_limits", {}),
+            "endpoints": documentation.get("endpoints", []),
+            "response_schemas": documentation.get("response_schemas", {}),
+            "integration_examples": documentation.get("integration_examples", []),
+            "documentation": documentation,  # Full documentation for reference
             "timestamp": datetime.utcnow().isoformat()
         }
         
