@@ -148,14 +148,13 @@ class ProfessionalIntegrationsAPITester:
     def test_integrations_action(self):
         """Test POST /api/integrations/action - Execute actions using integrations"""
         action_data = {
-            "integration_name": "CourtListener",
-            "action_type": "search_cases",
+            "integration_id": "courtlistener",
+            "action": "search_cases",
             "parameters": {
                 "query": "contract dispute",
                 "jurisdiction": "US",
                 "max_results": 10
-            },
-            "organization_id": "test-org-123"
+            }
         }
         
         success, response = self.run_test(
