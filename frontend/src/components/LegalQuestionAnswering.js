@@ -61,7 +61,8 @@ const LegalQuestionAnswering = () => {
       color: 'bg-indigo-100 text-indigo-700 border-indigo-200'
     }
   ];
-    { value: '', label: 'All Legal Areas' },
+
+  const legalDomains = [
     { value: 'contract_law', label: 'Contract Law' },
     { value: 'employment_labor_law', label: 'Employment & Labor Law' },
     { value: 'intellectual_property', label: 'Intellectual Property' },
