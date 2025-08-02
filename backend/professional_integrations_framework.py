@@ -184,7 +184,7 @@ class ProfessionalIntegrationsFramework:
         # Legal Research (Free Platforms)
         free_research_configs = [
             {
-                "integration_id": "courtlistener_enhanced",
+                "integration_id": "courtlistener",  # Updated to match test expectation
                 "name": "CourtListener Enhanced",
                 "integration_type": IntegrationType.LEGAL_RESEARCH,
                 "provider": "Free.law",
