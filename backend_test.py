@@ -5403,6 +5403,19 @@ def main():
     
     print("🧠"*60)
     
+    # NEW: Legal Updates Monitoring System Tests
+    print("\n" + "🔍"*60)
+    print("🔍 LEGAL UPDATES MONITORING SYSTEM TESTING - NEW FEATURE")
+    print("🔍"*60)
+    
+    # Legal Updates Monitoring Tests
+    print("\n" + "📡"*30)
+    print("📡 LEGAL UPDATES MONITORING TESTING")
+    print("📡"*30)
+    tester.run_legal_updates_monitoring_tests()
+    
+    print("🔍"*60)
+    
     # Print final results
     print("\n" + "="*60)
     print("📊 TEST RESULTS SUMMARY")
