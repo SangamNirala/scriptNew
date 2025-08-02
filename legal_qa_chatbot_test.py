@@ -17,7 +17,7 @@ import re
 from datetime import datetime
 
 class LegalQAChatbotTester:
-    def __init__(self, base_url="https://17f01563-eeb4-4649-9d85-857e3840bc73.preview.emergentagent.com"):
+    def __init__(self, base_url="https://d01c7809-84d3-468a-a14b-f514547f0e05.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.tests_run = 0
