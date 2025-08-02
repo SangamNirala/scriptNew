@@ -836,6 +836,108 @@ const LegalQuestionAnswering = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Personalized Recommendations Panel */}
+        {showPersonalizedRecommendations && personalizedRecommendations.length > 0 && (
+          <div className="lg:col-span-4 mb-6">
+            <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-6 border border-blue-200">
+              <h3 className="text-lg font-semibold mb-4 flex items-center">
+                <TrendingUp className="w-5 h-5 mr-2 text-blue-600" />
+                Personalized Recommendations
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {personalizedRecommendations.slice(0, 3).map((rec, index) => (
+                  <div key={index} className="bg-white p-4 rounded-lg shadow-sm border">
+                    <div className="flex items-start justify-between mb-2">
+                      <h4 className="font-medium text-gray-900">{rec.title}</h4>
+                      <span className={`px-2 py-1 text-xs rounded-full ${
+                        rec.priority === 'high' ? 'bg-red-100 text-red-800' :
+                        rec.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-green-100 text-green-800'
+                      }`}>
+                        {rec.priority}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-600 mb-2">{rec.description}</p>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-blue-600">{rec.estimated_value}</span>
+                      <span className="text-xs text-gray-500">
+                        {Math.round(rec.relevance_score * 100)}% match
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Interactive Guidance Panel */}
+        {interactiveGuidance && (
+          <div className="lg:col-span-4 mb-6">
+            <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg p-6 border border-green-200">
+              <h3 className="text-lg font-semibold mb-4 flex items-center justify-between">
+                <div className="flex items-center">
+                  <BookOpen className="w-5 h-5 mr-2 text-green-600" />
+                  Interactive Legal Guidance
+                </div>
+                <button
+                  onClick={() => setInteractiveGuidance(null)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  ×
+                </button>
+              </h3>
+              
+              <div className="mb-4">
+                <div className="flex items-center space-x-4 text-sm text-gray-600">
+                  <span>📋 {interactiveGuidance.total_steps} steps</span>
+                  <span>⏱️ {interactiveGuidance.estimated_total_time}</span>
+                  <span className={`px-2 py-1 rounded-full text-xs ${
+                    interactiveGuidance.overall_complexity === 'high' ? 'bg-red-100 text-red-800' :
+                    interactiveGuidance.overall_complexity === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                    'bg-green-100 text-green-800'
+                  }`}>
+                    {interactiveGuidance.overall_complexity} complexity
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-60 overflow-y-auto">
+                {interactiveGuidance.steps.slice(0, 4).map((step, index) => (
+                  <div key={index} className="bg-white p-4 rounded-lg shadow-sm border">
+                    <div className="flex items-start justify-between mb-2">
+                      <h4 className="font-medium text-gray-900">{step.title}</h4>
+                      <span className={`px-2 py-1 text-xs rounded-full ${
+                        step.risk_level === 'high' ? 'bg-red-100 text-red-800' :
+                        step.risk_level === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-green-100 text-green-800'
+                      }`}>
+                        {step.risk_level} risk
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-600 mb-3">{step.description}</p>
+                    <div className="text-xs text-gray-500">
+                      <div>📝 {step.action_items.length} action items</div>
+                      <div>⏳ {step.estimated_time}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {interactiveGuidance.professional_consultation_recommended && (
+                <div className="mt-4 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                  <div className="flex items-center">
+                    <AlertCircle className="w-4 h-4 text-yellow-600 mr-2" />
+                    <span className="text-sm text-yellow-800 font-medium">
+                      Professional legal consultation recommended for this matter
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Sidebar */}
         <div className="lg:col-span-1 space-y-6">
           {/* Query Configuration */}
