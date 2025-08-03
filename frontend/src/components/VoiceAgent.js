@@ -77,12 +77,58 @@ const VoiceAgent = ({ onClose }) => {
 
   const sampleQuestions = [
     "What are the key elements of a valid contract?",
-    "How does employment at-will doctrine work?",
+    "How does employment at-will doctrine work?", 
     "What is the difference between copyright and trademark?",
     "What are the requirements for forming an LLC?",
     "How do non-compete agreements work in different states?",
-    "What are the legal requirements for terminating an employee?"
+    "What are the legal requirements for terminating an employee?",
+    "Can you explain breach of contract remedies?",
+    "What is intellectual property infringement?",
+    "How do I protect my business from liability?",
+    "What are the basics of employment discrimination law?"
   ];
+
+  // Generate contextual follow-up suggestions
+  const generateFollowUpSuggestions = (lastResponse, userQuestion) => {
+    const suggestions = [];
+    
+    // Contract law follow-ups
+    if (lastResponse.toLowerCase().includes('contract') || userQuestion.toLowerCase().includes('contract')) {
+      suggestions.push("What happens if a contract is breached?");
+      suggestions.push("Can you explain contract modification?");
+      suggestions.push("What makes a contract void?");
+    }
+    
+    // Employment law follow-ups
+    if (lastResponse.toLowerCase().includes('employment') || userQuestion.toLowerCase().includes('employee')) {
+      suggestions.push("What are wrongful termination laws?");
+      suggestions.push("Can you explain workplace discrimination?");
+      suggestions.push("What are employee rights regarding wages?");
+    }
+    
+    // IP law follow-ups
+    if (lastResponse.toLowerCase().includes('intellectual property') || lastResponse.toLowerCase().includes('copyright') || lastResponse.toLowerCase().includes('trademark')) {
+      suggestions.push("How do I file for trademark protection?");
+      suggestions.push("What is fair use in copyright law?");
+      suggestions.push("Can you explain patent basics?");
+    }
+    
+    // Business law follow-ups
+    if (lastResponse.toLowerCase().includes('llc') || lastResponse.toLowerCase().includes('corporation') || userQuestion.toLowerCase().includes('business')) {
+      suggestions.push("What are the tax implications of an LLC?");
+      suggestions.push("How do I maintain corporate compliance?");
+      suggestions.push("What are the differences between LLC and corporation?");
+    }
+    
+    // Generic follow-ups if no specific category matched
+    if (suggestions.length === 0) {
+      suggestions.push("Can you provide more details?");
+      suggestions.push("What are the practical implications?");
+      suggestions.push("Are there any exceptions to this rule?");
+    }
+    
+    return suggestions.slice(0, 3); // Return max 3 suggestions
+  };
 
   // Enhanced cleanup utility
   const cleanupReferences = () => {
