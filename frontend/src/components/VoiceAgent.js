@@ -723,21 +723,31 @@ const VoiceAgent = ({ onClose }) => {
       // Enhanced error handling for speech recognition start
       const startSpeechRecognition = () => {
         return new Promise((resolve, reject) => {
-          if (!recognitionRef.current || recognitionState !== 'starting') {
-            reject(new Error('Recognition state changed before start'));
+          if (!recognitionRef.current) {
+            reject(new Error('Recognition object not available'));
+            return;
+          }
+
+          // Double-check state before proceeding
+          if (recognitionState !== 'starting') {
+            reject(new Error('Recognition state changed during initialization'));
             return;
           }
 
           // Set up one-time event listeners for start result
           const onStart = () => {
             console.log('🎤 ✅ Speech recognition started successfully');
-            recognitionRef.current.removeEventListener('error', onError);
+            if (recognitionRef.current) {
+              recognitionRef.current.removeEventListener('error', onError);
+            }
             resolve();
           };
 
           const onError = (event) => {
             console.error('🎤 ❌ Speech recognition start error:', event.error);
-            recognitionRef.current.removeEventListener('start', onStart);
+            if (recognitionRef.current) {
+              recognitionRef.current.removeEventListener('start', onStart);
+            }
             
             // Handle specific errors during start
             if (event.error === 'not-allowed') {
@@ -762,8 +772,10 @@ const VoiceAgent = ({ onClose }) => {
             recognitionRef.current.start();
           } catch (startError) {
             // Remove event listeners on synchronous error
-            recognitionRef.current.removeEventListener('start', onStart);
-            recognitionRef.current.removeEventListener('error', onError);
+            if (recognitionRef.current) {
+              recognitionRef.current.removeEventListener('start', onStart);
+              recognitionRef.current.removeEventListener('error', onError);
+            }
             
             if (startError.message && startError.message.includes('already started')) {
               console.log('🎤 ℹ️ Recognition already running, updating state');
@@ -778,14 +790,47 @@ const VoiceAgent = ({ onClose }) => {
         });
       };
 
-      // Try to start with timeout
+      // Try to start with timeout and better state checking
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Speech recognition start timeout')), 10000);
+        setTimeout(() => reject(new Error('Speech recognition start timeout')), 8000);
       });
 
-      await Promise.race([startSpeechRecognition(), timeoutPromise]);
-      
-      console.log('🎤 ✅ Speech recognition start completed successfully');
+      // Add delay to prevent race conditions
+      setTimeout(async () => {
+        try {
+          // Verify state hasn't changed during delay
+          if (recognitionState !== 'starting' || !recognitionRef.current) {
+            throw new Error('Recognition state changed before start');
+          }
+          
+          await Promise.race([startSpeechRecognition(), timeoutPromise]);
+          console.log('🎤 ✅ Speech recognition start completed successfully');
+          
+        } catch (error) {
+          console.error('🎤 ❌ Error starting speech recognition:', error);
+          
+          // Set appropriate error message based on error type
+          let errorMessage = '❌ Could not start voice recognition. ';
+          
+          if (error.message.includes('permission') || error.message.includes('not-allowed')) {
+            errorMessage = '❌ Microphone permission denied. Please allow microphone access in your browser and try again.';
+          } else if (error.message.includes('microphone') || error.message.includes('audio-capture')) {
+            errorMessage = '❌ No microphone detected. Please connect a microphone and try again.';
+          } else if (error.message.includes('timeout')) {
+            errorMessage = '❌ Speech recognition start timed out. Please check your microphone and try again.';
+          } else if (error.message.includes('network')) {
+            errorMessage = '❌ Network error. Please check your internet connection and try again.';
+          } else if (error.message.includes('state changed')) {
+            errorMessage = '❌ Voice recognition startup interrupted. Please try clicking "Start Listening" again.';
+          } else {
+            errorMessage += error.message || 'Please try again or reload the page.';
+          }
+          
+          setVoiceError(errorMessage);
+          setRecognitionState('error');
+          setIsListening(false);
+        }
+      }, 200); // Small delay to prevent race conditions
       
     } catch (error) {
       console.error('🎤 ❌ Error starting speech recognition:', error);
