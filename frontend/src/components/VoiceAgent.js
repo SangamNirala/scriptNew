@@ -141,6 +141,22 @@ const VoiceAgent = ({ onClose }) => {
       clearTimeout(restartTimeoutRef.current);
       restartTimeoutRef.current = null;
     }
+    if (interruptTimeoutRef.current) {
+      clearTimeout(interruptTimeoutRef.current);
+      interruptTimeoutRef.current = null;
+    }
+    
+    // Stop speech synthesis safely
+    if (synthRef.current) {
+      try {
+        synthRef.current.cancel();
+        if (currentUtteranceRef.current) {
+          currentUtteranceRef.current = null;
+        }
+      } catch (error) {
+        console.warn('Error during speech synthesis cleanup:', error);
+      }
+    }
     
     // Stop recognition safely
     if (recognitionRef.current) {
@@ -152,18 +168,11 @@ const VoiceAgent = ({ onClose }) => {
       }
     }
     
-    // Stop speech synthesis
-    if (synthRef.current) {
-      try {
-        synthRef.current.cancel();
-      } catch (error) {
-        console.warn('Error during speech synthesis cleanup:', error);
-      }
-    }
-    
     setRecognitionState('idle');
     setIsListening(false);
     setIsSpeaking(false);
+    setIsUserSpeaking(false);
+    setInterimTranscript('');
   };
 
   // Initialize voice capabilities and session
