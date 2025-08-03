@@ -2,6 +2,8 @@ import requests
 import sys
 import json
 import base64
+import time
+import random
 from datetime import datetime
 
 class LegalMateAPITester:
