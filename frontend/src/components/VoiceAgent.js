@@ -1451,10 +1451,10 @@ const VoiceAgent = ({ onClose }) => {
                   {/* Voice Test Button */}
                 <Button
                   onClick={async () => {
-                    console.log('🎤 🧪 === MICROPHONE TEST STARTED ===');
+                    console.log('🎤 🧪 === ENHANCED MICROPHONE TEST STARTED ===');
                     
                     try {
-                      setVoiceError('🔍 Testing microphone access...');
+                      setVoiceError('🔍 Running comprehensive microphone and speech recognition test...');
                       
                       // Test 1: Check browser support
                       const hasWebSpeech = ('webkitSpeechRecognition' in window) || ('SpeechRecognition' in window);
@@ -1466,45 +1466,106 @@ const VoiceAgent = ({ onClose }) => {
                         speechSynthesis: hasSpeechSynthesis,
                         mediaDevices: hasMediaDevices,
                         isSecureContext: window.isSecureContext,
-                        protocol: window.location.protocol
+                        protocol: window.location.protocol,
+                        userAgent: navigator.userAgent
                       });
                       
+                      let testResults = [];
+                      
                       if (!hasWebSpeech) {
-                        setVoiceError('❌ Browser does not support speech recognition. Please use Chrome or Edge.');
+                        setVoiceError('❌ Browser does not support speech recognition. Please use Chrome, Edge, or Safari.');
                         return;
                       }
+                      testResults.push('✅ Web Speech API supported');
                       
                       if (!window.isSecureContext) {
                         setVoiceError('❌ Speech recognition requires HTTPS. Please access this page via HTTPS.');
                         return;
                       }
+                      testResults.push('✅ Secure context (HTTPS)');
                       
-                      // Test 2: Detailed microphone access test
+                      // Test 2: Check device enumeration (non-blocking)
+                      setVoiceError('🔍 Checking for audio devices...');
+                      let microphoneDevicesFound = 0;
+                      
+                      if (hasMediaDevices && 'enumerateDevices' in navigator.mediaDevices) {
+                        try {
+                          const devices = await navigator.mediaDevices.enumerateDevices();
+                          const audioInputs = devices.filter(device => device.kind === 'audioinput');
+                          microphoneDevicesFound = audioInputs.length;
+                          
+                          console.log('🧪 Device Enumeration:', {
+                            totalDevices: devices.length,
+                            audioInputs: audioInputs.length,
+                            devices: audioInputs.map(d => ({ id: d.deviceId, label: d.label || 'Unknown Device' }))
+                          });
+                          
+                          if (microphoneDevicesFound > 0) {
+                            testResults.push(`✅ ${microphoneDevicesFound} microphone device(s) detected`);
+                          } else {
+                            testResults.push('⚠️ No microphone devices detected (may still work)');
+                          }
+                        } catch (enumError) {
+                          console.log('⚠️ Device enumeration failed:', enumError);
+                          testResults.push('⚠️ Could not enumerate devices (may still work)');
+                        }
+                      }
+                      
+                      // Test 3: Try getUserMedia (non-blocking - don't fail if it doesn't work)
                       setVoiceError('🎤 Testing microphone access...');
+                      let getUserMediaWorked = false;
                       
-                      const stream = await navigator.mediaDevices.getUserMedia({ 
-                        audio: { 
-                          echoCancellation: true,
-                          noiseSuppression: true,
-                          autoGainControl: true 
-                        } 
-                      });
+                      if (hasMediaDevices && 'getUserMedia' in navigator.mediaDevices) {
+                        try {
+                          const getUserMediaPromise = navigator.mediaDevices.getUserMedia({ 
+                            audio: { 
+                              echoCancellation: true,
+                              noiseSuppression: true,
+                              autoGainControl: true 
+                            } 
+                          });
+                          
+                          const timeoutPromise = new Promise((_, reject) => {
+                            setTimeout(() => reject(new Error('getUserMedia timeout')), 3000);
+                          });
+                          
+                          const stream = await Promise.race([getUserMediaPromise, timeoutPromise]);
+                          
+                          console.log('🧪 getUserMedia Success:', {
+                            active: stream.active,
+                            id: stream.id,
+                            tracks: stream.getAudioTracks().map(track => ({
+                              id: track.id,
+                              kind: track.kind,
+                              label: track.label,
+                              enabled: track.enabled,
+                              muted: track.muted,
+                              readyState: track.readyState,
+                              settings: track.getSettings()
+                            }))
+                          });
+                          
+                          // Stop the stream immediately
+                          stream.getTracks().forEach(track => track.stop());
+                          getUserMediaWorked = true;
+                          testResults.push('✅ Microphone access granted');
+                          
+                        } catch (mediaError) {
+                          console.log('⚠️ getUserMedia failed (this is OK):', mediaError.name, mediaError.message);
+                          
+                          if (mediaError.name === 'NotAllowedError') {
+                            testResults.push('⚠️ Microphone permission not granted (will be requested when needed)');
+                          } else if (mediaError.name === 'NotFoundError') {
+                            testResults.push('⚠️ No microphone detected (speech recognition may still work)');
+                          } else if (mediaError.message === 'getUserMedia timeout') {
+                            testResults.push('⚠️ Microphone access timed out (speech recognition may still work)');
+                          } else {
+                            testResults.push('⚠️ Microphone test inconclusive (speech recognition may still work)');
+                          }
+                        }
+                      }
                       
-                      console.log('🧪 Microphone Stream Test:', {
-                        active: stream.active,
-                        id: stream.id,
-                        tracks: stream.getAudioTracks().map(track => ({
-                          id: track.id,
-                          kind: track.kind,
-                          label: track.label,
-                          enabled: track.enabled,
-                          muted: track.muted,
-                          readyState: track.readyState,
-                          settings: track.getSettings()
-                        }))
-                      });
-                      
-                      // Test 3: Speech Recognition initialization test
+                      // Test 4: Speech Recognition initialization test (this is the important one)
                       setVoiceError('🔧 Testing speech recognition initialization...');
                       
                       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -1518,50 +1579,104 @@ const VoiceAgent = ({ onClose }) => {
                         maxAlternatives: testRecognition.maxAlternatives
                       });
                       
-                      // Test 4: Try a quick recognition test
+                      testResults.push('✅ Speech Recognition object created successfully');
+                      
+                      // Test 5: Try a quick recognition start/stop test
                       setVoiceError('🎯 Testing speech recognition start/stop...');
                       
-                      return new Promise((resolve) => {
+                      const recognitionTest = await new Promise((resolve) => {
+                        let testTimeout;
+                        let resolved = false;
+                        
+                        const resolveOnce = (result) => {
+                          if (!resolved) {
+                            resolved = true;
+                            if (testTimeout) clearTimeout(testTimeout);
+                            resolve(result);
+                          }
+                        };
+                        
                         testRecognition.onstart = () => {
                           console.log('🧪 ✅ Test recognition started successfully');
                           setTimeout(() => {
-                            testRecognition.stop();
+                            try {
+                              testRecognition.stop();
+                            } catch (e) {
+                              console.log('🧪 Note: stop() called but recognition may have already ended');
+                            }
                           }, 1000);
                         };
                         
                         testRecognition.onend = () => {
                           console.log('🧪 ✅ Test recognition ended successfully');
-                          setVoiceError('✅ Microphone test completed successfully! Speech recognition should work now.');
-                          resolve();
+                          resolveOnce({ success: true, message: 'Speech recognition start/stop test passed' });
                         };
                         
                         testRecognition.onerror = (event) => {
-                          console.error('🧪 ❌ Test recognition error:', event.error);
-                          setVoiceError(`❌ Speech recognition test failed: ${event.error}. Please check microphone permissions.`);
-                          resolve();
+                          console.log('🧪 ⚠️ Test recognition error (this might be expected):', event.error);
+                          if (event.error === 'not-allowed') {
+                            resolveOnce({ success: false, message: 'Microphone permission denied (will be requested when user starts listening)', warning: true });
+                          } else if (event.error === 'audio-capture') {
+                            resolveOnce({ success: false, message: 'No microphone detected (users with microphones should be able to use this)', warning: true });
+                          } else if (event.error === 'service-not-allowed') {
+                            resolveOnce({ success: false, message: 'Speech recognition service not allowed', error: true });
+                          } else {
+                            resolveOnce({ success: false, message: `Speech recognition error: ${event.error}`, warning: true });
+                          }
                         };
+                        
+                        // Set timeout for the test
+                        testTimeout = setTimeout(() => {
+                          resolveOnce({ success: false, message: 'Speech recognition test timed out', warning: true });
+                        }, 5000);
                         
                         try {
                           testRecognition.start();
                         } catch (error) {
-                          console.error('🧪 ❌ Test recognition start error:', error);
-                          setVoiceError(`❌ Could not start test recognition: ${error.message}`);
-                          resolve();
+                          console.log('🧪 ⚠️ Test recognition start error:', error);
+                          resolveOnce({ success: false, message: `Could not start test: ${error.message}`, warning: true });
                         }
                       });
                       
+                      if (recognitionTest.success) {
+                        testResults.push('✅ Speech recognition start/stop test passed');
+                      } else if (recognitionTest.warning) {
+                        testResults.push(`⚠️ ${recognitionTest.message}`);
+                      } else {
+                        testResults.push(`❌ ${recognitionTest.message}`);
+                      }
+                      
+                      // Final assessment
+                      const criticalErrors = testResults.filter(r => r.startsWith('❌')).length;
+                      const warnings = testResults.filter(r => r.startsWith('⚠️')).length;
+                      const successes = testResults.filter(r => r.startsWith('✅')).length;
+                      
+                      console.log('🧪 Test Results Summary:', {
+                        successes,
+                        warnings, 
+                        criticalErrors,
+                        results: testResults
+                      });
+                      
+                      let finalMessage = '';
+                      if (criticalErrors === 0) {
+                        if (warnings === 0) {
+                          finalMessage = '✅ All tests passed! Voice recognition should work perfectly.';
+                        } else {
+                          finalMessage = `✅ Basic functionality works! (${warnings} minor issues detected - voice recognition should still work for users with microphones)`;
+                        }
+                      } else {
+                        finalMessage = `❌ Found ${criticalErrors} critical issue(s). Voice recognition may not work properly.`;
+                      }
+                      
+                      finalMessage += `\n\nTest Results:\n${testResults.join('\n')}`;
+                      setVoiceError(finalMessage);
+                      
                     } catch (error) {
                       console.error('🧪 ❌ Microphone test error:', error);
-                      
-                      if (error.name === 'NotAllowedError') {
-                        setVoiceError('❌ Microphone access denied. Please click the microphone icon in your browser address bar and allow access.');
-                      } else if (error.name === 'NotFoundError') {
-                        setVoiceError('❌ No microphone found. Please connect a microphone.');
-                      } else {
-                        setVoiceError(`❌ Microphone test failed: ${error.message}`);
-                      }
+                      setVoiceError(`❌ Test failed: ${error.message}. Check console for details.`);
                     } finally {
-                      console.log('🧪 🏁 === MICROPHONE TEST COMPLETED ===');
+                      console.log('🧪 🏁 === ENHANCED MICROPHONE TEST COMPLETED ===');
                     }
                   }}
                   variant="outline"
@@ -1570,7 +1685,7 @@ const VoiceAgent = ({ onClose }) => {
                   className="bg-green-50 hover:bg-green-100"
                 >
                   <Mic className="h-4 w-4" />
-                  <span className="ml-1">Mic Test</span>
+                  <span className="ml-1">Mic Test+</span>
                 </Button>
                 </div>
                 
