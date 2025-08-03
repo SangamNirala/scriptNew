@@ -808,8 +808,19 @@ const VoiceAgent = ({ onClose }) => {
           {/* Status Indicators */}
           <div className="flex-shrink-0 flex items-center space-x-4 p-2 bg-white border rounded-lg">
             <div className="flex items-center space-x-2">
-              <Activity className={`h-4 w-4 ${isListening ? 'text-green-500 animate-pulse' : 'text-gray-400'}`} />
-              <span className="text-sm">{isListening ? 'Listening...' : 'Not listening'}</span>
+              <Activity className={`h-4 w-4 ${
+                recognitionState === 'active' ? 'text-green-500 animate-pulse' : 
+                recognitionState === 'starting' ? 'text-yellow-500 animate-pulse' :
+                recognitionState === 'stopping' ? 'text-orange-500 animate-pulse' :
+                'text-gray-400'
+              }`} />
+              <span className="text-sm">
+                {recognitionState === 'active' ? 'Listening...' :
+                 recognitionState === 'starting' ? 'Starting...' :
+                 recognitionState === 'stopping' ? 'Stopping...' :
+                 recognitionState === 'error' ? 'Error' :
+                 'Not listening'}
+              </span>
             </div>
             
             <div className="flex items-center space-x-2">
@@ -824,6 +835,13 @@ const VoiceAgent = ({ onClose }) => {
               <div className="flex items-center space-x-2">
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-600"></div>
                 <span className="text-sm">Processing...</span>
+              </div>
+            )}
+
+            {isInitializing && (
+              <div className="flex items-center space-x-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                <span className="text-sm">Initializing...</span>
               </div>
             )}
 
