@@ -1107,7 +1107,22 @@ const VoiceAgent = ({ onClose }) => {
 
           {voiceError && (
             <Alert className="mt-4">
-              <AlertDescription>{voiceError}</AlertDescription>
+              <AlertDescription className="flex items-center justify-between">
+                <span>{voiceError}</span>
+                {voiceError.includes('❌') && (
+                  <Button
+                    onClick={() => {
+                      console.log('🔄 Force refresh requested by user');
+                      window.location.reload();
+                    }}
+                    variant="outline"
+                    size="sm"
+                    className="ml-2"
+                  >
+                    🔄 Refresh Page
+                  </Button>
+                )}
+              </AlertDescription>
             </Alert>
           )}
         </CardHeader>
