@@ -438,7 +438,50 @@ const VoiceAgent = ({ onClose }) => {
     setTimeout(speakWelcome, 800);
   };
 
-  const startListening = () => {
+  // Check microphone permissions explicitly
+  const checkMicrophonePermissions = async () => {
+    try {
+      // Check if navigator.permissions is available
+      if ('permissions' in navigator) {
+        const permissionStatus = await navigator.permissions.query({ name: 'microphone' });
+        console.log('Microphone permission status:', permissionStatus.state);
+        
+        if (permissionStatus.state === 'denied') {
+          setVoiceError('Microphone access denied. Please enable microphone permissions in your browser settings and reload the page.');
+          return false;
+        } else if (permissionStatus.state === 'prompt') {
+          console.log('Microphone permission will be requested when starting recognition');
+        }
+      }
+      
+      // Try to get user media to verify microphone access
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        console.log('Microphone access verified successfully');
+        
+        // Stop the stream immediately as we just needed to verify access
+        stream.getTracks().forEach(track => track.stop());
+        return true;
+      } catch (mediaError) {
+        console.error('MediaDevices getUserMedia error:', mediaError);
+        
+        if (mediaError.name === 'NotAllowedError' || mediaError.name === 'PermissionDeniedError') {
+          setVoiceError('Microphone access denied. Please allow microphone access and reload the page.');
+        } else if (mediaError.name === 'NotFoundError') {
+          setVoiceError('No microphone found. Please connect a microphone and try again.');
+        } else {
+          setVoiceError('Could not access microphone. Please check your microphone settings.');
+        }
+        return false;
+      }
+    } catch (error) {
+      console.error('Error checking microphone permissions:', error);
+      // If permission check fails, we'll still try to start recognition
+      return true;
+    }
+  };
+
+  const startListening = async () => {
     // Prevent multiple simultaneous start attempts
     if (recognitionState === 'starting' || recognitionState === 'active' || isProcessing || isSpeaking || isInitializing) {
       console.log('Start listening blocked:', { recognitionState, isProcessing, isSpeaking, isInitializing });
@@ -451,21 +494,45 @@ const VoiceAgent = ({ onClose }) => {
       return;
     }
 
+    // Check microphone permissions first
+    console.log('Checking microphone permissions before starting...');
+    const hasPermission = await checkMicrophonePermissions();
+    if (!hasPermission) {
+      return;
+    }
+
     try {
       setRecognitionState('starting');
       setTranscript('');
       setVoiceError(null);
       
+      console.log('Attempting to start speech recognition...');
+      
       // Small delay to ensure previous operations completed
       setTimeout(() => {
         if (recognitionRef.current && recognitionState === 'starting') {
-          recognitionRef.current.start();
+          try {
+            recognitionRef.current.start();
+            console.log('Speech recognition start() called successfully');
+          } catch (startError) {
+            console.error('Error calling recognition.start():', startError);
+            
+            if (startError.message && startError.message.includes('already started')) {
+              // Recognition is already running, just update our state
+              setRecognitionState('active');
+              setIsListening(true);
+            } else {
+              setVoiceError('Could not start voice recognition. Please try again or reload the page.');
+              setRecognitionState('error');
+              setIsListening(false);
+            }
+          }
         }
       }, 100);
       
     } catch (error) {
       console.error('Error starting speech recognition:', error);
-      setVoiceError('Could not start voice recognition. Please try again.');
+      setVoiceError('Could not start voice recognition. Please try again or reload the page.');
       setRecognitionState('error');
       setIsListening(false);
     }
