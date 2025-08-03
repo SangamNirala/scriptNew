@@ -542,17 +542,72 @@ const VoiceAgent = ({ onClose }) => {
   const resetConversation = () => {
     setConversation([]);
     setTranscript('');
+    setRetryCount(0);
+    setVoiceError(null);
     stopSpeaking();
     stopListening();
-    initializeSession();
+    
+    // Clear all timeouts
+    if (retryTimeoutRef.current) {
+      clearTimeout(retryTimeoutRef.current);
+      retryTimeoutRef.current = null;
+    }
+    if (restartTimeoutRef.current) {
+      clearTimeout(restartTimeoutRef.current);
+      restartTimeoutRef.current = null;
+    }
+    
+    // Reinitialize session
+    setTimeout(() => {
+      initializeSession();
+    }, 500);
   };
 
   const toggleAutoListen = () => {
-    setAutoListen(!autoListen);
-    if (!autoListen && !isListening && !isProcessing) {
-      startListening();
-    } else if (autoListen && isListening) {
+    const newAutoListen = !autoListen;
+    setAutoListen(newAutoListen);
+    
+    if (newAutoListen && recognitionState === 'idle' && !isProcessing && !isSpeaking) {
+      setTimeout(() => {
+        startListening();
+      }, 500);
+    } else if (!newAutoListen) {
       stopListening();
+      // Clear retry attempts when auto-listen is disabled
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current);
+        retryTimeoutRef.current = null;
+      }
+      setRetryCount(0);
+    }
+  };
+
+  // Enhanced retry function
+  const handleRetry = () => {
+    setVoiceError(null);
+    setRetryCount(0);
+    setRecognitionState('idle');
+    
+    // Clear all timeouts
+    if (retryTimeoutRef.current) {
+      clearTimeout(retryTimeoutRef.current);
+      retryTimeoutRef.current = null;
+    }
+    if (restartTimeoutRef.current) {
+      clearTimeout(restartTimeoutRef.current);
+      restartTimeoutRef.current = null;
+    }
+    
+    // Reinitialize if needed
+    if (!recognitionRef.current) {
+      initializeVoiceCapabilities();
+    } else {
+      setAutoListen(true);
+      if (!isProcessing && !isSpeaking) {
+        setTimeout(() => {
+          startListening();
+        }, 800);
+      }
     }
   };
 
