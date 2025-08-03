@@ -502,32 +502,89 @@ const VoiceAgent = ({ onClose }) => {
 
             <div className="space-y-2">
               <h4 className="font-semibold text-sm">Settings</h4>
-              <div className="flex space-x-2">
-                <Select value={selectedJurisdiction} onValueChange={setSelectedJurisdiction}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {jurisdictions.map((jurisdiction) => (
-                      <SelectItem key={jurisdiction.value} value={jurisdiction.value}>
-                        {jurisdiction.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="grid grid-cols-1 gap-2">
+                <div className="flex space-x-2">
+                  <Select value={selectedJurisdiction} onValueChange={setSelectedJurisdiction}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {jurisdictions.map((jurisdiction) => (
+                        <SelectItem key={jurisdiction.value} value={jurisdiction.value}>
+                          {jurisdiction.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  
+                  <Select value={selectedDomain} onValueChange={setSelectedDomain}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Legal Domain" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {legalDomains.map((domain) => (
+                        <SelectItem key={domain.value} value={domain.value}>
+                          {domain.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
                 
-                <Select value={selectedDomain} onValueChange={setSelectedDomain}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Legal Domain" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {legalDomains.map((domain) => (
-                      <SelectItem key={domain.value} value={domain.value}>
-                        {domain.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {/* Voice Selection */}
+                <div className="flex space-x-2">
+                  <Select 
+                    value={selectedVoice?.name || ''} 
+                    onValueChange={(voiceName) => {
+                      const voice = availableVoices.find(v => v.name === voiceName);
+                      if (voice) {
+                        setSelectedVoice(voice);
+                        console.log('Voice changed to:', voice.name);
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select Voice" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableVoices.map((voice) => (
+                        <SelectItem key={voice.name} value={voice.name}>
+                          {voice.name} ({voice.lang})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  
+                  {/* Voice Test Button */}
+                  <Button
+                    onClick={() => {
+                      if (selectedVoice) {
+                        speakText('Hello, this is a voice test. How do I sound?');
+                      }
+                    }}
+                    variant="outline"
+                    size="sm"
+                    disabled={!selectedVoice || isSpeaking}
+                  >
+                    <Volume2 className="h-4 w-4" />
+                    Test
+                  </Button>
+                </div>
+                
+                {/* Voice Speed Control */}
+                <div className="flex items-center space-x-2">
+                  <label className="text-xs text-gray-600 w-16">Speed:</label>
+                  <input
+                    type="range"
+                    min="0.5"
+                    max="2"
+                    step="0.1"
+                    value={speechRate}
+                    onChange={(e) => setSpeechRate(parseFloat(e.target.value))}
+                    className="flex-1"
+                  />
+                  <span className="text-xs text-gray-600 w-8">{speechRate.toFixed(1)}</span>
+                </div>
               </div>
             </div>
           </div>
