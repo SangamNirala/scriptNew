@@ -648,15 +648,20 @@ const VoiceAgent = ({ onClose }) => {
               <h4 className="font-semibold text-sm">Voice Controls</h4>
               <div className="flex space-x-2">
                 <Button
-                  onClick={isListening ? stopListening : startListening}
-                  disabled={isProcessing || !!voiceError || isSpeaking}
+                  onClick={recognitionState === 'active' ? stopListening : startListening}
+                  disabled={isProcessing || isInitializing || isSpeaking || recognitionState === 'starting' || recognitionState === 'stopping'}
                   className={`flex items-center space-x-2 ${
-                    isListening ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'
+                    recognitionState === 'active' ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'
                   }`}
                   size="sm"
                 >
-                  {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-                  <span>{isListening ? 'Stop' : 'Start'} Listening</span>
+                  {recognitionState === 'active' ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                  <span>
+                    {recognitionState === 'active' ? 'Stop' : 
+                     recognitionState === 'starting' ? 'Starting...' :
+                     recognitionState === 'stopping' ? 'Stopping...' : 
+                     'Start'} Listening
+                  </span>
                 </Button>
                 
                 <Button
@@ -673,7 +678,7 @@ const VoiceAgent = ({ onClose }) => {
                   onClick={resetConversation}
                   variant="outline"
                   size="sm"
-                  disabled={isProcessing}
+                  disabled={isProcessing || isInitializing}
                 >
                   <RotateCcw className="h-4 w-4" />
                   <span className="ml-1">Reset</span>
@@ -681,19 +686,14 @@ const VoiceAgent = ({ onClose }) => {
 
                 {voiceError && (
                   <Button
-                    onClick={() => {
-                      setVoiceError(null);
-                      setAutoListen(true);
-                      if (!isListening && !isProcessing && !isSpeaking) {
-                        startListening();
-                      }
-                    }}
+                    onClick={handleRetry}
                     variant="outline"
                     size="sm"
                     className="bg-yellow-100 hover:bg-yellow-200"
+                    disabled={isInitializing}
                   >
                     <Settings className="h-4 w-4" />
-                    <span className="ml-1">Retry</span>
+                    <span className="ml-1">{isInitializing ? 'Initializing...' : 'Retry'}</span>
                   </Button>
                 )}
               </div>
@@ -704,9 +704,15 @@ const VoiceAgent = ({ onClose }) => {
                   id="autoListen"
                   checked={autoListen}
                   onChange={toggleAutoListen}
+                  disabled={isInitializing}
                   className="rounded"
                 />
                 <label htmlFor="autoListen" className="text-sm">Auto-listen after speaking</label>
+                {retryCount > 0 && (
+                  <span className="text-xs text-yellow-600">
+                    (Retry {retryCount}/5)
+                  </span>
+                )}
               </div>
             </div>
 
