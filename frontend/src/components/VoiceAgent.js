@@ -204,17 +204,30 @@ const VoiceAgent = ({ onClose }) => {
     const welcomeMessage = {
       id: Date.now(),
       type: 'assistant',
-      content: 'Hello! I\'m your AI legal assistant. You can ask me any legal questions using your voice. I have access to over 25,000 legal documents. How can I help you today?',
+      content: 'Hello! I\'m your AI legal assistant. You can ask me any legal questions using your voice. I have access to over 25,000 legal documents and can help with contracts, employment law, intellectual property, and much more. How can I help you today?',
       timestamp: new Date().toISOString(),
       confidence: null
     };
     
     setConversation([welcomeMessage]);
     
-    // Speak the welcome message
-    setTimeout(() => {
-      speakText(welcomeMessage.content);
-    }, 1000);
+    // Ensure voices are loaded and speak the welcome message
+    const speakWelcome = () => {
+      if (synthRef.current && selectedVoice) {
+        speakText(welcomeMessage.content);
+      } else {
+        // If voices aren't ready yet, try again in a moment
+        setTimeout(() => {
+          loadVoices();
+          if (synthRef.current && selectedVoice) {
+            speakText(welcomeMessage.content);
+          }
+        }, 500);
+      }
+    };
+    
+    // Speak the welcome message after a short delay
+    setTimeout(speakWelcome, 800);
   };
 
   const startListening = () => {
