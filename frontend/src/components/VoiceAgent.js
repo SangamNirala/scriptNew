@@ -581,6 +581,9 @@ const VoiceAgent = ({ onClose }) => {
 
     setIsProcessing(true);
     setTranscript('');
+    setInterimTranscript('');
+    setIsUserSpeaking(false);
+    setLastUserIntent(input);
 
     // Add user message to conversation
     const userMessage = {
@@ -591,9 +594,12 @@ const VoiceAgent = ({ onClose }) => {
     };
 
     setConversation(prev => [...prev, userMessage]);
+    
+    // Update conversation context
+    setConversationContext(prev => [...prev, { role: 'user', content: input }]);
 
     try {
-      // Call the legal Q&A API
+      // Call the legal Q&A API with enhanced parameters
       const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/legal-qa/ask`, {
         method: 'POST',
         headers: {
@@ -603,7 +609,9 @@ const VoiceAgent = ({ onClose }) => {
           question: input,
           session_id: sessionId,
           jurisdiction: selectedJurisdiction,
-          legal_domain: selectedDomain === 'all_domains' ? null : selectedDomain
+          legal_domain: selectedDomain === 'all_domains' ? null : selectedDomain,
+          is_voice: true,
+          conversation_context: conversationContext.slice(-4) // Last 4 exchanges for context
         })
       });
 
@@ -620,9 +628,20 @@ const VoiceAgent = ({ onClose }) => {
         };
 
         setConversation(prev => [...prev, assistantMessage]);
+        
+        // Update conversation context
+        setConversationContext(prev => [...prev, { role: 'assistant', content: result.answer }]);
+        
+        // Generate contextual follow-up suggestions
+        const followUps = generateFollowUpSuggestions(result.answer, input);
+        setSuggestedFollowUps(followUps);
+        
+        // Update conversation summary
+        updateConversationSummary(input, result.answer);
 
-        // Speak the response
-        speakText(result.answer);
+        // Speak the response with enhanced naturalness
+        const enhancedResponse = enhanceResponseForSpeech(result.answer);
+        speakText(enhancedResponse);
         
       } else {
         throw new Error('Failed to get response from legal assistant');
@@ -633,7 +652,7 @@ const VoiceAgent = ({ onClose }) => {
       const errorMessage = {
         id: Date.now() + 1,
         type: 'error',
-        content: 'I apologize, but I encountered an error processing your question. Please try again.',
+        content: 'I apologize, but I encountered an error processing your question. Could you please rephrase or try again?',
         timestamp: new Date().toISOString()
       };
 
@@ -641,6 +660,47 @@ const VoiceAgent = ({ onClose }) => {
       speakText(errorMessage.content);
     } finally {
       setIsProcessing(false);
+    }
+  };
+
+  // Enhance response text for more natural speech
+  const enhanceResponseForSpeech = (text) => {
+    // Add natural pauses and improve flow for speech
+    return text
+      .replace(/\n\n/g, '. ') // Replace paragraph breaks with pauses
+      .replace(/\n/g, ', ') // Replace line breaks with commas
+      .replace(/\s+/g, ' ') // Normalize whitespace
+      .replace(/([.!?])\s*([A-Z])/g, '$1 $2') // Ensure proper spacing after sentences
+      .trim();
+  };
+
+  // Update conversation summary
+  const updateConversationSummary = (question, answer) => {
+    const topics = [];
+    
+    // Extract key legal topics from the conversation
+    const legalKeywords = {
+      'contract': 'Contract Law',
+      'employment': 'Employment Law', 
+      'intellectual property': 'IP Law',
+      'trademark': 'Trademark Law',
+      'copyright': 'Copyright Law',
+      'llc': 'Business Formation',
+      'corporation': 'Corporate Law',
+      'liability': 'Liability Issues',
+      'breach': 'Contract Breach',
+      'termination': 'Employment Termination'
+    };
+    
+    const combined = (question + ' ' + answer).toLowerCase();
+    Object.entries(legalKeywords).forEach(([keyword, topic]) => {
+      if (combined.includes(keyword) && !topics.includes(topic)) {
+        topics.push(topic);
+      }
+    });
+    
+    if (topics.length > 0) {
+      setConversationSummary(`Discussed: ${topics.join(', ')}`);
     }
   };
 
