@@ -1026,6 +1026,51 @@ const VoiceAgent = ({ onClose }) => {
                   <span className="ml-1">Reset</span>
                 </Button>
 
+                <Button
+                  onClick={async () => {
+                    console.log('=== VOICE SYSTEM DIAGNOSTIC TEST ===');
+                    
+                    // Log current state
+                    console.log('Current state:', {
+                      recognitionState,
+                      isListening,
+                      isSpeaking,
+                      isProcessing,
+                      isInitializing,
+                      autoListen,
+                      retryCount,
+                      voiceError
+                    });
+                    
+                    // Test microphone permissions
+                    const hasPermission = await checkMicrophonePermissions();
+                    console.log('Microphone permission check result:', hasPermission);
+                    
+                    // Test browser support
+                    const hasWebSpeech = ('webkitSpeechRecognition' in window) || ('SpeechRecognition' in window);
+                    const hasSpeechSynthesis = ('speechSynthesis' in window);
+                    console.log('Browser support:', { webSpeech, speechSynthesis: hasSpeechSynthesis });
+                    
+                    // Test recognition object
+                    console.log('Recognition object exists:', !!recognitionRef.current);
+                    
+                    // Test speech synthesis
+                    if (selectedVoice) {
+                      console.log('Testing speech synthesis...');
+                      speakText('Voice system diagnostic test complete. Check the console for detailed results.');
+                    }
+                    
+                    console.log('=== END DIAGNOSTIC TEST ===');
+                  }}
+                  variant="outline"
+                  size="sm"
+                  disabled={isInitializing}
+                  className="bg-blue-50 hover:bg-blue-100"
+                >
+                  <Settings className="h-4 w-4" />
+                  <span className="ml-1">Test</span>
+                </Button>
+
                 {voiceError && (
                   <Button
                     onClick={handleRetry}
