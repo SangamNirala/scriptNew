@@ -173,13 +173,26 @@ const VoiceAgent = ({ onClose }) => {
     const englishVoices = voices.filter(voice => voice.lang.startsWith('en'));
     setAvailableVoices(englishVoices);
     
-    // Set default voice (prefer female, US English)
+    // Set default voice with better selection criteria
     if (!selectedVoice && englishVoices.length > 0) {
-      const preferredVoice = englishVoices.find(voice => 
-        voice.lang === 'en-US' && voice.name.toLowerCase().includes('female')
-      ) || englishVoices.find(voice => voice.lang === 'en-US') || englishVoices[0];
+      // Try to find a good female voice first
+      let preferredVoice = englishVoices.find(voice => 
+        voice.lang === 'en-US' && 
+        (voice.name.toLowerCase().includes('female') || voice.name.toLowerCase().includes('samantha') || voice.name.toLowerCase().includes('karen'))
+      );
+      
+      // If no female voice, try any US English voice
+      if (!preferredVoice) {
+        preferredVoice = englishVoices.find(voice => voice.lang === 'en-US');
+      }
+      
+      // If no US voice, pick the first English voice
+      if (!preferredVoice) {
+        preferredVoice = englishVoices[0];
+      }
       
       setSelectedVoice(preferredVoice);
+      console.log('Selected voice:', preferredVoice?.name);
     }
   };
 
