@@ -515,70 +515,143 @@ const VoiceAgent = ({ onClose }) => {
     setTimeout(speakWelcome, 800);
   };
 
-  // Check microphone permissions explicitly with enhanced handling
+  // Enhanced microphone permissions and capabilities check
   const checkMicrophonePermissions = async () => {
-    console.log('=== MICROPHONE PERMISSION CHECK STARTED ===');
+    console.log('=== ENHANCED MICROPHONE CHECK STARTED ===');
+    
     try {
-      // Check if navigator.permissions is available
-      if ('permissions' in navigator) {
-        const permissionStatus = await navigator.permissions.query({ name: 'microphone' });
-        console.log('Microphone permission status:', permissionStatus.state);
-        
-        if (permissionStatus.state === 'denied') {
-          setVoiceError('❌ Microphone access denied. Please click the microphone icon in your browser address bar and allow microphone access, then reload the page.');
-          return false;
-        } else if (permissionStatus.state === 'prompt') {
-          console.log('✅ Microphone permission will be requested when starting recognition');
-        } else if (permissionStatus.state === 'granted') {
-          console.log('✅ Microphone permission already granted');
-        }
-      } else {
-        console.log('⚠️ navigator.permissions not available, proceeding with getUserMedia test');
-      }
-      
-      // Try to get user media to verify microphone access
-      try {
-        console.log('🎤 Testing microphone access with getUserMedia...');
-        const stream = await navigator.mediaDevices.getUserMedia({ 
-          audio: { 
-            echoCancellation: true,
-            noiseSuppression: true,
-            autoGainControl: true 
-          } 
-        });
-        console.log('✅ Microphone access verified successfully');
-        console.log('🎤 Microphone stream details:', {
-          active: stream.active,
-          tracks: stream.getAudioTracks().length,
-          trackSettings: stream.getAudioTracks()[0]?.getSettings()
-        });
-        
-        // Stop the stream immediately as we just needed to verify access
-        stream.getTracks().forEach(track => {
-          console.log('🛑 Stopping microphone track:', track.label);
-          track.stop();
-        });
-        return true;
-      } catch (mediaError) {
-        console.error('❌ MediaDevices getUserMedia error:', mediaError);
-        
-        if (mediaError.name === 'NotAllowedError' || mediaError.name === 'PermissionDeniedError') {
-          setVoiceError('❌ Microphone access denied. Please allow microphone access in your browser and reload the page. Look for the microphone icon in your address bar.');
-        } else if (mediaError.name === 'NotFoundError') {
-          setVoiceError('❌ No microphone found. Please connect a microphone and try again.');
-        } else if (mediaError.name === 'NotReadableError') {
-          setVoiceError('❌ Microphone is being used by another application. Please close other apps using the microphone.');
-        } else {
-          setVoiceError(`❌ Microphone error: ${mediaError.message}. Please check your microphone settings.`);
-        }
+      // First, check basic Web Speech API support
+      if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+        setVoiceError('❌ Speech recognition not supported in this browser. Please use Chrome, Edge, or Safari.');
         return false;
       }
+
+      // Check if we're in a secure context (required for microphone access)
+      if (!window.isSecureContext) {
+        setVoiceError('❌ Voice recognition requires HTTPS. Please access this page via HTTPS.');
+        return false;
+      }
+
+      // Check if MediaDevices API is available
+      if (!('mediaDevices' in navigator) || !('getUserMedia' in navigator.mediaDevices)) {
+        console.log('⚠️ MediaDevices API not available, but speech recognition might still work');
+        // Don't fail here - speech recognition might work without explicit media device access
+      }
+
+      let permissionGranted = false;
+      let microphoneAvailable = false;
+
+      // Check permissions if available
+      if ('permissions' in navigator) {
+        try {
+          const permissionStatus = await navigator.permissions.query({ name: 'microphone' });
+          console.log('🔐 Microphone permission status:', permissionStatus.state);
+          
+          if (permissionStatus.state === 'denied') {
+            setVoiceError('❌ Microphone access denied. Please click the microphone icon in your browser address bar and allow microphone access, then reload the page.');
+            return false;
+          } else if (permissionStatus.state === 'granted') {
+            permissionGranted = true;
+            console.log('✅ Microphone permission already granted');
+          } else {
+            console.log('⏳ Microphone permission will be requested when needed');
+          }
+        } catch (permError) {
+          console.log('⚠️ Could not check permissions API, proceeding with speech recognition test');
+        }
+      }
+
+      // Try to detect microphone availability (but don't fail if not available)
+      if ('mediaDevices' in navigator && 'getUserMedia' in navigator.mediaDevices) {
+        try {
+          console.log('🎤 Testing microphone access with getUserMedia...');
+          
+          // First, try to enumerate devices to see if microphones are available
+          if ('enumerateDevices' in navigator.mediaDevices) {
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const audioInputs = devices.filter(device => device.kind === 'audioinput');
+            console.log('🎤 Audio input devices found:', audioInputs.length);
+            
+            if (audioInputs.length > 0) {
+              microphoneAvailable = true;
+              console.log('✅ Microphone devices detected');
+            } else {
+              console.log('⚠️ No microphone devices detected, but speech recognition might still work');
+            }
+          }
+
+          // Try getUserMedia with a short timeout
+          const getUserMediaPromise = navigator.mediaDevices.getUserMedia({ 
+            audio: { 
+              echoCancellation: true,
+              noiseSuppression: true,
+              autoGainControl: true 
+            } 
+          });
+
+          // Add timeout to prevent hanging
+          const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error('getUserMedia timeout')), 5000);
+          });
+
+          try {
+            const stream = await Promise.race([getUserMediaPromise, timeoutPromise]);
+            console.log('✅ Microphone access verified successfully');
+            console.log('🎤 Microphone stream details:', {
+              active: stream.active,
+              tracks: stream.getAudioTracks().length,
+              trackSettings: stream.getAudioTracks()[0]?.getSettings()
+            });
+            
+            // Stop the stream immediately as we just needed to verify access
+            stream.getTracks().forEach(track => {
+              console.log('🛑 Stopping microphone track:', track.label);
+              track.stop();
+            });
+            
+            microphoneAvailable = true;
+            permissionGranted = true;
+            
+          } catch (mediaError) {
+            console.log('⚠️ getUserMedia test failed:', mediaError.name, mediaError.message);
+            
+            // Don't set error for common cases - let speech recognition handle it
+            if (mediaError.name === 'NotAllowedError' || mediaError.name === 'PermissionDeniedError') {
+              console.log('⚠️ Microphone permission not granted, will request when starting speech recognition');
+            } else if (mediaError.name === 'NotFoundError') {
+              console.log('⚠️ No microphone found, but speech recognition might still work');
+            } else if (mediaError.message === 'getUserMedia timeout') {
+              console.log('⚠️ getUserMedia timed out, but speech recognition might still work');
+            } else {
+              console.log('⚠️ getUserMedia failed, but attempting speech recognition anyway');
+            }
+          }
+        } catch (deviceError) {
+          console.log('⚠️ Device enumeration failed:', deviceError);
+        }
+      }
+
+      // Final decision logic
+      console.log('📊 Microphone check results:', {
+        permissionGranted,
+        microphoneAvailable,
+        webSpeechSupported: true,
+        secureContext: window.isSecureContext
+      });
+
+      // Always allow proceeding to speech recognition - let it handle microphone access
+      console.log('✅ Proceeding with speech recognition (microphone access will be handled by browser)');
+      return true;
+
     } catch (error) {
-      console.error('❌ Error checking microphone permissions:', error);
-      setVoiceError('❌ Could not check microphone permissions. Please ensure you\'re using HTTPS and reload the page.');
-      return false;
+      console.error('❌ Error during microphone check:', error);
+      
+      // Don't fail completely - let speech recognition try
+      console.log('⚠️ Microphone check had errors, but allowing speech recognition to try');
+      return true;
+      
     } finally {
-      console.log('=== MICROPHONE PERMISSION CHECK COMPLETED ===');
+      console.log('=== ENHANCED MICROPHONE CHECK COMPLETED ===');
     }
   };
 
