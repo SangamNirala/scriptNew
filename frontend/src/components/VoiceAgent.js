@@ -258,7 +258,22 @@ const VoiceAgent = ({ onClose }) => {
   };
 
   const speakText = (text) => {
-    if (!synthRef.current || !selectedVoice) return;
+    if (!synthRef.current) {
+      console.warn('Speech synthesis not available');
+      return;
+    }
+
+    if (!selectedVoice) {
+      console.warn('No voice selected, loading voices...');
+      loadVoices();
+      // Try again after loading voices
+      setTimeout(() => {
+        if (selectedVoice) {
+          speakText(text);
+        }
+      }, 500);
+      return;
+    }
 
     // Stop any ongoing speech
     synthRef.current.cancel();
@@ -270,6 +285,7 @@ const VoiceAgent = ({ onClose }) => {
     utterance.volume = voiceVolume;
 
     utterance.onstart = () => {
+      console.log('Started speaking:', text.substring(0, 50) + '...');
       setIsSpeaking(true);
       setCurrentSpeech(text);
       // Stop listening while speaking
@@ -279,13 +295,14 @@ const VoiceAgent = ({ onClose }) => {
     };
 
     utterance.onend = () => {
+      console.log('Finished speaking');
       setIsSpeaking(false);
       setCurrentSpeech('');
       // Resume listening after speaking if auto-listen is enabled
-      if (autoListen && !isProcessing) {
+      if (autoListen && !isProcessing && !voiceError) {
         setTimeout(() => {
           startListening();
-        }, 500);
+        }, 800);
       }
     };
 
@@ -293,6 +310,7 @@ const VoiceAgent = ({ onClose }) => {
       console.error('Speech synthesis error:', event.error);
       setIsSpeaking(false);
       setCurrentSpeech('');
+      setVoiceError(`Speech error: ${event.error}`);
     };
 
     synthRef.current.speak(utterance);
