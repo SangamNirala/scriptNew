@@ -8,7 +8,7 @@ import json
 import time
 
 # Get backend URL from frontend .env
-BACKEND_URL = "https://18d0ad0f-6396-452f-9a42-45fe37062731.preview.emergentagent.com/api"
+BACKEND_URL = "https://37d07ba6-0842-4e21-97a2-4e6551d024e6.preview.emergentagent.com/api"
 
 def test_basic_connectivity():
     """Test basic API connectivity"""
