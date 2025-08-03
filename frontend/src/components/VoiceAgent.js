@@ -72,8 +72,21 @@ const VoiceAgent = ({ onClose }) => {
     initializeSession();
     
     return () => {
-      stopListening();
-      stopSpeaking();
+      // Clean up when component unmounts
+      if (recognitionRef.current && isListening) {
+        try {
+          recognitionRef.current.abort();
+        } catch (error) {
+          console.warn('Error aborting recognition:', error);
+        }
+      }
+      if (synthRef.current) {
+        try {
+          synthRef.current.cancel();
+        } catch (error) {
+          console.warn('Error canceling speech:', error);
+        }
+      }
     };
   }, []);
 
