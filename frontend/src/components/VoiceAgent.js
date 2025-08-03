@@ -833,9 +833,9 @@ const VoiceAgent = ({ onClose }) => {
       }, 200); // Small delay to prevent race conditions
       
     } catch (error) {
-      console.error('🎤 ❌ Error starting speech recognition:', error);
+      console.error('🎤 ❌ Outer error in startListening:', error);
       
-      // Set appropriate error message based on error type
+      // Handle any uncaught errors
       let errorMessage = '❌ Could not start voice recognition. ';
       
       if (error.message.includes('permission') || error.message.includes('not-allowed')) {
