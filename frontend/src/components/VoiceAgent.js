@@ -498,7 +498,6 @@ const VoiceAgent = ({ onClose }) => {
     if (!selectedVoice) {
       console.warn('No voice selected, loading voices...');
       loadVoices();
-      // Try again after loading voices
       setTimeout(() => {
         if (selectedVoice) {
           speakText(text);
@@ -508,20 +507,24 @@ const VoiceAgent = ({ onClose }) => {
     }
 
     // Stop any ongoing speech
-    synthRef.current.cancel();
+    stopSpeaking();
+    setIsInterrupted(false);
 
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.voice = selectedVoice;
     utterance.rate = speechRate;
     utterance.pitch = speechPitch;
     utterance.volume = voiceVolume;
+    
+    // Store reference for interruption capability
+    currentUtteranceRef.current = utterance;
 
     utterance.onstart = () => {
       console.log('Started speaking:', text.substring(0, 50) + '...');
       setIsSpeaking(true);
       setCurrentSpeech(text);
-      // Stop listening while speaking
-      if (isListening) {
+      // Stop listening while speaking to prevent feedback
+      if (recognitionState === 'active') {
         stopListening();
       }
     };
@@ -530,10 +533,14 @@ const VoiceAgent = ({ onClose }) => {
       console.log('Finished speaking');
       setIsSpeaking(false);
       setCurrentSpeech('');
-      // Resume listening after speaking if auto-listen is enabled
-      if (autoListen && !isProcessing && !voiceError) {
+      currentUtteranceRef.current = null;
+      
+      // Resume listening after speaking if auto-listen is enabled and not interrupted
+      if (autoListen && !isProcessing && !voiceError && !isInterrupted) {
         setTimeout(() => {
-          startListening();
+          if (!isInterrupted) {
+            startListening();
+          }
         }, 800);
       }
     };
@@ -542,7 +549,17 @@ const VoiceAgent = ({ onClose }) => {
       console.error('Speech synthesis error:', event.error);
       setIsSpeaking(false);
       setCurrentSpeech('');
+      currentUtteranceRef.current = null;
       setVoiceError(`Speech error: ${event.error}`);
+    };
+
+    // Enable interruption detection
+    utterance.onboundary = (event) => {
+      // Check for interruption every word boundary
+      if (isInterrupted && currentUtteranceRef.current) {
+        synthRef.current.cancel();
+        return;
+      }
     };
 
     synthRef.current.speak(utterance);
@@ -553,6 +570,9 @@ const VoiceAgent = ({ onClose }) => {
       synthRef.current.cancel();
       setIsSpeaking(false);
       setCurrentSpeech('');
+      if (currentUtteranceRef.current) {
+        currentUtteranceRef.current = null;
+      }
     }
   };
 
