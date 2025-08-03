@@ -599,6 +599,9 @@ const VoiceAgent = ({ onClose }) => {
             <div className="flex items-center space-x-2">
               <Volume2 className={`h-4 w-4 ${isSpeaking ? 'text-blue-500 animate-pulse' : 'text-gray-400'}`} />
               <span className="text-sm">{isSpeaking ? 'Speaking...' : 'Silent'}</span>
+              {selectedVoice && !isSpeaking && (
+                <span className="text-xs text-gray-500">({selectedVoice.name.split(' ')[0]})</span>
+              )}
             </div>
 
             {isProcessing && (
