@@ -44,7 +44,7 @@ const VoiceAgent = ({ onClose }) => {
   ];
 
   const legalDomains = [
-    { value: '', label: 'All Legal Domains' },
+    { value: 'all_domains', label: 'All Legal Domains' },
     { value: 'contract_law', label: 'Contract Law' },
     { value: 'employment_labor_law', label: 'Employment & Labor Law' },
     { value: 'intellectual_property', label: 'Intellectual Property' },
