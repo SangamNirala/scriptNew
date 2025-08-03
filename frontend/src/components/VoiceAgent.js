@@ -236,7 +236,7 @@ const VoiceAgent = ({ onClose }) => {
 
       // Set up recognition event handlers with improved logic
       recognitionRef.current.onstart = () => {
-        console.log('Speech recognition started');
+        console.log('Speech recognition started successfully');
         setRecognitionState('active');
         setIsListening(true);
         setVoiceError(null);
@@ -287,14 +287,14 @@ const VoiceAgent = ({ onClose }) => {
         setIsListening(false);
         
         if (errorCategory === 'fatal') {
-          setVoiceError(`Speech recognition error: ${event.error}. Please check microphone permissions.`);
+          setVoiceError(`Speech recognition error: ${event.error}. Please check microphone permissions and reload the page.`);
           setAutoListen(false);
           setRetryCount(0);
         } else if (errorCategory === 'retryable' && retryCount < 5) {
           setVoiceError(`Temporary issue: ${event.error}. Retrying...`);
           handleRetryableError();
         } else {
-          setVoiceError(`Speech recognition error: ${event.error}`);
+          setVoiceError(`Speech recognition error: ${event.error}. Try clicking 'Retry' or reload the page.`);
           setAutoListen(false);
           setRetryCount(0);
         }
@@ -348,11 +348,12 @@ const VoiceAgent = ({ onClose }) => {
       setTimeout(() => {
         loadVoices();
         setIsInitializing(false);
+        console.log('Voice capabilities initialized successfully');
       }, 200);
 
     } catch (error) {
       console.error('Error initializing voice capabilities:', error);
-      setVoiceError('Failed to initialize voice capabilities.');
+      setVoiceError('Failed to initialize voice capabilities. Please reload the page.');
       setIsInitializing(false);
     }
   };
