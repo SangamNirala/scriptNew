@@ -985,49 +985,83 @@ const VoiceAgent = ({ onClose }) => {
             </div>
           </div>
 
-          {/* Status Indicators */}
-          <div className="flex-shrink-0 flex items-center space-x-4 p-2 bg-white border rounded-lg">
-            <div className="flex items-center space-x-2">
-              <Activity className={`h-4 w-4 ${
-                recognitionState === 'active' ? 'text-green-500 animate-pulse' : 
-                recognitionState === 'starting' ? 'text-yellow-500 animate-pulse' :
-                recognitionState === 'stopping' ? 'text-orange-500 animate-pulse' :
-                'text-gray-400'
-              }`} />
-              <span className="text-sm">
-                {recognitionState === 'active' ? 'Listening...' :
-                 recognitionState === 'starting' ? 'Starting...' :
-                 recognitionState === 'stopping' ? 'Stopping...' :
-                 recognitionState === 'error' ? 'Error' :
-                 'Not listening'}
-              </span>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <Volume2 className={`h-4 w-4 ${isSpeaking ? 'text-blue-500 animate-pulse' : 'text-gray-400'}`} />
-              <span className="text-sm">{isSpeaking ? 'Speaking...' : 'Silent'}</span>
-              {selectedVoice && !isSpeaking && (
-                <span className="text-xs text-gray-500">({selectedVoice.name.split(' ')[0]})</span>
+          {/* Enhanced Status Indicators */}
+          <div className="flex-shrink-0 space-y-2">
+            {/* Main Status Bar */}
+            <div className="flex items-center space-x-4 p-2 bg-white border rounded-lg">
+              <div className="flex items-center space-x-2">
+                <Activity className={`h-4 w-4 ${
+                  recognitionState === 'active' ? 'text-green-500 animate-pulse' : 
+                  recognitionState === 'starting' ? 'text-yellow-500 animate-pulse' :
+                  recognitionState === 'stopping' ? 'text-orange-500 animate-pulse' :
+                  'text-gray-400'
+                }`} />
+                <span className="text-sm">
+                  {recognitionState === 'active' ? 'Listening...' :
+                   recognitionState === 'starting' ? 'Starting...' :
+                   recognitionState === 'stopping' ? 'Stopping...' :
+                   recognitionState === 'error' ? 'Error' :
+                   'Not listening'}
+                </span>
+                {isUserSpeaking && (
+                  <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                    Speaking
+                  </span>
+                )}
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Volume2 className={`h-4 w-4 ${isSpeaking ? 'text-blue-500 animate-pulse' : 'text-gray-400'}`} />
+                <span className="text-sm">{isSpeaking ? 'AI Speaking...' : 'Silent'}</span>
+                {selectedVoice && !isSpeaking && (
+                  <span className="text-xs text-gray-500">({selectedVoice.name.split(' ')[0]})</span>
+                )}
+                {isInterrupted && (
+                  <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full">
+                    Interrupted
+                  </span>
+                )}
+              </div>
+
+              {isProcessing && (
+                <div className="flex items-center space-x-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-600"></div>
+                  <span className="text-sm">Processing...</span>
+                </div>
+              )}
+
+              {isInitializing && (
+                <div className="flex items-center space-x-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                  <span className="text-sm">Initializing...</span>
+                </div>
               )}
             </div>
 
-            {isProcessing && (
-              <div className="flex items-center space-x-2">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-600"></div>
-                <span className="text-sm">Processing...</span>
+            {/* Live Transcript Display */}
+            {(transcript || interimTranscript) && (
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="text-sm text-blue-800">
+                  <span className="font-medium">Live Transcript:</span>
+                  <div className="mt-1">
+                    {transcript && <span className="text-blue-900">{transcript}</span>}
+                    {interimTranscript && (
+                      <span className="text-blue-600 italic opacity-70">
+                        {transcript && ' '}{interimTranscript}
+                        <span className="animate-pulse">|</span>
+                      </span>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
 
-            {isInitializing && (
-              <div className="flex items-center space-x-2">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                <span className="text-sm">Initializing...</span>
-              </div>
-            )}
-
-            {transcript && (
-              <div className="text-sm text-blue-600 italic">
-                Transcript: "{transcript}"
+            {/* Conversation Summary */}
+            {conversationSummary && (
+              <div className="p-2 bg-purple-50 border border-purple-200 rounded-lg">
+                <div className="text-sm text-purple-800">
+                  <span className="font-medium">Session Summary:</span> {conversationSummary}
+                </div>
               </div>
             )}
           </div>
