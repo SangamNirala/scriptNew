@@ -29,10 +29,17 @@ const VoiceAgent = ({ onClose }) => {
   const [selectedJurisdiction, setSelectedJurisdiction] = useState('US');
   const [selectedDomain, setSelectedDomain] = useState('all_domains');
   
+  // Enhanced error handling and retry logic
+  const [retryCount, setRetryCount] = useState(0);
+  const [isInitializing, setIsInitializing] = useState(false);
+  const [recognitionState, setRecognitionState] = useState('idle'); // 'idle', 'starting', 'active', 'stopping', 'error'
+  
   // Refs
   const recognitionRef = useRef(null);
   const synthRef = useRef(null);
   const conversationEndRef = useRef(null);
+  const retryTimeoutRef = useRef(null);
+  const restartTimeoutRef = useRef(null);
 
   const jurisdictions = [
     { value: 'US', label: 'United States' },
