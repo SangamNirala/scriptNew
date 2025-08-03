@@ -234,9 +234,10 @@ const VoiceAgent = ({ onClose }) => {
       recognitionRef.current.lang = 'en-US';
       recognitionRef.current.maxAlternatives = 1;
 
-      // Set up recognition event handlers with improved logic
+      // Set up recognition event handlers with improved logic and detailed logging
       recognitionRef.current.onstart = () => {
-        console.log('Speech recognition started successfully');
+        console.log('🎤 ✅ Speech recognition started successfully');
+        console.log('🎤 Recognition state changing from', recognitionState, 'to active');
         setRecognitionState('active');
         setIsListening(true);
         setVoiceError(null);
@@ -244,11 +245,19 @@ const VoiceAgent = ({ onClose }) => {
       };
 
       recognitionRef.current.onresult = (event) => {
+        console.log('🎤 📝 Speech recognition result received:', event);
         let interimTranscript = '';
         let finalTranscript = '';
 
         for (let i = event.resultIndex; i < event.results.length; i++) {
           const transcript = event.results[i][0].transcript;
+          const confidence = event.results[i][0].confidence;
+          console.log(`🎤 Result ${i}:`, {
+            transcript: transcript,
+            confidence: confidence,
+            isFinal: event.results[i].isFinal
+          });
+          
           if (event.results[i].isFinal) {
             finalTranscript += transcript;
           } else {
@@ -260,19 +269,30 @@ const VoiceAgent = ({ onClose }) => {
         setInterimTranscript(interimTranscript);
         setTranscript(finalTranscript + interimTranscript);
         
+        console.log('🎤 📝 Transcripts updated:', {
+          interim: interimTranscript,
+          final: finalTranscript,
+          combined: finalTranscript + interimTranscript
+        });
+        
         // Detect if user is actively speaking
         const hasInterimText = interimTranscript.trim().length > 0;
         setIsUserSpeaking(hasInterimText || finalTranscript.trim().length > 0);
         
+        if (hasInterimText || finalTranscript.trim().length > 0) {
+          console.log('🎤 👤 User is speaking detected');
+        }
+        
         // If user starts speaking while AI is speaking, interrupt
         if (hasInterimText && isSpeaking) {
-          console.log('User interruption detected, stopping AI speech');
+          console.log('🎤 ✋ User interruption detected, stopping AI speech');
           setIsInterrupted(true);
           stopSpeaking();
         }
 
         // Process final transcript
         if (finalTranscript.trim()) {
+          console.log('🎤 ✅ Processing final transcript:', finalTranscript.trim());
           setInterimTranscript(''); // Clear interim when we have final
           setIsUserSpeaking(false);
           processVoiceInput(finalTranscript.trim());
@@ -280,28 +300,47 @@ const VoiceAgent = ({ onClose }) => {
       };
 
       recognitionRef.current.onerror = (event) => {
-        console.error('Speech recognition error:', event.error);
+        console.error('🎤 ❌ Speech recognition error:', event.error);
+        console.error('🎤 ❌ Error details:', {
+          error: event.error,
+          message: event.message,
+          timeStamp: event.timeStamp,
+          type: event.type
+        });
+        
         const errorCategory = categorizeError(event.error);
+        console.log('🎤 📊 Error category:', errorCategory);
         
         setRecognitionState('error');
         setIsListening(false);
         
         if (errorCategory === 'fatal') {
-          setVoiceError(`Speech recognition error: ${event.error}. Please check microphone permissions and reload the page.`);
+          setVoiceError(`❌ Speech recognition error: ${event.error}. Please check microphone permissions and reload the page.`);
           setAutoListen(false);
           setRetryCount(0);
         } else if (errorCategory === 'retryable' && retryCount < 5) {
-          setVoiceError(`Temporary issue: ${event.error}. Retrying...`);
+          setVoiceError(`⚠️ Temporary issue: ${event.error}. Retrying automatically...`);
+          console.log('🎤 🔄 Attempting automatic retry for retryable error');
           handleRetryableError();
         } else {
-          setVoiceError(`Speech recognition error: ${event.error}. Try clicking 'Retry' or reload the page.`);
+          setVoiceError(`❌ Speech recognition error: ${event.error}. Try clicking 'Retry' or reload the page.`);
           setAutoListen(false);
           setRetryCount(0);
         }
       };
 
       recognitionRef.current.onend = () => {
-        console.log('Speech recognition ended');
+        console.log('🎤 🛑 Speech recognition ended');
+        console.log('🎤 📊 Recognition end state:', {
+          autoListen,
+          isProcessing,
+          isSpeaking,
+          voiceError,
+          isInterrupted,
+          recognitionState,
+          retryCount
+        });
+        
         setRecognitionState('idle');
         setIsListening(false);
         setIsUserSpeaking(false);
@@ -316,6 +355,8 @@ const VoiceAgent = ({ onClose }) => {
             recognitionState !== 'error' &&
             retryCount < 3) {
           
+          console.log('🎤 🔄 Auto-restart conditions met, scheduling restart...');
+          
           // Clear any existing restart timeout
           if (restartTimeoutRef.current) {
             clearTimeout(restartTimeoutRef.current);
@@ -324,15 +365,51 @@ const VoiceAgent = ({ onClose }) => {
           // Delayed restart to prevent rapid cycling
           restartTimeoutRef.current = setTimeout(() => {
             if (autoListen && !isProcessing && !isSpeaking && !voiceError && !isInterrupted) {
+              console.log('🎤 🔄 Auto-restarting speech recognition...');
               startListening();
+            } else {
+              console.log('🎤 🚫 Auto-restart cancelled due to changed conditions');
             }
           }, 1500); // Increased delay to prevent loops
+        } else {
+          console.log('🎤 🚫 Auto-restart conditions not met');
         }
         
         // Reset interruption flag after a delay
         if (isInterrupted) {
-          setTimeout(() => setIsInterrupted(false), 2000);
+          setTimeout(() => {
+            console.log('🎤 🔄 Resetting interruption flag');
+            setIsInterrupted(false);
+          }, 2000);
         }
+      };
+
+      recognitionRef.current.onspeechstart = () => {
+        console.log('🎤 🗣️ Speech started (user began speaking)');
+      };
+
+      recognitionRef.current.onspeechend = () => {
+        console.log('🎤 🔇 Speech ended (user stopped speaking)');
+      };
+
+      recognitionRef.current.onsoundstart = () => {
+        console.log('🎤 🔊 Sound detected');
+      };
+
+      recognitionRef.current.onsoundend = () => {
+        console.log('🎤 🔇 Sound ended');
+      };
+
+      recognitionRef.current.onaudiostart = () => {
+        console.log('🎤 🎵 Audio capture started');
+      };
+
+      recognitionRef.current.onaudioend = () => {
+        console.log('🎤 🔇 Audio capture ended');
+      };
+
+      recognitionRef.current.onnomatch = () => {
+        console.log('🎤 ❓ No speech match found');
       };
 
       // Initialize Speech Synthesis
