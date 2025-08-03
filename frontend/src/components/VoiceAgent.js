@@ -1049,7 +1049,7 @@ const VoiceAgent = ({ onClose }) => {
                     // Test browser support
                     const hasWebSpeech = ('webkitSpeechRecognition' in window) || ('SpeechRecognition' in window);
                     const hasSpeechSynthesis = ('speechSynthesis' in window);
-                    console.log('Browser support:', { webSpeech, speechSynthesis: hasSpeechSynthesis });
+                    console.log('Browser support:', { webSpeech: hasWebSpeech, speechSynthesis: hasSpeechSynthesis });
                     
                     // Test recognition object
                     console.log('Recognition object exists:', !!recognitionRef.current);
