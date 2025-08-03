@@ -198,20 +198,29 @@ const VoiceAgent = ({ onClose }) => {
   };
 
   const startListening = () => {
-    if (recognitionRef.current && !isListening && !isProcessing) {
-      try {
-        setTranscript('');
-        recognitionRef.current.start();
-      } catch (error) {
-        console.error('Error starting speech recognition:', error);
-        setVoiceError('Could not start voice recognition. Please try again.');
-      }
+    if (!recognitionRef.current || isListening || isProcessing || isSpeaking) {
+      return;
+    }
+
+    try {
+      setTranscript('');
+      setVoiceError(null);
+      recognitionRef.current.start();
+    } catch (error) {
+      console.error('Error starting speech recognition:', error);
+      setVoiceError('Could not start voice recognition. Please try again.');
+      setIsListening(false);
     }
   };
 
   const stopListening = () => {
     if (recognitionRef.current && isListening) {
-      recognitionRef.current.stop();
+      try {
+        recognitionRef.current.stop();
+      } catch (error) {
+        console.error('Error stopping speech recognition:', error);
+        setIsListening(false);
+      }
     }
   };
 
