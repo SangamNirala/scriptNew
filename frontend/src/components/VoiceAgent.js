@@ -1066,9 +1066,9 @@ const VoiceAgent = ({ onClose }) => {
             )}
           </div>
 
-          {/* Conversation Area */}
+          {/* Enhanced Conversation Area */}
           <div className="flex-1 overflow-y-auto bg-gray-50 rounded-lg p-4 space-y-4">
-            {conversation.map((message) => (
+            {conversation.map((message, index) => (
               <div
                 key={message.id}
                 className={`flex items-start space-x-3 ${
@@ -1100,20 +1100,71 @@ const VoiceAgent = ({ onClose }) => {
                       : 'bg-white shadow-sm border'
                   }`}>
                     <div className="text-sm whitespace-pre-wrap">{message.content}</div>
-                    {message.confidence && (
-                      <div className="mt-2">
+                    
+                    {/* Enhanced message metadata */}
+                    <div className="mt-2 flex items-center justify-between">
+                      {message.confidence && (
                         <Badge variant="outline" className="text-xs">
                           Confidence: {Math.round(message.confidence * 100)}%
                         </Badge>
-                      </div>
-                    )}
+                      )}
+                      
+                      {message.type === 'assistant' && (
+                        <div className="flex items-center space-x-1">
+                          {isSpeaking && index === conversation.length - 1 && (
+                            <Button
+                              onClick={() => {
+                                setIsInterrupted(true);
+                                stopSpeaking();
+                              }}
+                              variant="ghost"
+                              size="sm"
+                              className="text-xs h-6 px-2 hover:bg-gray-100"
+                            >
+                              ✋ Stop
+                            </Button>
+                          )}
+                          
+                          {!isSpeaking && (
+                            <Button
+                              onClick={() => speakText(message.content)}
+                              variant="ghost"
+                              size="sm"
+                              className="text-xs h-6 px-2 hover:bg-gray-100"
+                              disabled={isProcessing}
+                            >
+                              🔊 Repeat
+                            </Button>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div className="text-xs text-gray-500 mt-1">
-                    {new Date(message.timestamp).toLocaleTimeString()}
+                  
+                  <div className="text-xs text-gray-500 mt-1 flex items-center justify-between">
+                    <span>{new Date(message.timestamp).toLocaleTimeString()}</span>
+                    
+                    {/* Context indicator for follow-up questions */}
+                    {message.type === 'user' && index > 0 && (
+                      <span className="bg-gray-200 text-gray-600 px-2 py-1 rounded-full text-xs">
+                        Follow-up
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
             ))}
+            
+            {/* Processing indicator */}
+            {isProcessing && (
+              <div className="flex items-center justify-center p-4">
+                <div className="flex items-center space-x-2 text-purple-600">
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-purple-600"></div>
+                  <span className="text-sm">AI is thinking...</span>
+                </div>
+              </div>
+            )}
+            
             <div ref={conversationEndRef} />
           </div>
 
