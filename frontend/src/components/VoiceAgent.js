@@ -1288,19 +1288,129 @@ const VoiceAgent = ({ onClose }) => {
                   </Select>
                   
                   {/* Voice Test Button */}
-                  <Button
-                    onClick={() => {
-                      if (selectedVoice) {
-                        speakText('Hello, this is a voice test. How do I sound?');
+                <Button
+                  onClick={async () => {
+                    console.log('🎤 🧪 === MICROPHONE TEST STARTED ===');
+                    
+                    try {
+                      setVoiceError('🔍 Testing microphone access...');
+                      
+                      // Test 1: Check browser support
+                      const hasWebSpeech = ('webkitSpeechRecognition' in window) || ('SpeechRecognition' in window);
+                      const hasSpeechSynthesis = ('speechSynthesis' in window);
+                      const hasMediaDevices = ('mediaDevices' in navigator);
+                      
+                      console.log('🧪 Browser Support Test:', {
+                        webSpeech: hasWebSpeech,
+                        speechSynthesis: hasSpeechSynthesis,
+                        mediaDevices: hasMediaDevices,
+                        isSecureContext: window.isSecureContext,
+                        protocol: window.location.protocol
+                      });
+                      
+                      if (!hasWebSpeech) {
+                        setVoiceError('❌ Browser does not support speech recognition. Please use Chrome or Edge.');
+                        return;
                       }
-                    }}
-                    variant="outline"
-                    size="sm"
-                    disabled={!selectedVoice || isSpeaking}
-                  >
-                    <Volume2 className="h-4 w-4" />
-                    Test
-                  </Button>
+                      
+                      if (!window.isSecureContext) {
+                        setVoiceError('❌ Speech recognition requires HTTPS. Please access this page via HTTPS.');
+                        return;
+                      }
+                      
+                      // Test 2: Detailed microphone access test
+                      setVoiceError('🎤 Testing microphone access...');
+                      
+                      const stream = await navigator.mediaDevices.getUserMedia({ 
+                        audio: { 
+                          echoCancellation: true,
+                          noiseSuppression: true,
+                          autoGainControl: true 
+                        } 
+                      });
+                      
+                      console.log('🧪 Microphone Stream Test:', {
+                        active: stream.active,
+                        id: stream.id,
+                        tracks: stream.getAudioTracks().map(track => ({
+                          id: track.id,
+                          kind: track.kind,
+                          label: track.label,
+                          enabled: track.enabled,
+                          muted: track.muted,
+                          readyState: track.readyState,
+                          settings: track.getSettings()
+                        }))
+                      });
+                      
+                      // Test 3: Speech Recognition initialization test
+                      setVoiceError('🔧 Testing speech recognition initialization...');
+                      
+                      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                      const testRecognition = new SpeechRecognition();
+                      
+                      console.log('🧪 Speech Recognition Test:', {
+                        constructor: testRecognition.constructor.name,
+                        continuous: testRecognition.continuous,
+                        interimResults: testRecognition.interimResults,
+                        lang: testRecognition.lang,
+                        maxAlternatives: testRecognition.maxAlternatives
+                      });
+                      
+                      // Test 4: Try a quick recognition test
+                      setVoiceError('🎯 Testing speech recognition start/stop...');
+                      
+                      return new Promise((resolve) => {
+                        testRecognition.onstart = () => {
+                          console.log('🧪 ✅ Test recognition started successfully');
+                          setTimeout(() => {
+                            testRecognition.stop();
+                          }, 1000);
+                        };
+                        
+                        testRecognition.onend = () => {
+                          console.log('🧪 ✅ Test recognition ended successfully');
+                          setVoiceError('✅ Microphone test completed successfully! Speech recognition should work now.');
+                          resolve();
+                        };
+                        
+                        testRecognition.onerror = (event) => {
+                          console.error('🧪 ❌ Test recognition error:', event.error);
+                          setVoiceError(`❌ Speech recognition test failed: ${event.error}. Please check microphone permissions.`);
+                          resolve();
+                        };
+                        
+                        try {
+                          testRecognition.start();
+                        } catch (error) {
+                          console.error('🧪 ❌ Test recognition start error:', error);
+                          setVoiceError(`❌ Could not start test recognition: ${error.message}`);
+                          resolve();
+                        }
+                      });
+                      
+                    } catch (error) {
+                      console.error('🧪 ❌ Microphone test error:', error);
+                      
+                      if (error.name === 'NotAllowedError') {
+                        setVoiceError('❌ Microphone access denied. Please click the microphone icon in your browser address bar and allow access.');
+                      } else if (error.name === 'NotFoundError') {
+                        setVoiceError('❌ No microphone found. Please connect a microphone.');
+                      } else {
+                        setVoiceError(`❌ Microphone test failed: ${error.message}`);
+                      }
+                    } finally {
+                      console.log('🧪 🏁 === MICROPHONE TEST COMPLETED ===');
+                    }
+                  }}
+                  variant="outline"
+                  size="sm"
+                  disabled={isInitializing}
+                  className="bg-green-50 hover:bg-green-100"
+                >
+                  <Mic className="h-4 w-4" />
+                  <span className="ml-1">Mic Test</span>
+                </Button>
                 </div>
                 
                 {/* Voice Speed Control */}
