@@ -583,60 +583,88 @@ const VoiceAgent = ({ onClose }) => {
   };
 
   const startListening = async () => {
+    console.log('🎤 🚀 === START LISTENING FUNCTION CALLED ===');
+    
     // Prevent multiple simultaneous start attempts
     if (recognitionState === 'starting' || recognitionState === 'active' || isProcessing || isSpeaking || isInitializing) {
-      console.log('Start listening blocked:', { recognitionState, isProcessing, isSpeaking, isInitializing });
+      console.log('🎤 🚫 Start listening blocked:', { 
+        recognitionState, 
+        isProcessing, 
+        isSpeaking, 
+        isInitializing 
+      });
       return;
     }
 
     if (!recognitionRef.current) {
-      console.warn('Recognition not initialized');
-      setVoiceError('Voice recognition not properly initialized. Please reload the page.');
+      console.warn('🎤 ❌ Recognition not initialized');
+      setVoiceError('❌ Voice recognition not properly initialized. Please reload the page.');
       return;
     }
 
     // Check microphone permissions first
-    console.log('Checking microphone permissions before starting...');
+    console.log('🎤 🔍 Checking microphone permissions before starting...');
     const hasPermission = await checkMicrophonePermissions();
     if (!hasPermission) {
+      console.log('🎤 ❌ Microphone permission check failed');
       return;
     }
 
     try {
+      console.log('🎤 ⏳ Setting recognition state to starting...');
       setRecognitionState('starting');
       setTranscript('');
       setVoiceError(null);
       
-      console.log('Attempting to start speech recognition...');
+      console.log('🎤 🔧 Configuring speech recognition...');
+      console.log('🎤 📊 Recognition configuration:', {
+        continuous: recognitionRef.current.continuous,
+        interimResults: recognitionRef.current.interimResults,
+        lang: recognitionRef.current.lang,
+        maxAlternatives: recognitionRef.current.maxAlternatives
+      });
+      
+      console.log('🎤 🎯 Attempting to start speech recognition...');
       
       // Small delay to ensure previous operations completed
       setTimeout(() => {
         if (recognitionRef.current && recognitionState === 'starting') {
           try {
+            console.log('🎤 ▶️ Calling recognition.start()...');
             recognitionRef.current.start();
-            console.log('Speech recognition start() called successfully');
+            console.log('🎤 ✅ Speech recognition start() called successfully');
           } catch (startError) {
-            console.error('Error calling recognition.start():', startError);
+            console.error('🎤 ❌ Error calling recognition.start():', startError);
             
             if (startError.message && startError.message.includes('already started')) {
+              console.log('🎤 ℹ️ Recognition already running, updating state');
               // Recognition is already running, just update our state
               setRecognitionState('active');
               setIsListening(true);
             } else {
-              setVoiceError('Could not start voice recognition. Please try again or reload the page.');
+              console.error('🎤 ❌ Start error details:', {
+                name: startError.name,
+                message: startError.message,
+                stack: startError.stack
+              });
+              setVoiceError('❌ Could not start voice recognition. Please try again or reload the page.');
               setRecognitionState('error');
               setIsListening(false);
             }
           }
+        } else {
+          console.log('🎤 ⚠️ Start conditions changed during timeout');
         }
       }, 100);
       
     } catch (error) {
-      console.error('Error starting speech recognition:', error);
-      setVoiceError('Could not start voice recognition. Please try again or reload the page.');
+      console.error('🎤 ❌ Error starting speech recognition:', error);
+      setVoiceError('❌ Could not start voice recognition. Please try again or reload the page.');
       setRecognitionState('error');
       setIsListening(false);
     }
+    
+    console.log('🎤 🏁 === START LISTENING FUNCTION COMPLETED ===');
   };
 
   const stopListening = () => {
