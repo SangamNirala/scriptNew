@@ -471,7 +471,7 @@ const VoiceAgent = ({ onClose }) => {
               <div className="flex space-x-2">
                 <Button
                   onClick={isListening ? stopListening : startListening}
-                  disabled={isProcessing || !!voiceError}
+                  disabled={isProcessing || !!voiceError || isSpeaking}
                   className={`flex items-center space-x-2 ${
                     isListening ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'
                   }`}
@@ -495,10 +495,29 @@ const VoiceAgent = ({ onClose }) => {
                   onClick={resetConversation}
                   variant="outline"
                   size="sm"
+                  disabled={isProcessing}
                 >
                   <RotateCcw className="h-4 w-4" />
                   <span className="ml-1">Reset</span>
                 </Button>
+
+                {voiceError && (
+                  <Button
+                    onClick={() => {
+                      setVoiceError(null);
+                      setAutoListen(true);
+                      if (!isListening && !isProcessing && !isSpeaking) {
+                        startListening();
+                      }
+                    }}
+                    variant="outline"
+                    size="sm"
+                    className="bg-yellow-100 hover:bg-yellow-200"
+                  >
+                    <Settings className="h-4 w-4" />
+                    <span className="ml-1">Retry</span>
+                  </Button>
+                )}
               </div>
               
               <div className="flex items-center space-x-2">
