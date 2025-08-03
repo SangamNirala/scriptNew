@@ -2283,7 +2283,11 @@ def extract_clean_script(raw_script):
     Extract only the actual spoken content from a formatted video script.
     Removes ALL production elements and keeps ONLY what should be spoken in the final video.
     
+    Enhanced to handle modern script formats with [DIALOGUE:] markers and AI image prompts.
+    
     This includes removing:
+    - Opening/closing production notes and metadata
+    - AI image prompts and technical specifications 
     - Timestamps (0:00), (0:00-0:03)
     - Scene descriptions [SCENE START: ...]
     - Speaker/narrator directions (Expert), (Narrator), (Person Speaking)
@@ -2291,23 +2295,38 @@ def extract_clean_script(raw_script):
     - Section headers (TARGET DURATION, VIDEO TYPE, etc.)
     - Production notes and metadata
     - Bullet points and formatting instructions
+    - Important considerations and technical notes
     - Duplicate content (same text in CHARACTER and DIALOGUE fields)
     """
+    
+    # First, check if this is a modern script format with [DIALOGUE:] markers
+    if '[DIALOGUE:]' in raw_script or '**[DIALOGUE:]**' in raw_script:
+        return extract_dialogue_only_script(raw_script)
     
     lines = raw_script.strip().split('\n')
     spoken_content = []
     seen_content = set()  # Track unique content to avoid duplicates
+    
+    # Skip everything until we find the actual script content
+    # Look for script start indicators
+    script_started = False
+    script_start_patterns = [
+        'VIDEO SCRIPT:', '**VIDEO SCRIPT', 'SCRIPT:', 'TARGET DURATION:', 'DIALOGUE'
+    ]
     
     # Section headers and metadata to completely skip
     skip_sections = [
         'TARGET DURATION', 'VIDEO TYPE', 'VIDEO SCRIPT', 'SCRIPT:', 'KEY RETENTION ELEMENTS',
         'NOTES:', 'RETENTION ELEMENTS:', 'ADJUSTMENTS:', 'OPTIMIZATION:', 'METRICS:',
         'NOTES', 'SCRIPT', 'DURATION', 'TYPE', 'KEY CONSIDERATIONS', 'RATIONALE:',
-        'END.', '**KEY CONSIDERATIONS', '**END**', 'VIDEO TITLE', 'TARGET DURATION'
+        'END.', '**KEY CONSIDERATIONS', '**END**', 'VIDEO TITLE', 'TARGET DURATION',
+        'IMPORTANT CONSIDERATIONS', 'ITERATE AND REFINE', 'PLATFORM-SPECIFIC',
+        'CHARACTER CONSISTENCY', 'MUSIC AND SOUND'
     ]
     
     # Track if we're in a metadata section
     in_metadata_section = False
+    skip_until_script = True
     
     for line in lines:
         original_line = line
@@ -2316,6 +2335,20 @@ def extract_clean_script(raw_script):
         # Skip empty lines
         if not line:
             continue
+            
+        # Skip initial production notes until we find script content
+        if skip_until_script:
+            # Check if this line starts the actual script
+            line_upper = line.upper()
+            if any(pattern.upper() in line_upper for pattern in script_start_patterns):
+                skip_until_script = False
+                continue
+            # Also check for dialogue patterns
+            if '[DIALOGUE:]' in line or '**[DIALOGUE:]**' in line or line.startswith('**[') or re.search(r'\[\d+:\d+', line):
+                skip_until_script = False
+                # Don't continue here, process this line
+            else:
+                continue  # Skip everything before script starts
         
         # Skip visual and sound cues completely
         if line.startswith('**(VISUAL CUE:') or line.startswith('**(SOUND:') or line.startswith('**(VISUAL'):
@@ -2487,6 +2520,84 @@ def extract_clean_script(raw_script):
                 final_script = fallback
     
     return final_script.strip()
+
+
+def extract_dialogue_only_script(raw_script):
+    """
+    Extract ONLY dialogue content from modern AI-generated scripts with [DIALOGUE:] markers.
+    
+    This function specifically handles scripts that contain:
+    - AI image prompts
+    - [DIALOGUE:] or **[DIALOGUE:]** markers
+    - Production notes and metadata
+    - Technical specifications
+    
+    It extracts ONLY the actual spoken dialogue content.
+    """
+    
+    dialogue_content = []
+    seen_content = set()
+    
+    lines = raw_script.strip().split('\n')
+    
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+            
+        # Look for dialogue markers
+        if '[DIALOGUE:]' in line or '**[DIALOGUE:]**' in line:
+            # Extract content after the dialogue marker
+            if '**[DIALOGUE:]**' in line:
+                dialogue_text = line.split('**[DIALOGUE:]**', 1)[1].strip()
+            elif '[DIALOGUE:]' in line:
+                dialogue_text = line.split('[DIALOGUE:]', 1)[1].strip()
+            else:
+                continue
+                
+            # Clean up the dialogue text
+            dialogue_text = dialogue_text.strip()
+            
+            # Remove speaker directions in parentheses at the beginning
+            # Pattern: (Intense, slightly hushed tone) or (Narrator) etc.
+            dialogue_text = re.sub(r'^\([^)]*\)\s*', '', dialogue_text)
+            
+            # Extract quoted dialogue if present
+            quoted_content = re.findall(r'"([^"]+)"', dialogue_text)
+            if quoted_content:
+                for quote in quoted_content:
+                    quote_clean = quote.strip()
+                    quote_lower = quote_clean.lower()
+                    
+                    if quote_lower not in seen_content and len(quote_clean) > 3:
+                        seen_content.add(quote_lower)
+                        dialogue_content.append(quote_clean)
+            else:
+                # If no quotes, take the remaining text after cleaning
+                if dialogue_text and len(dialogue_text) > 3:
+                    # Remove any remaining markdown
+                    dialogue_text = re.sub(r'\*\*([^*]+)\*\*', r'\1', dialogue_text)
+                    dialogue_text = re.sub(r'\*([^*]+)\*', r'\1', dialogue_text)
+                    
+                    # Clean up extra spaces
+                    dialogue_text = re.sub(r'\s+', ' ', dialogue_text).strip()
+                    
+                    dialogue_lower = dialogue_text.lower()
+                    if dialogue_lower not in seen_content:
+                        seen_content.add(dialogue_lower)
+                        dialogue_content.append(dialogue_text)
+    
+    # Join all dialogue content
+    final_dialogue = ' '.join(dialogue_content)
+    
+    # Final cleanup
+    final_dialogue = re.sub(r'\s+', ' ', final_dialogue)  # Multiple spaces
+    final_dialogue = re.sub(r'\s*\.\.\.\s*', '... ', final_dialogue)  # Normalize ellipses
+    final_dialogue = re.sub(r'\s*!\s*', '! ', final_dialogue)  # Normalize exclamation
+    final_dialogue = re.sub(r'\s*\?\s*', '? ', final_dialogue)  # Normalize questions  
+    final_dialogue = re.sub(r'\s*,\s*', ', ', final_dialogue)  # Normalize commas
+    
+    return final_dialogue.strip()
 
 @api_router.get("/voices", response_model=List[VoiceOption])
 async def get_available_voices():
