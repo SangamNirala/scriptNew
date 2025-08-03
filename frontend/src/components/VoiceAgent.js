@@ -29,6 +29,15 @@ const VoiceAgent = ({ onClose }) => {
   const [selectedJurisdiction, setSelectedJurisdiction] = useState('US');
   const [selectedDomain, setSelectedDomain] = useState('all_domains');
   
+  // Enhanced conversation states
+  const [interimTranscript, setInterimTranscript] = useState('');
+  const [isUserSpeaking, setIsUserSpeaking] = useState(false);
+  const [conversationContext, setConversationContext] = useState([]);
+  const [suggestedFollowUps, setSuggestedFollowUps] = useState([]);
+  const [isInterrupted, setIsInterrupted] = useState(false);
+  const [conversationSummary, setConversationSummary] = useState('');
+  const [lastUserIntent, setLastUserIntent] = useState('');
+  
   // Enhanced error handling and retry logic
   const [retryCount, setRetryCount] = useState(0);
   const [isInitializing, setIsInitializing] = useState(false);
@@ -40,6 +49,8 @@ const VoiceAgent = ({ onClose }) => {
   const conversationEndRef = useRef(null);
   const retryTimeoutRef = useRef(null);
   const restartTimeoutRef = useRef(null);
+  const interruptTimeoutRef = useRef(null);
+  const currentUtteranceRef = useRef(null);
 
   const jurisdictions = [
     { value: 'US', label: 'United States' },
