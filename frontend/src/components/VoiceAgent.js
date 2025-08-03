@@ -105,6 +105,7 @@ const VoiceAgent = ({ onClose }) => {
 
       // Set up recognition event handlers
       recognitionRef.current.onstart = () => {
+        console.log('Speech recognition started');
         setIsListening(true);
         setVoiceError(null);
       };
@@ -134,12 +135,18 @@ const VoiceAgent = ({ onClose }) => {
         console.error('Speech recognition error:', event.error);
         setVoiceError(`Speech recognition error: ${event.error}`);
         setIsListening(false);
+        
+        // Don't auto-restart on certain errors
+        if (event.error === 'aborted' || event.error === 'audio-capture' || event.error === 'not-allowed') {
+          setAutoListen(false);
+        }
       };
 
       recognitionRef.current.onend = () => {
+        console.log('Speech recognition ended');
         setIsListening(false);
-        // Auto-restart listening if enabled and not processing
-        if (autoListen && !isProcessing) {
+        // Auto-restart listening if enabled, not processing, and not speaking
+        if (autoListen && !isProcessing && !isSpeaking && !voiceError) {
           setTimeout(() => {
             startListening();
           }, 500);
