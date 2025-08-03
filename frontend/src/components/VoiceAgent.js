@@ -291,7 +291,7 @@ const VoiceAgent = ({ onClose }) => {
           question: input,
           session_id: sessionId,
           jurisdiction: selectedJurisdiction,
-          legal_domain: selectedDomain || null
+          legal_domain: selectedDomain === 'all_domains' ? null : selectedDomain
         })
       });
 
