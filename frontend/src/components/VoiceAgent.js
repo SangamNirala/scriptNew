@@ -877,8 +877,9 @@ const VoiceAgent = ({ onClose }) => {
     }
   };
 
-  // Enhanced retry function
-  const handleRetry = () => {
+  // Enhanced retry function with better diagnostics
+  const handleRetry = async () => {
+    console.log('Starting enhanced retry process...');
     setVoiceError(null);
     setRetryCount(0);
     setRecognitionState('idle');
@@ -893,16 +894,62 @@ const VoiceAgent = ({ onClose }) => {
       restartTimeoutRef.current = null;
     }
     
-    // Reinitialize if needed
-    if (!recognitionRef.current) {
-      initializeVoiceCapabilities();
-    } else {
-      setAutoListen(true);
-      if (!isProcessing && !isSpeaking) {
-        setTimeout(() => {
-          startListening();
-        }, 800);
+    // Clean up existing recognition
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.abort();
+        recognitionRef.current = null;
+      } catch (error) {
+        console.warn('Error cleaning up recognition:', error);
       }
+    }
+    
+    // Run diagnostics
+    console.log('Running voice system diagnostics...');
+    
+    // Check browser support
+    const hasWebSpeech = ('webkitSpeechRecognition' in window) || ('SpeechRecognition' in window);
+    const hasSpeechSynthesis = ('speechSynthesis' in window);
+    
+    console.log('Browser capabilities:', {
+      webSpeech: hasWebSpeech,
+      speechSynthesis: hasSpeechSynthesis,
+      userAgent: navigator.userAgent
+    });
+    
+    if (!hasWebSpeech) {
+      setVoiceError('Speech recognition not supported in this browser. Please use Chrome or Edge.');
+      return;
+    }
+    
+    // Check microphone permissions
+    const hasPermission = await checkMicrophonePermissions();
+    if (!hasPermission) {
+      console.log('Microphone permission check failed during retry');
+      return;
+    }
+    
+    // Reinitialize if needed
+    try {
+      setIsInitializing(true);
+      console.log('Reinitializing voice capabilities...');
+      
+      setTimeout(() => {
+        initializeVoiceCapabilities();
+        
+        setTimeout(() => {
+          setAutoListen(true);
+          if (!isProcessing && !isSpeaking) {
+            console.log('Attempting to start listening after reinitialization...');
+            startListening();
+          }
+        }, 1000);
+      }, 500);
+      
+    } catch (error) {
+      console.error('Error during retry:', error);
+      setVoiceError('Failed to reinitialize voice system. Please reload the page.');
+      setIsInitializing(false);
     }
   };
 
