@@ -155,12 +155,19 @@ const VoiceAgent = ({ onClose }) => {
 
       // Initialize Speech Synthesis
       synthRef.current = window.speechSynthesis;
+      
+      // Load voices immediately
       loadVoices();
 
-      // Load voices when they become available
+      // Load voices when they become available (some browsers need this)
       if (synthRef.current.onvoiceschanged !== undefined) {
         synthRef.current.onvoiceschanged = loadVoices;
       }
+
+      // Also try loading voices after a short delay (Chrome workaround)
+      setTimeout(() => {
+        loadVoices();
+      }, 100);
 
     } catch (error) {
       console.error('Error initializing voice capabilities:', error);
