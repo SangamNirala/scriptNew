@@ -665,13 +665,60 @@ const VoiceAgent = ({ onClose }) => {
 
   // Enhance response text for more natural speech
   const enhanceResponseForSpeech = (text) => {
-    // Add natural pauses and improve flow for speech
-    return text
+    // Replace symbols that shouldn't be pronounced
+    let enhancedText = text
+      // Handle asterisks and stars
+      .replace(/\*/g, '') // Remove asterisks entirely
+      .replace(/★|⭐/g, '') // Remove star symbols
+      
+      // Handle other common symbols
+      .replace(/#/g, 'hashtag ') // Hash/pound sign
+      .replace(/@/g, 'at ') // At symbol
+      .replace(/&/g, 'and ') // Ampersand
+      .replace(/%/g, 'percent ') // Percent sign
+      .replace(/\$/g, 'dollar ') // Dollar sign
+      .replace(/€/g, 'euro ') // Euro sign
+      .replace(/£/g, 'pound ') // Pound sign
+      .replace(/\+/g, 'plus ') // Plus sign
+      .replace(/=/g, 'equals ') // Equals sign
+      .replace(/</g, 'less than ') // Less than
+      .replace(/>/g, 'greater than ') // Greater than
+      .replace(/\|/g, ' ') // Pipe symbol - just remove
+      .replace(/~/g, ' ') // Tilde - just remove
+      .replace(/`/g, ' ') // Backtick - just remove
+      .replace(/\^/g, ' ') // Caret - just remove
+      .replace(/_/g, ' ') // Underscore - replace with space
+      
+      // Handle brackets and parentheses more naturally
+      .replace(/\[/g, ' ') // Opening square bracket - remove
+      .replace(/\]/g, ' ') // Closing square bracket - remove
+      .replace(/\{/g, ' ') // Opening curly brace - remove
+      .replace(/\}/g, ' ') // Closing curly brace - remove
+      
+      // Handle quotation marks
+      .replace(/"/g, '') // Remove double quotes
+      .replace(/'/g, '') // Remove single quotes
+      .replace(/`/g, '') // Remove backticks
+      
+      // Handle multiple punctuation marks
+      .replace(/\.{2,}/g, '. ') // Multiple periods
+      .replace(/\?{2,}/g, '? ') // Multiple question marks
+      .replace(/!{2,}/g, '! ') // Multiple exclamation marks
+      
+      // Add natural pauses and improve flow for speech
       .replace(/\n\n/g, '. ') // Replace paragraph breaks with pauses
       .replace(/\n/g, ', ') // Replace line breaks with commas
       .replace(/\s+/g, ' ') // Normalize whitespace
       .replace(/([.!?])\s*([A-Z])/g, '$1 $2') // Ensure proper spacing after sentences
       .trim();
+    
+    // Final cleanup - remove any remaining problematic characters
+    enhancedText = enhancedText
+      .replace(/[^\w\s.,!?;:()\-]/g, ' ') // Remove any remaining special characters
+      .replace(/\s+/g, ' ') // Final whitespace normalization
+      .trim();
+    
+    return enhancedText;
   };
 
   // Update conversation summary
