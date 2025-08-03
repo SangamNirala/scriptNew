@@ -304,12 +304,15 @@ const VoiceAgent = ({ onClose }) => {
         console.log('Speech recognition ended');
         setRecognitionState('idle');
         setIsListening(false);
+        setIsUserSpeaking(false);
+        setInterimTranscript('');
         
         // Only auto-restart if conditions are met and we're not in an error state
         if (autoListen && 
             !isProcessing && 
             !isSpeaking && 
             !voiceError && 
+            !isInterrupted &&
             recognitionState !== 'error' &&
             retryCount < 3) {
           
@@ -320,10 +323,15 @@ const VoiceAgent = ({ onClose }) => {
           
           // Delayed restart to prevent rapid cycling
           restartTimeoutRef.current = setTimeout(() => {
-            if (autoListen && !isProcessing && !isSpeaking && !voiceError) {
+            if (autoListen && !isProcessing && !isSpeaking && !voiceError && !isInterrupted) {
               startListening();
             }
           }, 1500); // Increased delay to prevent loops
+        }
+        
+        // Reset interruption flag after a delay
+        if (isInterrupted) {
+          setTimeout(() => setIsInterrupted(false), 2000);
         }
       };
 
