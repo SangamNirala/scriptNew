@@ -438,8 +438,9 @@ const VoiceAgent = ({ onClose }) => {
     setTimeout(speakWelcome, 800);
   };
 
-  // Check microphone permissions explicitly
+  // Check microphone permissions explicitly with enhanced handling
   const checkMicrophonePermissions = async () => {
+    console.log('=== MICROPHONE PERMISSION CHECK STARTED ===');
     try {
       // Check if navigator.permissions is available
       if ('permissions' in navigator) {
@@ -447,37 +448,60 @@ const VoiceAgent = ({ onClose }) => {
         console.log('Microphone permission status:', permissionStatus.state);
         
         if (permissionStatus.state === 'denied') {
-          setVoiceError('Microphone access denied. Please enable microphone permissions in your browser settings and reload the page.');
+          setVoiceError('❌ Microphone access denied. Please click the microphone icon in your browser address bar and allow microphone access, then reload the page.');
           return false;
         } else if (permissionStatus.state === 'prompt') {
-          console.log('Microphone permission will be requested when starting recognition');
+          console.log('✅ Microphone permission will be requested when starting recognition');
+        } else if (permissionStatus.state === 'granted') {
+          console.log('✅ Microphone permission already granted');
         }
+      } else {
+        console.log('⚠️ navigator.permissions not available, proceeding with getUserMedia test');
       }
       
       // Try to get user media to verify microphone access
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        console.log('Microphone access verified successfully');
+        console.log('🎤 Testing microphone access with getUserMedia...');
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          audio: { 
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true 
+          } 
+        });
+        console.log('✅ Microphone access verified successfully');
+        console.log('🎤 Microphone stream details:', {
+          active: stream.active,
+          tracks: stream.getAudioTracks().length,
+          trackSettings: stream.getAudioTracks()[0]?.getSettings()
+        });
         
         // Stop the stream immediately as we just needed to verify access
-        stream.getTracks().forEach(track => track.stop());
+        stream.getTracks().forEach(track => {
+          console.log('🛑 Stopping microphone track:', track.label);
+          track.stop();
+        });
         return true;
       } catch (mediaError) {
-        console.error('MediaDevices getUserMedia error:', mediaError);
+        console.error('❌ MediaDevices getUserMedia error:', mediaError);
         
         if (mediaError.name === 'NotAllowedError' || mediaError.name === 'PermissionDeniedError') {
-          setVoiceError('Microphone access denied. Please allow microphone access and reload the page.');
+          setVoiceError('❌ Microphone access denied. Please allow microphone access in your browser and reload the page. Look for the microphone icon in your address bar.');
         } else if (mediaError.name === 'NotFoundError') {
-          setVoiceError('No microphone found. Please connect a microphone and try again.');
+          setVoiceError('❌ No microphone found. Please connect a microphone and try again.');
+        } else if (mediaError.name === 'NotReadableError') {
+          setVoiceError('❌ Microphone is being used by another application. Please close other apps using the microphone.');
         } else {
-          setVoiceError('Could not access microphone. Please check your microphone settings.');
+          setVoiceError(`❌ Microphone error: ${mediaError.message}. Please check your microphone settings.`);
         }
         return false;
       }
     } catch (error) {
-      console.error('Error checking microphone permissions:', error);
-      // If permission check fails, we'll still try to start recognition
-      return true;
+      console.error('❌ Error checking microphone permissions:', error);
+      setVoiceError('❌ Could not check microphone permissions. Please ensure you\'re using HTTPS and reload the page.');
+      return false;
+    } finally {
+      console.log('=== MICROPHONE PERMISSION CHECK COMPLETED ===');
     }
   };
 
