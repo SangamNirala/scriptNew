@@ -23,7 +23,7 @@ test_script = '''
 **[TRANSITION:]** Fade to black.
 '''
 
-backend_url = "https://37d07ba6-0842-4e21-97a2-4e6551d024e6.preview.emergentagent.com/api"
+backend_url = "https://85f60b75-d062-4153-aa35-b4515aa989ee.preview.emergentagent.com/api"
 
 print("Testing duplicate line fix...")
 print("=" * 50)
