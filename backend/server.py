@@ -1778,49 +1778,65 @@ Remember: Each shot must be a COMPLETE, STANDALONE AI IMAGE PROMPT that produces
         ).with_model("gemini", "gemini-2.0-flash")
 
         script_message = UserMessage(
-            text=f"""Create a comprehensive, AI-video-generator-optimized script for {request.video_type} content based on this prompt:
+            text=f"""Create a comprehensive script for {request.video_type} content where EACH SHOT is a standalone, copy-paste-ready AI image prompt optimized for MidJourney, DALL-E, Stable Diffusion, and other AI image generators.
 
 "{request.prompt}"
 
 SPECIFICATIONS:
 - Duration target: {request.duration}
 - Video type: {request.video_type}
-- AI Video Generator Optimization: MAXIMUM DETAIL
+- AI IMAGE GENERATOR OPTIMIZATION: Each shot must be a complete, ready-to-use AI image prompt
 
-REQUIRED OUTPUT FORMAT:
-Generate a script with EXTREME visual detail that includes:
+🎯 CRITICAL REQUIREMENTS:
 
-1. **SHOT-BY-SHOT BREAKDOWN** (Every 2-3 seconds):
-   - Precise camera specifications (angle, movement, framing)
-   - Complete environment descriptions (location, lighting, weather, time)
-   - Detailed character descriptions (appearance, clothing, expressions, gestures)
-   - Specific color palettes and visual moods
-   - Exact timing markers
+1. **STANDALONE AI IMAGE PROMPTS** (Every 2-3 seconds):
+   Each shot MUST be formatted as a complete AI image prompt that can be directly copy-pasted into any AI image generator. Include:
+   
+   **FORMAT FOR EACH SHOT:**
+   **[0:XX-0:XX] AI IMAGE PROMPT:**
+   "[Detailed subject description], [artistic style], [composition and framing], [lighting setup], [environment/background], [technical camera specs], [color palette], [mood/atmosphere], [quality modifiers]"
+   
+   **[DIALOGUE:]** (Spoken content)
 
-2. **TECHNICAL SPECIFICATIONS**:
-   - Camera movements and transitions between shots
-   - Lighting setup and atmospheric details
-   - Props, set decoration, and background elements
-   - Character positioning and blocking
-   - Visual effects and post-production notes
+2. **VISUAL PROMPT ELEMENTS** (Required in every shot):
+   - **Subject Details**: Precise character description, pose, expression, clothing, accessories
+   - **Artistic Style**: "photorealistic", "cinematic photography", "commercial quality", "professional studio lighting"
+   - **Composition**: Camera angle, framing, rule of thirds positioning, depth of field
+   - **Lighting**: Specific lighting setup, direction, quality, color temperature
+   - **Environment**: Detailed background, setting, atmospheric elements
+   - **Technical Specs**: Camera model/lens suggestions, aperture, quality indicators
+   - **Colors**: Specific color palette, mood, contrast levels
+   - **Quality Modifiers**: "ultra-high quality", "8K resolution", "sharp focus", "professional photography"
 
-3. **AI-FRIENDLY FORMATTING**:
-   - Use **[CAMERA:]**, **[SETTING:]**, **[CHARACTER:]**, **[LIGHTING:]**, **[MOVEMENT:]** tags
-   - Include specific visual descriptions that AI can interpret
-   - Provide alternative angle suggestions for variety
-   - Specify continuity between shots
+3. **CROSS-PLATFORM OPTIMIZATION**:
+   - Use keywords that work across MidJourney, DALL-E, Stable Diffusion
+   - Include proven modifiers: "professional photography", "cinematic lighting", "commercial quality"
+   - Balance detail with prompt length for optimal AI processing
 
-4. **ENGAGEMENT OPTIMIZATION**:
-   - Hook within first 3 seconds with compelling visuals and dialogue
+4. **COPY-PASTE READY**:
+   - Each shot description is a complete, standalone prompt
+   - No additional editing needed for AI image generation
+   - Optimized for direct use in any AI image generator
+
+5. **VISUAL CONSISTENCY**:
+   - Maintain character appearance across shots
+   - Consistent lighting and color schemes
+   - Smooth visual progression between scenes
+   - Professional production standards throughout
+
+6. **ENGAGEMENT & NARRATIVE**:
+   - Hook within first 3 seconds with compelling visual and dialogue
    - Visual variety every 2-3 seconds to maintain attention
    - Strong emotional arc with visual storytelling
-   - Clear narrative progression
-   - Professional production value
+   - Clear narrative progression suitable for {request.video_type} content
 
-5. **COMPREHENSIVE SCENE DESCRIPTIONS**:
-   Each shot should be so detailed that an AI video generator can create professional-quality footage without additional input. Include everything needed for high-quality AI video generation.
+EXAMPLE OUTPUT FORMAT:
+**[0:00-0:03] AI IMAGE PROMPT:**
+"Professional woman in her 30s with confident warm smile, navy blue tailored blazer over white silk blouse, natural wavy auburn hair, subtle professional makeup, leaning slightly forward with hands clasped, medium shot from slightly below eye level, shallow depth of field, soft natural window light from left side with warm golden hour glow, modern glass office background with city skyline, professional commercial photography style, shot with Canon EOS R5 85mm lens, ultra-high quality 8K resolution, cinematic framing, warm color palette, confident and approachable mood, contemporary professional aesthetic"
 
-Create a script that will produce a visually stunning, professionally crafted video when used with AI video generation tools."""
+**[DIALOGUE:]** (Confident, engaging tone) "What if I told you the secret to success isn't what you think?"
+
+Create a script where every visual description is a perfect, ready-to-use AI image prompt that will generate stunning visuals when copied directly into any AI image generator."""
         )
 
         generated_script = await chat.send_message(script_message)
