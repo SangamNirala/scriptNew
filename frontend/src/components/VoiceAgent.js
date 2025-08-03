@@ -27,7 +27,7 @@ const VoiceAgent = ({ onClose }) => {
   // Legal Q&A settings
   const [sessionId, setSessionId] = useState(null);
   const [selectedJurisdiction, setSelectedJurisdiction] = useState('US');
-  const [selectedDomain, setSelectedDomain] = useState('');
+  const [selectedDomain, setSelectedDomain] = useState('all_domains');
   
   // Refs
   const recognitionRef = useRef(null);
