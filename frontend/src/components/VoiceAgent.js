@@ -122,16 +122,40 @@ const VoiceAgent = ({ onClose }) => {
     conversationEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [conversation]);
 
+  // Categorize speech recognition errors
+  const categorizeError = (error) => {
+    const fatalErrors = ['not-allowed', 'audio-capture', 'service-not-allowed'];
+    const retryableErrors = ['aborted', 'network', 'no-speech'];
+    
+    if (fatalErrors.includes(error)) {
+      return 'fatal';
+    } else if (retryableErrors.includes(error)) {
+      return 'retryable';
+    }
+    return 'unknown';
+  };
+
+  // Calculate retry delay with exponential backoff
+  const getRetryDelay = (attempt) => {
+    return Math.min(1000 * Math.pow(2, attempt), 10000); // Max 10 seconds
+  };
+
   const initializeVoiceCapabilities = () => {
+    if (isInitializing) return;
+    
+    setIsInitializing(true);
+    
     try {
       // Check for Web Speech API support
       if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
         setVoiceError('Speech recognition not supported in this browser. Please use Chrome or Edge.');
+        setIsInitializing(false);
         return;
       }
 
       if (!('speechSynthesis' in window)) {
         setVoiceError('Speech synthesis not supported in this browser.');
+        setIsInitializing(false);
         return;
       }
 
@@ -142,12 +166,15 @@ const VoiceAgent = ({ onClose }) => {
       recognitionRef.current.continuous = true;
       recognitionRef.current.interimResults = true;
       recognitionRef.current.lang = 'en-US';
+      recognitionRef.current.maxAlternatives = 1;
 
-      // Set up recognition event handlers
+      // Set up recognition event handlers with improved logic
       recognitionRef.current.onstart = () => {
         console.log('Speech recognition started');
+        setRecognitionState('active');
         setIsListening(true);
         setVoiceError(null);
+        setRetryCount(0); // Reset retry count on successful start
       };
 
       recognitionRef.current.onresult = (event) => {
@@ -173,46 +200,90 @@ const VoiceAgent = ({ onClose }) => {
 
       recognitionRef.current.onerror = (event) => {
         console.error('Speech recognition error:', event.error);
-        setVoiceError(`Speech recognition error: ${event.error}`);
+        const errorCategory = categorizeError(event.error);
+        
+        setRecognitionState('error');
         setIsListening(false);
         
-        // Don't auto-restart on certain errors
-        if (event.error === 'aborted' || event.error === 'audio-capture' || event.error === 'not-allowed') {
+        if (errorCategory === 'fatal') {
+          setVoiceError(`Speech recognition error: ${event.error}. Please check microphone permissions.`);
           setAutoListen(false);
+          setRetryCount(0);
+        } else if (errorCategory === 'retryable' && retryCount < 5) {
+          setVoiceError(`Temporary issue: ${event.error}. Retrying...`);
+          handleRetryableError();
+        } else {
+          setVoiceError(`Speech recognition error: ${event.error}`);
+          setAutoListen(false);
+          setRetryCount(0);
         }
       };
 
       recognitionRef.current.onend = () => {
         console.log('Speech recognition ended');
+        setRecognitionState('idle');
         setIsListening(false);
-        // Auto-restart listening if enabled, not processing, and not speaking
-        if (autoListen && !isProcessing && !isSpeaking && !voiceError) {
-          setTimeout(() => {
-            startListening();
-          }, 500);
+        
+        // Only auto-restart if conditions are met and we're not in an error state
+        if (autoListen && 
+            !isProcessing && 
+            !isSpeaking && 
+            !voiceError && 
+            recognitionState !== 'error' &&
+            retryCount < 3) {
+          
+          // Clear any existing restart timeout
+          if (restartTimeoutRef.current) {
+            clearTimeout(restartTimeoutRef.current);
+          }
+          
+          // Delayed restart to prevent rapid cycling
+          restartTimeoutRef.current = setTimeout(() => {
+            if (autoListen && !isProcessing && !isSpeaking && !voiceError) {
+              startListening();
+            }
+          }, 1500); // Increased delay to prevent loops
         }
       };
 
       // Initialize Speech Synthesis
       synthRef.current = window.speechSynthesis;
       
-      // Load voices immediately
+      // Load voices with multiple attempts
       loadVoices();
-
-      // Load voices when they become available (some browsers need this)
+      
       if (synthRef.current.onvoiceschanged !== undefined) {
         synthRef.current.onvoiceschanged = loadVoices;
       }
-
-      // Also try loading voices after a short delay (Chrome workaround)
+      
       setTimeout(() => {
         loadVoices();
-      }, 100);
+        setIsInitializing(false);
+      }, 200);
 
     } catch (error) {
       console.error('Error initializing voice capabilities:', error);
       setVoiceError('Failed to initialize voice capabilities.');
+      setIsInitializing(false);
     }
+  };
+
+  // Handle retryable errors with exponential backoff
+  const handleRetryableError = () => {
+    const delay = getRetryDelay(retryCount);
+    
+    setRetryCount(prev => prev + 1);
+    
+    if (retryTimeoutRef.current) {
+      clearTimeout(retryTimeoutRef.current);
+    }
+    
+    retryTimeoutRef.current = setTimeout(() => {
+      if (autoListen && !isProcessing && !isSpeaking && retryCount < 5) {
+        console.log(`Retrying speech recognition (attempt ${retryCount + 1})`);
+        startListening();
+      }
+    }, delay);
   };
 
   const loadVoices = () => {
