@@ -256,10 +256,25 @@ const VoiceAgent = ({ onClose }) => {
           }
         }
 
+        // Update interim transcript for live feedback
+        setInterimTranscript(interimTranscript);
         setTranscript(finalTranscript + interimTranscript);
+        
+        // Detect if user is actively speaking
+        const hasInterimText = interimTranscript.trim().length > 0;
+        setIsUserSpeaking(hasInterimText || finalTranscript.trim().length > 0);
+        
+        // If user starts speaking while AI is speaking, interrupt
+        if (hasInterimText && isSpeaking) {
+          console.log('User interruption detected, stopping AI speech');
+          setIsInterrupted(true);
+          stopSpeaking();
+        }
 
         // Process final transcript
         if (finalTranscript.trim()) {
+          setInterimTranscript(''); // Clear interim when we have final
+          setIsUserSpeaking(false);
           processVoiceInput(finalTranscript.trim());
         }
       };
