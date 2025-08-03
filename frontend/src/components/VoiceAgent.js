@@ -314,19 +314,40 @@ const VoiceAgent = ({ onClose }) => {
         setRecognitionState('error');
         setIsListening(false);
         
-        if (errorCategory === 'fatal') {
-          setVoiceError(`❌ Speech recognition error: ${event.error}. Please check microphone permissions and reload the page.`);
+        // Enhanced error messages based on specific error types
+        let errorMessage = '';
+        
+        if (event.error === 'not-allowed') {
+          errorMessage = '❌ Microphone access denied. Please click the microphone icon in your browser address bar and allow microphone access, then try again.';
+          setAutoListen(false);
+        } else if (event.error === 'audio-capture') {
+          errorMessage = '❌ No microphone detected or microphone is not working. Please connect a working microphone and try again.';
+          setAutoListen(false);
+        } else if (event.error === 'service-not-allowed') {
+          errorMessage = '❌ Speech recognition service is not allowed. Please check your browser settings and try again.';
+          setAutoListen(false);
+        } else if (event.error === 'network') {
+          errorMessage = '⚠️ Network error occurred. Please check your internet connection and try again.';
+        } else if (event.error === 'no-speech') {
+          errorMessage = '⚠️ No speech detected. Please speak clearly into your microphone.';
+        } else if (event.error === 'aborted') {
+          errorMessage = '⚠️ Speech recognition was interrupted. Click "Start Listening" to try again.';
+        } else if (errorCategory === 'fatal') {
+          errorMessage = `❌ Speech recognition error: ${event.error}. Please check your microphone permissions and reload the page.`;
           setAutoListen(false);
           setRetryCount(0);
         } else if (errorCategory === 'retryable' && retryCount < 5) {
-          setVoiceError(`⚠️ Temporary issue: ${event.error}. Retrying automatically...`);
+          errorMessage = `⚠️ Temporary issue: ${event.error}. Retrying automatically...`;
           console.log('🎤 🔄 Attempting automatic retry for retryable error');
           handleRetryableError();
+          return; // Don't set error message yet
         } else {
-          setVoiceError(`❌ Speech recognition error: ${event.error}. Try clicking 'Retry' or reload the page.`);
+          errorMessage = `❌ Speech recognition error: ${event.error}. Try clicking the "Retry" button or reload the page.`;
           setAutoListen(false);
           setRetryCount(0);
         }
+        
+        setVoiceError(errorMessage);
       };
 
       recognitionRef.current.onend = () => {
