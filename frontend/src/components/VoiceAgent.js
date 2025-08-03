@@ -349,29 +349,54 @@ const VoiceAgent = ({ onClose }) => {
   };
 
   const startListening = () => {
-    if (!recognitionRef.current || isListening || isProcessing || isSpeaking) {
+    // Prevent multiple simultaneous start attempts
+    if (recognitionState === 'starting' || recognitionState === 'active' || isProcessing || isSpeaking || isInitializing) {
+      console.log('Start listening blocked:', { recognitionState, isProcessing, isSpeaking, isInitializing });
+      return;
+    }
+
+    if (!recognitionRef.current) {
+      console.warn('Recognition not initialized');
+      setVoiceError('Voice recognition not properly initialized. Please reload the page.');
       return;
     }
 
     try {
+      setRecognitionState('starting');
       setTranscript('');
       setVoiceError(null);
-      recognitionRef.current.start();
+      
+      // Small delay to ensure previous operations completed
+      setTimeout(() => {
+        if (recognitionRef.current && recognitionState === 'starting') {
+          recognitionRef.current.start();
+        }
+      }, 100);
+      
     } catch (error) {
       console.error('Error starting speech recognition:', error);
       setVoiceError('Could not start voice recognition. Please try again.');
+      setRecognitionState('error');
       setIsListening(false);
     }
   };
 
   const stopListening = () => {
-    if (recognitionRef.current && isListening) {
+    if (recognitionRef.current && (recognitionState === 'active' || recognitionState === 'starting')) {
       try {
+        setRecognitionState('stopping');
         recognitionRef.current.stop();
       } catch (error) {
         console.error('Error stopping speech recognition:', error);
+        setRecognitionState('idle');
         setIsListening(false);
       }
+    }
+    
+    // Clear any pending restart
+    if (restartTimeoutRef.current) {
+      clearTimeout(restartTimeoutRef.current);
+      restartTimeoutRef.current = null;
     }
   };
 
