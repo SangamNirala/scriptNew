@@ -710,9 +710,16 @@ const VoiceAgent = ({ onClose }) => {
 
   const resetConversation = () => {
     setConversation([]);
+    setConversationContext([]);
+    setSuggestedFollowUps([]);
+    setConversationSummary('');
     setTranscript('');
+    setInterimTranscript('');
+    setIsUserSpeaking(false);
+    setIsInterrupted(false);
     setRetryCount(0);
     setVoiceError(null);
+    setLastUserIntent('');
     stopSpeaking();
     stopListening();
     
@@ -724,6 +731,10 @@ const VoiceAgent = ({ onClose }) => {
     if (restartTimeoutRef.current) {
       clearTimeout(restartTimeoutRef.current);
       restartTimeoutRef.current = null;
+    }
+    if (interruptTimeoutRef.current) {
+      clearTimeout(interruptTimeoutRef.current);
+      interruptTimeoutRef.current = null;
     }
     
     // Reinitialize session
