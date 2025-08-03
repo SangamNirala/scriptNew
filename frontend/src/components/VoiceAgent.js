@@ -73,28 +73,48 @@ const VoiceAgent = ({ onClose }) => {
     "What are the legal requirements for terminating an employee?"
   ];
 
+  // Enhanced cleanup utility
+  const cleanupReferences = () => {
+    // Clear all timeouts
+    if (retryTimeoutRef.current) {
+      clearTimeout(retryTimeoutRef.current);
+      retryTimeoutRef.current = null;
+    }
+    if (restartTimeoutRef.current) {
+      clearTimeout(restartTimeoutRef.current);
+      restartTimeoutRef.current = null;
+    }
+    
+    // Stop recognition safely
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.abort();
+        recognitionRef.current = null;
+      } catch (error) {
+        console.warn('Error during recognition cleanup:', error);
+      }
+    }
+    
+    // Stop speech synthesis
+    if (synthRef.current) {
+      try {
+        synthRef.current.cancel();
+      } catch (error) {
+        console.warn('Error during speech synthesis cleanup:', error);
+      }
+    }
+    
+    setRecognitionState('idle');
+    setIsListening(false);
+    setIsSpeaking(false);
+  };
+
   // Initialize voice capabilities and session
   useEffect(() => {
     initializeVoiceCapabilities();
     initializeSession();
     
-    return () => {
-      // Clean up when component unmounts
-      if (recognitionRef.current && isListening) {
-        try {
-          recognitionRef.current.abort();
-        } catch (error) {
-          console.warn('Error aborting recognition:', error);
-        }
-      }
-      if (synthRef.current) {
-        try {
-          synthRef.current.cancel();
-        } catch (error) {
-          console.warn('Error canceling speech:', error);
-        }
-      }
-    };
+    return cleanupReferences;
   }, []);
 
   // Scroll to bottom when conversation updates
