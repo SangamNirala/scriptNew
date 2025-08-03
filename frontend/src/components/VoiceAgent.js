@@ -1117,22 +1117,65 @@ const VoiceAgent = ({ onClose }) => {
             <div ref={conversationEndRef} />
           </div>
 
-          {/* Sample Questions */}
-          <div className="flex-shrink-0 p-3 bg-white border rounded-lg">
-            <h4 className="font-semibold text-sm mb-2">Try asking:</h4>
-            <div className="flex flex-wrap gap-2">
-              {sampleQuestions.slice(0, 3).map((question, index) => (
-                <Button
-                  key={index}
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleSampleQuestion(question)}
-                  disabled={isProcessing}
-                  className="text-xs"
-                >
-                  {question}
-                </Button>
-              ))}
+          {/* Enhanced Sample Questions and Follow-ups */}
+          <div className="flex-shrink-0 space-y-3">
+            {/* Follow-up Suggestions */}
+            {suggestedFollowUps.length > 0 && (
+              <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                <h4 className="font-semibold text-sm text-green-800 mb-2">💡 Follow-up Questions:</h4>
+                <div className="flex flex-wrap gap-2">
+                  {suggestedFollowUps.map((question, index) => (
+                    <Button
+                      key={index}
+                      variant="outline"
+                      size="sm"
+                      onClick={() => processVoiceInput(question)}
+                      disabled={isProcessing || isSpeaking}
+                      className="text-xs bg-white hover:bg-green-50 border-green-300 text-green-700"
+                    >
+                      {question}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Sample Questions */}
+            <div className="p-3 bg-white border rounded-lg">
+              <h4 className="font-semibold text-sm mb-2">
+                {conversation.length > 1 ? '🎯 More Questions:' : '🎯 Try asking:'}
+              </h4>
+              <div className="flex flex-wrap gap-2">
+                {sampleQuestions.slice(0, 3).map((question, index) => (
+                  <Button
+                    key={index}
+                    variant="outline"
+                    size="sm"
+                    onClick={() => processVoiceInput(question)}
+                    disabled={isProcessing || isSpeaking}
+                    className="text-xs"
+                  >
+                    {question}
+                  </Button>
+                ))}
+              </div>
+              
+              {/* Interrupt Button */}
+              {isSpeaking && (
+                <div className="mt-2 pt-2 border-t border-gray-200">
+                  <Button
+                    onClick={() => {
+                      setIsInterrupted(true);
+                      stopSpeaking();
+                    }}
+                    variant="outline"
+                    size="sm"
+                    className="text-xs bg-orange-50 hover:bg-orange-100 border-orange-300 text-orange-700"
+                  >
+                    ✋ Interrupt & Ask New Question
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </CardContent>
