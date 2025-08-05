@@ -162,7 +162,13 @@ except ImportError as e:
     logger.warning(f"Professional integrations system not available: {e}")
     PROFESSIONAL_INTEGRATIONS_AVAILABLE = False
 
-# Import Compliance and Attorney Supervision Systems
+# Import Automatic Review Service
+try:
+    from automatic_review_service import start_automatic_review_service, stop_automatic_review_service
+    AUTOMATIC_REVIEW_SERVICE_AVAILABLE = True
+except ImportError as e:
+    logger.warning(f"Automatic review service not available: {e}")
+    AUTOMATIC_REVIEW_SERVICE_AVAILABLE = False
 try:
     from compliance_engine import get_compliance_engine
     from attorney_supervision import get_attorney_supervision_system, AttorneyRole, ReviewStatus, DocumentType
