@@ -330,7 +330,6 @@ function App() {
     loadJurisdictions();
     loadContracts();
     checkComplianceStatus();
-    checkExistingClientConsent();
     
     // Save client ID to localStorage for persistence
     localStorage.setItem('client_id', clientId);
