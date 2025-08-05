@@ -257,7 +257,7 @@ class Day1ComplianceSystemTester:
                 "last_name": "Tester",
                 "bar_number": f"PROF{random.randint(100000, 999999)}",
                 "jurisdiction": "Texas",
-                "role": "attorney",
+                "role": "reviewing_attorney",
                 "specializations": ["family_law"],
                 "years_experience": 3,
                 "password": "ProfileTest123!"
