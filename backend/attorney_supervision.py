@@ -234,8 +234,29 @@ class AttorneySupervisionSystem:
         """Approve a document after review"""
         try:
             review = await self._get_review_by_id(review_id)
-            if not review or review.assigned_attorney_id != attorney_id:
+            if not review:
+                logger.error(f"Review {review_id} not found")
                 return False
+            
+            # Verify attorney exists and is active
+            attorney = await self.get_attorney_by_id(attorney_id)
+            if not attorney or not attorney.is_active:
+                logger.error(f"Attorney {attorney_id} not found or inactive")
+                return False
+            
+            # If no assigned attorney yet, assign this attorney
+            if not review.assigned_attorney_id:
+                review.assigned_attorney_id = attorney_id
+                await self.db.document_reviews.update_one(
+                    {"id": review_id},
+                    {"$set": {"assigned_attorney_id": attorney_id, "assignment_date": datetime.utcnow()}}
+                )
+            # Otherwise, check if this attorney is authorized to approve
+            elif review.assigned_attorney_id != attorney_id:
+                # Allow supervising attorneys and senior partners to approve any document
+                if attorney.role not in [AttorneyRole.SUPERVISING_ATTORNEY, AttorneyRole.SENIOR_PARTNER]:
+                    logger.error(f"Attorney {attorney_id} not authorized to approve review {review_id}")
+                    return False
             
             # Update review record
             update_data = {
