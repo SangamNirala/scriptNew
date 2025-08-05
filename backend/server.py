@@ -13003,6 +13003,108 @@ async def get_review_status(review_id: str):
         logger.error(f"Error getting review status: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@api_router.post("/attorney/review/cleanup-stuck")
+async def cleanup_stuck_reviews():
+    """Cleanup script to fix stuck legacy reviews by assigning attorneys"""
+    if not COMPLIANCE_SYSTEM_AVAILABLE:
+        raise HTTPException(status_code=503, detail="Compliance system not available")
+    
+    try:
+        attorney_system = get_attorney_supervision_system(client, os.environ['DB_NAME'])
+        
+        # Find all stuck reviews (pending status with no assigned attorney)
+        db = get_db()
+        stuck_reviews_cursor = db.document_reviews.find({
+            "status": ReviewStatus.PENDING.value,
+            "assigned_attorney_id": None
+        })
+        
+        stuck_reviews = await stuck_reviews_cursor.to_list(length=100)
+        
+        if not stuck_reviews:
+            return {
+                "success": True,
+                "message": "No stuck reviews found",
+                "fixed_count": 0,
+                "details": []
+            }
+        
+        logger.info(f"Found {len(stuck_reviews)} stuck reviews to fix")
+        
+        fixed_reviews = []
+        failed_reviews = []
+        
+        for review_doc in stuck_reviews:
+            try:
+                # Convert document type string back to enum for assignment
+                document_type = DocumentType(review_doc['document_type'])
+                priority = review_doc.get('priority', 'normal')
+                
+                # Try to auto-assign attorney
+                assigned_attorney = await attorney_system._auto_assign_attorney(document_type, priority)
+                
+                if assigned_attorney:
+                    # Update review with attorney assignment
+                    update_result = await db.document_reviews.update_one(
+                        {"id": review_doc['id']},
+                        {
+                            "$set": {
+                                "assigned_attorney_id": assigned_attorney.id,
+                                "assignment_date": datetime.utcnow(),
+                                "status": ReviewStatus.IN_REVIEW.value,
+                                "progress_percentage": 25  # Initial progress when assigned
+                            }
+                        }
+                    )
+                    
+                    if update_result.modified_count > 0:
+                        # Update attorney's workload
+                        await db.attorneys.update_one(
+                            {"id": assigned_attorney.id},
+                            {"$inc": {"current_review_count": 1}}
+                        )
+                        
+                        fixed_reviews.append({
+                            "review_id": review_doc['id'],
+                            "assigned_attorney": f"{assigned_attorney.first_name} {assigned_attorney.last_name}",
+                            "attorney_id": assigned_attorney.id,
+                            "document_type": document_type.value,
+                            "priority": priority,
+                            "new_status": "in_review"
+                        })
+                        
+                        logger.info(f"Fixed stuck review {review_doc['id']} - assigned to {assigned_attorney.first_name} {assigned_attorney.last_name}")
+                    else:
+                        failed_reviews.append({
+                            "review_id": review_doc['id'],
+                            "reason": "Failed to update database"
+                        })
+                else:
+                    failed_reviews.append({
+                        "review_id": review_doc['id'],
+                        "reason": "No available attorney found"
+                    })
+                    
+            except Exception as review_error:
+                logger.error(f"Failed to fix review {review_doc['id']}: {review_error}")
+                failed_reviews.append({
+                    "review_id": review_doc['id'],
+                    "reason": str(review_error)
+                })
+        
+        return {
+            "success": True,
+            "message": f"Cleanup completed: {len(fixed_reviews)} reviews fixed, {len(failed_reviews)} failed",
+            "fixed_count": len(fixed_reviews),
+            "failed_count": len(failed_reviews),
+            "fixed_reviews": fixed_reviews,
+            "failed_reviews": failed_reviews if failed_reviews else []
+        }
+        
+    except Exception as e:
+        logger.error(f"Error during stuck reviews cleanup: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 # Client Consent Endpoints
 @api_router.post("/client/consent")
 async def record_consent(request: ConsentRequest):
