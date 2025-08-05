@@ -623,16 +623,51 @@ class AttorneySupervisionSystem:
             return (datetime.utcnow() + timedelta(hours=2)).isoformat()
 
     def _calculate_progress_percentage(self, review: Dict[str, Any]) -> float:
-        """Calculate review progress percentage"""
+        """Calculate review progress percentage with time-based progression"""
         status = review.get("status", "pending")
-        status_progress = {
-            "pending": 0,
-            "in_review": 50,
-            "needs_revision": 75,
-            "approved": 100,
-            "rejected": 100
-        }
-        return status_progress.get(status, 0)
+        
+        # Fixed percentages for completed states
+        if status == "approved" or status == "rejected":
+            return 100
+        elif status == "needs_revision":
+            return 75
+        elif status == "pending":
+            return 0
+        elif status == "in_review":
+            # Dynamic progress calculation for in_review status
+            try:
+                created_at = review.get("created_at")
+                assignment_date = review.get("assignment_date")
+                estimated_hours = review.get("estimated_review_time", 2.0)
+                
+                # Use assignment_date if available, otherwise created_at
+                start_time = assignment_date or created_at
+                if isinstance(start_time, str):
+                    start_time = datetime.fromisoformat(start_time)
+                
+                # Calculate elapsed time since review started
+                elapsed_time = datetime.utcnow() - start_time
+                elapsed_hours = elapsed_time.total_seconds() / 3600
+                
+                # Calculate progress: starts at 25% when assigned, progresses to 95% over estimated time
+                base_progress = 25  # Starting progress when assigned
+                max_progress = 95   # Maximum progress before completion
+                
+                if elapsed_hours <= 0:
+                    return base_progress
+                elif elapsed_hours >= estimated_hours:
+                    return max_progress
+                else:
+                    # Linear progression from base_progress to max_progress
+                    progress_range = max_progress - base_progress
+                    time_factor = elapsed_hours / estimated_hours
+                    return base_progress + (progress_range * time_factor)
+                    
+            except Exception as e:
+                logger.warning(f"Error calculating dynamic progress: {e}")
+                return 50  # Fallback to 50%
+        
+        return 0
 
 # Global attorney supervision system instance
 attorney_supervision_system = None
