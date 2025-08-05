@@ -23,6 +23,7 @@ export default function ConsentManager({
   const [error, setError] = useState('');
   const [hasExistingConsent, setHasExistingConsent] = useState(false);
   const [showDetails, setShowDetails] = useState({});
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
     if (clientId) {
@@ -37,16 +38,27 @@ export default function ConsentManager({
       setHasExistingConsent(hasConsent);
       
       // Only automatically trigger consent given if we have confirmed consent
-      // Add a small delay to prevent race conditions
-      if (hasConsent) {
+      // Add initialization flag to prevent immediate closing on mount
+      if (hasConsent && isInitialized) {
         setTimeout(() => {
           onConsentGiven?.(true);
         }, 100);
+      }
+      
+      if (!isInitialized) {
+        setIsInitialized(true);
+        // If we have existing consent, trigger callback after a short delay to allow UI to stabilize
+        if (hasConsent) {
+          setTimeout(() => {
+            onConsentGiven?.(true);
+          }, 300);
+        }
       }
     } catch (error) {
       console.error('Failed to check existing consent:', error);
       // On error, don't assume anything about consent status
       setHasExistingConsent(false);
+      setIsInitialized(true);
     }
   };
 
