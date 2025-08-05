@@ -652,6 +652,7 @@ class DocumentReviewRequest(BaseModel):
 
 class ReviewActionRequest(BaseModel):
     review_id: str
+    attorney_id: str  # Attorney performing the action
     action: str  # "approve", "reject", "request_revision"
     comments: str = ""
     approved_content: Optional[str] = None
