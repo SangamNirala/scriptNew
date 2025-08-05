@@ -188,18 +188,15 @@ class ComplianceAPITester:
         results = {}
         
         for test_case in test_cases:
-            test_data = {
-                "content": test_case["content"],
-                "content_type": test_case["content_type"],
-                "sanitization_level": test_case["sanitization_level"]
-            }
+            # Use query parameters instead of JSON body
+            endpoint = f"content/sanitize?content={test_case['content']}&content_type={test_case['content_type']}&sanitization_level={test_case['sanitization_level']}"
             
             success, response = self.run_test(
                 f"Content Sanitization - {test_case['name']}", 
                 "POST", 
-                "content/sanitize", 
+                endpoint, 
                 200,
-                test_data
+                {}  # Empty body since we're using query parameters
             )
             
             if success:
