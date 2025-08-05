@@ -5,6 +5,7 @@ This module implements automatic content sanitization to convert direct legal ad
 into compliant informational content with appropriate disclaimers.
 """
 
+import os
 import re
 import asyncio
 from typing import Dict, List, Optional, Tuple, Any
