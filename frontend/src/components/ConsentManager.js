@@ -36,24 +36,7 @@ export default function ConsentManager({
       const response = await axios.get(`${API}/api/client/consent/check/${clientId}`);
       const hasConsent = response.data.has_consent;
       setHasExistingConsent(hasConsent);
-      
-      // Only automatically trigger consent given if we have confirmed consent
-      // Add initialization flag to prevent immediate closing on mount
-      if (hasConsent && isInitialized) {
-        setTimeout(() => {
-          onConsentGiven?.(true);
-        }, 100);
-      }
-      
-      if (!isInitialized) {
-        setIsInitialized(true);
-        // If we have existing consent, trigger callback after a short delay to allow UI to stabilize
-        if (hasConsent) {
-          setTimeout(() => {
-            onConsentGiven?.(true);
-          }, 300);
-        }
-      }
+      setIsInitialized(true);
     } catch (error) {
       console.error('Failed to check existing consent:', error);
       // On error, don't assume anything about consent status
