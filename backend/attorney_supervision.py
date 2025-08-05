@@ -437,32 +437,52 @@ class AttorneySupervisionSystem:
             attorneys = await self.db.attorneys.find(query).to_list(50)
             
             if not attorneys:
+                logger.warning(f"No available attorneys found for document type {document_type}")
                 return None
             
             # Score attorneys based on availability and specialization
             scored_attorneys = []
             for attorney_doc in attorneys:
-                attorney = AttorneyProfile(**attorney_doc)
-                score = 100 - attorney.current_review_count  # Base score
-                
-                # Bonus for relevant specializations
-                for spec in specializations:
-                    if spec in attorney.specializations:
-                        score += 20
-                
-                # Bonus for lower average review time
-                if attorney.average_review_time > 0:
-                    score += max(0, 50 - attorney.average_review_time)
-                
-                # Priority case bonus for senior attorneys
-                if priority in ["high", "urgent"] and attorney.role in [AttorneyRole.SENIOR_PARTNER, AttorneyRole.SUPERVISING_ATTORNEY]:
-                    score += 30
-                
-                scored_attorneys.append((attorney, score))
+                try:
+                    # Handle potential enum field conversion issues
+                    if isinstance(attorney_doc.get('role'), str):
+                        try:
+                            attorney_doc['role'] = AttorneyRole(attorney_doc['role'])
+                        except ValueError:
+                            # If role conversion fails, default to reviewing attorney
+                            attorney_doc['role'] = AttorneyRole.REVIEWING_ATTORNEY
+                    
+                    attorney = AttorneyProfile(**attorney_doc)
+                    score = 100 - attorney.current_review_count  # Base score
+                    
+                    # Bonus for relevant specializations
+                    for spec in specializations:
+                        if spec in attorney.specializations:
+                            score += 20
+                    
+                    # Bonus for lower average review time
+                    if attorney.average_review_time > 0:
+                        score += max(0, 50 - attorney.average_review_time)
+                    
+                    # Priority case bonus for senior attorneys
+                    if priority in ["high", "urgent"] and attorney.role in [AttorneyRole.SENIOR_PARTNER, AttorneyRole.SUPERVISING_ATTORNEY]:
+                        score += 30
+                    
+                    scored_attorneys.append((attorney, score))
+                    
+                except Exception as attorney_error:
+                    logger.error(f"Failed to process attorney {attorney_doc.get('id', 'unknown')}: {attorney_error}")
+                    continue
+            
+            if not scored_attorneys:
+                logger.warning(f"No attorneys could be processed for assignment")
+                return None
             
             # Return highest scoring available attorney
             scored_attorneys.sort(key=lambda x: x[1], reverse=True)
-            return scored_attorneys[0][0] if scored_attorneys else None
+            selected_attorney = scored_attorneys[0][0]
+            logger.info(f"Auto-assigned attorney {selected_attorney.id} ({selected_attorney.first_name} {selected_attorney.last_name}) for {document_type}")
+            return selected_attorney
             
         except Exception as e:
             logger.error(f"Failed to auto-assign attorney: {e}")
