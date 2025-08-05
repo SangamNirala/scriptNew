@@ -425,11 +425,16 @@ function App() {
   const generateContract = async () => {
     setIsGenerating(true);
     try {
-      // Always show consent manager in compliance mode - user wants it to show every time
-      if (complianceMode) {
+      // Always show consent manager in compliance mode - unless consent was just provided
+      if (complianceMode && !consentJustProvided) {
         setShowConsentManager(true);
         // Don't set isGenerating to false - keep it true so we can resume after consent
         return;
+      }
+      
+      // Reset the consent flag after checking it
+      if (consentJustProvided) {
+        setConsentJustProvided(false);
       }
 
       // Use compliant contract generation endpoint
