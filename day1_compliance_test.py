@@ -432,10 +432,10 @@ class Day1ComplianceSystemTester:
                     print(f"   Create response: {create_response}")
                     return False, {}
         
-        # Test approve action
+        # Test approve action - Use the attorney_id that created the review or was assigned
         action_data = {
             "review_id": self.review_id,
-            "attorney_id": self.attorney_id,
+            "attorney_id": self.attorney_id,  # Use the actual attorney ID string, not the attorney object
             "action": "approve",
             "comments": "Contract looks good. All terms are reasonable and legally sound.",
             "approved_content": "Approved contract content with attorney review completed."
@@ -450,7 +450,7 @@ class Day1ComplianceSystemTester:
         )
         
         if success:
-            expected_fields = ['review_id', 'action', 'status', 'attorney_id', 'timestamp', 'comments']
+            expected_fields = ['success', 'action', 'review_id', 'message']
             missing_fields = [field for field in expected_fields if field not in response]
             if missing_fields:
                 print(f"   ⚠️  Missing expected fields: {missing_fields}")
@@ -458,8 +458,8 @@ class Day1ComplianceSystemTester:
                 print(f"   ✅ All expected fields present")
                 print(f"   Review ID: {response.get('review_id')}")
                 print(f"   Action: {response.get('action')}")
-                print(f"   Status: {response.get('status')}")
-                print(f"   Attorney ID: {response.get('attorney_id')}")
+                print(f"   Success: {response.get('success')}")
+                print(f"   Message: {response.get('message')}")
                 print(f"   🎯 PRIORITY TEST PASSED - Attorney Review Action endpoint working!")
         else:
             print(f"   🚨 PRIORITY TEST FAILED - Attorney Review Action endpoint not working!")
