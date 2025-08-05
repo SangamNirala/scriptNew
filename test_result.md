@@ -2015,23 +2015,12 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Day 1 Legal Compliance - Compliance Status Endpoint"
-    - "Day 1 Legal Compliance - Compliance Check Endpoint"
-    - "Day 1 Legal Compliance - Content Sanitization Endpoint"
-    - "Day 1 Legal Compliance - Attorney Login Endpoint"
-    - "Day 1 Legal Compliance - Attorney Creation Endpoint"
-    - "Day 1 Legal Compliance - Attorney Profile Endpoint"
-    - "Day 1 Legal Compliance - Document Review Submission Endpoint"
-    - "Day 1 Legal Compliance - Attorney Review Queue Endpoint"
+    - "Legal Q&A System with AI Integration"
     - "Day 1 Legal Compliance - Attorney Review Action Endpoint"
-    - "Day 1 Legal Compliance - Review Status Endpoint"
-    - "Day 1 Legal Compliance - Client Consent Recording Endpoint"  
-    - "Day 1 Legal Compliance - Client Consent Check Endpoint"
     - "Day 1 Legal Compliance - Compliant Contract Generation Endpoint"
-  stuck_tasks:
-    []
+  stuck_tasks: []
   test_all: false
-  test_priority: "critical_first"  # Test Day 1 compliance endpoints first
+  test_priority: "critical_first"
 
   - task: "Legal Updates Monitoring System - Monitor Status Endpoint"
     implemented: true
