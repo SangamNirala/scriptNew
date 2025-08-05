@@ -473,6 +473,18 @@ function App() {
     }
   };
 
+  const checkExistingClientConsent = async () => {
+    try {
+      const response = await axios.get(`${API}/client/consent/check/${clientId}`);
+      const hasConsent = response.data.has_consent;
+      setClientConsent(hasConsent);
+    } catch (error) {
+      console.error('Failed to check existing client consent:', error);
+      // Default to no consent if check fails
+      setClientConsent(false);
+    }
+  };
+
   const handleConsentGiven = (consentGiven) => {
     setClientConsent(consentGiven);
     setShowConsentManager(false);
