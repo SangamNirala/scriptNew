@@ -608,6 +608,63 @@ class LegalResearchResult(BaseModel):
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 
+# Compliance and Attorney Supervision Models
+class ComplianceCheckRequest(BaseModel):
+    content: str
+    content_type: str = "general"  # "contract", "legal_advice", "template", "general"
+    user_id: Optional[str] = None
+
+class ComplianceCheckResponse(BaseModel):
+    is_compliant: bool
+    violations: List[Dict[str, Any]]
+    confidence_score: float
+    sanitized_content: Optional[str] = None
+    requires_attorney_review: bool
+    blocked_phrases: List[str]
+    recommendations: List[str]
+
+class AttorneyLoginRequest(BaseModel):
+    email: str
+    password: str
+
+class AttorneyLoginResponse(BaseModel):
+    token: str
+    attorney: Dict[str, Any]
+    expires_at: str
+
+class AttorneyCreateRequest(BaseModel):
+    email: str
+    first_name: str
+    last_name: str
+    bar_number: str
+    jurisdiction: str
+    role: str  # Will be converted to AttorneyRole enum
+    specializations: List[str] = Field(default_factory=list)
+    years_experience: int
+    password: str
+
+class DocumentReviewRequest(BaseModel):
+    document_content: str
+    document_type: str
+    client_id: Optional[str] = None
+    original_request: Dict[str, Any] = Field(default_factory=dict)
+    priority: str = "normal"
+
+class ReviewActionRequest(BaseModel):
+    review_id: str
+    action: str  # "approve", "reject", "request_revision"
+    comments: str = ""
+    approved_content: Optional[str] = None
+    rejection_reason: Optional[str] = None
+    revision_requests: List[Dict[str, Any]] = Field(default_factory=list)
+
+class ConsentRequest(BaseModel):
+    client_id: str
+    consent_text: str
+    ip_address: Optional[str] = None
+    user_agent: Optional[str] = None
+
+
 # Multi-Agent System
 class LegalMateAgents:
     
