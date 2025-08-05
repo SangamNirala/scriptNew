@@ -484,7 +484,7 @@ function App() {
 
   const handleConsentDeclined = () => {
     setShowConsentManager(false);
-    setIsGenerating(false);
+    setIsGenerating(false); // Make sure to reset the generating state when consent is declined
     alert('Consent is required to use legal services. Please provide consent to continue.');
   };
 
