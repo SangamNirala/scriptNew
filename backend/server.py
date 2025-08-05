@@ -59,6 +59,10 @@ mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
+def get_db():
+    """Get database connection"""
+    return db
+
 # AI API Setup
 genai.configure(api_key=os.environ['GEMINI_API_KEY'])
 groq_client = Groq(api_key=os.environ['GROQ_API_KEY'])
