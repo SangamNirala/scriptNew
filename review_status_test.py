@@ -115,7 +115,7 @@ class ReviewStatusTester:
         # Step 3: Submit document for review
         review_data = {
             "document_content": "This is a test contract for review status endpoint testing. The contract contains standard terms and conditions for a service agreement between two parties.",
-            "document_type": "service_agreement",
+            "document_type": "contract",
             "client_id": f"client_{int(time.time())}_{uuid.uuid4().hex[:8]}",
             "original_request": {
                 "contract_type": "service_agreement",
