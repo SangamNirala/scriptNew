@@ -31,7 +31,7 @@ export default function ReviewStatus({ reviewId, onStatusChange, autoRefresh = t
   const fetchReviewStatus = async () => {
     try {
       setError('');
-      const response = await axios.get(`${API}/attorney/review/status/${reviewId}`);
+      const response = await axios.get(`${API}/api/attorney/review/status/${reviewId}`);
       const newStatus = response.data;
       
       // Check if status changed
