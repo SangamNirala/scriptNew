@@ -329,7 +329,11 @@ function App() {
     loadContractTypes();
     loadJurisdictions();
     loadContracts();
-  }, []);
+    checkComplianceStatus();
+    
+    // Save client ID to localStorage for persistence
+    localStorage.setItem('client_id', clientId);
+  }, [clientId]);
 
   // Simplified ResizeObserver console error suppression
   useEffect(() => {
