@@ -279,8 +279,10 @@ class Day1ComplianceSystemTester:
             
             if create_success and 'attorney_id' in create_response:
                 self.attorney_id = create_response['attorney_id']
+                print(f"   Created attorney ID for profile test: {self.attorney_id}")
             else:
                 print("   ❌ Failed to create attorney for profile test")
+                print(f"   Create response: {create_response}")
                 return False, {}
         
         success, response = self.run_test(
