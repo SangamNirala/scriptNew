@@ -158,6 +158,17 @@ except ImportError as e:
     logger.warning(f"Professional integrations system not available: {e}")
     PROFESSIONAL_INTEGRATIONS_AVAILABLE = False
 
+# Import Compliance and Attorney Supervision Systems
+try:
+    from compliance_engine import get_compliance_engine
+    from attorney_supervision import get_attorney_supervision_system, AttorneyRole, ReviewStatus, DocumentType
+    from content_sanitizer import get_content_sanitizer, ContentType, SanitizationLevel
+    from attorney_auth import get_attorney_auth
+    COMPLIANCE_SYSTEM_AVAILABLE = True
+except ImportError as e:
+    logger.warning(f"Compliance system not available: {e}")
+    COMPLIANCE_SYSTEM_AVAILABLE = False
+
 
 # Define Models
 class ContractRequest(BaseModel):
