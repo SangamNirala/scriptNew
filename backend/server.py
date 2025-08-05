@@ -12857,8 +12857,19 @@ async def create_attorney(request: AttorneyCreateRequest):
     try:
         attorney_auth = get_attorney_auth(client, os.environ['DB_NAME'])
         
-        # Convert role string to enum
-        role_enum = AttorneyRole(request.role.lower())
+        # Convert role string to enum with proper mapping
+        role_mapping = {
+            "supervising_attorney": AttorneyRole.SUPERVISING_ATTORNEY,
+            "reviewing_attorney": AttorneyRole.REVIEWING_ATTORNEY,
+            "senior_partner": AttorneyRole.SENIOR_PARTNER,
+            "compliance_officer": AttorneyRole.COMPLIANCE_OFFICER
+        }
+        
+        role_key = request.role.lower()
+        if role_key not in role_mapping:
+            raise HTTPException(status_code=400, detail=f"Invalid role: {request.role}. Valid roles: {list(role_mapping.keys())}")
+        
+        role_enum = role_mapping[role_key]
         
         attorney_data = {
             **request.dict(),
