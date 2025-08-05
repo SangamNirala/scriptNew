@@ -322,19 +322,35 @@ class AttorneySupervisionSystem:
                 logger.error(f"Attorney {attorney_id} not found or inactive")
                 return False
             
-            # If no assigned attorney yet, assign this attorney
-            if not review.assigned_attorney_id:
+            # If no assigned attorney yet OR status is still pending, allow assignment to this attorney
+            if not review.assigned_attorney_id or review.status == ReviewStatus.PENDING:
+                if not review.assigned_attorney_id:
+                    # First time assignment
+                    logger.info(f"Assigning attorney {attorney_id} to unassigned review {review_id}")
+                else:
+                    # Reassigning from pending state
+                    logger.info(f"Reassigning attorney {attorney_id} to pending review {review_id} (was previously assigned to {review.assigned_attorney_id})")
+                
                 review.assigned_attorney_id = attorney_id
                 await self.db.document_reviews.update_one(
                     {"id": review_id},
                     {"$set": {"assigned_attorney_id": attorney_id, "assignment_date": datetime.utcnow()}}
                 )
+                
+                # Update attorney's current review count if this is a new assignment
+                await self.db.attorneys.update_one(
+                    {"id": attorney_id},
+                    {"$inc": {"current_review_count": 1}}
+                )
+                
             # Otherwise, check if this attorney is authorized to reject
             elif review.assigned_attorney_id != attorney_id:
                 # Allow supervising attorneys and senior partners to reject any document
                 if attorney.role not in [AttorneyRole.SUPERVISING_ATTORNEY, AttorneyRole.SENIOR_PARTNER]:
-                    logger.error(f"Attorney {attorney_id} not authorized to reject review {review_id}")
+                    logger.error(f"Attorney {attorney_id} not authorized to reject review {review_id} (assigned to {review.assigned_attorney_id})")
                     return False
+                else:
+                    logger.info(f"Senior attorney {attorney_id} ({attorney.role.value}) overriding assignment for review {review_id}")
             
             # Update review record
             update_data = {
