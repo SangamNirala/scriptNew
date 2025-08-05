@@ -493,6 +493,7 @@ function App() {
   const handleConsentGiven = (consentGiven) => {
     setClientConsent(consentGiven);
     setShowConsentManager(false);
+    setConsentJustProvided(true); // Flag that consent was just provided
     
     if (consentGiven && isGenerating) {
       // Resume contract generation after consent
