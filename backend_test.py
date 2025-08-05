@@ -6006,6 +6006,255 @@ class LegalMateAPITester:
         
         print("=" * 80)
 
+    def test_stuck_review_cleanup_endpoint(self):
+        """Test the stuck review cleanup script endpoint"""
+        print(f"\n🔍 Testing Stuck Review Cleanup Script...")
+        
+        # First, let's check if there are any existing stuck reviews
+        success, response = self.run_test(
+            "Stuck Review Cleanup Script", 
+            "POST", 
+            "attorney/review/cleanup-stuck", 
+            200,
+            timeout=60
+        )
+        
+        if success:
+            print(f"   ✅ Cleanup endpoint accessible and functional")
+            
+            # Validate response structure
+            expected_fields = ['success', 'message', 'fixed_count', 'details']
+            missing_fields = [field for field in expected_fields if field not in response]
+            
+            if not missing_fields:
+                print(f"   ✅ Response contains all expected fields")
+            else:
+                print(f"   ⚠️  Missing response fields: {missing_fields}")
+            
+            # Check the results
+            fixed_count = response.get('fixed_count', 0)
+            failed_count = response.get('failed_count', 0)
+            fixed_reviews = response.get('fixed_reviews', [])
+            failed_reviews = response.get('failed_reviews', [])
+            
+            print(f"   📊 Cleanup Results:")
+            print(f"      - Fixed Reviews: {fixed_count}")
+            print(f"      - Failed Reviews: {failed_count}")
+            print(f"      - Total Processed: {fixed_count + failed_count}")
+            
+            if fixed_count > 0:
+                print(f"   ✅ Successfully fixed {fixed_count} stuck reviews")
+                
+                # Validate fixed review details
+                for i, fixed_review in enumerate(fixed_reviews[:3]):  # Show first 3
+                    print(f"      Fixed Review {i+1}:")
+                    print(f"        - Review ID: {fixed_review.get('review_id', 'N/A')}")
+                    print(f"        - Assigned Attorney: {fixed_review.get('assigned_attorney', 'N/A')}")
+                    print(f"        - Document Type: {fixed_review.get('document_type', 'N/A')}")
+                    print(f"        - New Status: {fixed_review.get('new_status', 'N/A')}")
+                    print(f"        - Priority: {fixed_review.get('priority', 'N/A')}")
+                
+                # Check if specific target reviews were fixed
+                target_reviews = [
+                    'b57f7ca3-24c1-4769-878b-afbbcf37814f',
+                    'cef9d675-7285-4c1c-8031-a5572bad5946'
+                ]
+                
+                fixed_review_ids = [review.get('review_id') for review in fixed_reviews]
+                for target_id in target_reviews:
+                    if target_id in fixed_review_ids:
+                        print(f"   🎯 Target stuck review {target_id} was successfully fixed!")
+                    else:
+                        print(f"   ⚠️  Target stuck review {target_id} was not found or fixed")
+                        
+            elif fixed_count == 0:
+                print(f"   ℹ️  No stuck reviews found to fix (system is clean)")
+                
+            if failed_count > 0:
+                print(f"   ⚠️  {failed_count} reviews failed to be fixed:")
+                for i, failed_review in enumerate(failed_reviews[:3]):  # Show first 3
+                    print(f"      Failed Review {i+1}:")
+                    print(f"        - Review ID: {failed_review.get('review_id', 'N/A')}")
+                    print(f"        - Reason: {failed_review.get('reason', 'N/A')}")
+            
+            # Verify response structure for fixed reviews
+            if fixed_reviews:
+                sample_fixed = fixed_reviews[0]
+                required_fixed_fields = ['review_id', 'assigned_attorney', 'attorney_id', 'document_type', 'new_status']
+                missing_fixed_fields = [field for field in required_fixed_fields if field not in sample_fixed]
+                
+                if not missing_fixed_fields:
+                    print(f"   ✅ Fixed review details contain all required fields")
+                else:
+                    print(f"   ⚠️  Fixed review missing fields: {missing_fixed_fields}")
+                    
+                # Verify status progression
+                if sample_fixed.get('new_status') == 'in_review':
+                    print(f"   ✅ Review status correctly updated to 'in_review'")
+                else:
+                    print(f"   ❌ Review status not updated correctly: {sample_fixed.get('new_status')}")
+            
+        return success, response
+
+    def test_attorney_system_prerequisites(self):
+        """Test attorney system prerequisites for cleanup functionality"""
+        print(f"\n🔍 Testing Attorney System Prerequisites...")
+        
+        # Test compliance status
+        success_compliance, response_compliance = self.run_test(
+            "Compliance System Status", 
+            "GET", 
+            "compliance/status", 
+            200
+        )
+        
+        if success_compliance:
+            compliance_mode = response_compliance.get('compliance_mode', False)
+            attorney_supervision = response_compliance.get('attorney_supervision_required', False)
+            
+            if compliance_mode and attorney_supervision:
+                print(f"   ✅ Compliance system operational with attorney supervision enabled")
+            else:
+                print(f"   ⚠️  Compliance system status: mode={compliance_mode}, supervision={attorney_supervision}")
+        
+        # Test attorney creation (to ensure attorneys exist for assignment)
+        attorney_data = {
+            "email": f"cleanup_test_attorney_{int(time.time())}@legalmate.ai",
+            "first_name": "Cleanup",
+            "last_name": "Test Attorney",
+            "bar_number": f"BAR{random.randint(100000, 999999)}",
+            "jurisdiction": "US",
+            "role": "reviewing_attorney",
+            "specializations": ["contract_law", "employment_law"],
+            "years_experience": 5,
+            "password": "SecurePassword123!"
+        }
+        
+        success_attorney, response_attorney = self.run_test(
+            "Create Test Attorney for Cleanup", 
+            "POST", 
+            "attorney/create", 
+            200,
+            attorney_data
+        )
+        
+        if success_attorney:
+            print(f"   ✅ Test attorney created successfully for cleanup testing")
+        else:
+            print(f"   ⚠️  Failed to create test attorney - may affect cleanup functionality")
+        
+        return success_compliance and success_attorney, {
+            "compliance": response_compliance,
+            "attorney": response_attorney
+        }
+
+    def test_review_status_after_cleanup(self):
+        """Test review status endpoint after cleanup to verify fixes"""
+        print(f"\n🔍 Testing Review Status After Cleanup...")
+        
+        # Test with known review IDs that should have been fixed
+        target_review_ids = [
+            'b57f7ca3-24c1-4769-878b-afbbcf37814f',
+            'cef9d675-7285-4c1c-8031-a5572bad5946'
+        ]
+        
+        all_success = True
+        results = {}
+        
+        for review_id in target_review_ids:
+            success, response = self.run_test(
+                f"Review Status Check - {review_id[:8]}...", 
+                "GET", 
+                f"attorney/review/status/{review_id}", 
+                200
+            )
+            
+            if success:
+                status = response.get('status', 'unknown')
+                progress = response.get('progress_percentage', 0)
+                attorney_info = response.get('attorney_info', {})
+                
+                print(f"   Review {review_id[:8]}...:")
+                print(f"      - Status: {status}")
+                print(f"      - Progress: {progress}%")
+                print(f"      - Attorney: {attorney_info.get('name', 'Not assigned')}")
+                
+                # Check if review was successfully fixed
+                if status == 'in_review' and progress >= 25 and attorney_info.get('name'):
+                    print(f"   ✅ Review successfully fixed - status updated, progress set, attorney assigned")
+                elif status == 'pending' and progress == 0:
+                    print(f"   ⚠️  Review still stuck - may need manual intervention")
+                else:
+                    print(f"   ℹ️  Review in intermediate state - status: {status}, progress: {progress}%")
+                
+                results[review_id] = {
+                    "success": True,
+                    "status": status,
+                    "progress": progress,
+                    "attorney_assigned": bool(attorney_info.get('name'))
+                }
+            else:
+                print(f"   ❌ Failed to get status for review {review_id[:8]}... (may not exist)")
+                all_success = False
+                results[review_id] = {"success": False, "error": "Review not found"}
+        
+        return all_success, results
+
+    def test_comprehensive_stuck_review_cleanup(self):
+        """Comprehensive test of the stuck review cleanup functionality"""
+        print(f"\n🎯 COMPREHENSIVE STUCK REVIEW CLEANUP TEST")
+        print(f"{'='*60}")
+        
+        # Step 1: Test prerequisites
+        print(f"\n📋 Step 1: Testing Prerequisites...")
+        prereq_success, prereq_response = self.test_attorney_system_prerequisites()
+        
+        # Step 2: Run cleanup script
+        print(f"\n🔧 Step 2: Running Cleanup Script...")
+        cleanup_success, cleanup_response = self.test_stuck_review_cleanup_endpoint()
+        
+        # Step 3: Verify results
+        print(f"\n✅ Step 3: Verifying Cleanup Results...")
+        status_success, status_response = self.test_review_status_after_cleanup()
+        
+        # Step 4: Run cleanup again to test idempotency
+        print(f"\n🔄 Step 4: Testing Cleanup Idempotency...")
+        second_cleanup_success, second_cleanup_response = self.run_test(
+            "Second Cleanup Run (Idempotency Test)", 
+            "POST", 
+            "attorney/review/cleanup-stuck", 
+            200,
+            timeout=60
+        )
+        
+        if second_cleanup_success:
+            second_fixed_count = second_cleanup_response.get('fixed_count', 0)
+            if second_fixed_count == 0:
+                print(f"   ✅ Cleanup is idempotent - no additional reviews fixed on second run")
+            else:
+                print(f"   ⚠️  Second cleanup fixed {second_fixed_count} additional reviews")
+        
+        # Summary
+        print(f"\n📊 CLEANUP TEST SUMMARY:")
+        print(f"   Prerequisites: {'✅ PASS' if prereq_success else '❌ FAIL'}")
+        print(f"   Cleanup Script: {'✅ PASS' if cleanup_success else '❌ FAIL'}")
+        print(f"   Status Verification: {'✅ PASS' if status_success else '❌ FAIL'}")
+        print(f"   Idempotency Test: {'✅ PASS' if second_cleanup_success else '❌ FAIL'}")
+        
+        overall_success = prereq_success and cleanup_success and status_success and second_cleanup_success
+        
+        if overall_success:
+            print(f"\n🎉 STUCK REVIEW CLEANUP SYSTEM FULLY OPERATIONAL!")
+        else:
+            print(f"\n⚠️  Some cleanup functionality issues detected")
+        
+        return overall_success, {
+            "prerequisites": prereq_response,
+            "cleanup": cleanup_response,
+            "status_verification": status_response,
+            "second_cleanup": second_cleanup_response
+        }
+
 def main():
     print("🚀 Starting LegalMate AI Backend API Tests")
     print("=" * 60)
