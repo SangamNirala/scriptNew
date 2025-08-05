@@ -5818,6 +5818,194 @@ class LegalMateAPITester:
         print("🏭 PRODUCTION OPTIMIZATION & PERFORMANCE ANALYTICS SYSTEM TESTS COMPLETE")
         print("=" * 80)
 
+    def test_consent_recording(self):
+        """Test client consent recording endpoint - CRITICAL PRIORITY"""
+        # Use the specific client_id from the user's error log
+        client_id = "client_1754408009219_5lrruvw2q"
+        
+        consent_data = {
+            "client_id": client_id,
+            "consent_text": "I hereby consent to attorney supervision for legal document creation and acknowledge that this service provides legal information, not legal advice. I understand that attorney review may be required for certain documents.",
+            "ip_address": "192.168.1.100",
+            "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+        }
+        
+        success, response = self.run_test(
+            "Client Consent Recording (CRITICAL)", 
+            "POST", 
+            "client/consent", 
+            200, 
+            consent_data,
+            timeout=30
+        )
+        
+        if success and response:
+            print(f"   ✅ Consent recorded successfully")
+            if 'consent_id' in response:
+                print(f"   Consent ID: {response.get('consent_id')}")
+            if 'success' in response:
+                print(f"   Success status: {response.get('success')}")
+            if 'message' in response:
+                print(f"   Message: {response.get('message')}")
+                
+            # Store client_id for consent check test
+            self.test_client_id = client_id
+        else:
+            print(f"   ❌ Consent recording failed")
+            
+        return success, response
+
+    def test_consent_check(self):
+        """Test client consent check endpoint - CRITICAL PRIORITY"""
+        # Use the client_id from consent recording test, or fallback to the specific one from user's error
+        client_id = getattr(self, 'test_client_id', "client_1754408009219_5lrruvw2q")
+        
+        success, response = self.run_test(
+            "Client Consent Check (CRITICAL)", 
+            "GET", 
+            f"client/consent/check/{client_id}", 
+            200,
+            timeout=30
+        )
+        
+        if success and response:
+            print(f"   ✅ Consent check successful")
+            if 'has_consent' in response:
+                has_consent = response.get('has_consent')
+                print(f"   Has consent: {has_consent}")
+                if has_consent:
+                    print(f"   ✅ Client consent status correctly returned as True")
+                else:
+                    print(f"   ⚠️  Client consent status returned as False - may need consent recording first")
+            if 'client_id' in response:
+                print(f"   Client ID: {response.get('client_id')}")
+            if 'consent_date' in response:
+                print(f"   Consent date: {response.get('consent_date')}")
+        else:
+            print(f"   ❌ Consent check failed")
+            
+        return success, response
+
+    def test_consent_check_invalid_client(self):
+        """Test consent check with invalid client ID for error handling"""
+        invalid_client_id = "invalid_client_id_12345"
+        
+        success, response = self.run_test(
+            "Consent Check - Invalid Client ID", 
+            "GET", 
+            f"client/consent/check/{invalid_client_id}", 
+            200,  # Should return 200 with has_consent: false
+            timeout=30
+        )
+        
+        if success and response:
+            print(f"   ✅ Invalid client ID handled correctly")
+            if 'has_consent' in response:
+                has_consent = response.get('has_consent')
+                if not has_consent:
+                    print(f"   ✅ Correctly returned has_consent: false for invalid client")
+                else:
+                    print(f"   ⚠️  Unexpected: has_consent: true for invalid client")
+        else:
+            print(f"   ❌ Invalid client ID test failed")
+            
+        return success, response
+
+    def test_consent_workflow_complete(self):
+        """Test complete consent workflow: record consent then check status"""
+        # Generate a unique client ID for this test
+        import time
+        test_client_id = f"test_client_{int(time.time())}_workflow"
+        
+        print(f"\n🔍 Testing Complete Consent Workflow...")
+        print(f"   Test Client ID: {test_client_id}")
+        
+        # Step 1: Record consent
+        consent_data = {
+            "client_id": test_client_id,
+            "consent_text": "Complete workflow test: I consent to attorney supervision for legal document creation and understand this provides legal information, not legal advice.",
+            "ip_address": "10.0.0.1",
+            "user_agent": "Test-Agent/1.0 (Workflow Testing)"
+        }
+        
+        record_success, record_response = self.run_test(
+            "Workflow Step 1 - Record Consent", 
+            "POST", 
+            "client/consent", 
+            200, 
+            consent_data,
+            timeout=30
+        )
+        
+        if not record_success:
+            print(f"   ❌ Workflow failed at Step 1 - consent recording")
+            return False, {"step1": record_response}
+        
+        print(f"   ✅ Step 1 completed - consent recorded")
+        
+        # Step 2: Check consent status (should now return has_consent: true)
+        check_success, check_response = self.run_test(
+            "Workflow Step 2 - Check Consent Status", 
+            "GET", 
+            f"client/consent/check/{test_client_id}", 
+            200,
+            timeout=30
+        )
+        
+        if not check_success:
+            print(f"   ❌ Workflow failed at Step 2 - consent check")
+            return False, {"step1": record_response, "step2": check_response}
+        
+        # Verify the workflow worked correctly
+        has_consent = check_response.get('has_consent', False)
+        if has_consent:
+            print(f"   ✅ Step 2 completed - consent status correctly shows True")
+            print(f"   🎉 COMPLETE WORKFLOW SUCCESS: Record → Check → Verified")
+            workflow_success = True
+        else:
+            print(f"   ❌ Step 2 issue - consent status shows False after recording")
+            print(f"   ⚠️  Workflow partially failed - consent recorded but not reflected in check")
+            workflow_success = False
+        
+        return workflow_success, {
+            "step1": record_response, 
+            "step2": check_response,
+            "workflow_success": workflow_success,
+            "test_client_id": test_client_id
+        }
+
+    def run_consent_tests_only(self):
+        """Run only the critical consent functionality tests"""
+        print("🎯 CRITICAL CONSENT FUNCTIONALITY TESTING")
+        print(f"   Base URL: {self.base_url}")
+        print(f"   API URL: {self.api_url}")
+        print("   Testing the consent endpoints that were just fixed...")
+        print("=" * 80)
+        
+        # Critical consent tests in order
+        self.test_consent_recording()
+        self.test_consent_check()
+        self.test_consent_check_invalid_client()
+        self.test_consent_workflow_complete()
+        
+        # Results
+        print("\n" + "=" * 80)
+        print("🎯 CONSENT TESTING COMPLETE")
+        print(f"   Tests Run: {self.tests_run}")
+        print(f"   Tests Passed: {self.tests_passed}")
+        print(f"   Success Rate: {(self.tests_passed/self.tests_run)*100:.1f}%")
+        
+        if self.tests_passed == self.tests_run:
+            print("   🎉 ALL CONSENT TESTS PASSED!")
+            print("   ✅ Consent functionality is working correctly")
+            print("   ✅ Frontend API routing fix was successful")
+        else:
+            failed = self.tests_run - self.tests_passed
+            print(f"   ⚠️  {failed} consent test(s) failed")
+            print("   ❌ Consent functionality may still have issues")
+        
+        print("=" * 80)
+
 def main():
     print("🚀 Starting LegalMate AI Backend API Tests")
     print("=" * 60)
