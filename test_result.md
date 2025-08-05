@@ -306,6 +306,12 @@ frontend:
         -working: true
         -agent: "main"
         -comment: "🔧 FINAL FIX - ALWAYS SHOW CONSENT FORM: User wants consent form to always appear regardless of previous consent status. COMPLETE FIX: 1) Removed the 'Consent Status: Active' early return logic from ConsentManager that was showing the status message instead of the form, 2) Modified generateContract() in App.js to always show consent manager in compliance mode (removed !clientConsent check), 3) Removed checkExistingClientConsent() call from useEffect since form should always show. NOW: Consent form will appear and stay open EVERY SINGLE TIME user clicks generate document, regardless of previous consent history."
+        -working: "partially"
+        -agent: "user"
+        -comment: "🚨 NEW ISSUE: Consent form shows every time as requested, but after providing consent, contract is not being generated. Form shows every time but gets stuck after consent is given."
+        -working: true
+        -agent: "main"
+        -comment: "🔧 CONTRACT GENERATION FLOW FIX: Fixed infinite loop issue where consent form kept showing after consent was provided. ROOT CAUSE: generateContract() was calling consent manager every time, creating loop. SOLUTION: 1) Added consentJustProvided state flag to track when consent was just given, 2) Modified generateContract() to skip consent check when consent was just provided and proceed with contract generation, 3) Reset flag at start of each new generation request. FLOW NOW: Click Generate → Show Consent → Provide Consent → Generate Contract → Next time: Show Consent again (fresh cycle)."
     implemented: true
     working: true
     file: "/app/frontend/src/App.js"
