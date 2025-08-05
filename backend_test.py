@@ -6015,6 +6015,16 @@ def main():
     # Run all tests
     test_results = []
     
+    # CRITICAL PRIORITY: Consent Tests First (as requested in review)
+    print("\n" + "🎯"*60)
+    print("🎯 CRITICAL PRIORITY: CONSENT FUNCTIONALITY TESTS - JUST FIXED")
+    print("🎯"*60)
+    test_results.append(tester.test_consent_recording())
+    test_results.append(tester.test_consent_check())
+    test_results.append(tester.test_consent_check_invalid_client())
+    test_results.append(tester.test_consent_workflow_complete())
+    print("🎯"*60)
+    
     # Basic endpoint tests
     test_results.append(tester.test_root_endpoint())
     test_results.append(tester.test_contract_types())
