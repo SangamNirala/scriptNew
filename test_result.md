@@ -451,6 +451,18 @@ frontend:
         -comment: "✅ ACCESSIBILITY IMPLEMENTED: Found 27 elements with proper accessibility attributes (aria-label, role, aria-describedby). Keyboard navigation working with Tab key functionality. No critical accessibility barriers detected. Application follows basic accessibility standards for legal compliance applications."
 
 backend:
+  - task: "Day 1 Legal Compliance - Stuck Review Cleanup Script"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: true
+    status_history:
+        -working: "NA"
+        -agent: "main"
+        -comment: "🔧 IMPLEMENTED: Added POST /api/attorney/review/cleanup-stuck endpoint to fix legacy reviews stuck at 0% progress with no attorney assignment. FUNCTIONALITY: 1) Finds all stuck reviews (pending status + no assigned attorney), 2) Uses existing _auto_assign_attorney logic to assign attorneys based on specialization/workload, 3) Updates review status from 'pending' to 'in_review' with 25% initial progress, 4) Updates attorney workload counts, 5) Returns detailed results with fixed/failed counts. TARGET: Fix user's specific stuck review b57f7ca3-24c1-4769-878b-afbbcf37814f and prevent system-wide stuck review issues."
+
   # Day 1 Legal Compliance System Endpoints - CRITICAL PRIORITY
   - task: "Day 1 Legal Compliance - Compliance Status Endpoint"
     implemented: true
