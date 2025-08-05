@@ -2020,7 +2020,6 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Legal Q&A System with AI Integration"
     - "Day 1 Legal Compliance - Attorney Review Action Endpoint"
     - "Day 1 Legal Compliance - Compliant Contract Generation Endpoint"
   stuck_tasks: []
