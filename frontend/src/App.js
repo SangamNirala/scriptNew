@@ -321,6 +321,7 @@ function App() {
   const [complianceMode, setComplianceMode] = useState(true);
   const [showConsentManager, setShowConsentManager] = useState(false);
   const [clientConsent, setClientConsent] = useState(false);
+  const [consentJustProvided, setConsentJustProvided] = useState(false);
   const [clientId] = useState(() => localStorage.getItem('client_id') || `client_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
   const [currentReviewId, setCurrentReviewId] = useState(null);
   const [complianceStatus, setComplianceStatus] = useState(null);
