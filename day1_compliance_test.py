@@ -402,7 +402,7 @@ class Day1ComplianceSystemTester:
                     "last_name": "Tester",
                     "bar_number": f"ACT{random.randint(100000, 999999)}",
                     "jurisdiction": "California",
-                    "role": "senior_attorney",
+                    "role": "supervising_attorney",
                     "specializations": ["contract_law"],
                     "years_experience": 10,
                     "password": "ActionTest123!"
