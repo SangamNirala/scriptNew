@@ -49,12 +49,11 @@
 ##
 ## test_plan:
 ##   current_focus:
-##     - "Task name 1"
-##     - "Task name 2"
-##   stuck_tasks:
-##     - "Task name with persistent issues"
+##     - "Day 1 Legal Compliance - Client Consent Recording Endpoint"
+##     - "Day 1 Legal Compliance - Client Consent Check Endpoint"
+##   stuck_tasks: []
 ##   test_all: false
-##   test_priority: "high_first"  # or "sequential" or "stuck_first"
+##   test_priority: "consent_endpoints_first"
 ##
 ## agent_communication:
 ##     -agent: "main"
