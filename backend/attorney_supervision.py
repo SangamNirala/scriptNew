@@ -12,8 +12,8 @@ from datetime import datetime, timedelta
 from enum import Enum
 import logging
 import smtplib
-from email.mime.text import MimeText
-from email.mime.multipart import MimeMultipart
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 # Database imports
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -494,12 +494,12 @@ class AttorneySupervisionSystem:
     async def _send_email(self, to_email: str, subject: str, body: str):
         """Send email notification"""
         try:
-            msg = MimeMultipart()
+            msg = MIMEMultipart()
             msg['From'] = self.smtp_from_email
             msg['To'] = to_email
             msg['Subject'] = subject
             
-            msg.attach(MimeText(body, 'plain'))
+            msg.attach(MIMEText(body, 'plain'))
             
             server = smtplib.SMTP(self.smtp_server, self.smtp_port)
             server.starttls()
