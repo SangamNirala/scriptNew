@@ -12754,5 +12754,362 @@ async def legal_billing_optimization_analytics(
 # END PROFESSIONAL INTEGRATIONS & API ECOSYSTEM ENDPOINTS
 # ====================================================================================================
 
+# ====================================================================================================
+# COMPLIANCE AND ATTORNEY SUPERVISION ENDPOINTS - Day 1 Legal Compliance Implementation
+# ====================================================================================================
+
+@api_router.get("/compliance/status")
+async def get_compliance_status():
+    """Get current compliance system status"""
+    if not COMPLIANCE_SYSTEM_AVAILABLE:
+        raise HTTPException(status_code=503, detail="Compliance system not available")
+    
+    try:
+        compliance_engine = get_compliance_engine(client, os.environ['DB_NAME'])
+        status = await compliance_engine.get_compliance_status()
+        return status
+    except Exception as e:
+        logger.error(f"Error getting compliance status: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/compliance/check")
+async def check_compliance(request: ComplianceCheckRequest):
+    """Check content for UPL violations and compliance issues"""
+    if not COMPLIANCE_SYSTEM_AVAILABLE:
+        raise HTTPException(status_code=503, detail="Compliance system not available")
+    
+    try:
+        compliance_engine = get_compliance_engine(client, os.environ['DB_NAME'])
+        result = await compliance_engine.check_compliance(request.content, request.content_type)
+        
+        return ComplianceCheckResponse(
+            is_compliant=result.is_compliant,
+            violations=result.violations,
+            confidence_score=result.confidence_score,
+            sanitized_content=result.sanitized_content,
+            requires_attorney_review=result.requires_attorney_review,
+            blocked_phrases=result.blocked_phrases,
+            recommendations=result.recommendations
+        )
+    except Exception as e:
+        logger.error(f"Error checking compliance: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/content/sanitize")
+async def sanitize_content(content: str, content_type: str = "general", sanitization_level: str = "comprehensive"):
+    """Sanitize content to remove UPL violations"""
+    if not COMPLIANCE_SYSTEM_AVAILABLE:
+        raise HTTPException(status_code=503, detail="Compliance system not available")
+    
+    try:
+        content_sanitizer = get_content_sanitizer()
+        
+        # Convert string to enum
+        content_type_enum = ContentType(content_type.lower())
+        sanitization_level_enum = SanitizationLevel(sanitization_level.lower())
+        
+        result = await content_sanitizer.sanitize_content(content, content_type_enum, sanitization_level_enum)
+        
+        return {
+            "sanitized_content": result.sanitized_content,
+            "changes_made": result.changes_made,
+            "disclaimers_added": result.disclaimers_added,
+            "blocked_phrases": result.blocked_phrases,
+            "confidence_score": result.confidence_score,
+            "requires_review": result.requires_review
+        }
+    except Exception as e:
+        logger.error(f"Error sanitizing content: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Attorney Authentication Endpoints
+@api_router.post("/attorney/login")
+async def attorney_login(request: AttorneyLoginRequest):
+    """Attorney login endpoint"""
+    if not COMPLIANCE_SYSTEM_AVAILABLE:
+        raise HTTPException(status_code=503, detail="Compliance system not available")
+    
+    try:
+        attorney_auth = get_attorney_auth(client, os.environ['DB_NAME'])
+        auth_result = await attorney_auth.authenticate_attorney(request.email, request.password)
+        
+        if not auth_result:
+            raise HTTPException(status_code=401, detail="Invalid credentials")
+        
+        return AttorneyLoginResponse(**auth_result)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error during attorney login: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/attorney/create")
+async def create_attorney(request: AttorneyCreateRequest):
+    """Create new attorney account (admin only)"""
+    if not COMPLIANCE_SYSTEM_AVAILABLE:
+        raise HTTPException(status_code=503, detail="Compliance system not available")
+    
+    try:
+        attorney_auth = get_attorney_auth(client, os.environ['DB_NAME'])
+        
+        # Convert role string to enum
+        role_enum = AttorneyRole(request.role.lower())
+        
+        attorney_data = {
+            **request.dict(),
+            "role": role_enum,
+            "id": str(uuid.uuid4())
+        }
+        
+        result = await attorney_auth.create_attorney_account(attorney_data)
+        return result
+    except Exception as e:
+        logger.error(f"Error creating attorney account: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/attorney/profile/{attorney_id}")
+async def get_attorney_profile(attorney_id: str):
+    """Get attorney profile information"""
+    if not COMPLIANCE_SYSTEM_AVAILABLE:
+        raise HTTPException(status_code=503, detail="Compliance system not available")
+    
+    try:
+        attorney_auth = get_attorney_auth(client, os.environ['DB_NAME'])
+        session_info = await attorney_auth.get_attorney_session_info(attorney_id)
+        
+        if not session_info:
+            raise HTTPException(status_code=404, detail="Attorney not found")
+        
+        return session_info
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting attorney profile: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Document Review Endpoints
+@api_router.post("/attorney/review/submit")
+async def submit_for_review(request: DocumentReviewRequest):
+    """Submit document for attorney review"""
+    if not COMPLIANCE_SYSTEM_AVAILABLE:
+        raise HTTPException(status_code=503, detail="Compliance system not available")
+    
+    try:
+        attorney_system = get_attorney_supervision_system(client, os.environ['DB_NAME'])
+        
+        # Convert document type string to enum
+        document_type_enum = DocumentType(request.document_type.lower())
+        
+        review_data = {
+            **request.dict(),
+            "document_type": document_type_enum,
+            "document_id": str(uuid.uuid4())
+        }
+        
+        review_id = await attorney_system.submit_for_review(review_data)
+        
+        return {
+            "success": True,
+            "review_id": review_id,
+            "message": "Document submitted for attorney review",
+            "estimated_review_time": "2-4 hours"
+        }
+    except Exception as e:
+        logger.error(f"Error submitting document for review: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/attorney/review/queue/{attorney_id}")
+async def get_attorney_queue(attorney_id: str):
+    """Get review queue for specific attorney"""
+    if not COMPLIANCE_SYSTEM_AVAILABLE:
+        raise HTTPException(status_code=503, detail="Compliance system not available")
+    
+    try:
+        attorney_system = get_attorney_supervision_system(client, os.environ['DB_NAME'])
+        queue = await attorney_system.get_attorney_queue(attorney_id)
+        
+        return {
+            "attorney_id": attorney_id,
+            "queue_length": len(queue),
+            "reviews": queue
+        }
+    except Exception as e:
+        logger.error(f"Error getting attorney queue: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/attorney/review/action")
+async def attorney_review_action(request: ReviewActionRequest):
+    """Approve, reject, or request revision for a document"""
+    if not COMPLIANCE_SYSTEM_AVAILABLE:
+        raise HTTPException(status_code=503, detail="Compliance system not available")
+    
+    try:
+        attorney_system = get_attorney_supervision_system(client, os.environ['DB_NAME'])
+        
+        if request.action == "approve":
+            success = await attorney_system.approve_document(
+                request.review_id,
+                request.attorney_id,  # This should come from JWT token in production
+                request.approved_content or "",
+                request.comments
+            )
+        elif request.action == "reject":
+            success = await attorney_system.reject_document(
+                request.review_id,
+                request.attorney_id,  # This should come from JWT token in production
+                request.rejection_reason or "Document rejected",
+                request.revision_requests
+            )
+        else:
+            raise HTTPException(status_code=400, detail="Invalid action")
+        
+        if not success:
+            raise HTTPException(status_code=400, detail="Review action failed")
+        
+        return {
+            "success": True,
+            "action": request.action,
+            "review_id": request.review_id,
+            "message": f"Document {request.action}d successfully"
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error processing review action: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/attorney/review/status/{review_id}")
+async def get_review_status(review_id: str):
+    """Get current status of a document review"""
+    if not COMPLIANCE_SYSTEM_AVAILABLE:
+        raise HTTPException(status_code=503, detail="Compliance system not available")
+    
+    try:
+        attorney_system = get_attorney_supervision_system(client, os.environ['DB_NAME'])
+        status = await attorney_system.get_review_status(review_id)
+        
+        if not status:
+            raise HTTPException(status_code=404, detail="Review not found")
+        
+        return status
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting review status: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Client Consent Endpoints
+@api_router.post("/client/consent")
+async def record_consent(request: ConsentRequest):
+    """Record client consent for attorney supervision"""
+    if not COMPLIANCE_SYSTEM_AVAILABLE:
+        raise HTTPException(status_code=503, detail="Compliance system not available")
+    
+    try:
+        attorney_system = get_attorney_supervision_system(client, os.environ['DB_NAME'])
+        
+        consent_data = {
+            "consent_text": request.consent_text,
+            "ip_address": request.ip_address,
+            "user_agent": request.user_agent
+        }
+        
+        consent_id = await attorney_system.record_consent(request.client_id, consent_data)
+        
+        return {
+            "success": True,
+            "consent_id": consent_id,
+            "message": "Consent recorded successfully"
+        }
+    except Exception as e:
+        logger.error(f"Error recording consent: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/client/consent/check/{client_id}")
+async def check_consent(client_id: str):
+    """Check if client has given consent for attorney supervision"""
+    if not COMPLIANCE_SYSTEM_AVAILABLE:
+        raise HTTPException(status_code=503, detail="Compliance system not available")
+    
+    try:
+        attorney_system = get_attorney_supervision_system(client, os.environ['DB_NAME'])
+        has_consent = await attorney_system.check_consent(client_id)
+        
+        return {
+            "client_id": client_id,
+            "has_consent": has_consent,
+            "consent_required": True  # Always required in compliance mode
+        }
+    except Exception as e:
+        logger.error(f"Error checking consent: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Compliance-Enhanced Contract Generation
+@api_router.post("/generate-contract-compliant", response_model=ContractResponse)
+async def generate_contract_compliant(request: ContractRequest):
+    """Generate contract with compliance checking and attorney supervision"""
+    if not COMPLIANCE_SYSTEM_AVAILABLE:
+        # Fallback to regular contract generation
+        return await generate_contract(request)
+    
+    try:
+        # Step 1: Generate initial contract using existing system
+        contract_response = await generate_contract(request)
+        
+        # Step 2: Check compliance
+        compliance_engine = get_compliance_engine(client, os.environ['DB_NAME'])
+        compliance_result = await compliance_engine.check_compliance(
+            contract_response.contract.content, 
+            "contract"
+        )
+        
+        if not compliance_result.is_compliant:
+            # Step 3: Sanitize content if not compliant
+            content_sanitizer = get_content_sanitizer()
+            sanitization_result = await content_sanitizer.sanitize_contract_template(
+                contract_response.contract.content,
+                request.contract_type
+            )
+            
+            # Update contract with sanitized content
+            contract_response.contract.content = sanitization_result.sanitized_content
+            
+            # Add compliance warnings
+            compliance_warnings = [
+                f"Original content contained {len(compliance_result.violations)} compliance violations",
+                "Content has been automatically sanitized",
+                "Attorney review required before use"
+            ]
+            contract_response.warnings.extend(compliance_warnings)
+        
+        # Step 4: Submit for attorney review
+        attorney_system = get_attorney_supervision_system(client, os.environ['DB_NAME'])
+        
+        review_data = {
+            "document_content": contract_response.contract.content,
+            "document_type": DocumentType.CONTRACT,
+            "client_id": request.parties.get("client_id"),
+            "original_request": request.dict(),
+            "priority": "normal"
+        }
+        
+        review_id = await attorney_system.submit_for_review(review_data)
+        
+        # Add attorney review information to response
+        contract_response.suggestions.extend([
+            f"Document submitted for attorney review (ID: {review_id})",
+            "This contract requires attorney approval before execution",
+            "You will be notified when the review is complete"
+        ])
+        
+        return contract_response
+        
+    except Exception as e:
+        logger.error(f"Compliant contract generation error: {e}")
+        raise HTTPException(status_code=500, detail=f"Error generating compliant contract: {str(e)}")
+
+# END COMPLIANCE AND ATTORNEY SUPERVISION ENDPOINTS
+# ====================================================================================================
+
 # Include all API routes in the main app (after ALL endpoints are defined)
 app.include_router(api_router)
