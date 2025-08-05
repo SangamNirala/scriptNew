@@ -2,7 +2,7 @@ import requests
 import json
 
 # Test HR compliance endpoint with correct parameters
-base_url = "https://c2bb998a-e34a-42ed-aac5-6ebc7f609e4d.preview.emergentagent.com"
+base_url = "https://ca4d3021-84d1-4c48-91ff-ff6dda893718.preview.emergentagent.com"
 api_url = f"{base_url}/api"
 
 # Based on the error, it expects 'content' and 'content_type' fields
