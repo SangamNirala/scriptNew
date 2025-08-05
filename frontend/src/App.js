@@ -1117,6 +1117,19 @@ function App() {
               NEW
             </Badge>
           </Button>
+          <Button
+            onClick={() => {
+              setShowAttorneyDashboard(true);
+            }}
+            variant="outline"
+            className="border-orange-300 text-white hover:bg-orange-500/20 px-8 py-4 text-lg font-semibold rounded-lg border-2"
+          >
+            <Scale className="h-5 w-5 mr-2" />
+            Attorney Dashboard
+            <Badge variant="secondary" className="ml-2 bg-orange-400 text-orange-900 text-xs">
+              COMPLIANCE
+            </Badge>
+          </Button>
         </div>
         
         <div className="flex flex-wrap justify-center gap-4 text-sm">
