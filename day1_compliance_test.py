@@ -163,7 +163,7 @@ class Day1ComplianceSystemTester:
             "last_name": "Johnson",
             "bar_number": f"BAR{random.randint(100000, 999999)}",
             "jurisdiction": "California",
-            "role": "senior_attorney",
+            "role": "supervising_attorney",
             "specializations": ["contract_law", "employment_law"],
             "years_experience": 8,
             "password": "SecurePassword123!"
