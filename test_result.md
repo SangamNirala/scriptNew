@@ -287,7 +287,17 @@ TESTING RESULTS: ✅ ALL TESTS PASSED
 READY FOR PRODUCTION: The system can now efficiently collect 15,000+ high-quality legal documents with comprehensive quality controls and detailed progress reporting."
 
 frontend:
-  - task: "Frontend UI Component Import Path Fix"
+  - task: "Consent Popup Auto-Disappearing Issue Fix"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/App.js, /app/frontend/src/components/ConsentManager.js"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: true
+    status_history:
+        -working: "NA"
+        -agent: "main"
+        -comment: "🔧 COMPREHENSIVE CONSENT POPUP FIX: Fixed the user-reported issue where consent popup appears but automatically disappears after 2 seconds before user can interact. ROOT CAUSE: ConsentManager had setTimeout logic that auto-closed modal when detecting existing consent. FIXES: 1) Added checkExistingClientConsent() function to App.js to properly initialize clientConsent state on app load, 2) Simplified ConsentManager checkExistingConsent() by removing problematic auto-close setTimeout calls, 3) Modal now only shows when genuinely needed and waits for manual user interaction."
     implemented: true
     working: true
     file: "/app/frontend/src/App.js"
