@@ -475,7 +475,7 @@ function App() {
 
   const checkExistingClientConsent = async () => {
     try {
-      const response = await axios.get(`${API}/client/consent/check/${clientId}`);
+      const response = await axios.get(`${API}/api/client/consent/check/${clientId}`);
       const hasConsent = response.data.has_consent;
       setClientConsent(hasConsent);
     } catch (error) {
