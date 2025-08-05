@@ -183,6 +183,8 @@ class Day1ComplianceSystemTester:
             if 'attorney_id' in response:
                 self.attorney_id = response['attorney_id']
                 print(f"   Attorney ID: {self.attorney_id}")
+            else:
+                print(f"   ⚠️  No attorney_id in response: {response}")
         
         return success, response
 
