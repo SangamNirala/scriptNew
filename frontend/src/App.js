@@ -427,7 +427,7 @@ function App() {
       // Check if client consent is required and not given
       if (complianceMode && !clientConsent) {
         setShowConsentManager(true);
-        setIsGenerating(false);
+        // Don't set isGenerating to false - keep it true so we can resume after consent
         return;
       }
 
