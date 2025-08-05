@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Alert, AlertDescription } from '../ui/alert';
-import { Badge } from '../ui/badge';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
+import { Alert, AlertDescription } from './ui/alert';
+import { Badge } from './ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { 
   AlertTriangle, Shield, Scale, CheckCircle, 
   XCircle, Clock, Info, ExternalLink 
