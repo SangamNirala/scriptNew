@@ -199,7 +199,7 @@ class Day1ComplianceSystemTester:
             "last_name": "Tester",
             "bar_number": f"LOGIN{random.randint(100000, 999999)}",
             "jurisdiction": "New York",
-            "role": "attorney",
+            "role": "reviewing_attorney",
             "specializations": ["corporate_law"],
             "years_experience": 5,
             "password": attorney_password
