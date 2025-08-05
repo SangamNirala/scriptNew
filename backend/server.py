@@ -13091,7 +13091,8 @@ async def generate_contract_compliant(request: ContractRequest):
             "document_type": "contract",  # Convert enum to string
             "client_id": request.parties.get("client_id"),
             "original_request": request.dict(),
-            "priority": "normal"
+            "priority": "normal",
+            "document_id": str(uuid.uuid4())  # Add missing document_id
         }
         
         review_id = await attorney_system.submit_for_review(review_data)
