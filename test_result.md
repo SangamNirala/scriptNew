@@ -148,52 +148,29 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Day 1 Legal Compliance & UPL Violation Elimination System
+user_problem_statement: "CRITICAL TESTING: Investigate the static progress percentage issue and "Overdue" status problem in document review system.
 
-OBJECTIVE: Implement immediate legal compliance transformation to eliminate Unauthorized Practice of Law (UPL) violations and implement attorney supervision workflows.
+SPECIFIC OBJECTIVES:
+1. TEST REVIEW STATUS API: Test GET /api/attorney/review/status/{review_id} endpoint to see what progress percentage is being returned and why it's static at 50%
 
-CRITICAL PRIORITY TASK: Day 1 Legal Compliance System Implementation
+2. INVESTIGATE ATTORNEY ASSIGNMENT: Check if reviews are properly getting assigned attorneys and moving from "pending" to "in_review" status
 
-The application currently has extensive functionality including contract generation, legal Q&A, professional integrations, and enterprise features. However, it needs immediate compliance measures to eliminate UPL violations and implement attorney supervision workflows.
+3. TEST PROGRESS CALCULATION: Verify the _calculate_progress_percentage method is working correctly with time-based progression
 
-DAY 1 OBJECTIVES - EMERGENCY COMPLIANCE IMPLEMENTATION:
+4. CHECK TIME ESTIMATION: Test _calculate_estimated_completion to understand why it's showing "Overdue"
 
-CRITICAL PRIORITY: UPL Violation Elimination
-✅ Compliance Mode System with environment variables (COMPLIANCE_MODE, ATTORNEY_SUPERVISION_REQUIRED, MAINTENANCE_MODE)
-✅ Legal Advice Detection & Blocking with AI-powered content scanner using Groq and Gemini
-✅ Attorney Supervision Notices with mandatory disclaimers and automatic disclaimer injection
+5. CREATE TEST SCENARIOS: 
+   - Submit a new document for review
+   - Check its initial status and progress
+   - Track progress over time (if dynamic)
+   - Verify attorney assignment
+   - Check estimated completion times
 
-HIGH PRIORITY: Attorney Supervision Workflow Foundation  
-✅ Attorney Database Schema with licensing information and availability tracking
-✅ Document Review Workflow with submission system and status tracking
-✅ Review Queue API Endpoints for attorney assignment and management
+6. ROOT CAUSE ANALYSIS: Identify exactly why progress is stuck at 50% instead of progressing dynamically from 25% to 95%
 
-HIGH PRIORITY: Legal Content Sanitization Engine
-✅ Content Analysis System with AI-powered legal advice detection using hybrid approach
-✅ Automatic Content Modification with prohibited phrase replacement and safe alternatives
-✅ Template Sanitization with attorney supervision requirements
+CONTEXT: User reported that after clicking "generate document", the review page opens but progress percentage stays constant at 50% instead of increasing dynamically. Time remaining shows "Overdue" instead of realistic completion time.
 
-IMPLEMENTATION STATUS: ✅ COMPLETED - ALL DAY 1 COMPLIANCE ENDPOINTS IMPLEMENTED
-
-CRITICAL COMPLIANCE ENDPOINTS IMPLEMENTED:
-✅ GET /api/compliance/status - Compliance system status monitoring
-✅ POST /api/compliance/check - Real-time UPL violation detection  
-✅ POST /api/content/sanitize - Automatic content sanitization
-✅ POST /api/attorney/create - Attorney account creation
-✅ POST /api/attorney/login - Attorney authentication with JWT
-✅ GET /api/attorney/profile/{attorney_id} - Attorney profile management
-✅ POST /api/attorney/review/submit - Document submission for attorney review
-✅ GET /api/attorney/review/queue/{attorney_id} - Attorney review queue management
-✅ POST /api/attorney/review/action - Attorney approval/rejection workflow
-✅ GET /api/attorney/review/status/{review_id} - Review status tracking
-✅ POST /api/client/consent - Client consent recording for attorney supervision
-✅ GET /api/client/consent/check/{client_id} - Consent validation before legal content access
-✅ POST /api/generate-contract-compliant - Compliance-enhanced contract generation
-
-TESTING PRIORITY: All Day 1 Legal Compliance endpoints must be tested first before professional integrations.
-
-SECONDARY TASK: Professional Integrations & API Ecosystem
-After Day 1 compliance is verified, continue with the existing professional integrations system."
+TESTING RESULTS: Comprehensive investigation completed with critical findings identified."
 
 REQUIREMENTS:
 
