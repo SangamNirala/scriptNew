@@ -32,7 +32,7 @@ export default function ConsentManager({
 
   const checkExistingConsent = async () => {
     try {
-      const response = await axios.get(`${API}/client/consent/check/${clientId}`);
+      const response = await axios.get(`${API}/api/client/consent/check/${clientId}`);
       setHasExistingConsent(response.data.has_consent);
       
       if (response.data.has_consent) {
