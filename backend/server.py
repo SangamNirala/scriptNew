@@ -9720,6 +9720,27 @@ async def startup_event():
             await initialize_monitoring_system(db)
             logger.info("🚀 Production optimization systems initialized successfully")
         
+        # Initialize Compliance and Attorney Supervision Systems
+        if COMPLIANCE_SYSTEM_AVAILABLE:
+            # Initialize compliance engine
+            compliance_engine = get_compliance_engine(client, os.environ['DB_NAME'])
+            compliance_status = await compliance_engine.get_compliance_status()
+            logger.info(f"🔒 Compliance Engine initialized - Mode: {compliance_status.get('compliance_mode', 'Unknown')}")
+            
+            # Initialize attorney supervision system
+            attorney_system = get_attorney_supervision_system(client, os.environ['DB_NAME'])
+            logger.info("👩‍⚖️ Attorney Supervision System initialized")
+            
+            # Initialize content sanitizer
+            content_sanitizer = get_content_sanitizer()
+            logger.info("🧹 Content Sanitizer initialized")
+            
+            # Initialize attorney authentication
+            attorney_auth = get_attorney_auth(client, os.environ['DB_NAME'])
+            logger.info("🔐 Attorney Authentication System initialized")
+            
+            logger.info("⚖️ Legal Compliance Systems fully operational")
+        
         logger.info("🎯 All systems initialized - Legal AI Platform ready for enterprise production")
         
     except Exception as e:
