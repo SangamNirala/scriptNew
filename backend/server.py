@@ -13088,7 +13088,7 @@ async def generate_contract_compliant(request: ContractRequest):
         
         review_data = {
             "document_content": contract_response.contract.content,
-            "document_type": DocumentType.CONTRACT,
+            "document_type": "contract",  # Convert enum to string
             "client_id": request.parties.get("client_id"),
             "original_request": request.dict(),
             "priority": "normal"
