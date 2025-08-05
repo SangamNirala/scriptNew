@@ -424,15 +424,76 @@ function App() {
   const generateContract = async () => {
     setIsGenerating(true);
     try {
-      const response = await axios.post(`${API}/generate-contract`, contractData);
+      // Check if client consent is required and not given
+      if (complianceMode && !clientConsent) {
+        setShowConsentManager(true);
+        setIsGenerating(false);
+        return;
+      }
+
+      // Use compliant contract generation endpoint
+      const endpoint = complianceMode ? '/generate-contract-compliant' : '/generate-contract';
+      const response = await axios.post(`${API}${endpoint}`, {
+        ...contractData,
+        client_id: clientId
+      });
+      
       setGeneratedContract(response.data);
+      
+      // Check if a review was submitted
+      const reviewIdMatch = response.data.suggestions?.find(s => s.includes('review (ID:'));
+      if (reviewIdMatch) {
+        const reviewId = reviewIdMatch.match(/ID:\s*([^)]+)/)?.[1];
+        if (reviewId) {
+          setCurrentReviewId(reviewId);
+        }
+      }
+      
       setCurrentStep(4);
-      loadContracts(); // Refresh the contracts list
+      await loadContracts();
     } catch (error) {
       console.error('Error generating contract:', error);
-      alert('Failed to generate contract. Please try again.');
+      alert('Error generating contract: ' + (error.response?.data?.detail || error.message));
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  // Compliance System Functions
+  const checkComplianceStatus = async () => {
+    try {
+      const response = await axios.get(`${API}/compliance/status`);
+      setComplianceStatus(response.data);
+      setComplianceMode(response.data.compliance_mode);
+    } catch (error) {
+      console.error('Error checking compliance status:', error);
+      // Default to compliance mode if check fails
+      setComplianceMode(true);
+    }
+  };
+
+  const handleConsentGiven = (consentGiven) => {
+    setClientConsent(consentGiven);
+    setShowConsentManager(false);
+    
+    if (consentGiven && isGenerating) {
+      // Resume contract generation after consent
+      generateContract();
+    }
+  };
+
+  const handleConsentDeclined = () => {
+    setShowConsentManager(false);
+    setIsGenerating(false);
+    alert('Consent is required to use legal services. Please provide consent to continue.');
+  };
+
+  const handleReviewStatusChange = (newStatus) => {
+    // Handle review status changes (e.g., show notifications)
+    if (newStatus.status === 'approved') {
+      alert('Great! Your document has been approved by an attorney.');
+    } else if (newStatus.status === 'rejected') {
+      alert('Your document requires revision. Please check the attorney feedback.');
     }
   };
 
