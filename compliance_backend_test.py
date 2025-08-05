@@ -330,9 +330,8 @@ class ComplianceAPITester:
     def test_attorney_review_submit(self):
         """Test POST /api/attorney/review/submit - Document review submission"""
         review_data = {
-            "document_id": f"doc_{int(time.time())}",  # Add missing document_id
             "document_content": "This is a test contract that needs attorney review for UPL compliance.",
-            "document_type": "contract",  # Use string instead of enum
+            "document_type": "contract",  # Use string as expected by DocumentReviewRequest
             "client_id": "test_client_123",
             "original_request": {
                 "contract_type": "NDA",
