@@ -373,37 +373,15 @@ class Day1ComplianceSystemTester:
 
     def test_attorney_review_action(self):
         """Test POST /api/attorney/review/action - Attorney approval/rejection workflow - PRIORITY TEST"""
-        if not self.review_id or not self.attorney_id:
+        # Use the attorney_id from earlier tests if available
+        action_attorney_id = self.attorney_id
+        action_review_id = self.review_id
+        
+        if not action_review_id or not action_attorney_id:
             print("   ⚠️  No review ID or attorney ID available, creating test data...")
-            # Create a document review first
-            document_data = {
-                "document_content": "Test contract content for review action testing. This agreement shall be governed by applicable law.",
-                "document_type": "contract",
-                "client_id": f"action_client_{random.randint(1000, 9999)}",
-                "original_request": {
-                    "contract_type": "service_agreement",
-                    "jurisdiction": "US"
-                },
-                "priority": "high"
-            }
             
-            submit_success, submit_response = self.run_test(
-                "Create Document Review for Action Test", 
-                "POST", 
-                "attorney/review/submit", 
-                200,
-                document_data
-            )
-            
-            if submit_success and 'review_id' in submit_response:
-                self.review_id = submit_response['review_id']
-                print(f"   Created review ID: {self.review_id}")
-            else:
-                print("   ❌ Failed to create document review for action test")
-                return False, {}
-            
-            # Ensure we have an attorney ID
-            if not self.attorney_id:
+            # Ensure we have an attorney ID first
+            if not action_attorney_id:
                 attorney_data = {
                     "email": f"action_attorney_{random.randint(1000, 9999)}@legalmate.test",
                     "first_name": "Action",
@@ -425,17 +403,44 @@ class Day1ComplianceSystemTester:
                 )
                 
                 if create_success and 'attorney_id' in create_response:
-                    self.attorney_id = create_response['attorney_id']
-                    print(f"   Created attorney ID for action test: {self.attorney_id}")
+                    action_attorney_id = create_response['attorney_id']
+                    print(f"   Created attorney ID for action test: {action_attorney_id}")
                 else:
                     print("   ❌ Failed to create attorney for action test")
                     print(f"   Create response: {create_response}")
                     return False, {}
+            
+            # Create a document review with the specific attorney
+            document_data = {
+                "document_content": "Test contract content for review action testing. This agreement shall be governed by applicable law.",
+                "document_type": "contract",
+                "client_id": f"action_client_{random.randint(1000, 9999)}",
+                "original_request": {
+                    "contract_type": "service_agreement",
+                    "jurisdiction": "US"
+                },
+                "priority": "high"
+            }
+            
+            submit_success, submit_response = self.run_test(
+                "Create Document Review for Action Test", 
+                "POST", 
+                "attorney/review/submit", 
+                200,
+                document_data
+            )
+            
+            if submit_success and 'review_id' in submit_response:
+                action_review_id = submit_response['review_id']
+                print(f"   Created review ID: {action_review_id}")
+            else:
+                print("   ❌ Failed to create document review for action test")
+                return False, {}
         
-        # Test approve action - Use the attorney_id that created the review or was assigned
+        # Test approve action - Use the attorney_id that should be assigned to the review
         action_data = {
-            "review_id": self.review_id,
-            "attorney_id": self.attorney_id,  # Use the actual attorney ID string, not the attorney object
+            "review_id": action_review_id,
+            "attorney_id": action_attorney_id,  # Use the actual attorney ID string
             "action": "approve",
             "comments": "Contract looks good. All terms are reasonable and legally sound.",
             "approved_content": "Approved contract content with attorney review completed."
@@ -463,6 +468,18 @@ class Day1ComplianceSystemTester:
                 print(f"   🎯 PRIORITY TEST PASSED - Attorney Review Action endpoint working!")
         else:
             print(f"   🚨 PRIORITY TEST FAILED - Attorney Review Action endpoint not working!")
+            # Debug: Check the review status to see who it's assigned to
+            print(f"   🔍 Debugging: Checking review status...")
+            debug_success, debug_response = self.run_test(
+                "Debug Review Status", 
+                "GET", 
+                f"attorney/review/status/{action_review_id}", 
+                200
+            )
+            if debug_success:
+                print(f"   Debug - Review Status: {debug_response.get('status')}")
+                print(f"   Debug - Assigned Attorney: {debug_response.get('attorney')}")
+                print(f"   Debug - Our Attorney ID: {action_attorney_id}")
         
         return success, response
 
