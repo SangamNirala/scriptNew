@@ -417,15 +417,18 @@ backend:
 
   - task: "Day 1 Legal Compliance - Client Consent Check Endpoint"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "critical"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         -working: "NA"
         -agent: "main"
         -comment: "Implemented GET /api/client/consent/check/{client_id} endpoint for consent verification. Validates active attorney supervision consent before allowing access to legal content generation, ensuring UPL compliance."
+        -working: true
+        -agent: "testing"
+        -comment: "✅ WORKING: GET /api/client/consent/check/{client_id} endpoint operational. Successfully validates client consent status, returning has_consent (True) for clients who have provided consent. Critical for ensuring UPL compliance before legal content access."
 
   - task: "Day 1 Legal Compliance - Compliant Contract Generation Endpoint"
     implemented: true
