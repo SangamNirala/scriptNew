@@ -33,13 +33,20 @@ export default function ConsentManager({
   const checkExistingConsent = async () => {
     try {
       const response = await axios.get(`${API}/api/client/consent/check/${clientId}`);
-      setHasExistingConsent(response.data.has_consent);
+      const hasConsent = response.data.has_consent;
+      setHasExistingConsent(hasConsent);
       
-      if (response.data.has_consent) {
-        onConsentGiven?.(true);
+      // Only automatically trigger consent given if we have confirmed consent
+      // Add a small delay to prevent race conditions
+      if (hasConsent) {
+        setTimeout(() => {
+          onConsentGiven?.(true);
+        }, 100);
       }
     } catch (error) {
       console.error('Failed to check existing consent:', error);
+      // On error, don't assume anything about consent status
+      setHasExistingConsent(false);
     }
   };
 
