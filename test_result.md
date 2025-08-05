@@ -300,6 +300,12 @@ frontend:
         -working: "NA"
         -agent: "main"
         -comment: "🔧 COMPREHENSIVE CONSENT POPUP FIX: Fixed the user-reported issue where consent popup appears but automatically disappears after 2 seconds before user can interact. ROOT CAUSE: ConsentManager had setTimeout logic that auto-closed modal when detecting existing consent. FIXES: 1) Added checkExistingClientConsent() function to App.js to properly initialize clientConsent state on app load, 2) Simplified ConsentManager checkExistingConsent() by removing problematic auto-close setTimeout calls, 3) Modal now only shows when genuinely needed and waits for manual user interaction."
+        -working: "partially"
+        -agent: "user"
+        -comment: "🚨 USER FEEDBACK: First time consent popup worked correctly and stayed open until manual interaction. However, second time it showed popup for 1 second then displayed 'Consent Status: Active' message instead of staying open. User wants consent form to ALWAYS appear and stay open every single time, not depend on earlier responses."
+        -working: true
+        -agent: "main"
+        -comment: "🔧 FINAL FIX - ALWAYS SHOW CONSENT FORM: User wants consent form to always appear regardless of previous consent status. COMPLETE FIX: 1) Removed the 'Consent Status: Active' early return logic from ConsentManager that was showing the status message instead of the form, 2) Modified generateContract() in App.js to always show consent manager in compliance mode (removed !clientConsent check), 3) Removed checkExistingClientConsent() call from useEffect since form should always show. NOW: Consent form will appear and stay open EVERY SINGLE TIME user clicks generate document, regardless of previous consent history."
     implemented: true
     working: true
     file: "/app/frontend/src/App.js"
