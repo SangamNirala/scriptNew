@@ -3,7 +3,7 @@ import json
 
 def test_edited_status_in_pdf():
     """Test that the 'Edited' status appears in the PDF metadata"""
-    base_url = "https://28703f28-84e8-401f-ac41-e84797b8e7d4.preview.emergentagent.com"
+    base_url = "https://9f8f5702-86b4-4b78-9d84-646b713c72f4.preview.emergentagent.com"
     api_url = f"{base_url}/api"
     
     # Generate a contract first
