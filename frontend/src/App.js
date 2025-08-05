@@ -19,6 +19,11 @@ import PlainEnglishContractCreator from './components/PlainEnglishContractCreato
 import LegalQuestionAnswering from './components/LegalQuestionAnswering';
 import VoiceAgent from './components/VoiceAgent';
 import ResizeObserverErrorBoundary from './components/ResizeObserverErrorBoundary';
+// Compliance System Components
+import AttorneyDashboard from './components/AttorneyDashboard';
+import { AttorneySupervisionNotice, ComplianceModeIndicator, LegalDisclaimerFooter } from './components/ComplianceNotices';
+import ConsentManager from './components/ConsentManager';
+import ReviewStatus from './components/ReviewStatus';
 import { FileText, Zap, Shield, Users, CheckCircle, AlertTriangle, Download, Eye, Calendar, Sparkles, Wand2, Clock, BarChart3, MessageSquare, Scale, Mic } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
