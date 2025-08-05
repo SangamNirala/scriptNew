@@ -3,7 +3,7 @@ import json
 
 def compare_original_vs_edited_pdf():
     """Compare original PDF vs edited PDF to verify differences"""
-    base_url = "https://5c57a7cc-92e6-408a-ab26-3ade3b44b659.preview.emergentagent.com"
+    base_url = "https://c2bb998a-e34a-42ed-aac5-6ebc7f609e4d.preview.emergentagent.com"
     api_url = f"{base_url}/api"
     
     # Generate a contract
