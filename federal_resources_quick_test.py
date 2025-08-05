@@ -5,7 +5,7 @@ import time
 from datetime import datetime
 
 class FederalResourcesQuickTester:
-    def __init__(self, base_url="https://60736639-5959-41bb-8484-5e9a7413156b.preview.emergentagent.com"):
+    def __init__(self, base_url="https://28703f28-84e8-401f-ac41-e84797b8e7d4.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.tests_run = 0
