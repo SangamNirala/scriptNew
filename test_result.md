@@ -596,9 +596,9 @@ backend:
     implemented: true
     working: true
     file: "/app/backend/server.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "critical"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
         -working: "NA"
         -agent: "main"
@@ -606,6 +606,12 @@ backend:
         -working: true
         -agent: "testing"
         -comment: "✅ WORKING: GET /api/client/consent/check/{client_id} endpoint operational. Successfully validates client consent status, returning has_consent (True) for clients who have provided consent. Critical for ensuring UPL compliance before legal content access."
+        -working: false
+        -agent: "user"
+        -comment: "🚨 USER REPORTED ISSUE: Frontend getting 404 errors when checking consent status. Browser console shows '/client/consent/check/{client_id}' returning 404. Missing /api prefix in frontend API calls causing routing failures."
+        -working: true
+        -agent: "main"
+        -comment: "🔧 FIXED: Updated ConsentManager.js frontend component to use correct API endpoint '/api/client/consent/check/{client_id}' instead of '/client/consent/check/{client_id}'. This ensures proper Kubernetes ingress routing to the backend endpoint and resolves 404 errors."
 
   - task: "Day 1 Legal Compliance - Compliant Contract Generation Endpoint"
     implemented: true
