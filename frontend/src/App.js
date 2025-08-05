@@ -1228,8 +1228,53 @@ function App() {
     <div className="min-h-screen bg-gray-50">
       <Hero />
       
+      {/* Compliance System Components */}
+      <ComplianceModeIndicator 
+        complianceMode={complianceMode}
+        attorneySupervisionRequired={complianceStatus?.attorney_supervision_required}
+      />
+      
+      {/* Attorney Dashboard Modal */}
+      {showAttorneyDashboard && (
+        <AttorneyDashboard onClose={() => setShowAttorneyDashboard(false)} />
+      )}
+      
+      {/* Consent Manager Modal */}
+      {showConsentManager && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-auto">
+            <div className="p-6">
+              <ConsentManager
+                clientId={clientId}
+                onConsentGiven={handleConsentGiven}
+                onConsentDeclined={handleConsentDeclined}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+      
       <div className="py-12 px-6">
         <div className="max-w-6xl mx-auto">
+          {/* Attorney Supervision Notice */}
+          {complianceMode && (
+            <AttorneySupervisionNotice 
+              isVisible={true}
+              showDetails={false}
+            />
+          )}
+          
+          {/* Review Status Display */}
+          {currentReviewId && (
+            <div className="mb-6">
+              <ReviewStatus
+                reviewId={currentReviewId}
+                onStatusChange={handleReviewStatusChange}
+                autoRefresh={true}
+              />
+            </div>
+          )}
+          
           {/* Plain English Creator */}
           {showPlainEnglishCreator && !showAnalytics && !useEnhancedWizard && !showLegalQA && !showVoiceAgent && (
             <PlainEnglishContractCreator
