@@ -297,15 +297,18 @@ backend:
 
   - task: "Day 1 Legal Compliance - Content Sanitization Endpoint"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "critical"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         -working: "NA"
         -agent: "main"
         -comment: "Implemented POST /api/content/sanitize endpoint for automatic content sanitization. Converts direct legal advice to informational content, adds mandatory attorney supervision disclaimers, and replaces prohibited phrases with compliance-safe alternatives."
+        -working: true
+        -agent: "testing"
+        -comment: "✅ WORKING: POST /api/content/sanitize endpoint fully operational with query parameter format. Successfully sanitizes legal advice content (67→891 chars), contract content (59→771 chars), and template content (58→750 chars). Adds attorney supervision disclaimers and modifies prohibited content. Returns all expected fields: sanitized_content, changes_made, disclaimers_added, blocked_phrases, confidence_score, requires_review."
 
   - task: "Day 1 Legal Compliance - Attorney Login Endpoint"
     implemented: true
