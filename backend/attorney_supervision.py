@@ -199,7 +199,11 @@ class AttorneySupervisionSystem:
                 review.status = ReviewStatus.PENDING
             
             # Store review record
-            await self.db.document_reviews.insert_one(review.dict())
+            review_dict = review.dict()
+            # Convert enum to string for MongoDB storage
+            review_dict["document_type"] = review.document_type.value
+            review_dict["status"] = review.status.value
+            await self.db.document_reviews.insert_one(review_dict)
             
             # Send confirmation to client
             await self._notify_client_submission(review)
