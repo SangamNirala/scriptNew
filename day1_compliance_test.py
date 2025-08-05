@@ -219,6 +219,10 @@ class Day1ComplianceSystemTester:
             print("   ❌ Failed to create attorney for login test")
             return False, {}
         
+        # Check if attorney_id was returned for future use
+        if 'attorney_id' in create_response:
+            print(f"   Created attorney ID: {create_response['attorney_id']}")
+        
         # Now test login
         login_data = {
             "email": attorney_email,
