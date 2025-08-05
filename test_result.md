@@ -320,15 +320,18 @@ backend:
 
   - task: "Day 1 Legal Compliance - Attorney Login Endpoint"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "critical"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         -working: "NA"
         -agent: "main"
         -comment: "Implemented POST /api/attorney/login endpoint for attorney authentication. Supports JWT token generation, password verification with bcrypt, and attorney session management for supervision workflow access."
+        -working: true
+        -agent: "testing"
+        -comment: "✅ WORKING: POST /api/attorney/login endpoint fully operational. Successfully authenticates attorneys with valid credentials, returns JWT token with proper expiration, and includes attorney profile information. Tested with all valid AttorneyRole enum values (supervising_attorney, reviewing_attorney, senior_partner, compliance_officer)."
 
   - task: "Day 1 Legal Compliance - Attorney Creation Endpoint"
     implemented: true
