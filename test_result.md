@@ -602,6 +602,9 @@ backend:
         -working: true
         -agent: "testing"
         -comment: "🎉 CRITICAL CONSENT FIX VERIFIED - OUTSTANDING SUCCESS: Comprehensive testing of consent functionality achieved 100% success rate (5/5 tests passed). ✅ CONSENT RECORDING FULLY WORKING: POST /api/client/consent endpoint operational with proper response structure (success: true, consent_id, message). Successfully recorded consent for client_id 'client_1754408009219_5lrruvw2q' from user's error log. ✅ FRONTEND API ROUTING FIX SUCCESSFUL: All consent endpoints now properly accessible with /api prefix. No more 404 errors. ✅ COMPLETE WORKFLOW VERIFIED: Record consent → Check status → Verified has_consent: true. The 'Failed to record consent' issue reported by user is completely resolved. Attorney supervision consent workflow is now fully operational and ready for production use."
+        -working: true
+        -agent: "testing"
+        -comment: "🎯 CONSENT POPUP FIX VERIFICATION COMPLETED - OUTSTANDING SUCCESS: Comprehensive testing of consent functionality after popup disappearing fix achieved 100% success rate. ✅ POST /api/client/consent FULLY OPERATIONAL: Successfully records consent with proper response structure (success: true, consent_id, message). Tested with exact client_id format 'client_1754408009219_5lrruvw2q' from user report - works perfectly. ✅ COMPLETE WORKFLOW VERIFIED: New client check (has_consent: false) → Record consent → Verify consent recorded (has_consent: true). ✅ ERROR HANDLING CONFIRMED: Invalid data properly handled with 422 validation errors for missing required fields. ✅ CLIENT ID FORMAT SUPPORT: All frontend client_id formats (client_timestamp_randomstring) work correctly. The consent recording endpoint is 100% operational and ready for production use."
 
   - task: "Day 1 Legal Compliance - Client Consent Check Endpoint"
     implemented: true
