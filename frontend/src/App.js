@@ -1351,6 +1351,15 @@ function App() {
           )}
         </div>
       </div>
+      
+      {/* Legal Disclaimer Footer */}
+      <LegalDisclaimerFooter 
+        isVisible={complianceMode}
+        disclaimerText={complianceMode ? 
+          "This application provides informational content only and does not constitute legal advice. All content requires attorney supervision and review before use. Consult with a qualified attorney licensed in your jurisdiction for advice specific to your situation. Use of this service does not create an attorney-client relationship." 
+          : undefined
+        }
+      />
     </div>
   );
 }
