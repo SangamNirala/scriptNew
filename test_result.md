@@ -351,15 +351,18 @@ backend:
 
   - task: "Day 1 Legal Compliance - Document Review Submission Endpoint"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "critical"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         -working: "NA"
         -agent: "main"
         -comment: "Implemented POST /api/attorney/review/submit endpoint for attorney supervision workflow. Auto-assigns documents to available attorneys based on specialization and workload, creates review records, and triggers attorney notifications for immediate UPL compliance."
+        -working: true
+        -agent: "testing"
+        -comment: "✅ WORKING: POST /api/attorney/review/submit endpoint operational after fixing enum serialization issue in attorney_supervision.py. Successfully accepts document_content, document_type, client_id, original_request, and priority. Auto-generates document_id and returns review_id with estimated review time (2-4 hours). Fixed MongoDB enum storage by converting to string values."
 
   - task: "Day 1 Legal Compliance - Attorney Review Queue Endpoint"
     implemented: true
