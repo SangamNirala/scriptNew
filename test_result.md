@@ -1795,37 +1795,23 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Professional Integrations Framework - Integration Status Endpoint"
-    - "Professional Integrations Framework - Integration Activation Endpoint"
-    - "Professional Integrations Framework - Integration Action Endpoint"
-    - "Professional API Ecosystem - API Key Generation Endpoint"
-    - "Professional API Ecosystem - API Documentation Endpoint"
-    - "Professional API Ecosystem - Usage Analytics Endpoint"
-    - "Enterprise Integration Features - SSO Authentication Endpoint"
-    - "Enterprise Integration Features - Compliance Check Endpoint"
-    - "Enterprise Integration Features - Audit Trail Endpoint"
-    - "Legal Workflow Automation - Workflow Templates Endpoint"
-    - "Legal Workflow Automation - Workflow Creation Endpoint"
-    - "Legal Workflow Automation - Workflow Start Endpoint"
-    - "Legal Workflow Automation - Workflow Status Endpoint"
-    - "Legal Workflow Automation - Workflow Analytics Endpoint"
-    - "Marketplace & Partnership Ecosystem - Marketplace Search Endpoint"
-    - "Marketplace & Partnership Ecosystem - App Details Endpoint"
-    - "Marketplace & Partnership Ecosystem - App Installation Endpoint"
-    - "Marketplace & Partnership Ecosystem - App Review Endpoint"
-    - "Marketplace & Partnership Ecosystem - Partnership Application Endpoint"
-    - "Marketplace & Partnership Ecosystem - Partner Search Endpoint"
-    - "Marketplace & Partnership Ecosystem - Marketplace Analytics Endpoint"
-    - "Professional API Endpoints - Developer Resources Endpoint"
-    - "Professional API Endpoints - Legal Research Integration"
-    - "Professional API Endpoints - Contract Analysis Integration"
-    - "Professional API Endpoints - Legal Memoranda Generation"
-    - "Professional API Endpoints - Law Firm Dashboard Analytics"
-    - "Professional API Endpoints - Client Communication Integration"
-    - "Professional API Endpoints - Billing Optimization Analytics"
-  stuck_tasks: []
+    - "Day 1 Legal Compliance - Compliance Status Endpoint"
+    - "Day 1 Legal Compliance - Compliance Check Endpoint"
+    - "Day 1 Legal Compliance - Content Sanitization Endpoint"
+    - "Day 1 Legal Compliance - Attorney Login Endpoint"
+    - "Day 1 Legal Compliance - Attorney Creation Endpoint"
+    - "Day 1 Legal Compliance - Attorney Profile Endpoint"
+    - "Day 1 Legal Compliance - Document Review Submission Endpoint"
+    - "Day 1 Legal Compliance - Attorney Review Queue Endpoint"
+    - "Day 1 Legal Compliance - Attorney Review Action Endpoint"
+    - "Day 1 Legal Compliance - Review Status Endpoint"
+    - "Day 1 Legal Compliance - Client Consent Recording Endpoint"  
+    - "Day 1 Legal Compliance - Client Consent Check Endpoint"
+    - "Day 1 Legal Compliance - Compliant Contract Generation Endpoint"
+  stuck_tasks:
+    []
   test_all: false
-  test_priority: "high_first"
+  test_priority: "critical_first"  # Test Day 1 compliance endpoints first
 
   - task: "Legal Updates Monitoring System - Monitor Status Endpoint"
     implemented: true
