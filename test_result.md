@@ -2100,6 +2100,21 @@ test_plan:
         -agent: "testing"
         -comment: "✅ LEGAL UPDATES TRIGGER MONITORING ENDPOINT WORKING: Successfully tested POST /api/legal-updates/trigger-monitoring endpoint with 200 status code. Triggers manual monitoring successfully with comprehensive response including status (completed), message, updates_found (0), processing_time_seconds (16.37s), updates_by_source, updates_by_priority, and timestamp. All required trigger monitoring fields present and manual monitoring completes successfully."
 
+  - task: "Legal Q&A Backend Functionality Testing"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: false
+    status_history:
+        -working: "NA"
+        -agent: "user"
+        -comment: "User reported that Legal Q&A backend functionality is failing. Frontend showing fallback responses with 0% confidence instead of proper answers. Need to test: 1) POST /api/legal-qa/ask endpoint with sample legal questions, 2) GET /api/legal-qa/stats to verify RAG system status, 3) GET /api/legal-qa/knowledge-base/stats to check knowledge base population, 4) Various legal questions to see if any work, 5) Check for API key issues, database connectivity, AI model access issues. User reports system always responds with 'I apologize, but I'm unable to generate a response at this time' with LOW (0%) confidence and 'fallback' status."
+        -working: false
+        -agent: "testing"
+        -comment: "❌ CRITICAL LEGAL Q&A SYSTEM FAILURE CONFIRMED: Comprehensive testing reveals the exact issues reported by the user. ROOT CAUSE IDENTIFIED: Invalid API keys causing complete system failure. DETAILED FINDINGS: 1) ❌ MAIN ENDPOINT FAILING: POST /api/legal-qa/ask returns 502 errors for most requests, when successful returns fallback responses with 0% confidence and 'I apologize, but I'm unable to generate a response at this time' message - exactly matching user report. 2) ✅ STATS ENDPOINTS WORKING: GET /api/legal-qa/stats returns 200 with proper structure (vector_db='faiss', embeddings_model='all-MiniLM-L6-v2', 304 indexed documents), GET /api/legal-qa/knowledge-base/stats returns 200 with 304 documents across 9 jurisdictions and 10 legal domains. 3) ❌ API KEY ISSUES CONFIRMED: Backend logs show critical errors: 'Error with Gemini generation: 400 API key not valid', 'Error with Groq generation: Error code: 401 - Invalid API Key'. System falling back to random embeddings and returning fallback responses. 4) ❌ 0/5 LEGAL QUESTIONS WORKING: Tested 5 different legal questions across various domains - all return either 502 errors or fallback responses with 0% confidence. Success rate: 0.0% - confirms user report. 5) ✅ KNOWLEDGE BASE POPULATED: System has 304 documents properly indexed with good domain distribution, but cannot generate responses due to AI API failures. CRITICAL IMPACT: Legal Q&A system completely non-functional for actual legal questions due to invalid Gemini (AIzaSyC1Bp8qNGOJ28r4aMfCuRSUqHI0p4W-BvY) and Groq (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) API keys. System architecture is sound but requires valid API keys to function."
+
 agent_communication:
     -agent: "main"
     -message: "ACADEMIC LEGAL CONTENT COLLECTION TESTING REQUEST: The system already has comprehensive academic collection functionality implemented with POST /api/legal-qa/rebuild-academic-knowledge-base endpoint. Need to test: 1) Academic collection endpoint functionality and response structure 2) Google Scholar Legal collection method targeting 2,000+ academic papers 3) Legal journals collection targeting 1,000+ bar journal articles and professional publications 4) Legal research papers collection targeting 500+ academic repository documents 5) Academic quality control filters including minimum 1,500 words, peer-reviewed focus, citation analysis 6) Enhanced metadata extraction for academic sources including author information, publication details, journal names 7) Quality metrics and validation systems. Test should verify the system can deliver the required 3,500+ academic documents with proper quality control and enhanced scholarly source integration. All API keys (SERP_API_KEY, COURTLISTENER_API_KEY) are configured and ready."
