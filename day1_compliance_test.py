@@ -558,7 +558,8 @@ class Day1ComplianceSystemTester:
                 "duration": "2_years"
             },
             "special_clauses": ["Attorney supervision clause"],
-            "client_id": self.client_id or f"compliant_client_{random.randint(1000, 9999)}"
+            "client_id": self.client_id or f"compliant_client_{random.randint(1000, 9999)}",
+            "document_id": f"doc_{random.randint(100000, 999999)}"  # Add required document_id
         }
         
         success, response = self.run_test(
