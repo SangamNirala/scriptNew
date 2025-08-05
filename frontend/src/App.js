@@ -425,8 +425,8 @@ function App() {
   const generateContract = async () => {
     setIsGenerating(true);
     try {
-      // Check if client consent is required and not given
-      if (complianceMode && !clientConsent) {
+      // Always show consent manager in compliance mode - user wants it to show every time
+      if (complianceMode) {
         setShowConsentManager(true);
         // Don't set isGenerating to false - keep it true so we can resume after consent
         return;
