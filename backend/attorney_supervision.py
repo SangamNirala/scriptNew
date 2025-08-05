@@ -609,17 +609,55 @@ class AttorneySupervisionSystem:
             logger.error(f"Failed to send email: {e}")
 
     def _calculate_estimated_completion(self, review: Dict[str, Any]) -> str:
-        """Calculate estimated completion time for review"""
+        """Calculate estimated completion time for review with dynamic adjustment"""
         try:
+            status = review.get("status", "pending")
             estimated_hours = review.get("estimated_review_time", 2.0)
-            created_at = review["created_at"]
-            if isinstance(created_at, str):
-                created_at = datetime.fromisoformat(created_at)
             
-            estimated_completion = created_at + timedelta(hours=estimated_hours)
+            # If already completed, return actual completion time
+            if status in ["approved", "rejected"]:
+                completion_date = review.get("completion_date")
+                if completion_date:
+                    return completion_date
+            
+            # Get the start time (assignment_date for in_review, created_at for pending)
+            if status == "in_review":
+                start_time = review.get("assignment_date") or review.get("created_at")
+            else:
+                start_time = review.get("created_at")
+                
+            if isinstance(start_time, str):
+                start_time = datetime.fromisoformat(start_time)
+            
+            if status == "pending":
+                # For pending reviews, estimate from now + queue delay
+                queue_delay = 0.5  # Assume 30 minutes queue delay
+                estimated_completion = datetime.utcnow() + timedelta(hours=queue_delay + estimated_hours)
+            else:
+                # For in_review, calculate remaining time based on progress
+                current_progress = self._calculate_progress_percentage(review)
+                if current_progress >= 95:
+                    # Nearly complete, should finish soon
+                    estimated_completion = datetime.utcnow() + timedelta(minutes=15)
+                else:
+                    # Calculate remaining work
+                    elapsed_time = datetime.utcnow() - start_time
+                    elapsed_hours = elapsed_time.total_seconds() / 3600
+                    
+                    # Estimate remaining time based on current progress
+                    if current_progress > 25:
+                        progress_factor = (current_progress - 25) / 70  # Progress from 25% to 95%
+                        remaining_factor = 1 - progress_factor
+                        remaining_hours = estimated_hours * remaining_factor
+                        estimated_completion = datetime.utcnow() + timedelta(hours=max(0.25, remaining_hours))
+                    else:
+                        estimated_completion = start_time + timedelta(hours=estimated_hours)
+            
             return estimated_completion.isoformat()
             
-        except Exception:
+        except Exception as e:
+            logger.warning(f"Error calculating estimated completion: {e}")
+            # Fallback: 2 hours from now
             return (datetime.utcnow() + timedelta(hours=2)).isoformat()
 
     def _calculate_progress_percentage(self, review: Dict[str, Any]) -> float:
