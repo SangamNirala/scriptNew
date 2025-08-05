@@ -423,6 +423,11 @@ function App() {
   };
 
   const generateContract = async () => {
+    // Reset consent flag at the start of each new contract generation
+    if (!isGenerating) {
+      setConsentJustProvided(false);
+    }
+    
     setIsGenerating(true);
     try {
       // Always show consent manager in compliance mode - unless consent was just provided
