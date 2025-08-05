@@ -86,6 +86,10 @@ class AttorneyAuth:
                 "max_concurrent_reviews": 10
             }
             
+            # Convert enum to string for MongoDB storage
+            if 'role' in attorney_record and hasattr(attorney_record['role'], 'value'):
+                attorney_record['role'] = attorney_record['role'].value
+            
             # Remove plain password
             del attorney_record['password']
             
