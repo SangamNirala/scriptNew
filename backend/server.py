@@ -13153,15 +13153,21 @@ async def create_demo_attorney():
         
         role_enum = role_mapping["reviewing_attorney"]
         
-        result = await attorney_auth.create_attorney(
-            demo_attorney_data["full_name"],
-            demo_attorney_data["email"],
-            demo_attorney_data["password"],
-            demo_attorney_data["bar_number"],
-            demo_attorney_data["jurisdiction"],
-            demo_attorney_data["specializations"],
-            role_enum
-        )
+        # Create attorney data dict for create_attorney_account method
+        attorney_data = {
+            "first_name": "Demo",
+            "last_name": "Attorney",
+            "email": demo_attorney_data["email"],
+            "password": demo_attorney_data["password"],
+            "bar_number": demo_attorney_data["bar_number"],
+            "jurisdiction": demo_attorney_data["jurisdiction"],
+            "specializations": demo_attorney_data["specializations"],
+            "years_experience": 5,
+            "role": role_enum,
+            "id": str(uuid.uuid4())
+        }
+        
+        result = await attorney_auth.create_attorney_account(attorney_data)
         
         if result:
             return {
