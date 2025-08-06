@@ -279,7 +279,7 @@ frontend:
     file: "/app/frontend/src/App.js, /app/frontend/src/components/ConsentManager.js"
     stuck_count: 0
     priority: "critical"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         -working: "NA"
         -agent: "main"
