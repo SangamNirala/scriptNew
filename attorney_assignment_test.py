@@ -407,7 +407,7 @@ class AttorneyAssignmentTester:
                 **CONTRACT LAW PROVISIONS**
                 This agreement contains specific contract law clauses requiring specialized review.
                 """,
-                "document_type": "service_agreement",
+                "document_type": "contract",
                 "client_id": f"client_{int(time.time())}_{random.randint(1000, 9999)}",
                 "original_request": {
                     "contract_type": "service_agreement",
