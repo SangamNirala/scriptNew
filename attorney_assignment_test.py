@@ -189,7 +189,7 @@ class AttorneyAssignmentTester:
             **PROFIT SHARING**
             Profits shall be shared equally between the parties (50/50 split).
             """,
-            "document_type": "partnership_agreement",
+            "document_type": "contract",
             "client_id": f"client_{int(time.time())}_{random.randint(1000, 9999)}",
             "original_request": {
                 "contract_type": "partnership_agreement",
