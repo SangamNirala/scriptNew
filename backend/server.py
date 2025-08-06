@@ -13169,10 +13169,10 @@ async def create_demo_attorney():
         
         result = await attorney_auth.create_attorney_account(attorney_data)
         
-        if result:
+        if result.get("success"):
             return {
                 "success": True,
-                "attorney_id": result,
+                "attorney_id": result.get("attorney_id"),
                 "message": "Demo attorney created successfully",
                 "credentials": {
                     "email": demo_attorney_data["email"],
@@ -13180,7 +13180,7 @@ async def create_demo_attorney():
                 }
             }
         else:
-            raise HTTPException(status_code=500, detail="Failed to create demo attorney")
+            raise HTTPException(status_code=500, detail=f"Failed to create demo attorney: {result.get('error', 'Unknown error')}")
     
     except Exception as e:
         logger.error(f"Error creating demo attorney: {e}")
