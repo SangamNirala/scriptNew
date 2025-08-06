@@ -67,7 +67,7 @@ class AttorneyAssignmentTester:
             "last_name": "Johnson",
             "bar_number": f"BAR{random.randint(100000, 999999)}",
             "jurisdiction": "US",
-            "role": "senior_attorney",
+            "role": "reviewing_attorney",
             "specializations": ["contract_law", "business_law"],
             "years_experience": 8,
             "password": "SecurePassword123!"
