@@ -13186,6 +13186,7 @@ async def create_demo_attorney():
         logger.error(f"Error creating demo attorney: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@api_router.post("/attorney/review/cleanup-stuck")
 async def cleanup_stuck_reviews():
     """Cleanup script to fix stuck legacy reviews by assigning attorneys"""
     if not COMPLIANCE_SYSTEM_AVAILABLE:
