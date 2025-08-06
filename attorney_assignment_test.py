@@ -372,7 +372,7 @@ class AttorneyAssignmentTester:
             "last_name": "Specialist",
             "bar_number": f"BAR{random.randint(100000, 999999)}",
             "jurisdiction": "US",
-            "role": "attorney",
+            "role": "reviewing_attorney",
             "specializations": ["contract_law"],
             "years_experience": 5,
             "password": "SecurePassword123!"
