@@ -1231,6 +1231,7 @@ function App() {
               setShowPlainEnglishCreator(false);
               setShowLegalQA(false);
               setShowVoiceAgent(false);
+              setShowLitigationAnalytics(false);
               setCurrentStep(1);
             }}
             variant="outline"
