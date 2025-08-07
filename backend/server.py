@@ -13472,6 +13472,11 @@ if LITIGATION_ANALYTICS_AVAILABLE:
         case_specific_insights: Dict[str, Any] = {}
         strategic_recommendations: List[str] = []
         confidence_score: float
+        # New validation fields
+        is_verified: bool = False
+        validation_sources: List[str] = []
+        validation_summary: str = ""
+        reference_links: List[Dict[str, str]] = []
     
     class JudgeComparisonRequest(BaseModel):
         judge_names: List[str]
