@@ -597,12 +597,17 @@ function App() {
 
   const handleConsentGiven = (consentGiven) => {
     console.log('✅ Consent given callback triggered:', consentGiven);
+    console.log('🔍 Current isGenerating state:', isGenerating);
+    
     setClientConsent(consentGiven);
     setShowConsentManager(false);
     setConsentJustProvided(true); // Flag that consent was just provided
     
-    if (consentGiven && isGenerating) {
+    if (consentGiven) {
       console.log('🔄 Resuming contract generation after consent...');
+      // Set isGenerating back to true since we're continuing the flow
+      setIsGenerating(true);
+      
       // Resume contract generation after consent with a small delay to ensure state is updated
       setTimeout(() => {
         generateContract();
