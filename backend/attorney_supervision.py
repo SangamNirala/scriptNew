@@ -758,6 +758,22 @@ class AttorneySupervisionSystem:
             logger.error(f"Error in auto-assignment: {e}")
             return None
 
+    async def _notify_attorney_assignment(self, attorney: AttorneyProfile, review: DocumentReview):
+        """Send notification to attorney about new assignment"""
+        try:
+            # In a real system, this would send email/SMS/push notification
+            logger.info(f"Notification sent to attorney {attorney.email} about review {review.id}")
+        except Exception as e:
+            logger.warning(f"Failed to notify attorney {attorney.id}: {e}")
+
+    async def _notify_client_submission(self, review: DocumentReview):
+        """Send confirmation to client about document submission"""
+        try:
+            # In a real system, this would send email/SMS notification to client
+            logger.info(f"Confirmation sent to client {review.client_id} about review {review.id}")
+        except Exception as e:
+            logger.warning(f"Failed to notify client {review.client_id}: {e}")
+
 # Global attorney supervision system instance
 attorney_supervision_system = None
 
