@@ -112,6 +112,10 @@ class ScriptResponse(BaseModel):
     duration: str
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
+class ScriptUpdateRequest(BaseModel):
+    script_id: str
+    generated_script: str
+
 class AIVideoScriptResponse(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     original_prompt: str
