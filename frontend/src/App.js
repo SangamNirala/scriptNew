@@ -562,7 +562,7 @@ function App() {
       setCurrentStep(3); // Go back to terms step
     } finally {
       // Only set isGenerating to false if we're not showing consent manager
-      if (!showConsentManager || consentJustProvided) {
+      if (!showConsentManager) {
         console.log('🏁 Ending generateContract function, setting isGenerating to false');
         setIsGenerating(false);
       } else {
