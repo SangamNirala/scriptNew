@@ -13674,6 +13674,61 @@ if LITIGATION_ANALYTICS_AVAILABLE:
                 status_code=500,
                 detail=f"Error getting judge insights: {str(e)}"
             )
+
+    @api_router.post("/litigation/judge-comparison", response_model=JudgeComparisonResponse)
+    async def compare_judges(request: JudgeComparisonRequest):
+        """
+        Compare multiple judges for strategic litigation insights
+        
+        Provides:
+        - Side-by-side comparison of judicial metrics
+        - Settlement rates, plaintiff success rates, case durations
+        - Strategic recommendations for judge selection
+        - Best judge selection based on case strategy
+        """
+        try:
+            logger.info(f"⚖️ Comparing {len(request.judge_names)} judges: {request.judge_names}")
+            
+            if len(request.judge_names) < 2:
+                raise HTTPException(
+                    status_code=400,
+                    detail="At least 2 judges are required for comparison"
+                )
+            
+            # Get judicial analyzer
+            judicial_analyzer = await get_judicial_analyzer(db)
+            
+            # Perform judge comparison
+            comparison_result = await judicial_analyzer.compare_judges(
+                judge_names=request.judge_names,
+                case_type=request.case_type
+            )
+            
+            if 'error' in comparison_result:
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Judge comparison failed: {comparison_result['error']}"
+                )
+            
+            from datetime import datetime
+            
+            return JudgeComparisonResponse(
+                judges_compared=comparison_result['judges_compared'],
+                case_type_focus=comparison_result.get('case_type_focus'),
+                comparative_metrics=comparison_result['comparative_metrics'],
+                recommendations=comparison_result['recommendations'],
+                analysis_date=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                confidence_score=0.85  # Default confidence for comparison analysis
+            )
+            
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"❌ Judge comparison failed: {e}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error comparing judges: {str(e)}"
+            )
     
     @api_router.post("/litigation/settlement-probability", response_model=SettlementAnalysisResponse)
     async def calculate_settlement_probability(request: SettlementAnalysisRequest):
