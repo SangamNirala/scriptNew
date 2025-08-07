@@ -11,7 +11,7 @@ from datetime import datetime
 from typing import Dict, Any, List
 
 # Backend URL from environment
-BACKEND_URL = "https://fc206f94-21ee-426f-9426-e33dbc8e5fc9.preview.emergentagent.com/api"
+BACKEND_URL = "https://4df7dab6-b38a-48f1-983f-397d3fc09d87.preview.emergentagent.com/api"
 
 class LegalValidationTester:
     def __init__(self):
