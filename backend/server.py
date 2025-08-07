@@ -13698,10 +13698,11 @@ if LITIGATION_ANALYTICS_AVAILABLE:
             # Get judicial analyzer
             judicial_analyzer = await get_judicial_analyzer(db)
             
-            # Perform judge comparison
+            # Perform judge comparison with force refresh for fresh data
             comparison_result = await judicial_analyzer.compare_judges(
                 judge_names=request.judge_names,
-                case_type=request.case_type
+                case_type=request.case_type,
+                force_refresh=True
             )
             
             if 'error' in comparison_result:
