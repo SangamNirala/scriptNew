@@ -6,7 +6,7 @@ import re
 from datetime import datetime
 
 class DocumentGenerationFlowTester:
-    def __init__(self, base_url="https://b79d1488-ad9a-4593-9c6b-717e30c454a7.preview.emergentagent.com"):
+    def __init__(self, base_url="https://7efb11d9-e14d-4c0e-a682-d8b63cd333fb.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.tests_run = 0
