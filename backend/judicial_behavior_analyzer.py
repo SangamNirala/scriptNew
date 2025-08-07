@@ -90,6 +90,12 @@ class JudicialProfile:
     ai_analysis_summary: str = ""
     last_updated: datetime = field(default_factory=datetime.utcnow)
     confidence_score: float = 0.0
+    
+    # New validation fields
+    is_verified: bool = False
+    validation_sources: List[str] = field(default_factory=list)
+    validation_summary: str = ""
+    reference_links: List[Dict[str, str]] = field(default_factory=list)  # [{"name": "source", "url": "link"}]
 
 class JudicialBehaviorAnalyzer:
     """Main analyzer for judicial behavior and decision patterns"""
