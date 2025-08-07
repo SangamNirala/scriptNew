@@ -450,74 +450,109 @@ class AttorneySupervisionSystem:
     async def _auto_assign_attorney(self, document_type: DocumentType, priority: str) -> Optional[AttorneyProfile]:
         """Auto-assign document to best available attorney"""
         try:
-            # Query for available attorneys
-            query = {
-                "is_active": True,
-                "is_available": True,
-                "$expr": {"$lt": ["$current_review_count", "$max_concurrent_reviews"]}
-            }
+            logger.info(f"Starting attorney assignment for document_type: {document_type}, priority: {priority}")
             
-            # Prefer attorneys with relevant specializations
+            # Step 1: First try to find attorneys with relevant specializations and availability
             specialization_map = {
                 DocumentType.CONTRACT: ["contract_law", "business_law"],
                 DocumentType.LEGAL_ADVICE: ["general_practice"],
                 DocumentType.COMPLIANCE_CONTENT: ["compliance", "regulatory"]
             }
             
-            specializations = specialization_map.get(document_type, [])
+            specializations = specialization_map.get(document_type, ["contract_law"])
             
-            attorneys = await self.db.attorneys.find(query).to_list(50)
+            # Query for available attorneys with specializations
+            query_specialized = {
+                "is_active": True,
+                "is_available": True,
+                "specializations": {"$in": specializations},
+                "current_review_count": {"$lt": 10}
+            }
+            
+            attorneys = await self.db.attorneys.find(query_specialized).to_list(50)
+            logger.info(f"Found {len(attorneys)} specialized attorneys for specializations: {specializations}")
+            
+            # Step 2: If no specialized attorneys, try any available attorney
+            if not attorneys:
+                logger.info("No specialized attorneys found, trying general attorneys")
+                query_general = {
+                    "is_active": True,
+                    "is_available": True,
+                    "current_review_count": {"$lt": 10}
+                }
+                attorneys = await self.db.attorneys.find(query_general).to_list(50)
+                logger.info(f"Found {len(attorneys)} general attorneys")
+            
+            # Step 3: If still no attorneys, try any active attorney (ignoring availability)
+            if not attorneys:
+                logger.info("No available attorneys found, trying any active attorney")
+                query_any_active = {
+                    "is_active": True,
+                    "current_review_count": {"$lt": 10}
+                }
+                attorneys = await self.db.attorneys.find(query_any_active).to_list(50)
+                logger.info(f"Found {len(attorneys)} active attorneys")
+            
+            # Step 4: If still no attorneys, try absolutely any attorney
+            if not attorneys:
+                logger.info("No active attorneys found, trying any attorney in database")
+                attorneys = await self.db.attorneys.find({}).to_list(50)
+                logger.info(f"Found {len(attorneys)} total attorneys in database")
             
             if not attorneys:
-                logger.warning(f"No available attorneys found for document type {document_type}")
+                logger.error("No attorneys found in database at all")
                 return None
             
-            # Score attorneys based on availability and specialization
+            # Score attorneys and select the best one
             scored_attorneys = []
             for attorney_doc in attorneys:
                 try:
-                    # Handle potential enum field conversion issues
+                    # Handle role conversion
                     if isinstance(attorney_doc.get('role'), str):
                         try:
                             attorney_doc['role'] = AttorneyRole(attorney_doc['role'])
                         except ValueError:
-                            # If role conversion fails, default to reviewing attorney
                             attorney_doc['role'] = AttorneyRole.REVIEWING_ATTORNEY
                     
                     attorney = AttorneyProfile(**attorney_doc)
-                    score = 100 - attorney.current_review_count  # Base score
+                    
+                    # Base score - prefer less busy attorneys
+                    score = 100 - attorney.current_review_count
                     
                     # Bonus for relevant specializations
                     for spec in specializations:
                         if spec in attorney.specializations:
                             score += 20
                     
-                    # Bonus for lower average review time
-                    if attorney.average_review_time > 0:
-                        score += max(0, 50 - attorney.average_review_time)
+                    # Bonus for availability
+                    if attorney.is_available:
+                        score += 10
                     
                     # Priority case bonus for senior attorneys
                     if priority in ["high", "urgent"] and attorney.role in [AttorneyRole.SENIOR_PARTNER, AttorneyRole.SUPERVISING_ATTORNEY]:
                         score += 30
                     
                     scored_attorneys.append((attorney, score))
+                    logger.debug(f"Scored attorney {attorney.id} ({attorney.first_name} {attorney.last_name}): {score} points")
                     
                 except Exception as attorney_error:
                     logger.error(f"Failed to process attorney {attorney_doc.get('id', 'unknown')}: {attorney_error}")
                     continue
             
             if not scored_attorneys:
-                logger.warning(f"No attorneys could be processed for assignment")
+                logger.error("No attorneys could be processed for assignment")
                 return None
             
-            # Return highest scoring available attorney
+            # Return highest scoring attorney
             scored_attorneys.sort(key=lambda x: x[1], reverse=True)
             selected_attorney = scored_attorneys[0][0]
-            logger.info(f"Auto-assigned attorney {selected_attorney.id} ({selected_attorney.first_name} {selected_attorney.last_name}) for {document_type}")
+            logger.info(f"Successfully auto-assigned attorney {selected_attorney.id} ({selected_attorney.first_name} {selected_attorney.last_name}) for {document_type} with score {scored_attorneys[0][1]}")
             return selected_attorney
             
         except Exception as e:
-            logger.error(f"Failed to auto-assign attorney: {e}")
+            logger.error(f"Critical error in auto-assign attorney: {e}")
+            import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
             return None
 
     async def _get_review_by_id(self, review_id: str) -> Optional[DocumentReview]:
