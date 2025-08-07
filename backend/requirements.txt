@@ -134,3 +134,85 @@ pyphen>=0.17.0
 importlib-resources>=6.5.0
 importlib-metadata>=8.7.0
 jsonschema>=4.25.0
+
+# Critical Dependencies Added During Troubleshooting (January 2025)
+# These dependencies were identified as missing during production deployment
+# and are required for core functionality
+
+# Core NLP and Text Processing Dependencies
+soupsieve>=2.6.0           # CSS selector parser for BeautifulSoup
+tinysegmenter>=0.3         # Japanese text segmentation (newspaper3k dependency)
+jieba3k>=0.35.1            # Chinese text segmentation (newspaper3k dependency)
+feedfinder2>=0.0.4         # RSS feed discovery (newspaper3k dependency)
+sgmllib3k>=1.0.0           # SGML parsing support (feedparser dependency)
+
+# Enhanced SpaCy Dependencies  
+spacy-legacy>=3.0.12       # SpaCy legacy compatibility
+spacy-loggers>=1.0.5       # SpaCy logging system
+murmurhash>=1.0.13         # Hash functions for SpaCy
+cymem>=2.0.11              # Memory management for SpaCy
+preshed>=3.0.10            # Hash table implementation for SpaCy
+thinc>=8.3.4               # Machine learning library for SpaCy
+wasabi>=1.1.3              # Pretty printing for SpaCy
+srsly>=2.5.1               # Serialization utilities for SpaCy
+catalogue>=2.0.10          # Function registry for SpaCy
+weasel>=0.4.1              # SpaCy project management
+langcodes>=3.5.0           # Language code utilities
+language-data>=1.3.0       # Language data for langcodes
+
+# Machine Learning and Scientific Computing
+blis>=1.3.0                # BLAS-like linear algebra library
+confection>=0.1.5          # Configuration management
+threadpoolctl>=3.6.0       # Thread pool control for scikit-learn
+marisa-trie>=1.2.1         # Memory-efficient trie data structure
+
+# Network and HTTP Dependencies
+aiohttp>=3.12.0            # Async HTTP client/server (already listed above, ensuring consistency)
+aiohappyeyeballs>=2.6.1    # Fast DNS resolution
+aiosignal>=1.4.0           # Signal dispatching for asyncio
+attrs>=25.3.0              # Python classes without boilerplate
+frozenlist>=1.7.0          # Immutable list implementation
+multidict>=6.6.3           # Multi-dictionary implementation
+propcache>=0.3.2           # Property caching utilities
+yarl>=1.20.1               # URL parsing library
+distro>=1.9.0              # Linux distribution detection
+jiter>=0.10.0              # Fast JSON iterator
+tenacity>=9.1.2            # Retry library
+websockets>=15.0.1         # WebSocket implementation
+
+# Google API and Cloud Dependencies
+google-api-core>=2.25.1        # Google API client core
+google-api-python-client>=2.178.0  # Google APIs client library
+google-auth>=2.40.3            # Google authentication library
+google-auth-httplib2>=0.2.0    # Google auth HTTP transport
+googleapis-common-protos>=1.70.0   # Common protobuf messages
+grpcio>=1.74.0                 # gRPC Python implementation
+grpcio-status>=1.71.2          # gRPC status proto mapping
+httplib2>=0.22.0               # HTTP client library
+pyparsing>=3.2.3               # Python parsing module
+uritemplate>=4.2.0             # URI template processor
+cachetools>=5.5.2              # Extensible memoizing collections
+pyasn1-modules>=0.4.2          # ASN.1 modules for pyasn1
+
+# Additional Core Dependencies
+filelock>=3.18.0               # Platform independent file locking
+fsspec>=2025.7.0               # Filesystem interface
+huggingface-hub>=0.34.3        # Hugging Face model hub
+tokenizers>=0.21.4             # Fast tokenization library
+tiktoken>=0.10.0               # OpenAI's tiktoken tokenizer
+httpcore>=1.0.9                # HTTP/1.1 and HTTP/2 support
+jsonschema-specifications>=2025.4.1  # JSON schema specifications
+referencing>=0.36.2            # JSON reference resolution
+rpds-py>=0.26.0                # Python bindings for Rust data structures
+zipp>=3.23.0                   # Backport of pathlib-compatible object wrapper
+smart-open>=7.3.0              # Streaming I/O library
+cloudpathlib>=0.21.1           # Cloud storage path library
+wrapt>=1.17.2                  # Decorator utilities
+requests-file>=2.1.0           # File transport adapter for Requests
+
+# Core System Dependencies (ensure versions)
+certifi>=2025.7.14             # Root certificates bundle
+charset-normalizer>=3.4.0      # Character encoding detector
+idna>=3.10                     # Internationalized domain names
+urllib3>=2.5.0                 # HTTP library
+six>=1.17.0                    # Python 2 and 3 compatibility utilities
