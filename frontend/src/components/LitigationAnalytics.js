@@ -705,21 +705,11 @@ const LitigationAnalytics = ({ onBack }) => {
           </TabsContent>
 
           <TabsContent value="settlement">
-            <div className="text-center py-12">
-              <Calculator className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-700 mb-2">Settlement Calculator</h3>
-              <p className="text-gray-500 mb-4">Coming next - comprehensive settlement analysis</p>
-              <Badge variant="outline">In Development</Badge>
-            </div>
+            <SettlementCalculator />
           </TabsContent>
 
           <TabsContent value="strategy">
-            <div className="text-center py-12">
-              <Lightbulb className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-700 mb-2">Strategy Optimizer</h3>
-              <p className="text-gray-500 mb-4">Coming next - AI-powered litigation strategy recommendations</p>
-              <Badge variant="outline">In Development</Badge>
-            </div>
+            <LitigationStrategy />
           </TabsContent>
         </Tabs>
       </div>
