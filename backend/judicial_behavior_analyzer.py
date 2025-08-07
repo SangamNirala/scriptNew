@@ -211,14 +211,14 @@ class JudicialBehaviorAnalyzer:
             logger.error(f"❌ Failed to get judge insights: {e}")
             return self._get_default_insights(judge_name)
 
-    async def compare_judges(self, judge_names: List[str], case_type: Optional[str] = None) -> Dict[str, Any]:
+    async def compare_judges(self, judge_names: List[str], case_type: Optional[str] = None, force_refresh: bool = False) -> Dict[str, Any]:
         """Compare multiple judges for litigation strategy"""
         try:
             logger.info(f"⚖️ Comparing {len(judge_names)} judges")
             
-            # Analyze all judges
+            # Analyze all judges with force_refresh parameter
             profiles = await asyncio.gather(
-                *[self.analyze_judge(judge) for judge in judge_names],
+                *[self.analyze_judge(judge, force_refresh=force_refresh) for judge in judge_names],
                 return_exceptions=True
             )
             
