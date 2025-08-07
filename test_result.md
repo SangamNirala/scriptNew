@@ -2144,11 +2144,11 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Day 1 Legal Compliance - Attorney Review Action Endpoint"
-    - "Day 1 Legal Compliance - Compliant Contract Generation Endpoint"
+    - "Consent Popup Infinite Loop Issue Fix"
+    - "Classic Mode Contract Generation Flow"
   stuck_tasks: []
   test_all: false
-  test_priority: "critical_first"
+  test_priority: "consent_flow_fix_verification"
 
   - task: "Legal Updates Monitoring System - Monitor Status Endpoint"
     implemented: true
