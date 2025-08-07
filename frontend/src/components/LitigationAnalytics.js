@@ -22,7 +22,7 @@ import {
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-// Case outcome prediction component
+// Enhanced Case outcome prediction component with advanced analytics
 const CaseOutcomePredictor = ({ onPredictionComplete }) => {
   const [caseData, setCaseData] = useState({
     case_type: '',
@@ -38,8 +38,11 @@ const CaseOutcomePredictor = ({ onPredictionComplete }) => {
     settlement_offers: []
   });
   const [prediction, setPrediction] = useState(null);
+  const [similarCases, setSimilarCases] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [loadingSimilar, setLoadingSimilar] = useState(false);
   const [error, setError] = useState(null);
+  const [showAdvancedMetrics, setShowAdvancedMetrics] = useState(false);
 
   const caseTypes = [
     { value: 'civil', label: 'Civil' },
