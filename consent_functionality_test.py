@@ -24,7 +24,7 @@ import uuid
 from datetime import datetime
 
 class ConsentFunctionalityTester:
-    def __init__(self, base_url="https://33412ae4-3427-4ffa-9007-2b8f74fd4e79.preview.emergentagent.com"):
+    def __init__(self, base_url="https://6cd214f1-0c9c-45d0-b5f1-ba72b3ef157f.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.tests_run = 0
