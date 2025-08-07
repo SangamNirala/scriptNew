@@ -13402,5 +13402,603 @@ async def generate_contract_compliant(request: ContractRequest):
 # END COMPLIANCE AND ATTORNEY SUPERVISION ENDPOINTS
 # ====================================================================================================
 
+# ====================================================================================================
+# LITIGATION ANALYTICS ENGINE ENDPOINTS
+# ====================================================================================================
+
+# Import litigation analytics modules
+try:
+    from litigation_analytics_engine import get_litigation_engine, CaseData, CaseType, CaseOutcome
+    from case_outcome_predictor import get_case_outcome_predictor, CaseFeatures
+    from judicial_behavior_analyzer import get_judicial_analyzer
+    from settlement_probability_calculator import get_settlement_calculator
+    from litigation_strategy_optimizer import get_litigation_strategy_optimizer, StrategyType
+    LITIGATION_ANALYTICS_AVAILABLE = True
+    logger.info("✅ Litigation Analytics Engine modules loaded successfully")
+except ImportError as e:
+    logger.warning(f"⚠️ Litigation Analytics Engine not available: {e}")
+    LITIGATION_ANALYTICS_AVAILABLE = False
+
+if LITIGATION_ANALYTICS_AVAILABLE:
+    
+    # Pydantic models for litigation analytics API
+    class CaseAnalysisRequest(BaseModel):
+        case_id: Optional[str] = None
+        case_type: str
+        jurisdiction: str
+        court_level: Optional[str] = "district"
+        judge_name: Optional[str] = None
+        case_facts: Optional[str] = None
+        legal_issues: List[str] = []
+        case_complexity: Optional[float] = None
+        case_value: Optional[float] = None
+        filing_date: Optional[str] = None
+        evidence_strength: Optional[float] = None
+        witness_count: Optional[int] = None
+        settlement_offers: List[float] = []
+    
+    class CaseAnalysisResponse(BaseModel):
+        case_id: str
+        predicted_outcome: str
+        confidence_score: float
+        probability_breakdown: Dict[str, float]
+        estimated_duration: Optional[int] = None
+        estimated_cost: Optional[float] = None
+        settlement_probability: Optional[float] = None
+        settlement_range: Optional[Dict[str, float]] = None
+        risk_factors: List[str] = []
+        success_factors: List[str] = []
+        recommendations: List[str] = []
+        prediction_date: str
+    
+    class JudgeInsightsRequest(BaseModel):
+        judge_name: str
+        case_type: Optional[str] = None
+        case_value: Optional[float] = None
+    
+    class JudgeInsightsResponse(BaseModel):
+        judge_name: str
+        court: str
+        experience_years: float
+        total_cases: int
+        settlement_rate: float
+        plaintiff_success_rate: float
+        average_case_duration: float
+        case_specific_insights: Dict[str, Any] = {}
+        strategic_recommendations: List[str] = []
+        confidence_score: float
+    
+    class SettlementAnalysisRequest(BaseModel):
+        case_id: Optional[str] = None
+        case_type: str
+        jurisdiction: str
+        case_value: Optional[float] = None
+        evidence_strength: Optional[float] = None
+        case_complexity: Optional[float] = None
+        filing_date: Optional[str] = None
+        judge_name: Optional[str] = None
+    
+    class SettlementAnalysisResponse(BaseModel):
+        case_id: str
+        settlement_probability: float
+        optimal_timing: str
+        plaintiff_settlement_range: Dict[str, float]
+        defendant_settlement_range: Dict[str, float]
+        expected_settlement_value: float
+        settlement_urgency_score: float
+        confidence_score: float
+        key_settlement_factors: List[str]
+        negotiation_leverage: Dict[str, float]
+        scenarios: List[Dict[str, Any]] = []
+        ai_insights: str = ""
+        recommendations: List[str] = []
+    
+    class SimilarCasesRequest(BaseModel):
+        case_type: str
+        jurisdiction: str
+        case_value: Optional[float] = None
+        limit: int = 10
+    
+    class LitigationStrategyRequest(BaseModel):
+        case_id: Optional[str] = None
+        case_type: str
+        jurisdiction: str
+        court_level: Optional[str] = "district"
+        judge_name: Optional[str] = None
+        case_value: Optional[float] = None
+        evidence_strength: Optional[float] = None
+        case_complexity: Optional[float] = None
+        case_facts: Optional[str] = None
+        legal_issues: List[str] = []
+        filing_date: Optional[str] = None
+    
+    class LitigationStrategyResponse(BaseModel):
+        case_id: str
+        recommended_strategy_type: str
+        confidence_score: float
+        strategic_recommendations: List[Dict[str, Any]]
+        jurisdiction_analysis: List[Dict[str, Any]] = []
+        timing_analysis: List[Dict[str, Any]] = []
+        evidence_assessment: Optional[Dict[str, Any]] = None
+        estimated_total_cost: Optional[float] = None
+        expected_value: Optional[float] = None
+        risk_factors: List[str] = []
+        mitigation_strategies: List[str] = []
+        ai_strategic_summary: str = ""
+        alternative_strategies: List[Dict[str, Any]] = []
+    
+    @api_router.post("/litigation/analyze-case", response_model=CaseAnalysisResponse)
+    async def analyze_litigation_case(request: CaseAnalysisRequest):
+        """
+        Comprehensive case outcome analysis and prediction
+        
+        Provides AI-powered insights including:
+        - Outcome predictions with confidence scores
+        - Probability breakdown for all possible outcomes
+        - Cost and timeline estimates
+        - Risk and success factor analysis
+        - Strategic recommendations
+        """
+        try:
+            logger.info(f"🔍 Analyzing litigation case: {request.case_type} in {request.jurisdiction}")
+            
+            # Get litigation analytics engine
+            litigation_engine = await get_litigation_engine(db)
+            
+            # Convert request to CaseData
+            from datetime import datetime
+            filing_date = None
+            if request.filing_date:
+                try:
+                    filing_date = datetime.fromisoformat(request.filing_date)
+                except:
+                    filing_date = None
+            
+            case_data = CaseData(
+                case_id=request.case_id or str(uuid.uuid4()),
+                case_type=CaseType(request.case_type),
+                jurisdiction=request.jurisdiction,
+                court_level=request.court_level or "district",
+                judge_name=request.judge_name,
+                case_facts=request.case_facts,
+                legal_issues=request.legal_issues,
+                case_complexity=request.case_complexity,
+                case_value=request.case_value,
+                filing_date=filing_date,
+                evidence_strength=request.evidence_strength,
+                witness_count=request.witness_count,
+                settlement_offers=request.settlement_offers
+            )
+            
+            # Analyze case
+            prediction_result = await litigation_engine.analyze_case_outcome(case_data)
+            
+            # Format settlement range
+            settlement_range = None
+            if prediction_result.settlement_range:
+                settlement_range = {
+                    "low": prediction_result.settlement_range[0],
+                    "high": prediction_result.settlement_range[1]
+                }
+            
+            return CaseAnalysisResponse(
+                case_id=prediction_result.case_id,
+                predicted_outcome=prediction_result.predicted_outcome.value,
+                confidence_score=prediction_result.confidence_score,
+                probability_breakdown=prediction_result.probability_breakdown,
+                estimated_duration=prediction_result.estimated_duration,
+                estimated_cost=prediction_result.estimated_cost,
+                settlement_probability=prediction_result.settlement_probability,
+                settlement_range=settlement_range,
+                risk_factors=prediction_result.risk_factors,
+                success_factors=prediction_result.success_factors,
+                recommendations=prediction_result.recommendations,
+                prediction_date=prediction_result.prediction_date.isoformat()
+            )
+            
+        except Exception as e:
+            logger.error(f"❌ Case analysis failed: {e}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error analyzing case: {str(e)}"
+            )
+    
+    @api_router.get("/litigation/judge-insights/{judge_name}", response_model=JudgeInsightsResponse)
+    async def get_judge_insights(judge_name: str, case_type: Optional[str] = None, case_value: Optional[float] = None):
+        """
+        Get comprehensive judicial behavior insights and analysis
+        
+        Provides:
+        - Judge decision patterns and tendencies
+        - Success rates and case duration statistics
+        - Case-type specific insights
+        - Strategic recommendations for appearing before this judge
+        """
+        try:
+            logger.info(f"⚖️ Getting insights for Judge {judge_name}")
+            
+            # Get judicial analyzer
+            judicial_analyzer = await get_judicial_analyzer(db)
+            
+            # Get judge insights
+            insights = await judicial_analyzer.get_judge_insights_for_case(
+                judge_name=judge_name,
+                case_type=case_type or "civil",
+                case_value=case_value
+            )
+            
+            return JudgeInsightsResponse(
+                judge_name=insights['judge_name'],
+                court=insights['court'],
+                experience_years=insights['experience_years'],
+                total_cases=insights['overall_metrics']['total_cases'],
+                settlement_rate=insights['overall_metrics']['settlement_rate'],
+                plaintiff_success_rate=insights['overall_metrics']['plaintiff_success_rate'],
+                average_case_duration=insights['overall_metrics']['average_case_duration'],
+                case_specific_insights=insights['case_specific_insights'],
+                strategic_recommendations=insights['strategic_recommendations'],
+                confidence_score=insights['confidence_score']
+            )
+            
+        except Exception as e:
+            logger.error(f"❌ Judge insights failed: {e}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error getting judge insights: {str(e)}"
+            )
+    
+    @api_router.post("/litigation/settlement-probability", response_model=SettlementAnalysisResponse)
+    async def calculate_settlement_probability(request: SettlementAnalysisRequest):
+        """
+        Calculate settlement probability and provide negotiation strategy
+        
+        Features:
+        - Settlement likelihood with confidence scores
+        - Optimal timing recommendations
+        - Settlement range calculations
+        - Negotiation leverage analysis
+        - Multiple settlement scenarios
+        - AI-powered strategic insights
+        """
+        try:
+            logger.info(f"💰 Calculating settlement probability for {request.case_type} case")
+            
+            # Get settlement calculator
+            settlement_calculator = await get_settlement_calculator(db)
+            
+            # Convert request to case data
+            case_data = {
+                "case_id": request.case_id or str(uuid.uuid4()),
+                "case_type": request.case_type,
+                "jurisdiction": request.jurisdiction,
+                "case_value": request.case_value,
+                "evidence_strength": request.evidence_strength,
+                "case_complexity": request.case_complexity,
+                "filing_date": request.filing_date,
+                "judge_name": request.judge_name
+            }
+            
+            # Calculate settlement analysis
+            analysis = await settlement_calculator.calculate_settlement_probability(case_data)
+            
+            # Convert scenarios to dict format
+            scenarios = []
+            for scenario in analysis.scenarios:
+                scenarios.append({
+                    "scenario_name": scenario.scenario_name,
+                    "probability": scenario.probability,
+                    "settlement_amount": scenario.settlement_amount,
+                    "timing": scenario.timing.value,
+                    "key_conditions": scenario.key_conditions,
+                    "plaintiff_satisfaction": scenario.plaintiff_satisfaction,
+                    "defendant_satisfaction": scenario.defendant_satisfaction,
+                    "strategic_notes": scenario.strategic_notes
+                })
+            
+            return SettlementAnalysisResponse(
+                case_id=analysis.case_id,
+                settlement_probability=analysis.metrics.settlement_probability,
+                optimal_timing=analysis.metrics.optimal_timing.value,
+                plaintiff_settlement_range={
+                    "low": analysis.metrics.plaintiff_settlement_range[0],
+                    "high": analysis.metrics.plaintiff_settlement_range[1]
+                },
+                defendant_settlement_range={
+                    "low": analysis.metrics.defendant_settlement_range[0],
+                    "high": analysis.metrics.defendant_settlement_range[1]
+                },
+                expected_settlement_value=analysis.metrics.expected_settlement_value,
+                settlement_urgency_score=analysis.metrics.settlement_urgency_score,
+                confidence_score=analysis.metrics.confidence_score,
+                key_settlement_factors=analysis.metrics.key_settlement_factors,
+                negotiation_leverage=analysis.metrics.negotiation_leverage,
+                scenarios=scenarios,
+                ai_insights=analysis.ai_insights,
+                recommendations=analysis.recommendations
+            )
+            
+        except Exception as e:
+            logger.error(f"❌ Settlement probability calculation failed: {e}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error calculating settlement probability: {str(e)}"
+            )
+    
+    @api_router.get("/litigation/similar-cases")
+    async def find_similar_cases(
+        case_type: str,
+        jurisdiction: str,
+        case_value: Optional[float] = None,
+        limit: int = 10
+    ):
+        """
+        Find similar historical cases for precedent analysis
+        
+        Returns cases with similar characteristics including:
+        - Same case type and jurisdiction
+        - Similar case values (if provided)
+        - Outcome information
+        - Settlement details
+        - Duration and cost data
+        """
+        try:
+            logger.info(f"🔍 Finding similar cases for {case_type} in {jurisdiction}")
+            
+            # Build query for similar cases
+            query = {
+                "case_type": case_type,
+                "jurisdiction": jurisdiction
+            }
+            
+            # Add case value range if provided
+            if case_value:
+                value_range = case_value * 0.5  # 50% range
+                query["case_value"] = {
+                    "$gte": case_value - value_range,
+                    "$lte": case_value + value_range
+                }
+            
+            # Find similar cases
+            similar_cases = await db.litigation_cases.find(query).limit(limit).to_list(limit)
+            
+            # Convert ObjectId to string for JSON serialization
+            for case in similar_cases:
+                case = convert_objectid_to_str(case)
+            
+            return {
+                "similar_cases": similar_cases,
+                "total_found": len(similar_cases),
+                "search_criteria": {
+                    "case_type": case_type,
+                    "jurisdiction": jurisdiction,
+                    "case_value": case_value
+                }
+            }
+            
+        except Exception as e:
+            logger.error(f"❌ Similar cases search failed: {e}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error finding similar cases: {str(e)}"
+            )
+    
+    @api_router.post("/litigation/strategy-recommendations", response_model=LitigationStrategyResponse)
+    async def generate_litigation_strategy(request: LitigationStrategyRequest):
+        """
+        Generate comprehensive litigation strategy recommendations
+        
+        Provides:
+        - Optimal strategy type recommendation
+        - Detailed strategic recommendations with priorities
+        - Jurisdiction analysis and alternatives
+        - Timing optimization for key actions
+        - Evidence assessment and discovery priorities
+        - Cost-benefit analysis
+        - Risk mitigation strategies
+        - AI-powered strategic summary
+        """
+        try:
+            logger.info(f"🎯 Generating litigation strategy for {request.case_type} case")
+            
+            # Get strategy optimizer
+            strategy_optimizer = await get_litigation_strategy_optimizer(db)
+            
+            # Convert request to case data
+            case_data = {
+                "case_id": request.case_id or str(uuid.uuid4()),
+                "case_type": request.case_type,
+                "jurisdiction": request.jurisdiction,
+                "court_level": request.court_level,
+                "judge_name": request.judge_name,
+                "case_value": request.case_value,
+                "evidence_strength": request.evidence_strength,
+                "case_complexity": request.case_complexity,
+                "case_facts": request.case_facts,
+                "legal_issues": request.legal_issues,
+                "filing_date": request.filing_date
+            }
+            
+            # Generate strategy
+            strategy = await strategy_optimizer.optimize_litigation_strategy(case_data)
+            
+            # Convert strategic recommendations to dict format
+            strategic_recommendations = []
+            for rec in strategy.strategic_recommendations:
+                strategic_recommendations.append({
+                    "title": rec.title,
+                    "description": rec.description,
+                    "priority": rec.priority.value,
+                    "category": rec.category,
+                    "estimated_cost": rec.estimated_cost,
+                    "estimated_timeframe": rec.estimated_timeframe,
+                    "success_probability": rec.success_probability,
+                    "risk_level": rec.risk_level,
+                    "supporting_evidence": rec.supporting_evidence
+                })
+            
+            # Convert jurisdiction analysis to dict format
+            jurisdiction_analysis = []
+            for analysis in strategy.jurisdiction_analysis:
+                jurisdiction_analysis.append({
+                    "jurisdiction": analysis.jurisdiction,
+                    "suitability_score": analysis.suitability_score,
+                    "advantages": analysis.advantages,
+                    "disadvantages": analysis.disadvantages,
+                    "average_case_duration": analysis.average_case_duration,
+                    "success_rate": analysis.success_rate_for_case_type,
+                    "settlement_rate": analysis.settlement_rate
+                })
+            
+            # Convert timing analysis to dict format
+            timing_analysis = []
+            for timing in strategy.timing_analysis:
+                timing_analysis.append({
+                    "action_type": timing.action_type,
+                    "optimal_window": {
+                        "start": timing.optimal_window[0].isoformat(),
+                        "end": timing.optimal_window[1].isoformat()
+                    },
+                    "urgency_level": timing.urgency_level,
+                    "rationale": timing.rationale,
+                    "dependencies": timing.dependencies,
+                    "risk_factors": timing.risk_factors
+                })
+            
+            # Convert evidence assessment to dict format
+            evidence_assessment = None
+            if strategy.evidence_assessment:
+                evidence_assessment = {
+                    "overall_strength": strategy.evidence_assessment.overall_strength,
+                    "key_strengths": strategy.evidence_assessment.key_strengths,
+                    "critical_weaknesses": strategy.evidence_assessment.critical_weaknesses,
+                    "evidence_gaps": strategy.evidence_assessment.evidence_gaps,
+                    "discovery_priorities": strategy.evidence_assessment.discovery_priorities,
+                    "document_quality": strategy.evidence_assessment.document_quality,
+                    "expert_witness_needs": strategy.evidence_assessment.expert_witness_needs
+                }
+            
+            return LitigationStrategyResponse(
+                case_id=strategy.case_id,
+                recommended_strategy_type=strategy.recommended_strategy_type.value,
+                confidence_score=strategy.confidence_score,
+                strategic_recommendations=strategic_recommendations,
+                jurisdiction_analysis=jurisdiction_analysis,
+                timing_analysis=timing_analysis,
+                evidence_assessment=evidence_assessment,
+                estimated_total_cost=strategy.estimated_total_cost,
+                expected_value=strategy.expected_value,
+                risk_factors=strategy.risk_factors,
+                mitigation_strategies=strategy.mitigation_strategies,
+                ai_strategic_summary=strategy.ai_strategic_summary,
+                alternative_strategies=strategy.alternative_strategies
+            )
+            
+        except Exception as e:
+            logger.error(f"❌ Strategy generation failed: {e}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error generating litigation strategy: {str(e)}"
+            )
+    
+    @api_router.get("/litigation/analytics-dashboard")
+    async def get_analytics_dashboard():
+        """
+        Get comprehensive litigation analytics dashboard data
+        
+        Provides overview statistics and metrics for the litigation analytics system
+        """
+        try:
+            logger.info("📊 Fetching litigation analytics dashboard data")
+            
+            # Get database statistics
+            total_cases = await db.litigation_cases.count_documents({})
+            total_predictions = await db.litigation_analytics.count_documents({})
+            total_settlements = await db.settlement_data.count_documents({})
+            
+            # Get recent analytics
+            recent_predictions = await db.litigation_analytics.find({}).sort("prediction_date", -1).limit(10).to_list(10)
+            
+            # Calculate prediction accuracy if available
+            accuracy_metrics = await db.litigation_analytics.aggregate([
+                {"$match": {"accuracy_verified": True}},
+                {"$group": {
+                    "_id": None,
+                    "total_verified": {"$sum": 1},
+                    "correct_predictions": {
+                        "$sum": {
+                            "$cond": [
+                                {"$eq": ["$predicted_outcome", "$actual_outcome"]},
+                                1,
+                                0
+                            ]
+                        }
+                    }
+                }}
+            ]).to_list(1)
+            
+            accuracy_rate = 0.0
+            if accuracy_metrics:
+                metrics = accuracy_metrics[0]
+                accuracy_rate = metrics["correct_predictions"] / metrics["total_verified"] if metrics["total_verified"] > 0 else 0.0
+            
+            # Case type distribution
+            case_type_stats = await db.litigation_cases.aggregate([
+                {"$group": {"_id": "$case_type", "count": {"$sum": 1}}},
+                {"$sort": {"count": -1}}
+            ]).to_list(10)
+            
+            # Jurisdiction distribution
+            jurisdiction_stats = await db.litigation_cases.aggregate([
+                {"$group": {"_id": "$jurisdiction", "count": {"$sum": 1}}},
+                {"$sort": {"count": -1}}
+            ]).to_list(10)
+            
+            return {
+                "overview": {
+                    "total_cases_analyzed": total_cases,
+                    "total_predictions_made": total_predictions,
+                    "total_settlements_tracked": total_settlements,
+                    "prediction_accuracy": accuracy_rate,
+                    "system_status": "operational"
+                },
+                "recent_activity": {
+                    "recent_predictions": [convert_objectid_to_str(pred) for pred in recent_predictions],
+                    "predictions_last_7_days": await db.litigation_analytics.count_documents({
+                        "prediction_date": {"$gte": datetime.utcnow() - timedelta(days=7)}
+                    })
+                },
+                "distribution_stats": {
+                    "by_case_type": [{"case_type": stat["_id"], "count": stat["count"]} for stat in case_type_stats],
+                    "by_jurisdiction": [{"jurisdiction": stat["_id"], "count": stat["count"]} for stat in jurisdiction_stats]
+                },
+                "timestamp": datetime.utcnow().isoformat()
+            }
+            
+        except Exception as e:
+            logger.error(f"❌ Dashboard data fetch failed: {e}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error fetching dashboard data: {str(e)}"
+            )
+
+else:
+    # Fallback endpoints when litigation analytics is not available
+    @api_router.post("/litigation/analyze-case")
+    async def analyze_case_fallback(request: dict):
+        raise HTTPException(
+            status_code=503,
+            detail="Litigation Analytics Engine is currently unavailable. Please check system configuration."
+        )
+    
+    @api_router.get("/litigation/judge-insights/{judge_name}")
+    async def judge_insights_fallback(judge_name: str):
+        raise HTTPException(
+            status_code=503,
+            detail="Judicial Behavior Analyzer is currently unavailable. Please check system configuration."
+        )
+
+# END LITIGATION ANALYTICS ENGINE ENDPOINTS
+# ====================================================================================================
+
 # Include all API routes in the main app (after ALL endpoints are defined)
 app.include_router(api_router)
