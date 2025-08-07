@@ -106,6 +106,8 @@ user_problem_statement: "You are an expert in text-to-speech (TTS) systems and u
 
 **CONTINUATION REQUEST:** When the "Enhance Prompt" button is clicked, the system should continue to generate the three categorized enhanced prompts: Emotional Engagement Focus, Technical Excellence Focus, Viral Potential Focus. However, each enhanced prompt should be significantly upgraded in depth, clarity, and structure — making them fully optimized for generating high-quality, ready-to-use scripts. The enhancements should go beyond surface-level rewording and incorporate advanced prompt engineering techniques tailored to each focus area.
 
+**NEW FEATURE REQUEST:** In the Generated Script section, please add a new button labeled "Enhance Image Prompt" positioned below the "Listen" button. When clicked, it should automatically enhance all the image prompts associated with each shot by adding more descriptive text, visual and contextual details, and structuring the prompt in a way that is easily understood by any AI image generators. The goal is to produce high-quality, contextually accurate images when used with AI image generation tools.
+
   - task: "Phase 2: Master Prompt Template V2.0 & Dynamic Context Integration"
     implemented: true
     working: true
