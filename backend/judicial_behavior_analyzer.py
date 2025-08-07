@@ -185,10 +185,10 @@ class JudicialBehaviorAnalyzer:
             logger.error(f"❌ Judicial analysis failed for {judge_name}: {e}")
             return self._create_error_profile(judge_name, str(e))
 
-    async def get_judge_insights_for_case(self, judge_name: str, case_type: str, case_value: Optional[float] = None) -> Dict[str, Any]:
-        """Get specific insights for a judge in context of a particular case type"""
+    async def get_judge_insights_for_case(self, judge_name: str, case_type: str, case_value: Optional[float] = None, jurisdiction: str = None) -> Dict[str, Any]:
+        """Get specific insights for a judge in context of a particular case type with validation"""
         try:
-            profile = await self.analyze_judge(judge_name)
+            profile = await self.analyze_judge(judge_name, jurisdiction=jurisdiction)
             
             # Get case-specific insights
             case_pattern = profile.case_type_patterns.get(case_type)
