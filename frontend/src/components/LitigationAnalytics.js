@@ -708,6 +708,9 @@ const JudgeInsights = () => {
   const [error, setError] = useState(null);
   const [showComparison, setShowComparison] = useState(false);
   const [compareJudge, setCompareJudge] = useState('');
+  const [comparisonData, setComparisonData] = useState(null);
+  const [comparisonLoading, setComparisonLoading] = useState(false);
+  const [comparisonError, setComparisonError] = useState(null);
 
   const handleSearch = async () => {
     if (!judgeName.trim()) return;
