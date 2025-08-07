@@ -423,6 +423,8 @@ function App() {
   };
 
   const generateContract = async () => {
+    console.log('🔄 Starting generateContract function...');
+    
     // Reset consent flag at the start of each new contract generation
     if (!isGenerating) {
       setConsentJustProvided(false);
@@ -432,6 +434,7 @@ function App() {
     try {
       // Always show consent manager in compliance mode - unless consent was just provided
       if (complianceMode && !consentJustProvided) {
+        console.log('🔒 Showing consent manager...');
         setShowConsentManager(true);
         // Don't set isGenerating to false - keep it true so we can resume after consent
         return;
@@ -439,42 +442,130 @@ function App() {
       
       // Reset the consent flag after checking it
       if (consentJustProvided) {
+        console.log('✅ Consent was just provided, continuing with generation...');
         setConsentJustProvided(false);
       }
 
+      console.log('🔄 Calling contract generation API...');
+      console.log('📋 Contract data:', contractData);
+      console.log('👤 Client ID:', clientId);
+
       // Use compliant contract generation endpoint
       const endpoint = complianceMode ? '/generate-contract-compliant' : '/generate-contract';
-      const response = await axios.post(`${API}${endpoint}`, {
+      const fullUrl = `${API}${endpoint}`;
+      console.log('🌐 API URL:', fullUrl);
+
+      const requestData = {
         ...contractData,
         client_id: clientId
-      });
+      };
+      console.log('📤 Request data:', requestData);
+
+      const response = await axios.post(fullUrl, requestData);
+      console.log('✅ Contract generation API call successful');
+      console.log('📥 Full response:', response.data);
       
       setGeneratedContract(response.data);
       
-      // Check if a review was submitted
-      console.log('🔍 DEBUG: Contract generation response:', response.data);
-      console.log('🔍 DEBUG: Suggestions array:', response.data.suggestions);
+      // Enhanced review ID extraction with more debugging
+      console.log('🔍 Checking for review ID in suggestions...');
+      const suggestions = response.data.suggestions;
+      console.log('📝 Suggestions array:', suggestions);
+      console.log('📝 Suggestions type:', typeof suggestions);
+      console.log('📝 Is array?', Array.isArray(suggestions));
       
-      const reviewIdMatch = response.data.suggestions?.find(s => s.includes('review (ID:'));
-      console.log('🔍 DEBUG: Review ID match found:', reviewIdMatch);
-      
-      if (reviewIdMatch) {
-        const reviewId = reviewIdMatch.match(/ID:\s*([^)]+)/)?.[1];
-        console.log('🔍 DEBUG: Extracted review ID:', reviewId);
-        if (reviewId) {
-          console.log('🔍 DEBUG: Setting currentReviewId to:', reviewId);
-          setCurrentReviewId(reviewId);
+      if (suggestions && Array.isArray(suggestions)) {
+        console.log('🔍 Searching through suggestions for review ID...');
+        
+        let reviewIdFound = null;
+        for (let i = 0; i < suggestions.length; i++) {
+          const suggestion = suggestions[i];
+          console.log(`📝 Suggestion ${i}:`, suggestion);
+          
+          // Multiple patterns to catch review ID
+          if (suggestion && (
+            suggestion.includes('review (ID:') || 
+            suggestion.includes('review ID:') ||
+            suggestion.includes('ID:')
+          )) {
+            console.log('🎯 Found potential review ID match:', suggestion);
+            
+            // Try multiple regex patterns
+            const patterns = [
+              /review \(ID:\s*([^)]+)\)/i,
+              /review ID:\s*([^)]+)/i,
+              /ID:\s*([^)\s,]+)/i
+            ];
+            
+            for (const pattern of patterns) {
+              const match = suggestion.match(pattern);
+              if (match && match[1]) {
+                reviewIdFound = match[1].trim();
+                console.log('✅ Successfully extracted review ID:', reviewIdFound);
+                break;
+              }
+            }
+            
+            if (reviewIdFound) break;
+          }
+        }
+        
+        if (reviewIdFound) {
+          console.log('🎉 Setting currentReviewId to:', reviewIdFound);
+          setCurrentReviewId(reviewIdFound);
+          
+          // Additional verification - check if the review ID is valid
+          setTimeout(async () => {
+            try {
+              const statusResponse = await axios.get(`${API}/attorney/review/status/${reviewIdFound}`);
+              console.log('✅ Review status verification successful:', statusResponse.data);
+            } catch (statusError) {
+              console.error('❌ Review status verification failed:', statusError);
+            }
+          }, 2000);
+          
+        } else {
+          console.log('❌ Could not extract review ID from suggestions');
+          console.log('📝 Available suggestions for debugging:', suggestions);
         }
       } else {
-        console.log('🔍 DEBUG: No review ID match found in suggestions');
+        console.log('❌ No suggestions array found in response');
+        console.log('📊 Response structure:', Object.keys(response.data));
       }
       
+      console.log('🔄 Moving to step 4 (Contract Result)...');
       setCurrentStep(4);
+      
+      console.log('📚 Loading contracts...');
       await loadContracts();
+      
+      console.log('✅ Contract generation completed successfully');
+      
     } catch (error) {
-      console.error('Error generating contract:', error);
-      alert('Error generating contract: ' + (error.response?.data?.detail || error.message));
+      console.error('❌ Error in generateContract:', error);
+      console.error('❌ Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        config: error.config
+      });
+      
+      // More detailed error message
+      let errorMessage = 'Failed to generate contract. ';
+      if (error.response?.data?.detail) {
+        errorMessage += error.response.data.detail;
+      } else if (error.response?.data?.message) {
+        errorMessage += error.response.data.message;  
+      } else if (error.message) {
+        errorMessage += error.message;
+      }
+      
+      alert(errorMessage);
+      
+      // Reset state on error
+      setCurrentStep(3); // Go back to terms step
     } finally {
+      console.log('🏁 Ending generateContract function, setting isGenerating to false');
       setIsGenerating(false);
     }
   };
