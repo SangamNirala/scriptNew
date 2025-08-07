@@ -886,10 +886,28 @@ const ScriptGenerator = () => {
                   </div>
                 </div>
                 
-                <div 
-                  className="text-gray-200 leading-relaxed bg-white/5 p-4 rounded-lg max-h-96 overflow-y-auto"
-                  dangerouslySetInnerHTML={{ __html: formatScript(generatedScript) }}
-                />
+                {/* Script Content - Editable or Display */}
+                {isEditingScript ? (
+                  <div className="space-y-4">
+                    <textarea
+                      value={editedScript}
+                      onChange={(e) => handleScriptChange(e.target.value)}
+                      className="w-full h-80 p-4 bg-white/10 backdrop-blur-lg rounded-lg border border-white/20 text-gray-200 leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent"
+                      placeholder="Edit your script content here..."
+                    />
+                    {hasUnsavedChanges && (
+                      <div className="text-sm text-yellow-300 flex items-center space-x-2">
+                        <span>⚠️</span>
+                        <span>You have unsaved changes. Click "Save Changes" to apply them.</span>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div 
+                    className="text-gray-200 leading-relaxed bg-white/5 p-4 rounded-lg max-h-96 overflow-y-auto"
+                    dangerouslySetInnerHTML={{ __html: formatScript(generatedScript) }}
+                  />
+                )}
                 
                 <div className="mt-4 pt-4 border-t border-white/20 flex flex-wrap gap-3">
                   <button
