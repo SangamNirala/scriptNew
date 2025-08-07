@@ -1474,12 +1474,12 @@ function App() {
           )}
           
           {/* Legal Question Answering */}
-          {showLegalQA && (
+          {showLegalQA && !showLitigationAnalytics && (
             <LegalQuestionAnswering />
           )}
           
           {/* Voice Agent */}
-          {showVoiceAgent && (
+          {showVoiceAgent && !showLitigationAnalytics && (
             <VoiceAgent onClose={() => setShowVoiceAgent(false)} />
           )}
           
