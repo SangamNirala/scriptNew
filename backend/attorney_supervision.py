@@ -742,56 +742,7 @@ class AttorneySupervisionSystem:
         
         return 0
 
-    async def _auto_assign_attorney(self, document_type: DocumentType, priority: str = "normal") -> Optional[AttorneyProfile]:
-        """Automatically assign an available attorney based on specialization and workload"""
-        try:
-            # Determine required specialization based on document type
-            specialization_map = {
-                DocumentType.CONTRACT: "contract_law",
-                DocumentType.LEGAL_BRIEF: "litigation",
-                DocumentType.COMPLIANCE: "compliance",
-                DocumentType.EMPLOYMENT: "employment_law",
-                DocumentType.INTELLECTUAL_PROPERTY: "intellectual_property",
-                DocumentType.REAL_ESTATE: "real_estate",
-            }
-            
-            required_specialization = specialization_map.get(document_type, "contract_law")
-            
-            # Find available attorneys with the required specialization
-            attorneys_cursor = self.db.attorneys.find({
-                "is_active": True,
-                "specializations": {"$in": [required_specialization]},
-                "current_review_count": {"$lt": 10}  # Max 10 concurrent reviews
-            }).sort("current_review_count", 1)  # Sort by workload (least busy first)
-            
-            attorneys = await attorneys_cursor.to_list(50)
-            
-            if not attorneys:
-                # Fallback: find any available attorney if no specialist available
-                logger.warning(f"No specialist attorney found for {required_specialization}, using general assignment")
-                attorneys_cursor = self.db.attorneys.find({
-                    "is_active": True,
-                    "current_review_count": {"$lt": 10}
-                }).sort("current_review_count", 1)
-                attorneys = await attorneys_cursor.to_list(50)
-            
-            if attorneys:
-                # Select the attorney with the lowest workload
-                selected_attorney_doc = attorneys[0]
-                attorney = AttorneyProfile(**selected_attorney_doc)
-                
-                logger.info(f"Auto-assigned attorney {attorney.id} ({attorney.first_name} {attorney.last_name}) "
-                           f"for {document_type.value} document (specialization: {required_specialization}, "
-                           f"current workload: {selected_attorney_doc.get('current_review_count', 0)})")
-                
-                return attorney
-            else:
-                logger.warning(f"No available attorneys found for document type {document_type.value}")
-                return None
-                
-        except Exception as e:
-            logger.error(f"Error in auto-assignment: {e}")
-            return None
+
 
     async def _notify_attorney_assignment(self, attorney: AttorneyProfile, review: DocumentReview):
         """Send notification to attorney about new assignment"""
