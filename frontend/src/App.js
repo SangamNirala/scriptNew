@@ -426,11 +426,6 @@ function App() {
     console.log('🔄 Starting generateContract function...');
     console.log('🔍 Current state - isGenerating:', isGenerating, 'consentJustProvided:', consentJustProvided);
     
-    // Reset consent flag at the start of each new contract generation
-    if (!isGenerating && !consentJustProvided) {
-      setConsentJustProvided(false);
-    }
-    
     setIsGenerating(true);
     try {
       // Always show consent manager in compliance mode - unless consent was just provided
@@ -441,7 +436,7 @@ function App() {
         return;
       }
       
-      // Reset the consent flag after checking it
+      // Reset the consent flag after successful consent check
       if (consentJustProvided) {
         console.log('✅ Consent was just provided, continuing with generation...');
         setConsentJustProvided(false);
