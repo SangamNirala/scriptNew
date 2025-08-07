@@ -513,7 +513,7 @@ function App() {
           // Additional verification - check if the review ID is valid
           setTimeout(async () => {
             try {
-              const statusResponse = await axios.get(`${API}/attorney/review/status/${reviewIdFound}`);
+              const statusResponse = await axios.get(`${API}/api/attorney/review/status/${reviewIdFound}`);
               console.log('✅ Review status verification successful:', statusResponse.data);
             } catch (statusError) {
               console.error('❌ Review status verification failed:', statusError);
