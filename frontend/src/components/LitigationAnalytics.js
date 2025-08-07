@@ -700,12 +700,14 @@ const CaseOutcomePredictor = ({ onPredictionComplete }) => {
   );
 };
 
-// Judge insights component  
+// Enhanced Judge insights component with advanced analytics
 const JudgeInsights = () => {
   const [judgeName, setJudgeName] = useState('');
   const [insights, setInsights] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [showComparison, setShowComparison] = useState(false);
+  const [compareJudge, setCompareJudge] = useState('');
 
   const handleSearch = async () => {
     if (!judgeName.trim()) return;
