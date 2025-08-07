@@ -254,6 +254,14 @@ class JudicialBehaviorAnalyzer:
                 profile, case_type, case_value
             )
             
+            # Add validation information
+            insights.update({
+                'is_verified': profile.is_verified,
+                'validation_sources': profile.validation_sources,
+                'validation_summary': profile.validation_summary,
+                'reference_links': profile.reference_links
+            })
+            
             return insights
             
         except Exception as e:
