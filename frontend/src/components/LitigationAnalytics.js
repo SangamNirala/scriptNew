@@ -10,6 +10,8 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { Alert, AlertDescription } from './ui/alert';
+import SettlementCalculator from './SettlementCalculator';
+import LitigationStrategy from './LitigationStrategy';
 import {
   BarChart3, Brain, Scale, Target, TrendingUp, TrendingDown,
   Clock, DollarSign, Shield, AlertTriangle, CheckCircle,
