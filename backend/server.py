@@ -13717,12 +13717,13 @@ if LITIGATION_ANALYTICS_AVAILABLE:
             from datetime import datetime
             
             return JudgeComparisonResponse(
-                judges_compared=comparison_result['judges_compared'],
+                judges_compared=comparison_result.get('judges_compared', len(request.judge_names)),
                 case_type_focus=comparison_result.get('case_type_focus'),
-                comparative_metrics=comparison_result['comparative_metrics'],
-                recommendations=comparison_result['recommendations'],
+                comparative_metrics=comparison_result.get('comparative_metrics', {}),
+                recommendations=comparison_result.get('recommendations', {}),
                 analysis_date=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                confidence_score=0.85  # Default confidence for comparison analysis
+                confidence_score=0.85,  # Default confidence for comparison analysis
+                validation_info=comparison_result.get('validation_info')  # Include validation details
             )
             
         except HTTPException:
