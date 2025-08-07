@@ -260,30 +260,74 @@ class JudicialBehaviorAnalyzer:
             logger.error(f"❌ Failed to get judge insights: {e}")
             return self._get_default_insights(judge_name)
 
-    async def compare_judges(self, judge_names: List[str], case_type: Optional[str] = None, force_refresh: bool = False) -> Dict[str, Any]:
-        """Compare multiple judges for litigation strategy"""
+    async def compare_judges(self, judge_names: List[str], case_type: Optional[str] = None, force_refresh: bool = False, jurisdiction: str = None) -> Dict[str, Any]:
+        """Compare multiple judges for litigation strategy with validation"""
         try:
             logger.info(f"⚖️ Comparing {len(judge_names)} judges")
             
-            # Analyze all judges with force_refresh parameter
+            # Analyze all judges with force_refresh and jurisdiction parameters
             profiles = await asyncio.gather(
-                *[self.analyze_judge(judge, force_refresh=force_refresh) for judge in judge_names],
+                *[self.analyze_judge(judge, force_refresh=force_refresh, jurisdiction=jurisdiction) for judge in judge_names],
                 return_exceptions=True
             )
             
-            # Filter out failed analyses
-            valid_profiles = []
-            for i, profile in enumerate(profiles):
-                if not isinstance(profile, Exception):
-                    valid_profiles.append(profile)
-                else:
-                    logger.warning(f"⚠️ Failed to analyze Judge {judge_names[i]}")
+            # Filter out failed analyses and categorize results
+            verified_profiles = []
+            estimated_profiles = []
+            no_info_profiles = []
             
-            if not valid_profiles:
-                return {'error': 'No valid judge profiles found'}
+            for i, profile in enumerate(profiles):
+                if isinstance(profile, Exception):
+                    logger.warning(f"⚠️ Failed to analyze Judge {judge_names[i]}: {profile}")
+                    continue
+                    
+                if profile.confidence_score == 0.0 and "No reliable information" in profile.ai_analysis_summary:
+                    no_info_profiles.append(profile)
+                elif profile.is_verified:
+                    verified_profiles.append(profile)
+                else:
+                    estimated_profiles.append(profile)
+            
+            # Check if we have enough profiles to compare
+            total_usable_profiles = len(verified_profiles) + len(estimated_profiles)
+            
+            if total_usable_profiles == 0:
+                return {
+                    'error': 'No valid judge profiles found for comparison',
+                    'judges_with_no_information': [p.judge_name for p in no_info_profiles],
+                    'recommendation': 'Please verify judge names and jurisdictions, or check official court directories'
+                }
+            
+            if total_usable_profiles == 1:
+                return {
+                    'error': 'At least 2 judges with available information are required for comparison',
+                    'judges_with_information': len(verified_profiles + estimated_profiles),
+                    'judges_with_no_information': [p.judge_name for p in no_info_profiles]
+                }
+            
+            # Combine verified and estimated profiles for comparison
+            valid_profiles = verified_profiles + estimated_profiles
             
             # Generate comparison analysis
             comparison = self._generate_judge_comparison(valid_profiles, case_type)
+            
+            # Add validation information to comparison
+            comparison['validation_info'] = {
+                'verified_judges': len(verified_profiles),
+                'estimated_judges': len(estimated_profiles),
+                'judges_with_no_information': len(no_info_profiles),
+                'verification_details': [
+                    {
+                        'judge_name': profile.judge_name,
+                        'is_verified': profile.is_verified,
+                        'confidence_score': profile.confidence_score,
+                        'validation_summary': profile.validation_summary,
+                        'reference_links': profile.reference_links
+                    }
+                    for profile in valid_profiles
+                ],
+                'judges_not_found': [p.judge_name for p in no_info_profiles]
+            }
             
             return comparison
             
