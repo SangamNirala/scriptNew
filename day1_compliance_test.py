@@ -6,7 +6,7 @@ import random
 from datetime import datetime
 
 class Day1ComplianceSystemTester:
-    def __init__(self, base_url="https://d1bbad60-93d6-4924-9acb-b53fa5df85f4.preview.emergentagent.com"):
+    def __init__(self, base_url="https://7685452a-36e4-4aa2-8a33-030ed21ffcc0.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.tests_run = 0
