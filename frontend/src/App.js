@@ -48,6 +48,10 @@ const ScriptGenerator = () => {
   const [userImageBase64, setUserImageBase64] = useState(null);
   const [showAvatarOptions, setShowAvatarOptions] = useState(false);
 
+  // Image prompt enhancement state
+  const [isEnhancingImagePrompts, setIsEnhancingImagePrompts] = useState(false);
+  const [enhancedImagePrompts, setEnhancedImagePrompts] = useState("");
+
   // Ultra-realistic avatar generation state
   const [showUltraRealisticOptions, setShowUltraRealisticOptions] = useState(false);
   const [ultraAvatarStyle, setUltraAvatarStyle] = useState("business_professional");
