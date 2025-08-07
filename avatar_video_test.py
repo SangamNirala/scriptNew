@@ -7,7 +7,7 @@ import requests
 import json
 import time
 
-BACKEND_URL = "https://a426f42e-0dde-411a-ab07-0a2695323042.preview.emergentagent.com/api"
+BACKEND_URL = "https://32adf3f3-88c9-40a1-b6b3-c5997cdd2993.preview.emergentagent.com/api"
 
 def test_avatar_video_generation():
     """Test the avatar video generation functionality"""
