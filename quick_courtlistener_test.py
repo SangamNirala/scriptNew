@@ -4,7 +4,7 @@ import json
 from datetime import datetime
 
 class QuickCourtListenerTester:
-    def __init__(self, base_url="https://7efb11d9-e14d-4c0e-a682-d8b63cd333fb.preview.emergentagent.com"):
+    def __init__(self, base_url="https://33412ae4-3427-4ffa-9007-2b8f74fd4e79.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.tests_run = 0
