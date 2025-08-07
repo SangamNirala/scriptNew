@@ -1394,28 +1394,8 @@ function App() {
             />
           )}
           
-          {/* Review Status Display - Enhanced with better debugging and positioning */}
-          {currentReviewId && (
-            <div className="mb-6 w-full">
-              {console.log('🔍 DEBUG: Rendering ReviewStatus component with ID:', currentReviewId)}
-              {console.log('🔍 DEBUG: Current step:', currentStep)}
-              {console.log('🔍 DEBUG: Generated contract exists:', !!generatedContract)}
-              <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-4 mb-4">
-                <h3 className="text-lg font-semibold text-yellow-800 mb-2">
-                  📋 Attorney Review in Progress
-                </h3>
-                <p className="text-yellow-700 text-sm mb-3">
-                  Your document has been submitted for attorney supervision and review. 
-                  Progress will update automatically as the review progresses.
-                </p>
-                <ReviewStatus
-                  reviewId={currentReviewId}
-                  onStatusChange={handleReviewStatusChange}
-                  autoRefresh={true}
-                />
-              </div>
-            </div>
-          )}
+          {/* Review Status Display - REMOVED per user request */}
+          {/* Users will see generated document directly instead of progress tracking */}
           
           {/* Debug info for development */}
           {process.env.NODE_ENV === 'development' && (
