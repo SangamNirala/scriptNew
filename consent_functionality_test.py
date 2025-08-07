@@ -282,7 +282,7 @@ class ConsentFunctionalityTester:
         )
         
         if success and response:
-            required_fields = ['review_id', 'status', 'progress_percentage', 'estimated_completion', 'assigned_attorney']
+            required_fields = ['review_id', 'status', 'progress_percentage', 'estimated_completion', 'attorney']
             missing_fields = [field for field in required_fields if field not in response]
             
             if missing_fields:
