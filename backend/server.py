@@ -433,6 +433,23 @@ class ExampleDatabaseResponse(BaseModel):
     performance_metrics: Dict[str, float]
     last_updated: datetime
 
+# Image Prompt Enhancement Models
+class ImagePromptEnhancementRequest(BaseModel):
+    script_content: str
+    video_type: Optional[str] = "general"
+    enhancement_style: Optional[str] = "detailed"  # detailed, cinematic, artistic, photorealistic
+    target_ai_generator: Optional[str] = "universal"  # midjourney, dalle3, stable-diffusion, universal
+
+class ImagePromptEnhancementResponse(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    original_script: str
+    enhanced_script: str
+    enhancement_count: int
+    enhancement_style: str
+    target_ai_generator: str
+    enhancement_summary: List[str]
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
 # Add your routes to the router instead of directly to app
 @api_router.get("/")
 async def root():
