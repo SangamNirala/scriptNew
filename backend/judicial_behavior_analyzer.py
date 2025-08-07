@@ -113,37 +113,77 @@ class JudicialBehaviorAnalyzer:
         
         logger.info("⚖️ Judicial Behavior Analyzer initialized")
 
-    async def analyze_judge(self, judge_name: str, force_refresh: bool = False) -> JudicialProfile:
-        """Comprehensive analysis of a specific judge's behavior patterns"""
+    async def analyze_judge(self, judge_name: str, force_refresh: bool = False, jurisdiction: str = None) -> JudicialProfile:
+        """Comprehensive analysis of a specific judge's behavior patterns with validation"""
         try:
             logger.info(f"⚖️ Analyzing judicial behavior for Judge {judge_name}")
             
-            # Check for cached analysis
-            if not force_refresh:
+            # Step 1: Validate judge existence first
+            async with JudgeValidator() as validator:
+                validation_result = await validator.validate_judge(judge_name, jurisdiction)
+                
+                logger.info(f"🔍 Validation result for {judge_name}: {validation_result.confidence_score:.2f} confidence")
+                
+                # Handle validation results based on confidence
+                if validation_result.recommended_action == "NO_INFORMATION_FOUND":
+                    # Return "no information found" profile
+                    return self._create_no_information_profile(judge_name, validation_result)
+                    
+                elif validation_result.recommended_action == "TECHNICAL_ERROR":
+                    # Proceed with limited analysis due to validation error
+                    logger.warning(f"⚠️ Validation failed for {judge_name}, proceeding with limited analysis")
+            
+            # Step 2: Check for cached analysis (if not forcing refresh and judge is verified)
+            if not force_refresh and validation_result.is_verified:
                 cached_profile = await self._get_cached_profile(judge_name)
                 if cached_profile:
+                    # Update cached profile with latest validation info
+                    cached_profile.is_verified = validation_result.is_verified
+                    cached_profile.validation_sources = [s.name for s in validation_result.sources]
+                    cached_profile.validation_summary = validation_result.validation_summary
+                    cached_profile.reference_links = [{"name": s.name, "url": s.url} for s in validation_result.sources]
+                    
                     logger.info(f"📄 Using cached profile for Judge {judge_name}")
                     return cached_profile
             
-            # Collect judicial data
+            # Step 3: Collect judicial data
             judicial_data = await self._collect_judicial_data(judge_name)
             
-            if not judicial_data:
-                logger.warning(f"⚠️ No judicial data found for Judge {judge_name}")
-                return self._create_default_profile(judge_name)
+            # Step 4: Generate profile based on validation confidence
+            if validation_result.recommended_action == "HIGH_CONFIDENCE":
+                # High confidence - use real data if available, otherwise enhanced default
+                if judicial_data:
+                    profile = await self._generate_judicial_profile(judge_name, judicial_data)
+                else:
+                    profile = self._create_enhanced_default_profile(judge_name, validation_result)
+                    
+            elif validation_result.recommended_action == "MODERATE_CONFIDENCE":
+                # Moderate confidence - clearly label estimated data
+                if judicial_data:
+                    profile = await self._generate_judicial_profile(judge_name, judicial_data)
+                else:
+                    profile = self._create_enhanced_default_profile(judge_name, validation_result)
+                    
+            else:  # LOW_CONFIDENCE_ESTIMATED
+                # Low confidence - return clearly labeled estimated profile
+                profile = self._create_enhanced_default_profile(judge_name, validation_result)
             
-            # Analyze patterns and generate profile
-            profile = await self._generate_judicial_profile(judge_name, judicial_data)
+            # Step 5: Add validation information to profile
+            profile.is_verified = validation_result.is_verified
+            profile.validation_sources = [s.name for s in validation_result.sources]
+            profile.validation_summary = validation_result.validation_summary
+            profile.reference_links = [{"name": s.name, "url": s.url} for s in validation_result.sources]
             
-            # Cache the analysis
-            await self._cache_judicial_profile(profile)
+            # Step 6: Cache the analysis (only cache verified profiles)
+            if validation_result.is_verified:
+                await self._cache_judicial_profile(profile)
             
-            logger.info(f"✅ Judicial analysis completed for Judge {judge_name}")
+            logger.info(f"✅ Judicial analysis completed for Judge {judge_name} (Verified: {validation_result.is_verified})")
             return profile
             
         except Exception as e:
             logger.error(f"❌ Judicial analysis failed for {judge_name}: {e}")
-            return self._create_default_profile(judge_name)
+            return self._create_error_profile(judge_name, str(e))
 
     async def get_judge_insights_for_case(self, judge_name: str, case_type: str, case_value: Optional[float] = None) -> Dict[str, Any]:
         """Get specific insights for a judge in context of a particular case type"""
