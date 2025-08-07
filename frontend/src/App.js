@@ -14,6 +14,7 @@ const ScriptGenerator = () => {
   const [enhancementVariations, setEnhancementVariations] = useState([]);
   const [enhancementRecommendation, setEnhancementRecommendation] = useState("");
   const [generatedScript, setGeneratedScript] = useState("");
+  const [currentScriptId, setCurrentScriptId] = useState(""); // Track current script ID
   const [generatedWithPrompt, setGeneratedWithPrompt] = useState(""); // Track which prompt was used
   const [isEnhancing, setIsEnhancing] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -22,6 +23,12 @@ const ScriptGenerator = () => {
   const [scripts, setScripts] = useState([]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentUtterance, setCurrentUtterance] = useState(null);
+  
+  // Script editing state
+  const [isEditingScript, setIsEditingScript] = useState(false);
+  const [editedScript, setEditedScript] = useState("");
+  const [isSavingScript, setIsSavingScript] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   
   // Voice selection state
   const [voices, setVoices] = useState([]);
