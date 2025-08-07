@@ -1066,12 +1066,12 @@ const JudgeInsights = () => {
                   className="flex-1"
                 />
                 <Button 
-                  onClick={() => setShowComparison(true)}
-                  disabled={!compareJudge.trim()}
+                  onClick={handleCompare}
+                  disabled={!compareJudge.trim() || !judgeName.trim() || comparisonLoading}
                   variant="outline"
                 >
                   <Search className="h-4 w-4 mr-2" />
-                  Compare
+                  {comparisonLoading ? 'Comparing...' : 'Compare'}
                 </Button>
               </div>
               
