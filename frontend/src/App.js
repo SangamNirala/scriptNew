@@ -1438,7 +1438,7 @@ function App() {
           )}
           
           {/* Plain English Creator */}
-          {showPlainEnglishCreator && !showAnalytics && !useEnhancedWizard && !showLegalQA && !showVoiceAgent && (
+          {showPlainEnglishCreator && !showAnalytics && !useEnhancedWizard && !showLegalQA && !showVoiceAgent && !showLitigationAnalytics && (
             <PlainEnglishContractCreator
               contractTypes={contractTypes}
               jurisdictions={jurisdictions}
@@ -1447,12 +1447,17 @@ function App() {
           )}
           
           {/* Analytics Dashboard */}
-          {showAnalytics && !showLegalQA && !showVoiceAgent && (
+          {showAnalytics && !showLegalQA && !showVoiceAgent && !showLitigationAnalytics && (
             <AnalyticsDashboard onBack={() => setShowAnalytics(false)} />
           )}
           
+          {/* Litigation Analytics */}
+          {showLitigationAnalytics && !showAnalytics && !showLegalQA && !showVoiceAgent && !useEnhancedWizard && !showPlainEnglishCreator && (
+            <LitigationAnalytics onBack={() => setShowLitigationAnalytics(false)} />
+          )}
+          
           {/* Enhanced Contract Wizard */}
-          {useEnhancedWizard && !showAnalytics && !showLegalQA && !showVoiceAgent && (
+          {useEnhancedWizard && !showAnalytics && !showLegalQA && !showVoiceAgent && !showLitigationAnalytics && (
             <ResizeObserverErrorBoundary>
               <EnhancedContractWizard
                 contractTypes={contractTypes}
