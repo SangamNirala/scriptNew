@@ -448,10 +448,15 @@ metadata:
   run_ui: true
 
 test_plan:
-  current_focus: []
+  current_focus:
+    - "Frontend UI Testing - Script Generation Flow"
+    - "Frontend UI Testing - Prompt Enhancement Features"
+    - "Frontend UI Testing - Voice Selection and Audio Generation"
+    - "Frontend UI Testing - Avatar Video Generation (All 3 Types)"
+    - "Frontend UI Testing - Modal Interactions and Responsiveness"
   stuck_tasks: []
-  test_all: false
-  test_priority: "high_first"
+  test_all: true
+  test_priority: "frontend_comprehensive"
 
 agent_communication:
     - agent: "main"
