@@ -1077,11 +1077,118 @@ const JudgeInsights = () => {
               
               {showComparison && (
                 <div className="p-4 bg-gray-50 rounded-lg">
-                  <div className="text-center text-gray-600">
-                    <BarChart3 className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-                    <p className="text-sm">Comparison analysis would appear here</p>
-                    <p className="text-xs mt-1">Feature available in premium version</p>
-                  </div>
+                  {comparisonLoading && (
+                    <div className="text-center text-gray-600">
+                      <div className="animate-spin h-8 w-8 border-b-2 border-blue-600 rounded-full mx-auto mb-2"></div>
+                      <p className="text-sm">Comparing judges...</p>
+                    </div>
+                  )}
+                  
+                  {comparisonError && (
+                    <div className="text-center text-red-600">
+                      <AlertCircle className="h-8 w-8 mx-auto mb-2" />
+                      <p className="text-sm">Error: {comparisonError}</p>
+                    </div>
+                  )}
+                  
+                  {comparisonData && !comparisonLoading && (
+                    <div className="space-y-4">
+                      <div className="text-center mb-4">
+                        <h4 className="font-semibold text-lg text-gray-900">
+                          Judge Comparison Results
+                        </h4>
+                        <p className="text-sm text-gray-600">
+                          Comparing {judgeName} vs {compareJudge}
+                        </p>
+                      </div>
+                      
+                      {/* Comparative Metrics */}
+                      {comparisonData.comparative_metrics && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {/* Settlement Rates */}
+                          {comparisonData.comparative_metrics.settlement_rates && (
+                            <div className="bg-white p-3 rounded-lg border">
+                              <h5 className="font-medium text-gray-900 mb-2">Settlement Rates</h5>
+                              {Object.entries(comparisonData.comparative_metrics.settlement_rates).map(([judge, rate]) => (
+                                <div key={judge} className="flex justify-between items-center mb-1">
+                                  <span className="text-sm text-gray-600">{judge}:</span>
+                                  <span className="text-sm font-medium">{(rate * 100).toFixed(1)}%</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          
+                          {/* Plaintiff Success Rates */}
+                          {comparisonData.comparative_metrics.plaintiff_success_rates && (
+                            <div className="bg-white p-3 rounded-lg border">
+                              <h5 className="font-medium text-gray-900 mb-2">Plaintiff Success Rates</h5>
+                              {Object.entries(comparisonData.comparative_metrics.plaintiff_success_rates).map(([judge, rate]) => (
+                                <div key={judge} className="flex justify-between items-center mb-1">
+                                  <span className="text-sm text-gray-600">{judge}:</span>
+                                  <span className="text-sm font-medium">{(rate * 100).toFixed(1)}%</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          
+                          {/* Motion Grant Rates */}
+                          {comparisonData.comparative_metrics.motion_grant_rates && (
+                            <div className="bg-white p-3 rounded-lg border">
+                              <h5 className="font-medium text-gray-900 mb-2">Motion Grant Rates</h5>
+                              {Object.entries(comparisonData.comparative_metrics.motion_grant_rates).map(([judge, rate]) => (
+                                <div key={judge} className="flex justify-between items-center mb-1">
+                                  <span className="text-sm text-gray-600">{judge}:</span>
+                                  <span className="text-sm font-medium">{(rate * 100).toFixed(1)}%</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
+                      {/* Strategic Recommendations */}
+                      {comparisonData.recommendations && (
+                        <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                          <h5 className="font-medium text-blue-900 mb-3 flex items-center">
+                            <Lightbulb className="h-4 w-4 mr-2" />
+                            Strategic Recommendations
+                          </h5>
+                          <div className="space-y-2">
+                            {comparisonData.recommendations.best_for_settlement && (
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm text-blue-800">Best for Settlement:</span>
+                                <span className="text-sm font-medium text-blue-900">
+                                  {comparisonData.recommendations.best_for_settlement}
+                                </span>
+                              </div>
+                            )}
+                            {comparisonData.recommendations.best_for_plaintiff && (
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm text-blue-800">Best for Plaintiff:</span>
+                                <span className="text-sm font-medium text-blue-900">
+                                  {comparisonData.recommendations.best_for_plaintiff}
+                                </span>
+                              </div>
+                            )}
+                            {comparisonData.recommendations.fastest_resolution && (
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm text-blue-800">Fastest Resolution:</span>
+                                <span className="text-sm font-medium text-blue-900">
+                                  {comparisonData.recommendations.fastest_resolution}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Analysis Info */}
+                      <div className="text-center text-xs text-gray-500">
+                        Analysis completed on {comparisonData.analysis_date} • 
+                        Confidence: {(comparisonData.confidence_score * 100).toFixed(0)}%
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </CardContent>
