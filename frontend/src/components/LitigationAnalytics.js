@@ -16,7 +16,7 @@ import {
   BarChart3, Brain, Scale, Target, TrendingUp, TrendingDown,
   Clock, DollarSign, Shield, AlertTriangle, CheckCircle,
   Users, FileText, Gavel, PieChart, ArrowLeft, RefreshCw,
-  BookOpen, Calculator, Lightbulb, Search
+  BookOpen, Calculator, Lightbulb, Search, AlertCircle
 } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
