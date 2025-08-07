@@ -1238,6 +1238,7 @@ function App() {
               setShowPlainEnglishCreator(false);
               setShowLegalQA(false);
               setShowVoiceAgent(false);
+              setShowLitigationAnalytics(false);
             }}
             variant="outline"
             className="border-white/30 text-white hover:bg-white/10 px-8 py-4 text-lg font-semibold rounded-lg"
@@ -1246,6 +1247,23 @@ function App() {
             Analytics Dashboard
             <Badge variant="secondary" className="ml-2 bg-green-400 text-green-900 text-xs">
               NEW
+            </Badge>
+          </Button>
+          <Button
+            onClick={() => {
+              setShowLitigationAnalytics(true);
+              setUseEnhancedWizard(false);
+              setShowPlainEnglishCreator(false);
+              setShowLegalQA(false);
+              setShowVoiceAgent(false);
+              setShowAnalytics(false);
+            }}
+            className="bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white px-8 py-4 text-lg font-semibold rounded-lg transition-all duration-300 transform hover:scale-105"
+          >
+            <Scale className="h-5 w-5 mr-2" />
+            Litigation Analytics
+            <Badge variant="secondary" className="ml-2 bg-red-400 text-red-900 text-xs">
+              PREMIUM
             </Badge>
           </Button>
           <Button
