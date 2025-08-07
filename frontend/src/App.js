@@ -424,9 +424,10 @@ function App() {
 
   const generateContract = async () => {
     console.log('🔄 Starting generateContract function...');
+    console.log('🔍 Current state - isGenerating:', isGenerating, 'consentJustProvided:', consentJustProvided);
     
     // Reset consent flag at the start of each new contract generation
-    if (!isGenerating) {
+    if (!isGenerating && !consentJustProvided) {
       setConsentJustProvided(false);
     }
     
@@ -436,7 +437,7 @@ function App() {
       if (complianceMode && !consentJustProvided) {
         console.log('🔒 Showing consent manager...');
         setShowConsentManager(true);
-        // Don't set isGenerating to false - keep it true so we can resume after consent
+        // Keep isGenerating true and return - don't call finally block
         return;
       }
       
@@ -565,8 +566,13 @@ function App() {
       // Reset state on error
       setCurrentStep(3); // Go back to terms step
     } finally {
-      console.log('🏁 Ending generateContract function, setting isGenerating to false');
-      setIsGenerating(false);
+      // Only set isGenerating to false if we're not showing consent manager
+      if (!showConsentManager || consentJustProvided) {
+        console.log('🏁 Ending generateContract function, setting isGenerating to false');
+        setIsGenerating(false);
+      } else {
+        console.log('🔒 Keeping isGenerating true - consent manager is shown');
+      }
     }
   };
 
