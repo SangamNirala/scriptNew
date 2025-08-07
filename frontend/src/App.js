@@ -1300,6 +1300,7 @@ function App() {
           {/* Review Status Display */}
           {currentReviewId && (
             <div className="mb-6">
+              {console.log('🔍 DEBUG: Rendering ReviewStatus component with ID:', currentReviewId)}
               <ReviewStatus
                 reviewId={currentReviewId}
                 onStatusChange={handleReviewStatusChange}
