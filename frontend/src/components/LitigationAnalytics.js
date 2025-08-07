@@ -1276,24 +1276,28 @@ const LitigationAnalytics = ({ onBack }) => {
           </div>
         )}
 
-        {/* Main Tabs Interface */}
+        {/* Enhanced Main Tabs Interface */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-4 mb-8">
-            <TabsTrigger value="predictor" className="flex items-center space-x-2">
-              <Brain className="h-4 w-4" />
-              <span>Case Predictor</span>
+          <TabsList className="grid w-full grid-cols-4 mb-8 h-auto p-1">
+            <TabsTrigger value="predictor" className="flex flex-col items-center space-y-1 p-4 h-auto">
+              <Brain className="h-5 w-5" />
+              <span className="font-medium">Case Predictor</span>
+              <span className="text-xs text-gray-500">AI-Powered Outcomes</span>
             </TabsTrigger>
-            <TabsTrigger value="judge" className="flex items-center space-x-2">
-              <Gavel className="h-4 w-4" />
-              <span>Judge Insights</span>
+            <TabsTrigger value="judge" className="flex flex-col items-center space-y-1 p-4 h-auto">
+              <Gavel className="h-5 w-5" />
+              <span className="font-medium">Judge Insights</span>
+              <span className="text-xs text-gray-500">Behavioral Analysis</span>
             </TabsTrigger>
-            <TabsTrigger value="settlement" className="flex items-center space-x-2">
-              <Calculator className="h-4 w-4" />
-              <span>Settlement Analysis</span>
+            <TabsTrigger value="settlement" className="flex flex-col items-center space-y-1 p-4 h-auto">
+              <Calculator className="h-5 w-5" />
+              <span className="font-medium">Settlement Calculator</span>
+              <span className="text-xs text-gray-500">Probability Analytics</span>
             </TabsTrigger>
-            <TabsTrigger value="strategy" className="flex items-center space-x-2">
-              <Lightbulb className="h-4 w-4" />
-              <span>Strategy Optimizer</span>
+            <TabsTrigger value="strategy" className="flex flex-col items-center space-y-1 p-4 h-auto">
+              <Lightbulb className="h-5 w-5" />
+              <span className="font-medium">Strategy Optimizer</span>
+              <span className="text-xs text-gray-500">Action Plans</span>
             </TabsTrigger>
           </TabsList>
 
