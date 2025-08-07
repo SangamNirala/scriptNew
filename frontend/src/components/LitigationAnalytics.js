@@ -80,10 +80,32 @@ const CaseOutcomePredictor = ({ onPredictionComplete }) => {
         evidence_strength: parseFloat(caseData.evidence_strength)
       };
 
+      // Get case outcome prediction
       const response = await axios.post(`${API}/litigation/analyze-case`, requestData);
       setPrediction(response.data);
+      
       if (onPredictionComplete) {
         onPredictionComplete(response.data);
+      }
+
+      // Fetch similar cases in parallel
+      if (requestData.case_type && requestData.jurisdiction) {
+        setLoadingSimilar(true);
+        try {
+          const similarResponse = await axios.get(`${API}/litigation/similar-cases`, {
+            params: {
+              case_type: requestData.case_type,
+              jurisdiction: requestData.jurisdiction,
+              case_value: requestData.case_value,
+              limit: 5
+            }
+          });
+          setSimilarCases(similarResponse.data);
+        } catch (similarError) {
+          console.error('Similar cases error:', similarError);
+        } finally {
+          setLoadingSimilar(false);
+        }
       }
     } catch (err) {
       console.error('Case analysis error:', err);
