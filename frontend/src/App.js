@@ -968,6 +968,32 @@ const ScriptGenerator = () => {
                   />
                 )}
                 
+                {/* Enhanced Image Prompts Display */}
+                {enhancedImagePrompts && (
+                  <div className="mt-6 bg-gradient-to-r from-orange-500/10 to-pink-500/10 backdrop-blur-lg rounded-lg border border-orange-300/20 p-6">
+                    <div className="flex items-center space-x-2 mb-4">
+                      <span className="text-2xl">🎨</span>
+                      <h3 className="text-xl font-bold text-orange-300">Enhanced AI Image Prompts</h3>
+                    </div>
+                    <div className="text-sm text-orange-200 mb-4">
+                      Copy any prompt below and paste directly into MidJourney, DALL-E, Stable Diffusion, or other AI image generators
+                    </div>
+                    <div 
+                      className="text-gray-200 leading-relaxed bg-white/5 p-4 rounded-lg max-h-96 overflow-y-auto"
+                      dangerouslySetInnerHTML={{ __html: formatScript(enhancedImagePrompts) }}
+                    />
+                    <div className="flex gap-3 mt-4">
+                      <button
+                        onClick={() => navigator.clipboard.writeText(enhancedImagePrompts)}
+                        className="px-4 py-2 bg-orange-500/20 text-orange-300 rounded-lg hover:bg-orange-500/30 transition-colors flex items-center space-x-2"
+                      >
+                        <span>📋</span>
+                        <span>Copy Enhanced Prompts</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+                
                 <div className="mt-4 pt-4 border-t border-white/20 flex flex-wrap gap-3">
                   <button
                     onClick={() => navigator.clipboard.writeText(generatedScript)}
