@@ -5,7 +5,7 @@ import re
 def test_specific_review_id_extraction():
     """Test the specific regex pattern mentioned in requirements: /ID:\s*([^)]+)/"""
     
-    base_url = "https://cd1fa585-6f36-4dd7-b604-8f2ce019e7b4.preview.emergentagent.com"
+    base_url = "https://eb93f6b8-d59c-436f-a03f-35aa61340ba6.preview.emergentagent.com"
     api_url = f"{base_url}/api"
     
     print("🔍 TESTING SPECIFIC REVIEW ID EXTRACTION PATTERN")
@@ -105,7 +105,7 @@ def verify_review(api_url, review_id):
 def test_multiple_contracts_for_pattern_consistency():
     """Test multiple contracts to see if the pattern is consistent"""
     
-    base_url = "https://cd1fa585-6f36-4dd7-b604-8f2ce019e7b4.preview.emergentagent.com"
+    base_url = "https://eb93f6b8-d59c-436f-a03f-35aa61340ba6.preview.emergentagent.com"
     api_url = f"{base_url}/api"
     
     print(f"\n🔍 TESTING PATTERN CONSISTENCY ACROSS MULTIPLE CONTRACTS")
