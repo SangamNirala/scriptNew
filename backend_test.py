@@ -5055,6 +5055,7 @@ What's your biggest remote work challenge? Share in the comments below!"""
             ("Comprehensive Script Framework", self.test_comprehensive_script_framework_system),
             ("Script Generation", self.test_generate_script_endpoint),
             ("Scripts Retrieval", self.test_scripts_retrieval_endpoint),
+            ("Script Editing Functionality", self.test_script_editing_functionality),  # NEW TEST
             ("Integration Flow", self.test_integration_flow),
             ("Voices Endpoint", self.test_voices_endpoint),
             ("Generate Audio", self.test_generate_audio_endpoint),
