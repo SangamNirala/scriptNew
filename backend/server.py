@@ -1871,6 +1871,34 @@ async def get_scripts():
         logger.error(f"Error fetching scripts: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error fetching scripts: {str(e)}")
 
+@api_router.put("/scripts/{script_id}", response_model=ScriptResponse)
+async def update_script(script_id: str, update_request: ScriptUpdateRequest):
+    """Update an existing script's content"""
+    try:
+        # Find the existing script
+        existing_script = await db.scripts.find_one({"id": script_id})
+        if not existing_script:
+            raise HTTPException(status_code=404, detail="Script not found")
+        
+        # Update the script content
+        update_result = await db.scripts.update_one(
+            {"id": script_id},
+            {"$set": {"generated_script": update_request.generated_script, "updated_at": datetime.utcnow()}}
+        )
+        
+        if update_result.modified_count == 0:
+            raise HTTPException(status_code=500, detail="Failed to update script")
+        
+        # Return the updated script
+        updated_script = await db.scripts.find_one({"id": script_id})
+        return ScriptResponse(**updated_script)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating script: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error updating script: {str(e)}")
+
 @api_router.post("/generate-script-v2", response_model=ScriptResponse)
 async def generate_script_v2(request: ScriptRequest):
     """
