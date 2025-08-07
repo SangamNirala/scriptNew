@@ -4039,11 +4039,9 @@ Transform basic descriptions like "[Person talking]" into detailed prompts like:
 Return the COMPLETE enhanced script with dramatically improved image prompts while preserving all other content exactly."""
 
         # Generate the enhancement
-        enhancement_result = await enhancement_chat.chat([
-            UserMessage(content=enhancement_prompt)
-        ])
+        enhancement_result = await enhancement_chat.send_message(UserMessage(text=enhancement_prompt))
         
-        enhanced_script = enhancement_result.content
+        enhanced_script = enhancement_result
         
         # Count the number of enhancements made
         import re
@@ -4065,9 +4063,7 @@ ENHANCED: (first 200 chars) {enhanced_script[:200]}...
 
 Focus on what specific visual elements, technical details, and professional qualities were added."""
         
-        summary_result = await summary_chat.chat([
-            UserMessage(content=summary_prompt)
-        ])
+        summary_result = await summary_chat.send_message(UserMessage(text=summary_prompt))
         
         enhancement_summary = [line.strip().lstrip('•- ') for line in summary_result.content.split('\n') if line.strip() and not line.strip().startswith('#')][:5]
         
