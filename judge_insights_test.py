@@ -134,10 +134,14 @@ class JudgeInsightsAPITester:
         case_type = "civil"
         case_value = 50000.0
         
+        # URL encode the judge name properly
+        import urllib.parse
+        encoded_judge_name = urllib.parse.quote(judge_name)
+        
         success, response = self.run_test(
             f"Judge Insights with Parameters",
             "GET",
-            f"litigation/judge-insights/{judge_name}?case_type={case_type}&case_value={case_value}",
+            f"litigation/judge-insights/{encoded_judge_name}?case_type={case_type}&case_value={case_value}",
             200,
             timeout=30
         )
