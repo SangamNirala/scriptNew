@@ -3962,6 +3962,139 @@ async def get_few_shot_stats():
 # END STEP 2: FEW-SHOT LEARNING ENDPOINTS
 # =============================================================================
 
+@api_router.post("/enhance-image-prompts", response_model=ImagePromptEnhancementResponse)
+async def enhance_image_prompts(request: ImagePromptEnhancementRequest):
+    """
+    Enhance AI image prompts in video scripts for better AI image generation
+    
+    Takes a script with basic image prompts and enhances them with:
+    - More descriptive visual details
+    - Professional photography terminology
+    - AI-generator specific optimization
+    - Contextual and atmospheric details
+    """
+    try:
+        # Initialize the LLM for enhancement
+        enhancement_chat = LlmChat(
+            api_key=GEMINI_API_KEY,
+            session_id=f"image-enhancement-{str(uuid.uuid4())[:8]}",
+            system_message=f"""You are an elite AI Image Prompt Architect specializing in enhancing basic image descriptions into highly detailed, production-ready prompts for AI image generators like MidJourney, DALL-E 3, Stable Diffusion, and RunwayML.
+
+🎯 MISSION: Transform simple image descriptions in video scripts into comprehensive, copy-paste-ready AI image prompts that produce stunning, contextually accurate visuals.
+
+📋 ENHANCEMENT STANDARDS:
+
+1. **VISUAL DETAIL ENHANCEMENT**:
+   - Add specific lighting conditions (golden hour, soft diffused, dramatic shadows, etc.)
+   - Include camera angles and shot types (close-up, wide shot, over-shoulder, etc.)
+   - Specify color palettes and mood (warm tones, high contrast, muted colors, etc.)
+   - Add texture and material details (smooth, rough, metallic, organic, etc.)
+
+2. **PROFESSIONAL PHOTOGRAPHY TERMINOLOGY**:
+   - Camera settings references (shallow depth of field, bokeh, sharp focus, etc.)
+   - Lens specifications (50mm portrait lens, wide-angle, macro lens, etc.)
+   - Professional quality indicators (8K resolution, professional photography, award-winning, etc.)
+
+3. **AI GENERATOR OPTIMIZATION**:
+   - Use keywords that work well across multiple AI platforms
+   - Include style references (photorealistic, cinematic, studio quality, etc.)
+   - Add composition elements (rule of thirds, leading lines, symmetry, etc.)
+
+4. **CONTEXTUAL ATMOSPHERE**:
+   - Environmental details matching the video content
+   - Emotional tone and atmosphere
+   - Action and movement descriptions
+   - Background and setting specifics
+
+🔧 ENHANCEMENT STYLE: {request.enhancement_style.upper()}
+- detailed: Focus on comprehensive visual descriptions
+- cinematic: Emphasize movie-like quality and dramatic elements  
+- artistic: Add creative and stylistic elements
+- photorealistic: Emphasize realistic photography qualities
+
+🎬 VIDEO TYPE CONTEXT: {request.video_type} content - ensure prompts match the intended mood and professionalism level.
+
+⚡ OUTPUT FORMAT: Return the COMPLETE enhanced script with improved image prompts, maintaining all original structure and dialogue while dramatically upgrading every visual description."""
+        ).with_model("gemini", "gemini-2.0-flash")
+
+        # Create the enhancement prompt
+        enhancement_prompt = f"""Enhance all image prompts in this {request.video_type} video script. Transform every basic visual description into a detailed, professional AI image generation prompt.
+
+ORIGINAL SCRIPT TO ENHANCE:
+{request.script_content}
+
+ENHANCEMENT REQUIREMENTS:
+1. Keep ALL original text structure, timestamps, dialogue, and narrative
+2. Enhance ONLY the image/visual descriptions 
+3. Make each visual description a complete, standalone AI image prompt
+4. Add 3-5x more visual detail to each image description
+5. Include professional photography terms and technical specifications
+6. Ensure prompts work well with MidJourney, DALL-E, Stable Diffusion
+7. Match the enhancement style: {request.enhancement_style}
+8. Maintain consistency with {request.video_type} content tone
+
+Transform basic descriptions like "[Person talking]" into detailed prompts like:
+"[Professional headshot of confident person speaking directly to camera, warm studio lighting, shallow depth of field, 50mm lens, cinematic quality, soft shadows, professional attire, engaging eye contact, 8K resolution, award-winning portrait photography]"
+
+Return the COMPLETE enhanced script with dramatically improved image prompts while preserving all other content exactly."""
+
+        # Generate the enhancement
+        enhancement_result = await enhancement_chat.chat([
+            UserMessage(content=enhancement_prompt)
+        ])
+        
+        enhanced_script = enhancement_result.content
+        
+        # Count the number of enhancements made
+        import re
+        original_brackets = len(re.findall(r'\[([^\]]+)\]', request.script_content))
+        enhanced_brackets = len(re.findall(r'\[([^\]]+)\]', enhanced_script))
+        enhancement_count = enhanced_brackets  # Count enhanced prompts
+        
+        # Generate enhancement summary
+        summary_chat = LlmChat(
+            api_key=GEMINI_API_KEY,
+            session_id=f"enhancement-summary-{str(uuid.uuid4())[:8]}",
+            system_message="You are an AI that creates concise summaries of image prompt enhancements."
+        ).with_model("gemini", "gemini-2.0-flash")
+        
+        summary_prompt = f"""Analyze the enhancements made to this script and provide 3-5 key improvements in bullet points.
+
+ORIGINAL: (first 200 chars) {request.script_content[:200]}...
+ENHANCED: (first 200 chars) {enhanced_script[:200]}...
+
+Focus on what specific visual elements, technical details, and professional qualities were added."""
+        
+        summary_result = await summary_chat.chat([
+            UserMessage(content=summary_prompt)
+        ])
+        
+        enhancement_summary = [line.strip().lstrip('•- ') for line in summary_result.content.split('\n') if line.strip() and not line.strip().startswith('#')][:5]
+        
+        # Create response
+        response = ImagePromptEnhancementResponse(
+            original_script=request.script_content,
+            enhanced_script=enhanced_script,
+            enhancement_count=enhancement_count,
+            enhancement_style=request.enhancement_style,
+            target_ai_generator=request.target_ai_generator,
+            enhancement_summary=enhancement_summary
+        )
+        
+        # Save to database (optional - you may want to create a collection for this)
+        try:
+            await db.enhanced_image_prompts.insert_one(response.dict())
+        except Exception as db_error:
+            logger.warning(f"Failed to save enhanced image prompts to database: {db_error}")
+        
+        logger.info(f"✅ Enhanced {enhancement_count} image prompts in {request.video_type} script using {request.enhancement_style} style")
+        
+        return response
+        
+    except Exception as e:
+        logger.error(f"Error in image prompt enhancement: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Image prompt enhancement failed: {str(e)}")
+
 # Add CORS middleware BEFORE including router
 app.add_middleware(
     CORSMiddleware,
