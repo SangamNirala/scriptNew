@@ -15,7 +15,8 @@ import {
   FileText, User, Award, BarChart3, MessageSquare
 } from 'lucide-react';
 
-const API = process.env.REACT_APP_BACKEND_URL;
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const API = `${BACKEND_URL}/api`;
 
 export default function AttorneyDashboard({ onClose }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
