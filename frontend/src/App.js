@@ -807,29 +807,83 @@ const ScriptGenerator = () => {
                       ({generatedWithPrompt} prompt)
                     </span>
                   </h2>
-                  <button
-                    onClick={handlePlayScript}
-                    disabled={isGeneratingAudio}
-                    className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center space-x-2 ${
-                      isPlaying 
-                        ? 'bg-red-500/20 text-red-300 hover:bg-red-500/30' 
-                        : isGeneratingAudio
-                        ? 'bg-yellow-500/20 text-yellow-300'
-                        : 'bg-green-500/20 text-green-300 hover:bg-green-500/30'
-                    } ${isGeneratingAudio ? 'cursor-not-allowed opacity-75' : ''}`}
-                  >
-                    {isGeneratingAudio ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-yellow-300"></div>
-                        <span>Generating...</span>
-                      </>
-                    ) : (
-                      <>
-                        <span>{isPlaying ? '⏹️' : '🎵'}</span>
-                        <span>{isPlaying ? 'Stop' : 'Listen'}</span>
-                      </>
+                  <div className="flex items-center space-x-2">
+                    {/* Edit Button */}
+                    <button
+                      onClick={handleEditScript}
+                      disabled={isEditingScript || isGeneratingAudio}
+                      className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center space-x-2 ${
+                        isEditingScript 
+                          ? 'bg-gray-500/20 text-gray-400 cursor-not-allowed opacity-75' 
+                          : 'bg-blue-500/20 text-blue-300 hover:bg-blue-500/30'
+                      }`}
+                    >
+                      <span>✏️</span>
+                      <span>{isEditingScript ? 'Editing...' : 'Edit'}</span>
+                    </button>
+
+                    {/* Save Changes Button (only visible when editing) */}
+                    {isEditingScript && (
+                      <button
+                        onClick={handleSaveScript}
+                        disabled={!hasUnsavedChanges || isSavingScript}
+                        className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center space-x-2 ${
+                          !hasUnsavedChanges || isSavingScript
+                            ? 'bg-gray-500/20 text-gray-400 cursor-not-allowed opacity-75'
+                            : 'bg-green-500/20 text-green-300 hover:bg-green-500/30'
+                        }`}
+                      >
+                        {isSavingScript ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-300"></div>
+                            <span>Saving...</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>💾</span>
+                            <span>Save Changes</span>
+                          </>
+                        )}
+                      </button>
                     )}
-                  </button>
+
+                    {/* Cancel Button (only visible when editing) */}
+                    {isEditingScript && (
+                      <button
+                        onClick={handleCancelEdit}
+                        disabled={isSavingScript}
+                        className="px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center space-x-2 bg-red-500/20 text-red-300 hover:bg-red-500/30"
+                      >
+                        <span>❌</span>
+                        <span>Cancel</span>
+                      </button>
+                    )}
+
+                    {/* Listen Button */}
+                    <button
+                      onClick={handlePlayScript}
+                      disabled={isGeneratingAudio || isEditingScript}
+                      className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center space-x-2 ${
+                        isPlaying 
+                          ? 'bg-red-500/20 text-red-300 hover:bg-red-500/30' 
+                          : isGeneratingAudio || isEditingScript
+                          ? 'bg-gray-500/20 text-gray-400 cursor-not-allowed opacity-75'
+                          : 'bg-green-500/20 text-green-300 hover:bg-green-500/30'
+                      }`}
+                    >
+                      {isGeneratingAudio ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-yellow-300"></div>
+                          <span>Generating...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>{isPlaying ? '⏹️' : '🎵'}</span>
+                          <span>{isPlaying ? 'Stop' : 'Listen'}</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
                 
                 <div 
