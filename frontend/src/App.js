@@ -606,13 +606,8 @@ function App() {
     
     if (consentGiven) {
       console.log('🔄 Resuming contract generation after consent...');
-      // Set isGenerating back to true since we're continuing the flow
-      setIsGenerating(true);
-      
-      // Resume contract generation after consent with a small delay to ensure state is updated
-      setTimeout(() => {
-        generateContract();
-      }, 500);
+      // Resume contract generation immediately - no delay needed
+      generateContract();
     }
   };
 
