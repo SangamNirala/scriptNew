@@ -226,6 +226,52 @@ const ScriptGenerator = () => {
     setSelectedVoice(voice);
   };
 
+  // Script editing functions
+  const handleEditScript = () => {
+    setIsEditingScript(true);
+    setEditedScript(generatedScript);
+    setHasUnsavedChanges(false);
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditingScript(false);
+    setEditedScript("");
+    setHasUnsavedChanges(false);
+  };
+
+  const handleScriptChange = (newText) => {
+    setEditedScript(newText);
+    setHasUnsavedChanges(newText !== generatedScript);
+  };
+
+  const handleSaveScript = async () => {
+    if (!currentScriptId || !hasUnsavedChanges) return;
+    
+    setIsSavingScript(true);
+    setError("");
+
+    try {
+      const response = await axios.put(`${API}/scripts/${currentScriptId}`, {
+        script_id: currentScriptId,
+        generated_script: editedScript
+      });
+
+      setGeneratedScript(editedScript);
+      setIsEditingScript(false);
+      setHasUnsavedChanges(false);
+      setEditedScript("");
+      
+      // Refresh scripts list
+      fetchScripts();
+      
+    } catch (err) {
+      setError("Error saving script changes. Please try again.");
+      console.error("Error saving script:", err);
+    } finally {
+      setIsSavingScript(false);
+    }
+  };
+
   const handleGenerateAndPlayAudio = async () => {
     if (!selectedVoice || !generatedScript) {
       setError("Please select a voice and ensure you have a script to read.");
