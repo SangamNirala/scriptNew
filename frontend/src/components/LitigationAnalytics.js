@@ -729,6 +729,27 @@ const JudgeInsights = () => {
     }
   };
 
+  const handleCompare = async () => {
+    if (!judgeName.trim() || !compareJudge.trim()) return;
+    
+    setComparisonLoading(true);
+    setComparisonError(null);
+    setShowComparison(true);
+
+    try {
+      const response = await axios.post(`${API}/litigation/judge-comparison`, {
+        judge_names: [judgeName.trim(), compareJudge.trim()],
+        case_type: "civil"
+      });
+      setComparisonData(response.data);
+    } catch (err) {
+      console.error('Judge comparison error:', err);
+      setComparisonError(err.response?.data?.detail || 'Failed to compare judges');
+    } finally {
+      setComparisonLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <Card>
