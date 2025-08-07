@@ -6,7 +6,7 @@ import random
 from datetime import datetime
 
 class ClassicModeContractTester:
-    def __init__(self, base_url="https://7685452a-36e4-4aa2-8a33-030ed21ffcc0.preview.emergentagent.com"):
+    def __init__(self, base_url="https://b79d1488-ad9a-4593-9c6b-717e30c454a7.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.tests_run = 0
