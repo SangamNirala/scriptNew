@@ -550,6 +550,36 @@ const ScriptGenerator = () => {
     }
   };
 
+  const handleEnhanceImagePrompts = async () => {
+    if (!generatedScript) {
+      setError("Please generate a script first before enhancing image prompts.");
+      return;
+    }
+
+    setIsEnhancingImagePrompts(true);
+    setError("");
+
+    try {
+      const response = await axios.post(`${API}/enhance-image-prompts`, {
+        script_content: generatedScript,
+        video_type: videoType,
+        enhancement_style: "detailed" // Can be made configurable later
+      });
+
+      setEnhancedImagePrompts(response.data.enhanced_script);
+
+    } catch (err) {
+      console.error("Error enhancing image prompts:", err);
+      if (err.response?.status === 500) {
+        setError("AI service temporarily unavailable. Please try again in a moment.");
+      } else {
+        setError("Error enhancing image prompts. Please try again.");
+      }
+    } finally {
+      setIsEnhancingImagePrompts(false);
+    }
+  };
+
   const formatScript = (script) => {
     return script
       .replace(/\[([^\]]+)\]/g, '<span class="text-blue-600 font-medium">[$1]</span>')
