@@ -4065,7 +4065,7 @@ Focus on what specific visual elements, technical details, and professional qual
         
         summary_result = await summary_chat.send_message(UserMessage(text=summary_prompt))
         
-        enhancement_summary = [line.strip().lstrip('•- ') for line in summary_result.content.split('\n') if line.strip() and not line.strip().startswith('#')][:5]
+        enhancement_summary = [line.strip().lstrip('•- ') for line in summary_result.split('\n') if line.strip() and not line.strip().startswith('#')][:5]
         
         # Create response
         response = ImagePromptEnhancementResponse(
