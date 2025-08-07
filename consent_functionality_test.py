@@ -298,7 +298,7 @@ class ConsentFunctionalityTester:
             self.log(f"   Status: {response.get('status')}")
             self.log(f"   Progress: {response.get('progress_percentage')}%")
             self.log(f"   Estimated Completion: {response.get('estimated_completion')}")
-            self.log(f"   Assigned Attorney: {response.get('assigned_attorney')}")
+            self.log(f"   Assigned Attorney: {response.get('attorney')}")
             
             return True
         
