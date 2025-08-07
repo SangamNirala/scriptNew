@@ -224,7 +224,7 @@ class LitigationAnalyticsEngine:
         - Jurisdiction: {case_data.jurisdiction}
         - Court Level: {case_data.court_level}
         - Judge: {case_data.judge_name or 'Not specified'}
-        - Case Value: ${case_data.case_value:,.2f}" if case_data.case_value else 'Not specified'}
+        - Case Value: {f'${case_data.case_value:,.2f}' if case_data.case_value else 'Not specified'}
         - Legal Issues: {', '.join(case_data.legal_issues) if case_data.legal_issues else 'Not specified'}
         - Case Facts: {case_data.case_facts or 'Not provided'}
         - Evidence Strength: {case_data.evidence_strength or 'Not rated'}/10
