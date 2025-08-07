@@ -1484,7 +1484,7 @@ function App() {
           )}
           
           {/* Classic Mode */}
-          {!useEnhancedWizard && !showAnalytics && !showPlainEnglishCreator && !showLegalQA && !showVoiceAgent && (
+          {!useEnhancedWizard && !showAnalytics && !showPlainEnglishCreator && !showLegalQA && !showVoiceAgent && !showLitigationAnalytics && (
             <>
               {currentStep < 4 && (
                 <div className="mb-8">
