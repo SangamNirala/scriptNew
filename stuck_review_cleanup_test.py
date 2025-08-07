@@ -6,7 +6,7 @@ import uuid
 from datetime import datetime
 
 class StuckReviewCleanupTester:
-    def __init__(self, base_url="https://eb93f6b8-d59c-436f-a03f-35aa61340ba6.preview.emergentagent.com"):
+    def __init__(self, base_url="https://82991f44-933f-4953-9a75-215abfd54da0.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.tests_run = 0
