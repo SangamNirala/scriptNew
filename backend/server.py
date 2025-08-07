@@ -13476,6 +13476,7 @@ if LITIGATION_ANALYTICS_AVAILABLE:
     class JudgeComparisonRequest(BaseModel):
         judge_names: List[str]
         case_type: Optional[str] = None
+        jurisdiction: Optional[str] = None  # New field for jurisdiction
     
     class JudgeComparisonResponse(BaseModel):
         judges_compared: int
@@ -13484,6 +13485,7 @@ if LITIGATION_ANALYTICS_AVAILABLE:
         recommendations: Dict[str, str]
         analysis_date: str
         confidence_score: float
+        validation_info: Optional[Dict[str, Any]] = None  # New field for validation details
     
     class SettlementAnalysisRequest(BaseModel):
         case_id: Optional[str] = None
