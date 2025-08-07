@@ -452,12 +452,21 @@ function App() {
       setGeneratedContract(response.data);
       
       // Check if a review was submitted
+      console.log('🔍 DEBUG: Contract generation response:', response.data);
+      console.log('🔍 DEBUG: Suggestions array:', response.data.suggestions);
+      
       const reviewIdMatch = response.data.suggestions?.find(s => s.includes('review (ID:'));
+      console.log('🔍 DEBUG: Review ID match found:', reviewIdMatch);
+      
       if (reviewIdMatch) {
         const reviewId = reviewIdMatch.match(/ID:\s*([^)]+)/)?.[1];
+        console.log('🔍 DEBUG: Extracted review ID:', reviewId);
         if (reviewId) {
+          console.log('🔍 DEBUG: Setting currentReviewId to:', reviewId);
           setCurrentReviewId(reviewId);
         }
+      } else {
+        console.log('🔍 DEBUG: No review ID match found in suggestions');
       }
       
       setCurrentStep(4);
