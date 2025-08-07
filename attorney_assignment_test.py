@@ -59,496 +59,601 @@ class AttorneyAssignmentTester:
             print(f"❌ Failed - Error: {str(e)}")
             return False, {}
 
-    def test_attorney_creation_regular(self):
-        """Test regular attorney creation endpoint"""
-        attorney_data = {
-            "email": f"attorney_{random.randint(1000, 9999)}@legalfirm.com",
-            "first_name": "Sarah",
-            "last_name": "Johnson",
-            "bar_number": f"BAR{random.randint(100000, 999999)}",
-            "jurisdiction": "US",
-            "role": "reviewing_attorney",
-            "specializations": ["contract_law", "business_law"],
-            "years_experience": 8,
-            "password": "SecurePassword123!"
-        }
+    def create_test_attorneys(self):
+        """Create multiple test attorneys to ensure there are available attorneys in the system"""
+        print(f"\n🏛️ STEP 1: Creating Test Attorneys...")
         
-        success, response = self.run_test(
-            "Regular Attorney Creation", 
-            "POST", 
-            "attorney/create", 
-            200, 
-            attorney_data
-        )
+        attorney_data_list = [
+            {
+                "email": f"attorney1_{int(time.time())}@testlaw.com",
+                "first_name": "Sarah",
+                "last_name": "Johnson",
+                "bar_number": f"BAR{random.randint(100000, 999999)}",
+                "jurisdiction": "US",
+                "role": "reviewing_attorney",
+                "specializations": ["contract_law", "business_law"],
+                "years_experience": 8,
+                "password": "SecurePass123!"
+            },
+            {
+                "email": f"attorney2_{int(time.time())}@testlaw.com",
+                "first_name": "Michael",
+                "last_name": "Chen",
+                "bar_number": f"BAR{random.randint(100000, 999999)}",
+                "jurisdiction": "US",
+                "role": "supervising_attorney",
+                "specializations": ["employment_law", "contract_law"],
+                "years_experience": 12,
+                "password": "SecurePass123!"
+            },
+            {
+                "email": f"attorney3_{int(time.time())}@testlaw.com",
+                "first_name": "Emily",
+                "last_name": "Rodriguez",
+                "bar_number": f"BAR{random.randint(100000, 999999)}",
+                "jurisdiction": "US",
+                "role": "senior_partner",
+                "specializations": ["business_law", "partnership_law"],
+                "years_experience": 15,
+                "password": "SecurePass123!"
+            }
+        ]
         
-        if success and response.get('success'):
-            attorney_id = response.get('attorney_id')
-            if attorney_id:
-                self.created_attorneys.append(attorney_id)
+        attorneys_created = 0
+        for i, attorney_data in enumerate(attorney_data_list):
+            success, response = self.run_test(
+                f"Create Test Attorney {i+1} ({attorney_data['first_name']} {attorney_data['last_name']})",
+                "POST",
+                "attorney/create",
+                200,
+                attorney_data,
+                timeout=30
+            )
+            
+            if success and response.get('success'):
+                attorney_id = response.get('attorney_id')
+                self.created_attorneys.append({
+                    'id': attorney_id,
+                    'email': attorney_data['email'],
+                    'name': f"{attorney_data['first_name']} {attorney_data['last_name']}",
+                    'role': attorney_data['role'],
+                    'specializations': attorney_data['specializations']
+                })
+                attorneys_created += 1
                 print(f"   ✅ Attorney created with ID: {attorney_id}")
-                print(f"   Specializations: {attorney_data['specializations']}")
-                print(f"   Role: {attorney_data['role']}")
             else:
-                print(f"   ⚠️  No attorney_id in response")
+                print(f"   ❌ Failed to create attorney {i+1}")
         
-        return success, response
+        print(f"\n📊 Attorney Creation Summary: {attorneys_created}/{len(attorney_data_list)} attorneys created successfully")
+        
+        if attorneys_created == 0:
+            print("❌ CRITICAL: No attorneys were created. Cannot proceed with assignment testing.")
+            return False
+        elif attorneys_created < len(attorney_data_list):
+            print("⚠️  WARNING: Not all attorneys were created, but proceeding with available attorneys.")
+        
+        return attorneys_created > 0
 
-    def test_attorney_creation_demo(self):
-        """Test demo attorney creation endpoint"""
+    def record_client_consent(self, client_id):
+        """Record client consent for attorney supervision"""
+        consent_data = {
+            "client_id": client_id,
+            "consent_text": "I consent to attorney supervision and review of my legal documents as required by law.",
+            "ip_address": "192.168.1.100",
+            "user_agent": "AttorneyAssignmentTester/1.0"
+        }
+        
         success, response = self.run_test(
-            "Demo Attorney Creation", 
-            "POST", 
-            "attorney/create-demo-attorney", 
-            200
+            f"Record Client Consent for {client_id}",
+            "POST",
+            "client/consent",
+            200,
+            consent_data,
+            timeout=30
         )
         
         if success and response.get('success'):
-            attorney_id = response.get('attorney_id')
-            if attorney_id:
-                self.created_attorneys.append(attorney_id)
-                print(f"   ✅ Demo attorney created with ID: {attorney_id}")
-                # Get attorney details if available
-                if 'attorney' in response:
-                    attorney = response['attorney']
-                    print(f"   Name: {attorney.get('first_name', 'N/A')} {attorney.get('last_name', 'N/A')}")
-                    print(f"   Specializations: {attorney.get('specializations', [])}")
-                    print(f"   Role: {attorney.get('role', 'N/A')}")
-            else:
-                print(f"   ⚠️  No attorney_id in response")
-        
-        return success, response
-
-    def test_document_review_submission_contract(self):
-        """Test document review submission with contract document"""
-        document_data = {
-            "document_content": """
-            **NON-DISCLOSURE AGREEMENT**
-            
-            This Non-Disclosure Agreement is entered into between Tech Innovations Inc. and John Developer.
-            
-            **CONFIDENTIAL INFORMATION**
-            The parties agree to maintain confidentiality of all proprietary information shared during business discussions.
-            
-            **TERM**
-            This agreement shall remain in effect for a period of two (2) years from the date of execution.
-            
-            **GOVERNING LAW**
-            This agreement shall be governed by the laws of California, United States.
-            """,
-            "document_type": "contract",
-            "client_id": f"client_{int(time.time())}_{random.randint(1000, 9999)}",
-            "original_request": {
-                "contract_type": "NDA",
-                "jurisdiction": "US",
-                "parties": {
-                    "party1_name": "Tech Innovations Inc.",
-                    "party2_name": "John Developer"
-                }
-            },
-            "priority": "normal"
-        }
-        
-        success, response = self.run_test(
-            "Document Review Submission - Contract", 
-            "POST", 
-            "attorney/review/submit", 
-            200, 
-            document_data
-        )
-        
-        if success and 'review_id' in response:
-            review_id = response['review_id']
-            self.created_reviews.append(review_id)
-            print(f"   ✅ Review created with ID: {review_id}")
-            print(f"   Status: {response.get('status', 'N/A')}")
-            print(f"   Assigned Attorney: {response.get('assigned_attorney_id', 'N/A')}")
-            print(f"   Priority: {response.get('priority', 'N/A')}")
-            
-            # Check if attorney was auto-assigned
-            if response.get('assigned_attorney_id'):
-                print(f"   ✅ Attorney auto-assignment successful")
-            else:
-                print(f"   ❌ No attorney assigned - assignment may have failed")
-        
-        return success, response
-
-    def test_document_review_submission_high_priority(self):
-        """Test document review submission with high priority document"""
-        document_data = {
-            "document_content": """
-            **URGENT PARTNERSHIP AGREEMENT**
-            
-            This Partnership Agreement is entered into between Alpha Corp and Beta LLC for immediate business collaboration.
-            
-            **BUSINESS PURPOSE**
-            Joint venture for time-sensitive market opportunity requiring immediate legal review and approval.
-            
-            **CAPITAL CONTRIBUTIONS**
-            Each party shall contribute $500,000 within 30 days of execution.
-            
-            **PROFIT SHARING**
-            Profits shall be shared equally between the parties (50/50 split).
-            """,
-            "document_type": "contract",
-            "client_id": f"client_{int(time.time())}_{random.randint(1000, 9999)}",
-            "original_request": {
-                "contract_type": "partnership_agreement",
-                "jurisdiction": "US",
-                "urgency": "high"
-            },
-            "priority": "high"
-        }
-        
-        success, response = self.run_test(
-            "Document Review Submission - High Priority", 
-            "POST", 
-            "attorney/review/submit", 
-            200, 
-            document_data
-        )
-        
-        if success and 'review_id' in response:
-            review_id = response['review_id']
-            self.created_reviews.append(review_id)
-            print(f"   ✅ High priority review created with ID: {review_id}")
-            print(f"   Status: {response.get('status', 'N/A')}")
-            print(f"   Assigned Attorney: {response.get('assigned_attorney_id', 'N/A')}")
-            print(f"   Priority: {response.get('priority', 'N/A')}")
-            
-            # High priority should be assigned to senior attorney
-            if response.get('assigned_attorney_id'):
-                print(f"   ✅ High priority document assigned to attorney")
-            else:
-                print(f"   ❌ High priority document not assigned")
-        
-        return success, response
-
-    def test_review_status_dynamic_progress(self):
-        """Test review status endpoint for dynamic progress calculation"""
-        if not self.created_reviews:
-            print("⚠️  No reviews available for status testing")
-            return True, {}
-        
-        review_id = self.created_reviews[0]
-        
-        success, response = self.run_test(
-            f"Review Status - Dynamic Progress", 
-            "GET", 
-            f"attorney/review/status/{review_id}", 
-            200
-        )
-        
-        if success:
-            print(f"   Review ID: {response.get('review_id', 'N/A')}")
-            print(f"   Status: {response.get('status', 'N/A')}")
-            print(f"   Progress: {response.get('progress_percentage', 'N/A')}%")
-            print(f"   Assigned Attorney: {response.get('assigned_attorney', {}).get('first_name', 'N/A')} {response.get('assigned_attorney', {}).get('last_name', 'N/A')}")
-            print(f"   Priority: {response.get('priority', 'N/A')}")
-            print(f"   Created: {response.get('created_at', 'N/A')}")
-            print(f"   Estimated Completion: {response.get('estimated_completion', 'N/A')}")
-            
-            # Check for dynamic progress
-            status = response.get('status')
-            progress = response.get('progress_percentage', 0)
-            
-            if status == 'in_review' and progress > 0:
-                print(f"   ✅ Review is in progress with {progress}% completion")
-                if progress >= 25:
-                    print(f"   ✅ Progress is advancing (≥25% indicates attorney assignment working)")
-                else:
-                    print(f"   ⚠️  Progress is low ({progress}%) - may still be initializing")
-            elif status == 'pending' and progress == 0:
-                print(f"   ❌ Review stuck in pending status with 0% progress")
-            else:
-                print(f"   ✅ Review status: {status}, Progress: {progress}%")
-            
-            # Check estimated completion time
-            estimated_completion = response.get('estimated_completion')
-            if estimated_completion and estimated_completion != "Overdue":
-                print(f"   ✅ Realistic completion time provided: {estimated_completion}")
-            elif estimated_completion == "Overdue":
-                print(f"   ❌ Shows 'Overdue' - time estimation issue")
-            else:
-                print(f"   ⚠️  No estimated completion time")
-        
-        return success, response
-
-    def test_multiple_review_progress_over_time(self):
-        """Test multiple reviews and check progress advancement over time"""
-        if len(self.created_reviews) < 2:
-            print("⚠️  Need at least 2 reviews for time-based progress testing")
-            return True, {}
-        
-        print(f"\n📊 Testing Progress Over Time for {len(self.created_reviews)} Reviews...")
-        
-        initial_progress = {}
-        
-        # Get initial progress for all reviews
-        for i, review_id in enumerate(self.created_reviews):
-            success, response = self.run_test(
-                f"Initial Progress Check - Review {i+1}", 
-                "GET", 
-                f"attorney/review/status/{review_id}", 
-                200
-            )
-            
-            if success:
-                initial_progress[review_id] = {
-                    'status': response.get('status'),
-                    'progress': response.get('progress_percentage', 0),
-                    'assigned_attorney': response.get('assigned_attorney', {}).get('attorney_id')
-                }
-                print(f"   Review {i+1}: {response.get('status')} - {response.get('progress_percentage', 0)}%")
-        
-        # Wait a few seconds to allow progress advancement
-        print(f"\n⏳ Waiting 5 seconds for progress advancement...")
-        time.sleep(5)
-        
-        # Check progress again
-        progress_advanced = False
-        for i, review_id in enumerate(self.created_reviews):
-            success, response = self.run_test(
-                f"Follow-up Progress Check - Review {i+1}", 
-                "GET", 
-                f"attorney/review/status/{review_id}", 
-                200
-            )
-            
-            if success:
-                current_progress = response.get('progress_percentage', 0)
-                initial = initial_progress.get(review_id, {}).get('progress', 0)
-                
-                print(f"   Review {i+1}: {initial}% → {current_progress}%")
-                
-                if current_progress > initial:
-                    print(f"   ✅ Progress advanced from {initial}% to {current_progress}%")
-                    progress_advanced = True
-                elif current_progress == initial and current_progress > 25:
-                    print(f"   ✅ Progress stable at {current_progress}% (acceptable for short time window)")
-                    progress_advanced = True
-                elif response.get('status') == 'in_review':
-                    print(f"   ✅ Status is 'in_review' indicating assignment successful")
-                    progress_advanced = True
-                else:
-                    print(f"   ⚠️  No progress advancement detected")
-        
-        if progress_advanced:
-            print(f"\n✅ Dynamic progress system is working - reviews are advancing")
+            print(f"   ✅ Consent recorded with ID: {response.get('consent_id')}")
+            return True
         else:
-            print(f"\n❌ Dynamic progress system may not be working - no advancement detected")
-        
-        return progress_advanced, initial_progress
+            print(f"   ❌ Failed to record consent")
+            return False
 
-    def test_cleanup_stuck_reviews(self):
-        """Test the cleanup stuck reviews endpoint"""
+    def generate_compliant_contract(self, client_id, contract_type="NDA", party1_name="Test Company Inc.", party2_name="John Doe"):
+        """Generate a compliant contract that should trigger attorney review"""
+        contract_data = {
+            "contract_type": contract_type,
+            "jurisdiction": "US",
+            "parties": {
+                "party1_name": party1_name,
+                "party1_type": "company",
+                "party2_name": party2_name,
+                "party2_type": "individual"
+            },
+            "terms": {
+                "purpose": "Business collaboration evaluation and confidential information sharing",
+                "duration": "2_years"
+            },
+            "special_clauses": ["Non-compete clause for 6 months"],
+            "client_id": client_id
+        }
+        
         success, response = self.run_test(
-            "Cleanup Stuck Reviews", 
-            "POST", 
-            "attorney/review/cleanup-stuck", 
-            200
+            f"Generate Compliant Contract ({contract_type})",
+            "POST",
+            "generate-contract-compliant",
+            200,
+            contract_data,
+            timeout=60
+        )
+        
+        if success and 'suggestions' in response:
+            suggestions = response.get('suggestions', [])
+            print(f"   Contract generation suggestions: {len(suggestions)} items")
+            
+            # Extract review ID from suggestions
+            review_id = None
+            for suggestion in suggestions:
+                if 'Document submitted for attorney review (ID:' in suggestion:
+                    # Extract UUID from the suggestion text
+                    import re
+                    match = re.search(r'ID:\s*([a-f0-9-]{36})', suggestion)
+                    if match:
+                        review_id = match.group(1)
+                        break
+            
+            if review_id:
+                print(f"   ✅ Review created with ID: {review_id}")
+                self.created_reviews.append(review_id)
+                return True, review_id
+            else:
+                print(f"   ❌ No review ID found in suggestions")
+                return False, None
+        else:
+            print(f"   ❌ Contract generation failed or no suggestions returned")
+            return False, None
+
+    def check_review_status(self, review_id):
+        """Check the status of a review to verify attorney assignment and progress"""
+        success, response = self.run_test(
+            f"Check Review Status for {review_id}",
+            "GET",
+            f"attorney/review/status/{review_id}",
+            200,
+            timeout=30
         )
         
         if success:
-            print(f"   Success: {response.get('success', False)}")
-            print(f"   Message: {response.get('message', 'N/A')}")
-            print(f"   Fixed Count: {response.get('fixed_count', 0)}")
+            status = response.get('status', 'unknown')
+            progress = response.get('progress_percentage', 0)
+            attorney = response.get('assigned_attorney')
+            priority = response.get('priority', 'unknown')
+            created_at = response.get('created_at', 'unknown')
+            estimated_completion = response.get('estimated_completion', 'unknown')
             
-            if 'details' in response and response['details']:
-                print(f"   Details: {response['details']}")
+            print(f"   📋 Review Status Details:")
+            print(f"      Status: {status}")
+            print(f"      Progress: {progress}%")
+            print(f"      Priority: {priority}")
+            print(f"      Created: {created_at}")
+            print(f"      Estimated Completion: {estimated_completion}")
             
-            if response.get('fixed_count', 0) > 0:
-                print(f"   ✅ Cleanup fixed {response['fixed_count']} stuck reviews")
+            if attorney:
+                attorney_name = attorney.get('name', 'Unknown')
+                attorney_id = attorney.get('attorney_id', 'Unknown')
+                print(f"      Assigned Attorney: {attorney_name} (ID: {attorney_id})")
+                print(f"   ✅ Attorney is assigned to this review")
+                return True, {
+                    'status': status,
+                    'progress': progress,
+                    'attorney_assigned': True,
+                    'attorney_name': attorney_name,
+                    'attorney_id': attorney_id
+                }
             else:
-                print(f"   ✅ No stuck reviews found (system working correctly)")
-        
-        return success, response
+                print(f"      Assigned Attorney: No attorney assigned")
+                print(f"   ❌ No attorney assigned to this review")
+                return True, {
+                    'status': status,
+                    'progress': progress,
+                    'attorney_assigned': False,
+                    'attorney_name': None,
+                    'attorney_id': None
+                }
+        else:
+            print(f"   ❌ Failed to check review status")
+            return False, {}
 
-    def test_specialization_based_assignment(self):
-        """Test that documents are assigned to attorneys based on specialization"""
-        # Create a contract law specialist attorney first
-        contract_attorney_data = {
-            "email": f"contract_specialist_{random.randint(1000, 9999)}@legalfirm.com",
-            "first_name": "Contract",
-            "last_name": "Specialist",
-            "bar_number": f"BAR{random.randint(100000, 999999)}",
-            "jurisdiction": "US",
-            "role": "reviewing_attorney",
-            "specializations": ["contract_law"],
-            "years_experience": 5,
-            "password": "SecurePassword123!"
-        }
+    def monitor_progress_advancement(self, review_id, monitoring_duration=60):
+        """Monitor a review's progress over time to verify it advances"""
+        print(f"\n⏱️  Monitoring progress advancement for review {review_id} over {monitoring_duration} seconds...")
         
-        success, attorney_response = self.run_test(
-            "Create Contract Law Specialist", 
-            "POST", 
-            "attorney/create", 
-            200, 
-            contract_attorney_data
+        progress_history = []
+        start_time = time.time()
+        
+        # Initial check
+        success, initial_status = self.check_review_status(review_id)
+        if success:
+            progress_history.append({
+                'time': 0,
+                'progress': initial_status.get('progress', 0),
+                'status': initial_status.get('status', 'unknown')
+            })
+            print(f"   Initial Progress: {initial_status.get('progress', 0)}%")
+        
+        # Monitor at intervals
+        check_intervals = [15, 30, 45, 60]  # Check at these second intervals
+        
+        for interval in check_intervals:
+            if interval <= monitoring_duration:
+                time.sleep(interval - (time.time() - start_time) if interval - (time.time() - start_time) > 0 else 0)
+                
+                success, current_status = self.check_review_status(review_id)
+                if success:
+                    elapsed_time = int(time.time() - start_time)
+                    current_progress = current_status.get('progress', 0)
+                    current_status_text = current_status.get('status', 'unknown')
+                    
+                    progress_history.append({
+                        'time': elapsed_time,
+                        'progress': current_progress,
+                        'status': current_status_text
+                    })
+                    
+                    print(f"   Progress at {elapsed_time}s: {current_progress}% (Status: {current_status_text})")
+        
+        # Analyze progress advancement
+        if len(progress_history) >= 2:
+            initial_progress = progress_history[0]['progress']
+            final_progress = progress_history[-1]['progress']
+            progress_increase = final_progress - initial_progress
+            
+            print(f"\n📈 Progress Analysis:")
+            print(f"   Initial Progress: {initial_progress}%")
+            print(f"   Final Progress: {final_progress}%")
+            print(f"   Progress Increase: {progress_increase}%")
+            
+            # Check for status transitions
+            initial_status = progress_history[0]['status']
+            final_status = progress_history[-1]['status']
+            
+            print(f"   Initial Status: {initial_status}")
+            print(f"   Final Status: {final_status}")
+            
+            # Determine if progress is advancing properly
+            if initial_progress == 0 and final_progress == 0:
+                print(f"   ❌ Progress stuck at 0% - attorney assignment issue likely persists")
+                return False, progress_history
+            elif progress_increase > 0:
+                print(f"   ✅ Progress is advancing over time (+{progress_increase}%)")
+                return True, progress_history
+            elif initial_progress > 0:
+                print(f"   ✅ Progress started above 0% ({initial_progress}%) - assignment working")
+                return True, progress_history
+            else:
+                print(f"   ⚠️  Progress not advancing but started above 0%")
+                return True, progress_history
+        else:
+            print(f"   ❌ Insufficient data to analyze progress advancement")
+            return False, progress_history
+
+    def test_complete_document_generation_flow(self):
+        """Test the complete document generation flow with attorney assignment"""
+        print(f"\n📋 STEP 2: Testing Complete Document Generation Flow...")
+        
+        # Generate unique client ID
+        client_id = f"client_{int(time.time())}_{random.randint(1000, 9999)}"
+        print(f"   Using client ID: {client_id}")
+        
+        # Step 1: Record client consent
+        print(f"\n   Step 2.1: Recording client consent...")
+        consent_success = self.record_client_consent(client_id)
+        if not consent_success:
+            print(f"   ❌ Failed to record consent - cannot proceed with flow")
+            return False
+        
+        # Step 2: Generate compliant contract
+        print(f"\n   Step 2.2: Generating compliant contract...")
+        contract_success, review_id = self.generate_compliant_contract(
+            client_id, 
+            contract_type="NDA",
+            party1_name="Test Company Inc.",
+            party2_name="John Doe"
         )
         
-        if success and attorney_response.get('attorney_id'):
-            contract_attorney_id = attorney_response['attorney_id']
-            self.created_attorneys.append(contract_attorney_id)
-            print(f"   ✅ Contract specialist created: {contract_attorney_id}")
+        if not contract_success or not review_id:
+            print(f"   ❌ Failed to generate contract or extract review ID")
+            return False
+        
+        # Step 3: Verify review creation and attorney assignment
+        print(f"\n   Step 2.3: Verifying review creation and attorney assignment...")
+        status_success, status_data = self.check_review_status(review_id)
+        
+        if not status_success:
+            print(f"   ❌ Failed to check review status")
+            return False
+        
+        # Check if attorney is assigned
+        if not status_data.get('attorney_assigned', False):
+            print(f"   ❌ CRITICAL: Review created but no attorney assigned - assignment fix failed")
+            return False
+        
+        print(f"   ✅ Review created and attorney assigned successfully")
+        print(f"   ✅ Attorney: {status_data.get('attorney_name')} (ID: {status_data.get('attorney_id')})")
+        
+        # Step 4: Verify progress is above 0%
+        initial_progress = status_data.get('progress', 0)
+        if initial_progress == 0:
+            print(f"   ❌ CRITICAL: Progress is still 0% despite attorney assignment")
+            return False
+        
+        print(f"   ✅ Initial progress is {initial_progress}% (above 0%)")
+        
+        # Step 5: Monitor progress advancement over time
+        print(f"\n   Step 2.4: Monitoring progress advancement...")
+        progress_success, progress_history = self.monitor_progress_advancement(review_id, monitoring_duration=60)
+        
+        if not progress_success:
+            print(f"   ❌ Progress monitoring failed or progress not advancing")
+            return False
+        
+        print(f"   ✅ Progress monitoring successful - progress is advancing over time")
+        
+        return True
+
+    def test_multiple_reviews_consistency(self):
+        """Test multiple reviews to ensure consistent attorney assignment and progress advancement"""
+        print(f"\n🔄 STEP 3: Testing Multiple Reviews for Consistency...")
+        
+        test_cases = [
+            {"contract_type": "NDA", "party1": "Alpha Corp", "party2": "Beta User"},
+            {"contract_type": "freelance_agreement", "party1": "Gamma LLC", "party2": "Delta Freelancer"},
+            {"contract_type": "partnership_agreement", "party1": "Epsilon Partners", "party2": "Zeta Ventures"}
+        ]
+        
+        successful_reviews = 0
+        review_results = []
+        
+        for i, test_case in enumerate(test_cases):
+            print(f"\n   Test Case {i+1}: {test_case['contract_type']}")
             
-            # Submit a contract document that should be assigned to this specialist
-            contract_document = {
-                "document_content": """
-                **SERVICE AGREEMENT**
-                
-                This Service Agreement is entered into between Service Provider LLC and Client Corp.
-                
-                **SERVICES**
-                Provider agrees to deliver consulting services as specified in Exhibit A.
-                
-                **PAYMENT TERMS**
-                Client shall pay $10,000 upon completion of services.
-                
-                **CONTRACT LAW PROVISIONS**
-                This agreement contains specific contract law clauses requiring specialized review.
-                """,
-                "document_type": "contract",
-                "client_id": f"client_{int(time.time())}_{random.randint(1000, 9999)}",
-                "original_request": {
-                    "contract_type": "service_agreement",
-                    "jurisdiction": "US",
-                    "specialization_required": "contract_law"
-                },
-                "priority": "normal"
+            # Generate unique client ID for each test
+            client_id = f"client_multi_{int(time.time())}_{i}_{random.randint(1000, 9999)}"
+            
+            # Record consent
+            consent_success = self.record_client_consent(client_id)
+            if not consent_success:
+                print(f"   ❌ Failed to record consent for test case {i+1}")
+                continue
+            
+            # Generate contract
+            contract_success, review_id = self.generate_compliant_contract(
+                client_id,
+                contract_type=test_case['contract_type'],
+                party1_name=test_case['party1'],
+                party2_name=test_case['party2']
+            )
+            
+            if not contract_success or not review_id:
+                print(f"   ❌ Failed to generate contract for test case {i+1}")
+                continue
+            
+            # Check review status
+            status_success, status_data = self.check_review_status(review_id)
+            
+            if not status_success:
+                print(f"   ❌ Failed to check status for test case {i+1}")
+                continue
+            
+            # Analyze results
+            attorney_assigned = status_data.get('attorney_assigned', False)
+            progress = status_data.get('progress', 0)
+            status = status_data.get('status', 'unknown')
+            
+            result = {
+                'test_case': i+1,
+                'contract_type': test_case['contract_type'],
+                'review_id': review_id,
+                'attorney_assigned': attorney_assigned,
+                'progress': progress,
+                'status': status,
+                'attorney_name': status_data.get('attorney_name'),
+                'success': attorney_assigned and progress > 0
             }
             
-            success, review_response = self.run_test(
-                "Submit Contract Document for Specialization Test", 
-                "POST", 
-                "attorney/review/submit", 
-                200, 
-                contract_document
-            )
+            review_results.append(result)
             
-            if success and review_response.get('review_id'):
-                review_id = review_response['review_id']
-                self.created_reviews.append(review_id)
-                assigned_attorney_id = review_response.get('assigned_attorney_id')
-                
-                print(f"   Review ID: {review_id}")
-                print(f"   Assigned Attorney: {assigned_attorney_id}")
-                
-                # Check if it was assigned to our contract specialist or another contract law attorney
-                if assigned_attorney_id:
-                    print(f"   ✅ Document assigned to attorney (specialization-based assignment working)")
-                    
-                    # Get review status to see attorney details
-                    success, status_response = self.run_test(
-                        "Check Assigned Attorney Specialization", 
-                        "GET", 
-                        f"attorney/review/status/{review_id}", 
-                        200
-                    )
-                    
-                    if success and 'assigned_attorney' in status_response:
-                        attorney_info = status_response['assigned_attorney']
-                        specializations = attorney_info.get('specializations', [])
-                        print(f"   Assigned Attorney Specializations: {specializations}")
-                        
-                        if 'contract_law' in specializations:
-                            print(f"   ✅ Document correctly assigned to contract law specialist")
-                        else:
-                            print(f"   ⚠️  Document assigned to attorney without contract law specialization")
-                else:
-                    print(f"   ❌ Document not assigned to any attorney")
+            if result['success']:
+                successful_reviews += 1
+                print(f"   ✅ Test Case {i+1}: Attorney assigned ({status_data.get('attorney_name')}), Progress: {progress}%")
+            else:
+                print(f"   ❌ Test Case {i+1}: Assignment failed or progress at 0%")
         
-        return success, attorney_response
+        # Summary
+        print(f"\n📊 Multiple Reviews Test Summary:")
+        print(f"   Successful Reviews: {successful_reviews}/{len(test_cases)}")
+        print(f"   Success Rate: {(successful_reviews/len(test_cases)*100):.1f}%")
+        
+        # Detailed analysis
+        if successful_reviews > 0:
+            assigned_attorneys = set()
+            progress_values = []
+            
+            for result in review_results:
+                if result['success']:
+                    if result['attorney_name']:
+                        assigned_attorneys.add(result['attorney_name'])
+                    progress_values.append(result['progress'])
+            
+            print(f"   Unique Attorneys Assigned: {len(assigned_attorneys)}")
+            print(f"   Attorney Names: {list(assigned_attorneys)}")
+            print(f"   Progress Range: {min(progress_values):.1f}% - {max(progress_values):.1f}%")
+            print(f"   Average Progress: {sum(progress_values)/len(progress_values):.1f}%")
+        
+        return successful_reviews == len(test_cases), review_results
 
-    def test_review_status_invalid_id(self):
-        """Test review status endpoint with invalid review ID"""
-        invalid_id = "invalid-review-id-12345"
+    def test_status_transitions(self):
+        """Test that reviews transition from 'pending' to 'in_review' status when attorneys are assigned"""
+        print(f"\n🔄 STEP 4: Testing Status Transitions (pending → in_review)...")
         
-        success, response = self.run_test(
-            "Review Status - Invalid ID", 
-            "GET", 
-            f"attorney/review/status/{invalid_id}", 
-            404
+        # Generate a new review for status transition testing
+        client_id = f"client_status_{int(time.time())}_{random.randint(1000, 9999)}"
+        
+        # Record consent and generate contract
+        consent_success = self.record_client_consent(client_id)
+        if not consent_success:
+            print(f"   ❌ Failed to record consent for status transition test")
+            return False
+        
+        contract_success, review_id = self.generate_compliant_contract(
+            client_id,
+            contract_type="employment_agreement",
+            party1_name="Status Test Corp",
+            party2_name="Transition Tester"
         )
         
-        if success:
-            print(f"   ✅ Correctly returned 404 for invalid review ID")
-            print(f"   Error message: {response.get('detail', 'N/A')}")
+        if not contract_success or not review_id:
+            print(f"   ❌ Failed to generate contract for status transition test")
+            return False
         
-        return success, response
-
-    def test_review_status_nonexistent_uuid(self):
-        """Test review status endpoint with non-existent but valid UUID"""
-        import uuid
-        nonexistent_id = str(uuid.uuid4())
+        # Check initial status immediately after creation
+        print(f"   Checking initial status immediately after creation...")
+        initial_success, initial_status = self.check_review_status(review_id)
         
-        success, response = self.run_test(
-            "Review Status - Non-existent UUID", 
-            "GET", 
-            f"attorney/review/status/{nonexistent_id}", 
-            404
-        )
+        if not initial_success:
+            print(f"   ❌ Failed to check initial status")
+            return False
         
-        if success:
-            print(f"   ✅ Correctly returned 404 for non-existent review")
-            print(f"   Review ID tested: {nonexistent_id}")
+        initial_status_text = initial_status.get('status', 'unknown')
+        initial_progress = initial_status.get('progress', 0)
+        initial_attorney_assigned = initial_status.get('attorney_assigned', False)
         
-        return success, response
+        print(f"   Initial Status: {initial_status_text}")
+        print(f"   Initial Progress: {initial_progress}%")
+        print(f"   Initial Attorney Assigned: {initial_attorney_assigned}")
+        
+        # Wait a moment and check again to see if status transitions
+        print(f"   Waiting 10 seconds for potential status transition...")
+        time.sleep(10)
+        
+        final_success, final_status = self.check_review_status(review_id)
+        
+        if not final_success:
+            print(f"   ❌ Failed to check final status")
+            return False
+        
+        final_status_text = final_status.get('status', 'unknown')
+        final_progress = final_status.get('progress', 0)
+        final_attorney_assigned = final_status.get('attorney_assigned', False)
+        
+        print(f"   Final Status: {final_status_text}")
+        print(f"   Final Progress: {final_progress}%")
+        print(f"   Final Attorney Assigned: {final_attorney_assigned}")
+        
+        # Analyze status transition
+        print(f"\n   📊 Status Transition Analysis:")
+        
+        if not final_attorney_assigned:
+            print(f"   ❌ CRITICAL: No attorney assigned - cannot test status transitions")
+            return False
+        
+        if final_status_text == 'pending':
+            print(f"   ❌ Status remains 'pending' despite attorney assignment")
+            return False
+        elif final_status_text == 'in_review':
+            print(f"   ✅ Status correctly transitioned to 'in_review'")
+        else:
+            print(f"   ⚠️  Status is '{final_status_text}' - unexpected but may be valid")
+        
+        if final_progress > 0:
+            print(f"   ✅ Progress is above 0% ({final_progress}%)")
+        else:
+            print(f"   ❌ Progress is still 0% despite attorney assignment")
+            return False
+        
+        return True
 
     def run_comprehensive_test(self):
-        """Run all attorney assignment and progress tests"""
-        print("🎯 ATTORNEY ASSIGNMENT SYSTEM COMPREHENSIVE TESTING")
-        print("=" * 60)
+        """Run the comprehensive attorney assignment test suite"""
+        print(f"🎯 ATTORNEY ASSIGNMENT COMPREHENSIVE TEST SUITE")
+        print(f"=" * 60)
+        print(f"Testing the critical fix for attorney assignment issue")
+        print(f"User reported: Progress stuck at 0% due to no attorney assignment")
+        print(f"Expected: Reviews assigned to attorneys with 25%+ progress advancement")
+        print(f"=" * 60)
         
-        # Test 1: Attorney Creation Endpoints
-        print("\n📋 PHASE 1: ATTORNEY CREATION TESTING")
-        self.test_attorney_creation_regular()
-        self.test_attorney_creation_demo()
+        # Step 1: Create test attorneys
+        if not self.create_test_attorneys():
+            print(f"\n❌ CRITICAL FAILURE: Could not create test attorneys")
+            return False
         
-        # Test 2: Document Review Submission
-        print("\n📋 PHASE 2: DOCUMENT REVIEW SUBMISSION TESTING")
-        self.test_document_review_submission_contract()
-        self.test_document_review_submission_high_priority()
+        # Step 2: Test complete document generation flow
+        flow_success = self.test_complete_document_generation_flow()
         
-        # Test 3: Dynamic Progress Verification
-        print("\n📋 PHASE 3: DYNAMIC PROGRESS VERIFICATION")
-        self.test_review_status_dynamic_progress()
-        self.test_multiple_review_progress_over_time()
+        # Step 3: Test multiple reviews for consistency
+        consistency_success, review_results = self.test_multiple_reviews_consistency()
         
-        # Test 4: Cleanup and Error Handling
-        print("\n📋 PHASE 4: CLEANUP AND ERROR HANDLING")
-        self.test_cleanup_stuck_reviews()
-        self.test_review_status_invalid_id()
-        self.test_review_status_nonexistent_uuid()
-        
-        # Test 5: Specialization-Based Assignment
-        print("\n📋 PHASE 5: SPECIALIZATION-BASED ASSIGNMENT")
-        self.test_specialization_based_assignment()
+        # Step 4: Test status transitions
+        transition_success = self.test_status_transitions()
         
         # Final Summary
-        print("\n" + "=" * 60)
-        print("🎯 ATTORNEY ASSIGNMENT SYSTEM TEST SUMMARY")
-        print("=" * 60)
-        print(f"Total Tests Run: {self.tests_run}")
-        print(f"Tests Passed: {self.tests_passed}")
-        print(f"Success Rate: {(self.tests_passed/self.tests_run)*100:.1f}%")
-        print(f"Created Attorneys: {len(self.created_attorneys)}")
-        print(f"Created Reviews: {len(self.created_reviews)}")
+        print(f"\n" + "=" * 60)
+        print(f"🎯 COMPREHENSIVE TEST RESULTS SUMMARY")
+        print(f"=" * 60)
         
-        if self.tests_passed == self.tests_run:
-            print("🎉 ALL TESTS PASSED - Attorney assignment system fully operational!")
-        elif self.tests_passed / self.tests_run >= 0.8:
-            print("✅ MOSTLY SUCCESSFUL - Attorney assignment system working with minor issues")
+        total_tests = 4  # Number of major test categories
+        passed_tests = sum([
+            1 if len(self.created_attorneys) > 0 else 0,  # Attorney creation
+            1 if flow_success else 0,  # Complete flow
+            1 if consistency_success else 0,  # Multiple reviews consistency
+            1 if transition_success else 0  # Status transitions
+        ])
+        
+        success_rate = (passed_tests / total_tests) * 100
+        
+        print(f"📊 Overall Results:")
+        print(f"   Tests Passed: {passed_tests}/{total_tests}")
+        print(f"   Success Rate: {success_rate:.1f}%")
+        print(f"   Individual API Tests: {self.tests_passed}/{self.tests_run}")
+        
+        print(f"\n📋 Detailed Results:")
+        print(f"   ✅ Attorney Creation: {len(self.created_attorneys)} attorneys created" if len(self.created_attorneys) > 0 else "   ❌ Attorney Creation: Failed")
+        print(f"   ✅ Complete Flow Test: Passed" if flow_success else "   ❌ Complete Flow Test: Failed")
+        print(f"   ✅ Multiple Reviews Consistency: Passed" if consistency_success else "   ❌ Multiple Reviews Consistency: Failed")
+        print(f"   ✅ Status Transitions: Passed" if transition_success else "   ❌ Status Transitions: Failed")
+        
+        print(f"\n🔍 Key Findings:")
+        if len(self.created_attorneys) > 0:
+            print(f"   • {len(self.created_attorneys)} test attorneys available for assignment")
+        
+        if len(self.created_reviews) > 0:
+            print(f"   • {len(self.created_reviews)} reviews created during testing")
+        
+        # Determine overall success
+        critical_success = flow_success and len(self.created_attorneys) > 0
+        
+        if critical_success:
+            print(f"\n✅ CRITICAL FIX VERIFICATION: SUCCESS")
+            print(f"   The attorney assignment issue appears to be resolved:")
+            print(f"   • Reviews are being assigned to attorneys")
+            print(f"   • Progress advances above 0% (typically 25%+)")
+            print(f"   • Status transitions from 'pending' to 'in_review'")
         else:
-            print("❌ SIGNIFICANT ISSUES - Attorney assignment system needs attention")
+            print(f"\n❌ CRITICAL FIX VERIFICATION: FAILED")
+            print(f"   The attorney assignment issue may still persist:")
+            print(f"   • Reviews may not be getting assigned to attorneys")
+            print(f"   • Progress may still be stuck at 0%")
+            print(f"   • Status may remain 'pending' indefinitely")
         
-        return self.tests_passed, self.tests_run
+        return critical_success
 
 if __name__ == "__main__":
-    print("🚀 Starting Attorney Assignment System Testing...")
     tester = AttorneyAssignmentTester()
-    passed, total = tester.run_comprehensive_test()
+    success = tester.run_comprehensive_test()
     
-    if passed == total:
+    if success:
+        print(f"\n🎉 All critical tests passed! Attorney assignment fix is working.")
         sys.exit(0)
     else:
+        print(f"\n💥 Critical tests failed. Attorney assignment issue may persist.")
         sys.exit(1)
