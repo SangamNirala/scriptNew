@@ -2255,12 +2255,11 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Litigation Analytics Engine - All Endpoints"
     - "Consent Popup Infinite Loop Issue Fix"
     - "Classic Mode Contract Generation Flow"
   stuck_tasks: []
   test_all: false
-  test_priority: "litigation_analytics_complete"
+  test_priority: "consent_and_contract_flow"
 
   - task: "Legal Updates Monitoring System - Monitor Status Endpoint"
     implemented: true
