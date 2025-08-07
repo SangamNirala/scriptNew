@@ -2300,11 +2300,10 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Consent Popup Infinite Loop Issue Fix"
-    - "Classic Mode Contract Generation Flow"
+    - "Judicial Behavior Analyzer Fixes - Different Judge Values"
   stuck_tasks: []
   test_all: false
-  test_priority: "consent_and_contract_flow"
+  test_priority: "judicial_behavior_fixes"
 
   - task: "Legal Updates Monitoring System - Monitor Status Endpoint"
     implemented: true
