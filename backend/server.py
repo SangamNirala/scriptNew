@@ -13628,15 +13628,16 @@ if LITIGATION_ANALYTICS_AVAILABLE:
             )
     
     @api_router.get("/litigation/judge-insights/{judge_name}", response_model=JudgeInsightsResponse)
-    async def get_judge_insights(judge_name: str, case_type: Optional[str] = None, case_value: Optional[float] = None):
+    async def get_judge_insights(judge_name: str, case_type: Optional[str] = None, case_value: Optional[float] = None, jurisdiction: Optional[str] = None):
         """
-        Get comprehensive judicial behavior insights and analysis
+        Get comprehensive judicial behavior insights and analysis with validation
         
         Provides:
         - Judge decision patterns and tendencies
         - Success rates and case duration statistics
         - Case-type specific insights
         - Strategic recommendations for appearing before this judge
+        - Validation information and credible source references
         """
         try:
             logger.info(f"⚖️ Getting insights for Judge {judge_name}")
@@ -13644,11 +13645,12 @@ if LITIGATION_ANALYTICS_AVAILABLE:
             # Get judicial analyzer
             judicial_analyzer = await get_judicial_analyzer(db)
             
-            # Get judge insights
+            # Get judge insights with validation
             insights = await judicial_analyzer.get_judge_insights_for_case(
                 judge_name=judge_name,
                 case_type=case_type or "civil",
-                case_value=case_value
+                case_value=case_value,
+                jurisdiction=jurisdiction
             )
             
             return JudgeInsightsResponse(
@@ -13672,7 +13674,12 @@ if LITIGATION_ANALYTICS_AVAILABLE:
                 recent_trends=insights.get('recent_trends', {}),
                 case_specific_insights=insights['case_specific_insights'],
                 strategic_recommendations=insights['strategic_recommendations'],
-                confidence_score=insights['confidence_score']
+                confidence_score=insights['confidence_score'],
+                # Validation information
+                is_verified=insights.get('is_verified', False),
+                validation_sources=insights.get('validation_sources', []),
+                validation_summary=insights.get('validation_summary', ''),
+                reference_links=insights.get('reference_links', [])
             )
             
         except Exception as e:
