@@ -4,7 +4,7 @@ import random
 
 def debug_review_action():
     """Debug the attorney review action issue"""
-    base_url = "https://6cd214f1-0c9c-45d0-b5f1-ba72b3ef157f.preview.emergentagent.com"
+    base_url = "https://e2548fee-4242-4ccc-9bcb-0aa2c17bac5c.preview.emergentagent.com"
     api_url = f"{base_url}/api"
     
     # Step 1: Create an attorney
