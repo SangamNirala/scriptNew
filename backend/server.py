@@ -13464,6 +13464,11 @@ if LITIGATION_ANALYTICS_AVAILABLE:
         settlement_rate: float
         plaintiff_success_rate: float
         average_case_duration: float
+        appeal_rate: float
+        outcome_patterns: Dict[str, float] = {}
+        specialty_areas: List[str] = []
+        decision_tendencies: Dict[str, Any] = {}
+        recent_trends: Dict[str, Any] = {}
         case_specific_insights: Dict[str, Any] = {}
         strategic_recommendations: List[str] = []
         confidence_score: float
