@@ -237,10 +237,14 @@ class JudgeInsightsAPITester:
         """Test comprehensive validation of Judge Insights response structure"""
         judge_name = "Sarah Martinez"
         
+        # URL encode the judge name properly
+        import urllib.parse
+        encoded_judge_name = urllib.parse.quote(judge_name)
+        
         success, response = self.run_test(
             f"Judge Insights Response Structure Validation",
             "GET",
-            f"litigation/judge-insights/{judge_name}",
+            f"litigation/judge-insights/{encoded_judge_name}",
             200,
             timeout=30
         )
