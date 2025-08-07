@@ -76,7 +76,7 @@ export default function ConsentManager({
           user_agent: navigator.userAgent
         };
 
-        await axios.post(`${API}/api/client/consent`, consentData);
+        await axios.post(`${API}/client/consent`, consentData);
       }
 
       setHasExistingConsent(true);
