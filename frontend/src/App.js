@@ -162,6 +162,7 @@ const ScriptGenerator = () => {
       });
 
       setGeneratedScript(response.data.generated_script);
+      setCurrentScriptId(response.data.id); // Store the script ID
       setGeneratedWithPrompt(promptTypeLabel);
       fetchScripts(); // Refresh the list
     } catch (err) {
