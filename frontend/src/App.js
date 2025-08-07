@@ -596,17 +596,22 @@ function App() {
   };
 
   const handleConsentGiven = (consentGiven) => {
+    console.log('✅ Consent given callback triggered:', consentGiven);
     setClientConsent(consentGiven);
     setShowConsentManager(false);
     setConsentJustProvided(true); // Flag that consent was just provided
     
     if (consentGiven && isGenerating) {
-      // Resume contract generation after consent
-      generateContract();
+      console.log('🔄 Resuming contract generation after consent...');
+      // Resume contract generation after consent with a small delay to ensure state is updated
+      setTimeout(() => {
+        generateContract();
+      }, 500);
     }
   };
 
   const handleConsentDeclined = () => {
+    console.log('❌ Consent declined');
     setShowConsentManager(false);
     setIsGenerating(false); // Make sure to reset the generating state when consent is declined
     alert('Consent is required to use legal services. Please provide consent to continue.');
