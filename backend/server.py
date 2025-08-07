@@ -13473,6 +13473,18 @@ if LITIGATION_ANALYTICS_AVAILABLE:
         strategic_recommendations: List[str] = []
         confidence_score: float
     
+    class JudgeComparisonRequest(BaseModel):
+        judge_names: List[str]
+        case_type: Optional[str] = None
+    
+    class JudgeComparisonResponse(BaseModel):
+        judges_compared: int
+        case_type_focus: Optional[str]
+        comparative_metrics: Dict[str, Any]
+        recommendations: Dict[str, str]
+        analysis_date: str
+        confidence_score: float
+    
     class SettlementAnalysisRequest(BaseModel):
         case_id: Optional[str] = None
         case_type: str
