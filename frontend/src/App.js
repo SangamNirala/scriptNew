@@ -917,6 +917,31 @@ const ScriptGenerator = () => {
                         </>
                       )}
                     </button>
+
+                    {/* Enhance Image Prompt Button */}
+                    <button
+                      onClick={handleEnhanceImagePrompts}
+                      disabled={isEnhancingImagePrompts || isEditingScript || !generatedScript}
+                      className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center space-x-2 ${
+                        isEnhancingImagePrompts 
+                          ? 'bg-yellow-500/20 text-yellow-300 cursor-not-allowed' 
+                          : !generatedScript || isEditingScript
+                          ? 'bg-gray-500/20 text-gray-400 cursor-not-allowed opacity-75'
+                          : 'bg-orange-500/20 text-orange-300 hover:bg-orange-500/30'
+                      }`}
+                    >
+                      {isEnhancingImagePrompts ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-yellow-300"></div>
+                          <span>Enhancing...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>🎨</span>
+                          <span>Enhance Image Prompt</span>
+                        </>
+                      )}
+                    </button>
                   </div>
                 </div>
                 
