@@ -306,6 +306,7 @@ const ScriptGenerator = () => {
       };
       
       setAudioData(audio);
+      setCurrentAudioBase64(audioBase64); // Store for download
       audio.play();
       
     } catch (err) {
