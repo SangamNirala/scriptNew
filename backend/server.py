@@ -2744,41 +2744,7 @@ async def generate_audio(request: TextToSpeechRequest):
         logger.error(f"Error generating audio: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error generating audio: {str(e)}")
 
-@api_router.post("/generate-avatar-video", response_model=AvatarVideoResponse)
-async def generate_avatar_video(request: AvatarVideoRequest):
-    """Generate an avatar video from audio using AI-powered lip sync"""
-    try:
-        logger.info("Starting avatar video generation")
-        
-        if not request.audio_base64 or request.audio_base64.strip() == "":
-            raise HTTPException(status_code=400, detail="Audio data is required")
-        
-        # Generate avatar video in a separate thread to avoid blocking
-        import concurrent.futures
-        import asyncio
-        
-        loop = asyncio.get_event_loop()
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            result = await loop.run_in_executor(
-                executor, 
-                avatar_generator.generate_avatar_video,
-                request.audio_base64,
-                request.avatar_image_path
-            )
-        
-        logger.info(f"Avatar video generation completed successfully. Video size: {len(result['video_base64'])} chars")
-        
-        return AvatarVideoResponse(
-            video_base64=result["video_base64"],
-            duration_seconds=result["duration_seconds"],
-            request_id=result["request_id"]
-        )
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error generating avatar video: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Error generating avatar video: {str(e)}")
+
 
 @api_router.post("/generate-enhanced-avatar-video", response_model=EnhancedAvatarVideoResponse)
 async def generate_enhanced_avatar_video(request: EnhancedAvatarVideoRequest):
