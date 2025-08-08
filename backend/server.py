@@ -13556,7 +13556,7 @@ if LITIGATION_ANALYTICS_AVAILABLE:
         settlement_urgency_score: float
         confidence_score: float
         key_settlement_factors: List[str]
-        negotiation_leverage: Dict[str, float]
+        negotiation_leverage: NegotiationLeverageData
         scenarios: List[Dict[str, Any]] = []
         ai_insights: str = ""
         recommendations: List[str] = []
