@@ -13537,6 +13537,32 @@ if LITIGATION_ANALYTICS_AVAILABLE:
         scenarios: List[Dict[str, Any]] = []
         ai_insights: str = ""
         recommendations: List[str] = []
+
+    # Advanced Settlement Response with enhanced analytics
+    class AdvancedSettlementAnalysisResponse(BaseModel):
+        case_id: str
+        settlement_probability: float
+        optimal_timing: str
+        plaintiff_settlement_range: Dict[str, float]
+        defendant_settlement_range: Dict[str, float]
+        expected_settlement_value: float
+        settlement_urgency_score: float
+        confidence_score: float
+        key_settlement_factors: List[str]
+        negotiation_leverage: Dict[str, float]
+        scenarios: List[Dict[str, Any]] = []
+        ai_insights: str = ""
+        recommendations: List[str] = []
+        # Advanced fields
+        monte_carlo_results: Optional[Dict[str, Any]] = None
+        ai_consensus_score: Optional[float] = None
+        market_trend_adjustment: Optional[float] = None
+        volatility_index: Optional[float] = None
+        strategic_advantage_score: Optional[float] = None
+        comparative_cases: List[Dict[str, Any]] = []
+        processing_time: Optional[float] = None
+        analysis_mode: Optional[str] = None
+        metadata: Optional[Dict[str, Any]] = None
     
     class SimilarCasesRequest(BaseModel):
         case_type: str
