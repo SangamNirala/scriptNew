@@ -345,7 +345,7 @@ const LitigationStrategy = () => {
                 <div className="text-center p-4 bg-blue-50 rounded-lg">
                   <Scale className="h-6 w-6 text-blue-600 mx-auto mb-2" />
                   <div className="text-2xl font-bold text-blue-900">
-                    {formatStrategy(recommendations.recommended_strategy)}
+                    {formatStrategy(recommendations.recommended_strategy_type)}
                   </div>
                   <div className="text-sm text-blue-600">Primary Strategy</div>
                 </div>
