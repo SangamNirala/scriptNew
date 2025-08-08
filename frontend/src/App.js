@@ -743,7 +743,7 @@ const ScriptGenerator = () => {
                     <span>Copy Script</span>
                   </button>
                   
-                  {lastGeneratedAudio && selectedVoice && (
+                  {currentAudioBase64 && selectedVoice && (
                     <button
                       onClick={handleDownloadAudio}
                       className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 flex items-center space-x-2"
@@ -753,61 +753,7 @@ const ScriptGenerator = () => {
                     </button>
                   )}
                   
-                  {lastGeneratedAudio && (
-                    <button
-                      onClick={handleGenerateAvatarVideo}
-                      disabled={isGeneratingVideo}
-                      className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center space-x-2 ${
-                        isGeneratingVideo 
-                          ? 'bg-yellow-500/20 text-yellow-300 cursor-not-allowed' 
-                          : 'bg-gradient-to-r from-green-600 to-teal-600 text-white hover:from-green-700 hover:to-teal-700'
-                      }`}
-                    >
-                      {isGeneratingVideo ? (
-                        <>
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-yellow-300"></div>
-                          <span>Creating Video...</span>
-                        </>
-                      ) : (
-                        <>
-                          <span>🎥</span>
-                          <span>Generate Avatar Video</span>
-                        </>
-                      )}
-                    </button>
-                  )}
-
-                  {lastGeneratedAudio && (
-                    <button
-                      onClick={() => setShowAvatarOptions(true)}
-                      disabled={isGeneratingVideo}
-                      className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center space-x-2 ${
-                        isGeneratingVideo 
-                          ? 'bg-yellow-500/20 text-yellow-300 cursor-not-allowed' 
-                          : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700'
-                      }`}
-                    >
-                      <span>✨</span>
-                      <span>Enhanced Avatar Video</span>
-                    </button>
-                  )}
-
-                  {lastGeneratedAudio && (
-                    <button
-                      onClick={() => setShowUltraRealisticOptions(true)}
-                      disabled={isGeneratingVideo}
-                      className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center space-x-2 ${
-                        isGeneratingVideo 
-                          ? 'bg-yellow-500/20 text-yellow-300 cursor-not-allowed' 
-                          : 'bg-gradient-to-r from-pink-600 to-red-600 text-white hover:from-pink-700 hover:to-red-700'
-                      }`}
-                    >
-                      <span>🎬</span>
-                      <span>Ultra-Realistic Avatar</span>
-                    </button>
-                  )}
-                  
-                  {!isPlaying && !isGeneratingAudio && !lastGeneratedAudio && (
+                  {!isPlaying && !isGeneratingAudio && !currentAudioBase64 && (
                     <div className="text-xs text-gray-400 flex items-center">
                       💡 Click "Listen" to choose a voice and hear your script read aloud
                     </div>
