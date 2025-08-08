@@ -172,8 +172,9 @@ class JudgeValidator:
             
             result = JudgeValidationResult(judge_name)
             
-            # Run validation tasks concurrently
+            # Run validation tasks concurrently - prioritize web search
             validation_tasks = [
+                self._web_search_judge(judge_name),  # Primary: Web search
                 self._check_courtlistener(judge_name),
                 self._check_wikipedia(judge_name),
                 self._check_news_sources(judge_name),
