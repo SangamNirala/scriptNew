@@ -18,6 +18,10 @@ from typing import Dict, List, Optional, Any, Tuple
 from datetime import datetime, timedelta
 from urllib.parse import quote_plus
 import json
+import os
+import requests
+from bs4 import BeautifulSoup
+import google.generativeai as genai
 
 logger = logging.getLogger(__name__)
 
