@@ -43,7 +43,9 @@ requests-file
 
 thinc
 
-
+# Scheduler and async dependencies
+apscheduler
+tzlocal
 
 # Database Dependencies
 pymongo==4.5.0
