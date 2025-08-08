@@ -105,6 +105,9 @@ const LitigationStrategy = () => {
   };
 
   const formatStrategy = (strategy) => {
+    if (!strategy || typeof strategy !== 'string') {
+      return 'N/A';
+    }
     return strategy.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 
