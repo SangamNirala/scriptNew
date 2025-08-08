@@ -289,16 +289,16 @@ const SettlementCalculator = () => {
                 <div className="text-center p-6 bg-blue-50 rounded-lg">
                   <Target className="h-8 w-8 text-blue-600 mx-auto mb-3" />
                   <div className="text-3xl font-bold text-blue-900 mb-2">
-                    {(analysis.metrics.settlement_probability * 100).toFixed(1)}%
+                    {(analysis.settlement_probability * 100).toFixed(1)}%
                   </div>
                   <div className="text-sm text-blue-600">Settlement Probability</div>
-                  <Progress value={analysis.metrics.settlement_probability * 100} className="mt-2 h-2" />
+                  <Progress value={analysis.settlement_probability * 100} className="mt-2 h-2" />
                 </div>
 
                 <div className="text-center p-6 bg-green-50 rounded-lg">
                   <DollarSign className="h-8 w-8 text-green-600 mx-auto mb-3" />
                   <div className="text-3xl font-bold text-green-900 mb-2">
-                    ${analysis.metrics.expected_settlement_value?.toLocaleString() || 'N/A'}
+                    ${analysis.expected_settlement_value?.toLocaleString() || 'N/A'}
                   </div>
                   <div className="text-sm text-green-600">Expected Settlement</div>
                 </div>
@@ -306,7 +306,7 @@ const SettlementCalculator = () => {
                 <div className="text-center p-6 bg-purple-50 rounded-lg">
                   <Clock className="h-8 w-8 text-purple-600 mx-auto mb-3" />
                   <div className="text-3xl font-bold text-purple-900 mb-2">
-                    {formatTiming(analysis.metrics.optimal_timing?.value)}
+                    {formatTiming(analysis.optimal_timing)}
                   </div>
                   <div className="text-sm text-purple-600">Optimal Timing</div>
                 </div>
