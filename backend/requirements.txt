@@ -64,6 +64,10 @@ feedparser>=6.0.0
 soupsieve>=2.3.0
 # RAG System Dependencies
 sentence-transformers>=2.2.0
+transformers>=4.20.0
+emergentintegrations
+scipy>=1.9.0
+plotly>=5.10.0
 faiss-cpu>=1.7.4
 supabase>=2.0.0
 numpy>=1.24.0
