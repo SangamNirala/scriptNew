@@ -126,6 +126,17 @@ class JudgeValidator:
         try:
             logger.info(f"🔍 Validating judge: {judge_name}")
             
+            # First, perform fake judge detection BEFORE any validation
+            fake_detection_result = self._detect_fake_judge(judge_name)
+            if fake_detection_result['is_fake']:
+                logger.warning(f"🚨 FAKE JUDGE DETECTED: {judge_name} - {fake_detection_result['reason']}")
+                result = JudgeValidationResult(judge_name)
+                result.is_verified = False
+                result.confidence_score = 0.0
+                result.validation_summary = f"No reliable information could be found for Judge {judge_name}. {fake_detection_result['reason']}"
+                result.recommended_action = "NO_INFORMATION_FOUND"
+                return result
+            
             # Check cache first
             cache_key = f"{judge_name}_{jurisdiction}"
             if cache_key in self.cache:
