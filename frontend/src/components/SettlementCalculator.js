@@ -436,7 +436,7 @@ const SettlementCalculator = () => {
                     <div className="text-sm text-green-600">Initial settlement discussions</div>
                   </div>
                   <div className="text-green-600">
-                    {analysis.metrics.settlement_probability > 0.7 ? '✓ Recommended' : '○ Optional'}
+                    {analysis.settlement_probability > 0.7 ? '✓ Recommended' : '○ Optional'}
                   </div>
                 </div>
 
@@ -446,7 +446,7 @@ const SettlementCalculator = () => {
                     <div className="text-sm text-blue-600">Post-discovery settlement talks</div>
                   </div>
                   <div className="text-blue-600">
-                    {formatTiming(analysis.metrics.optimal_timing?.value) === 'Early' ? '✓ Optimal Window' : '○ Alternative'}
+                    {formatTiming(analysis.optimal_timing) === 'Early' ? '✓ Optimal Window' : '○ Alternative'}
                   </div>
                 </div>
 
@@ -456,7 +456,7 @@ const SettlementCalculator = () => {
                     <div className="text-sm text-yellow-600">Final settlement opportunity</div>
                   </div>
                   <div className="text-yellow-600">
-                    {analysis.metrics.settlement_urgency_score < 0.5 ? '✓ Viable Option' : '○ Last Resort'}
+                    {analysis.settlement_urgency_score < 0.5 ? '✓ Viable Option' : '○ Last Resort'}
                   </div>
                 </div>
               </div>
