@@ -391,32 +391,23 @@ const LitigationStrategy = () => {
             </CardContent>
           </Card>
 
-          {/* Strategic Recommendations */}
+          {/* AI Strategic Summary */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <Lightbulb className="h-5 w-5" />
-                <span>Strategic Recommendations</span>
+                <span>AI Strategic Analysis</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {recommendations.strategic_recommendations && recommendations.strategic_recommendations.length > 0 ? (
-                <div className="space-y-3">
-                  {recommendations.strategic_recommendations.map((rec, index) => (
-                    <div key={index} className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                      <div className="flex items-start space-x-3">
-                        <div className="flex-shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                          {index + 1}
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-blue-800">{rec}</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+              {recommendations.ai_strategic_summary ? (
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="text-blue-800 whitespace-pre-line">
+                    {recommendations.ai_strategic_summary}
+                  </div>
                 </div>
               ) : (
-                <p className="text-gray-500">AI-powered strategic recommendations analyzing...</p>
+                <p className="text-gray-500">AI-powered strategic analysis in progress...</p>
               )}
             </CardContent>
           </Card>
