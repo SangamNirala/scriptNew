@@ -111,13 +111,29 @@ const SettlementCalculator = () => {
       {/* Settlement Calculator Form */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Calculator className="h-5 w-5" />
-            <span>Settlement Probability Calculator</span>
-          </CardTitle>
-          <CardDescription>
-            Calculate settlement likelihood and optimal negotiation strategies using AI analysis
-          </CardDescription>
+          <div className="flex justify-between items-start">
+            <div>
+              <CardTitle className="flex items-center space-x-2">
+                <Calculator className="h-5 w-5" />
+                <span>Settlement Probability Calculator</span>
+                {advancedMode && <Badge className="ml-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white"><Brain className="h-3 w-3 mr-1" />Advanced</Badge>}
+              </CardTitle>
+              <CardDescription>
+                {advancedMode 
+                  ? "Enhanced settlement analysis with AI consensus, Monte Carlo simulation, and market intelligence" 
+                  : "Calculate settlement likelihood and optimal negotiation strategies using AI analysis"
+                }
+              </CardDescription>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Label htmlFor="advanced-mode" className="text-sm">Advanced Mode</Label>
+              <Switch 
+                id="advanced-mode"
+                checked={advancedMode}
+                onCheckedChange={setAdvancedMode}
+              />
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
