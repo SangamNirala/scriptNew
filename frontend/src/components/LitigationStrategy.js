@@ -479,9 +479,9 @@ const LitigationStrategy = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {recommendations.action_plan && recommendations.action_plan.length > 0 ? (
+              {recommendations.strategic_recommendations && recommendations.strategic_recommendations.length > 0 ? (
                 <div className="space-y-4">
-                  {recommendations.action_plan.map((action, index) => (
+                  {recommendations.strategic_recommendations.map((action, index) => (
                     <div key={index} className="flex items-start space-x-4 p-4 bg-white border border-gray-200 rounded-lg">
                       <div className="flex-shrink-0">
                         <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-semibold">
@@ -489,17 +489,26 @@ const LitigationStrategy = () => {
                         </div>
                       </div>
                       <div className="flex-1">
-                        <div className="font-medium text-gray-900">{action.action || action}</div>
-                        {action.timeline && (
+                        <div className="font-medium text-gray-900">{action.title || action.description || action}</div>
+                        {action.description && action.title && (
+                          <div className="text-sm text-gray-600 mt-1">{action.description}</div>
+                        )}
+                        {action.estimated_timeframe && (
                           <div className="text-sm text-gray-500 mt-1">
                             <Clock className="h-3 w-3 inline mr-1" />
-                            {action.timeline}
+                            {action.estimated_timeframe}
                           </div>
                         )}
                         {action.priority && (
                           <Badge className={`mt-2 text-xs ${getPriorityColor(action.priority)}`}>
                             {action.priority} Priority
                           </Badge>
+                        )}
+                        {action.estimated_cost && (
+                          <div className="text-sm text-gray-500 mt-1">
+                            <DollarSign className="h-3 w-3 inline mr-1" />
+                            ${action.estimated_cost.toLocaleString()}
+                          </div>
                         )}
                       </div>
                     </div>
