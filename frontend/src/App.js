@@ -1736,6 +1736,59 @@ const ScriptGenerator = () => {
             </div>
           </div>
         )}
+
+        {/* Inline Image Gallery */}
+        {showInlineGallery && generatedImages.length > 0 && (
+          <div id="inline-image-gallery" className="bg-white/5 backdrop-blur-lg rounded-xl border border-white/20 p-6 mt-8">
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold text-white mb-2 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                Generated Images
+              </h2>
+              <p className="text-lg text-purple-200">
+                AI-Generated Images from Enhanced Prompts
+              </p>
+              <button
+                onClick={() => setShowInlineGallery(false)}
+                className="mt-4 px-4 py-2 bg-red-500/20 text-red-300 rounded-lg hover:bg-red-500/30 transition-colors"
+              >
+                ✕ Close Gallery
+              </button>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {generatedImages.map((img, index) => (
+                <div key={index} className="bg-white/10 backdrop-blur-lg rounded-lg border border-white/20 p-4">
+                  <div className="aspect-square mb-4 rounded-lg overflow-hidden bg-white/5">
+                    <img 
+                      src={`data:image/png;base64,${img.image_base64}`}
+                      alt={`Generated Image ${img.image_index}`}
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-200 cursor-zoom-in"
+                      onClick={(e) => {
+                        if (e.target.requestFullscreen) {
+                          e.target.requestFullscreen();
+                        }
+                      }}
+                    />
+                  </div>
+                  <div className="space-y-3">
+                    <h3 className="text-lg font-semibold text-white">Shot {img.image_index}</h3>
+                    <div className="bg-purple-500/20 rounded-lg p-3">
+                      <h4 className="text-sm font-medium text-purple-300 mb-2">Enhanced Prompt:</h4>
+                      <p className="text-sm text-gray-200 leading-relaxed">{img.enhanced_prompt}</p>
+                    </div>
+                    <button
+                      onClick={() => downloadImage(img.image_base64, `generated-image-${img.image_index}.png`)}
+                      className="w-full px-4 py-2 bg-blue-500/20 text-blue-300 rounded-lg hover:bg-blue-500/30 transition-colors flex items-center justify-center space-x-2"
+                    >
+                      <span>💾</span>
+                      <span>Download Image</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
