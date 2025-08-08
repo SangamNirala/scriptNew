@@ -2746,54 +2746,7 @@ async def generate_audio(request: TextToSpeechRequest):
 
 
 
-@api_router.post("/generate-enhanced-avatar-video", response_model=EnhancedAvatarVideoResponse)
-async def generate_enhanced_avatar_video(request: EnhancedAvatarVideoRequest):
-    """Generate an enhanced avatar video with realistic AI avatars and context-aware backgrounds"""
-    try:
-        logger.info("Starting enhanced avatar video generation")
-        
-        if not request.audio_base64 or request.audio_base64.strip() == "":
-            raise HTTPException(status_code=400, detail="Audio data is required")
-        
-        # Validate avatar option
-        if request.avatar_option not in ["default", "upload", "ai_generated"]:
-            raise HTTPException(status_code=400, detail="Invalid avatar option")
-        
-        # Validate user image if upload option is selected
-        if request.avatar_option == "upload" and not request.user_image_base64:
-            raise HTTPException(status_code=400, detail="User image is required for upload option")
-        
-        # Generate enhanced avatar video in a separate thread to avoid blocking
-        import concurrent.futures
-        import asyncio
-        
-        loop = asyncio.get_event_loop()
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            result = await loop.run_in_executor(
-                executor, 
-                enhanced_avatar_generator.generate_enhanced_avatar_video,
-                request.audio_base64,
-                request.avatar_option,
-                request.user_image_base64,
-                request.script_text or ""
-            )
-        
-        logger.info(f"Enhanced avatar video generation completed successfully. Video size: {len(result['video_base64'])} chars")
-        
-        return EnhancedAvatarVideoResponse(
-            video_base64=result["video_base64"],
-            duration_seconds=result["duration_seconds"],
-            request_id=result["request_id"],
-            avatar_option=result["avatar_option"],
-            script_segments=result["script_segments"],
-            sadtalker_used=result["sadtalker_used"]
-        )
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error generating enhanced avatar video: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Error generating enhanced avatar video: {str(e)}")
+
 
 @api_router.post("/generate-ultra-realistic-avatar-video", response_model=UltraRealisticAvatarVideoResponse)
 async def generate_ultra_realistic_avatar_video(request: UltraRealisticAvatarVideoRequest):
