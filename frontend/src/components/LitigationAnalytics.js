@@ -1043,6 +1043,70 @@ const JudgeInsights = () => {
                   Analysis based on {insights.total_cases} decisions spanning multiple case types and jurisdictions
                 </p>
               </div>
+
+              {/* Reference Links Section */}
+              {insights.reference_links && insights.reference_links.length > 0 && (
+                <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-6">
+                  <h3 className="text-lg font-semibold mb-4 flex items-center text-green-800">
+                    <ExternalLink className="h-5 w-5 mr-2" />
+                    Verified Reference Sources
+                  </h3>
+                  <p className="text-sm text-green-700 mb-4">
+                    This analysis is based on information from the following verified sources:
+                  </p>
+                  <div className="grid grid-cols-1 gap-3">
+                    {insights.reference_links.map((link, index) => (
+                      <div key={index} className="flex items-center space-x-3 p-3 bg-white rounded-md border">
+                        <div className="flex-shrink-0">
+                          <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                            <span className="text-green-600 text-sm font-medium">{index + 1}</span>
+                          </div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">
+                            {link.name || 'Judicial Source'}
+                          </p>
+                          <a 
+                            href={link.url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-sm text-blue-600 hover:text-blue-800 hover:underline truncate block"
+                          >
+                            {link.url}
+                          </a>
+                        </div>
+                        <ExternalLink className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-4 p-3 bg-green-100 rounded-md">
+                    <p className="text-xs text-green-800">
+                      <strong>Data Reliability:</strong> This analysis is based on {insights.reference_links.length} verified source{insights.reference_links.length !== 1 ? 's' : ''} 
+                      with a confidence score of {(insights.confidence_score * 100).toFixed(1)}%. 
+                      {insights.is_verified ? ' Sources have been validated for authenticity.' : ' Additional verification recommended.'}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* No Reference Links Warning */}
+              {(!insights.reference_links || insights.reference_links.length === 0) && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                  <div className="flex items-start">
+                    <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5 mr-3 flex-shrink-0" />
+                    <div>
+                      <h4 className="text-sm font-medium text-yellow-800 mb-1">
+                        Limited Source Verification
+                      </h4>
+                      <p className="text-sm text-yellow-700">
+                        No external reference sources could be verified for this judge. 
+                        The analysis shown may be estimated data. 
+                        Please verify independently before making legal strategy decisions.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
