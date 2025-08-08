@@ -16,9 +16,7 @@ import io
 import tempfile
 import asyncio
 import re
-from lib.avatar_generator import avatar_generator
-from lib.enhanced_avatar_generator import enhanced_avatar_generator
-from lib.ultra_realistic_avatar_generator import ultra_realistic_avatar_generator
+# Avatar generator imports removed - dependencies not available
 from lib.context_integration import ContextIntegrationSystem
 # Phase 3: Advanced Analytics and Validation Components
 from lib.advanced_context_engine import AdvancedContextEngine
