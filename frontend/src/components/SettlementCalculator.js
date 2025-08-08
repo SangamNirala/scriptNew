@@ -21,6 +21,92 @@ import {
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
+// Function to format AI insights text with proper structure
+const formatAIInsights = (text) => {
+  if (!text) return null;
+
+  // Split by double line breaks for major sections
+  const sections = text.split(/\n\s*\n/);
+  
+  return sections.map((section, sectionIndex) => {
+    // Check if section is a main heading (all caps with dashes or colons)
+    if (section.match(/^[A-Z\s:=-]+$/m)) {
+      return (
+        <div key={sectionIndex} className="font-bold text-gray-800 text-base border-b border-gray-200 pb-1 mb-2">
+          {section.replace(/[-=]/g, '').trim()}
+        </div>
+      );
+    }
+
+    // Split section by single line breaks
+    const lines = section.split('\n').filter(line => line.trim());
+    
+    return (
+      <div key={sectionIndex} className="mb-4">
+        {lines.map((line, lineIndex) => {
+          line = line.trim();
+          
+          // Main section headers (with colons and some formatting)
+          if (line.match(/^[A-Z][A-Z\s]+:/) || line.includes('COMPREHENSIVE SETTLEMENT ANALYSIS')) {
+            return (
+              <div key={lineIndex} className="font-semibold text-gray-800 text-sm mb-1 border-b border-gray-300 pb-1">
+                {line.replace(/^[-\s]*/, '')}
+              </div>
+            );
+          }
+          
+          // Bullet points starting with •
+          if (line.startsWith('•')) {
+            return (
+              <div key={lineIndex} className="ml-4 mb-1 text-gray-700">
+                <span className="text-blue-600 mr-2">•</span>
+                {line.substring(1).trim()}
+              </div>
+            );
+          }
+          
+          // Numbered items
+          if (line.match(/^\d+\./)) {
+            return (
+              <div key={lineIndex} className="font-medium text-gray-800 mb-1">
+                {line}
+              </div>
+            );
+          }
+          
+          // Sub-items with indentation
+          if (line.startsWith('  ') || line.includes('  •')) {
+            return (
+              <div key={lineIndex} className="ml-6 mb-1 text-gray-600 text-xs">
+                {line.trim()}
+              </div>
+            );
+          }
+          
+          // Key-value pairs (contains percentages, dollar amounts, or colons)
+          if (line.includes(':') && (line.includes('%') || line.includes('$') || line.includes('probability'))) {
+            const [key, ...valueParts] = line.split(':');
+            const value = valueParts.join(':').trim();
+            return (
+              <div key={lineIndex} className="mb-1 text-gray-700">
+                <span className="font-medium">{key.trim()}:</span>{' '}
+                <span className="text-gray-600">{value}</span>
+              </div>
+            );
+          }
+          
+          // Regular text
+          return (
+            <div key={lineIndex} className="mb-1 text-gray-700 leading-relaxed">
+              {line}
+            </div>
+          );
+        })}
+      </div>
+    );
+  });
+};
+
 const SettlementCalculator = () => {
   const [caseData, setCaseData] = useState({
     case_type: '',
