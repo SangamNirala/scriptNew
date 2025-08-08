@@ -13570,6 +13570,11 @@ if LITIGATION_ANALYTICS_AVAILABLE:
         processing_time: Optional[float] = None
         analysis_mode: Optional[str] = None
         metadata: Optional[Dict[str, Any]] = None
+        strategic_advantage_score: Optional[float] = None
+        comparative_cases: List[Dict[str, Any]] = []
+        processing_time: Optional[float] = None
+        analysis_mode: Optional[str] = None
+        metadata: Optional[Dict[str, Any]] = None
     
     class SimilarCasesRequest(BaseModel):
         case_type: str
