@@ -56,6 +56,7 @@ const ScriptGenerator = () => {
   const [isGeneratingImages, setIsGeneratingImages] = useState(false);
   const [generatedImages, setGeneratedImages] = useState([]);
   const [imageGenerationError, setImageGenerationError] = useState("");
+  const [showInlineGallery, setShowInlineGallery] = useState(false);
 
   // Ultra-realistic avatar generation state
   const [showUltraRealisticOptions, setShowUltraRealisticOptions] = useState(false);
