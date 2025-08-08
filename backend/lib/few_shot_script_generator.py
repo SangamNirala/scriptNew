@@ -102,9 +102,10 @@ class FewShotScriptGenerator:
     async def initialize(self):
         """Initialize the few-shot learning system"""
         try:
-            # Load spaCy model
-            self.nlp = spacy.load("en_core_web_sm")
-            logger.info("✅ Few-Shot Script Generator initialized successfully")
+            # Load spaCy model - temporarily disabled
+            # self.nlp = spacy.load("en_core_web_sm")
+            self.nlp = None  # Temporarily disabled
+            logger.info("✅ Few-Shot Script Generator initialized successfully (spaCy disabled)")
         except OSError:
             logger.warning("spaCy model not found. Installing en_core_web_sm...")
             # In production, this should be pre-installed
