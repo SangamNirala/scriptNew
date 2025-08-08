@@ -108,7 +108,7 @@ user_problem_statement: "You are an expert in text-to-speech (TTS) systems and u
 
 **NEW FEATURE REQUEST:** In the Generated Script section, please add a new button labeled "Enhance Image Prompt" positioned below the "Listen" button. When clicked, it should automatically enhance all the image prompts associated with each shot by adding more descriptive text, visual and contextual details, and structuring the prompt in a way that is easily understood by any AI image generators. The goal is to produce high-quality, contextually accurate images when used with AI image generation tools.
 
-**CURRENT ISSUE (January 2025):** User reported unable to generate images - after clicking "enhance image prompt" and then "generate images", error occurs. Issue was caused by missing Python dependencies for Gemini image generation API.
+**CURRENT ISSUE (January 2025) - RESOLVED:** User reported unable to generate images - after clicking "enhance image prompt" and then "generate images", error occurs: "TypeError: Cannot read properties of null (reading 'document')". The root cause was that window.open() was returning null due to popup blockers, and the code was trying to access .document on null object. FIXED by implementing proper error handling and fallback inline image gallery display.
 
   - task: "Image Generation Endpoint Backend"
     implemented: true
