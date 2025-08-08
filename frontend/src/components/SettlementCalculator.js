@@ -343,12 +343,12 @@ const SettlementCalculator = () => {
                     <TrendingUp className="h-4 w-4 mr-2" />
                     Settlement Urgency
                   </h4>
-                  <div className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${getUrgencyColor(analysis.metrics.settlement_urgency_score)}`}>
-                    {analysis.metrics.settlement_urgency_score > 0.7 ? 'High Urgency' :
-                     analysis.metrics.settlement_urgency_score > 0.5 ? 'Medium Urgency' : 'Low Urgency'}
+                  <div className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${getUrgencyColor(analysis.settlement_urgency_score)}`}>
+                    {analysis.settlement_urgency_score > 0.7 ? 'High Urgency' :
+                     analysis.settlement_urgency_score > 0.5 ? 'Medium Urgency' : 'Low Urgency'}
                   </div>
                   <div className="mt-2">
-                    <Progress value={analysis.metrics.settlement_urgency_score * 100} className="h-2" />
+                    <Progress value={analysis.settlement_urgency_score * 100} className="h-2" />
                   </div>
                 </div>
 
@@ -358,10 +358,10 @@ const SettlementCalculator = () => {
                     Confidence Level
                   </h4>
                   <div className="text-2xl font-bold text-gray-900">
-                    {(analysis.metrics.confidence_score * 100).toFixed(1)}%
+                    {(analysis.confidence_score * 100).toFixed(1)}%
                   </div>
                   <div className="mt-2">
-                    <Progress value={analysis.metrics.confidence_score * 100} className="h-2" />
+                    <Progress value={analysis.confidence_score * 100} className="h-2" />
                   </div>
                 </div>
               </div>
