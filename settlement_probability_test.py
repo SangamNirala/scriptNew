@@ -22,7 +22,7 @@ from datetime import datetime, timedelta
 from typing import Dict, Any, List
 
 # Backend URL from environment
-BACKEND_URL = "https://1f56c7dd-e870-4c69-b784-5a49ffdde0a2.preview.emergentagent.com/api"
+BACKEND_URL = "https://713b7daa-6e2b-44d9-8b8d-1458f53c5728.preview.emergentagent.com/api"
 
 def test_settlement_probability_basic():
     """Test basic settlement probability calculation with standard case"""
