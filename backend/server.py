@@ -211,47 +211,7 @@ class AudioResponse(BaseModel):
     voice_used: str
     duration_seconds: Optional[float] = None
 
-class AvatarVideoRequest(BaseModel):
-    audio_base64: str
-    avatar_image_path: Optional[str] = None
 
-class EnhancedAvatarVideoRequest(BaseModel):
-    audio_base64: str
-    avatar_option: str = "default"  # "default", "upload", "ai_generated"
-    user_image_base64: Optional[str] = None
-    script_text: Optional[str] = ""
-
-class AvatarVideoResponse(BaseModel):
-    video_base64: str
-    duration_seconds: float
-    request_id: str
-
-class EnhancedAvatarVideoResponse(BaseModel):
-    video_base64: str
-    duration_seconds: float
-    request_id: str
-    avatar_option: str
-    script_segments: int
-    sadtalker_used: bool
-
-class UltraRealisticAvatarVideoRequest(BaseModel):
-    audio_base64: str
-    avatar_style: str = "business_professional"  # "business_professional", "casual"
-    gender: str = "female"  # "male", "female", "diverse"
-    avatar_index: int = 1  # 1, 2, 3 for different avatar variations
-    script_text: Optional[str] = ""
-
-class UltraRealisticAvatarVideoResponse(BaseModel):
-    video_base64: str
-    duration_seconds: float
-    request_id: str
-    avatar_style: str
-    gender: str
-    avatar_index: int
-    script_segments: int
-    background_contexts: List[str]
-    ai_model_used: str
-    quality_level: str
 
 # Phase 4: A/B Testing and Optimization Models
 class PromptExperimentRequest(BaseModel):
