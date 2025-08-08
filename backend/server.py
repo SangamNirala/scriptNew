@@ -4089,9 +4089,16 @@ async def generate_images(request: ImageGenerationRequest):
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=["*"],
-    allow_methods=["*"],
+    allow_origins=[
+        "*",
+        "https://visual-solver.preview.emergentagent.com",
+        "https://7b2b85a9-71e7-4e4b-9de7-c790cb927210.preview.emergentagent.com",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000"
+    ],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"],
     allow_headers=["*"],
+    expose_headers=["*"]
 )
 
 # Include the router in the main app
