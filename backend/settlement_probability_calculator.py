@@ -760,7 +760,91 @@ class SettlementProbabilityCalculator:
             logger.error(f"❌ AI insights generation failed: {e}")
             return self._generate_enhanced_fallback_insights(case_data, metrics, scenarios)
 
-    def _generate_fallback_insights(self, case_data: Dict[str, Any], metrics: SettlementMetrics) -> str:
+    def _generate_enhanced_fallback_insights(self, case_data: Dict[str, Any], metrics: SettlementMetrics, scenarios: List[SettlementScenario] = None) -> str:
+        """Generate comprehensive fallback insights when AI services fail"""
+        try:
+            case_type = case_data.get('case_type', 'civil').title()
+            case_value = case_data.get('case_value', 100000)
+            evidence_strength = case_data.get('evidence_strength', 0.5)
+            case_complexity = case_data.get('case_complexity', 0.5)
+            
+            # Determine strength categories
+            strength_desc = "Strong" if evidence_strength > 0.7 else "Moderate" if evidence_strength > 0.4 else "Weak"
+            complexity_desc = "High" if case_complexity > 0.7 else "Moderate" if case_complexity > 0.4 else "Low"
+            
+            # Calculate settlement efficiency
+            range_overlap = max(0, min(metrics.defendant_settlement_range[1], metrics.plaintiff_settlement_range[1]) - 
+                               max(metrics.defendant_settlement_range[0], metrics.plaintiff_settlement_range[0]))
+            
+            settlement_window = range_overlap > 0
+            
+            insights = f"""
+**COMPREHENSIVE SETTLEMENT ANALYSIS**
+
+**Case Profile Overview:**
+This {case_type} law case presents a {complexity_desc.lower()} complexity dispute valued at ${case_value:,.2f} with {strength_desc.lower()} evidentiary support. Based on our analysis, the settlement probability is {metrics.settlement_probability:.0%}, indicating {"favorable" if metrics.settlement_probability > 0.7 else "moderate" if metrics.settlement_probability > 0.5 else "challenging"} settlement prospects.
+
+**Key Strategic Recommendations:**
+
+1. **Optimal Settlement Value:** Target the ${metrics.expected_settlement_value:,.2f} range ({(metrics.expected_settlement_value/case_value*100):.0f}% of claim value), which reflects realistic market expectations for {case_type.lower()} cases with similar characteristics.
+
+2. **Timing Strategy:** Pursue settlement during the {metrics.optimal_timing.value.replace('_', ' ').lower()} phase when negotiation dynamics are most favorable. The current urgency level is {metrics.settlement_urgency_score:.0%}, {"requiring prompt action" if metrics.settlement_urgency_score > 0.7 else "allowing for measured approach" if metrics.settlement_urgency_score < 0.4 else "suggesting balanced timing"}.
+
+3. **Negotiation Positioning:** {"Plaintiff holds stronger leverage" if metrics.negotiation_leverage.get('plaintiff', 0.5) > 0.6 else "Defendant has positional advantage" if metrics.negotiation_leverage.get('defendant', 0.5) > 0.6 else "Power balance is relatively equal"} ({metrics.negotiation_leverage.get('plaintiff', 0.5):.0%} vs {metrics.negotiation_leverage.get('defendant', 0.5):.0%}). Use this dynamic to {"press for higher settlement amounts" if metrics.negotiation_leverage.get('plaintiff', 0.5) > 0.6 else "focus on creative settlement structures" if metrics.negotiation_leverage.get('defendant', 0.5) > 0.6 else "emphasize mutual benefits"}.
+
+4. **Settlement Window Assessment:** {"A clear settlement window exists" if settlement_window else "No natural settlement overlap exists"} between plaintiff expectations (${metrics.plaintiff_settlement_range[0]:,.2f}-${metrics.plaintiff_settlement_range[1]:,.2f}) and defendant capacity (${metrics.defendant_settlement_range[0]:,.2f}-${metrics.defendant_settlement_range[1]:,.2f}). {f"Focus negotiations within the ${range_overlap:,.2f} overlap zone." if settlement_window else "Bridge-building and creative structuring will be essential to reach agreement."}
+
+**Critical Success Factors:**
+{chr(10).join(f'• {factor}' for factor in metrics.key_settlement_factors[:3])}
+
+**Risk Mitigation Strategies:**
+
+• **Evidence Risks:** {"Strengthen documentation and witness preparation" if evidence_strength < 0.6 else "Leverage strong evidence position for maximum settlement value"}
+• **Complexity Management:** {"Simplify presentation and focus on core issues" if case_complexity > 0.6 else "Prepare for straightforward negotiation process"}
+• **Cost Considerations:** Weigh litigation expenses against potential settlement savings, particularly given the {metrics.settlement_urgency_score:.0%} urgency level
+
+**Settlement Scenarios Analysis:**
+"""
+
+            if scenarios:
+                for i, scenario in enumerate(scenarios[:3], 1):
+                    insights += f"""
+{i}. **{scenario.scenario_name}** ({scenario.probability:.0%} probability)
+   - Expected Amount: ${scenario.settlement_amount:,.2f}
+   - Satisfaction Level: Plaintiff {scenario.plaintiff_satisfaction:.0%}, Defendant {scenario.defendant_satisfaction:.0%}
+   - Strategic Notes: {scenario.strategic_notes}"""
+            
+            insights += f"""
+
+**Professional Assessment:**
+Based on quantitative analysis and case-type specific patterns, this settlement analysis provides {metrics.confidence_score:.0%} confidence level. The recommended approach balances legal merits with practical business considerations to achieve optimal resolution outcomes.
+
+**Next Steps:**
+1. Initiate settlement discussions {"immediately" if metrics.settlement_urgency_score > 0.7 else "within 30-60 days"}
+2. Prepare comprehensive settlement presentation emphasizing key success factors
+3. {"Consider mediation or structured negotiation" if case_complexity > 0.6 else "Pursue direct settlement discussions"}
+4. Maintain flexibility while targeting the ${metrics.expected_settlement_value:,.2f} settlement value
+"""
+
+            return insights.strip()
+            
+        except Exception as e:
+            logger.error(f"Enhanced fallback insights generation failed: {e}")
+            # Ultimate fallback
+            return f"""
+**SETTLEMENT ANALYSIS SUMMARY**
+
+**Assessment:** This case shows {metrics.settlement_probability:.0%} settlement probability with an expected value of ${metrics.expected_settlement_value:,.2f}.
+
+**Key Recommendations:**
+• Target settlement range: ${metrics.expected_settlement_value * 0.9:,.2f} - ${metrics.expected_settlement_value * 1.1:,.2f}
+• Optimal timing: {metrics.optimal_timing.value.replace('_', ' ').title()} negotiation phase
+• Focus on: {', '.join(metrics.key_settlement_factors[:2])}
+
+**Strategic Approach:** {"Strong negotiation position" if metrics.negotiation_leverage.get('plaintiff', 0.5) > 0.6 else "Balanced approach required"} with {"high urgency" if metrics.settlement_urgency_score > 0.7 else "moderate timing pressure"}.
+
+Contact your legal team to discuss specific tactical implementation of these recommendations.
+"""
         """Generate fallback insights when AI fails"""
         insights = f"""
         SETTLEMENT ANALYSIS SUMMARY
