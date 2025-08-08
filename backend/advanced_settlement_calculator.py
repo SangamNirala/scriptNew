@@ -930,7 +930,156 @@ This suggests {case_data.get('case_type', 'civil')} cases in {case_data.get('jur
             recommendations.append(f"Strong expected value (${metrics.expected_settlement_value:,.0f}) supports premium settlement targeting")
         
         return recommendations[:8]  # Limit to top 8 recommendations
-        """Create structured prompt for AI analysis"""
+
+    def _create_enhanced_ai_analysis_prompt(self, case_data: Dict[str, Any]) -> str:
+        """Create enhanced structured prompt for latest AI models"""
+        case_type = case_data.get('case_type', 'civil')
+        case_value = case_data.get('case_value', 100000)
+        evidence_strength = case_data.get('evidence_strength', 0.5)
+        complexity = case_data.get('case_complexity', 0.5)
+        witness_count = case_data.get('witness_count', 0)
+        case_facts = case_data.get('case_facts', 'Standard civil case')
+        
+        prompt = f"""
+ADVANCED LEGAL SETTLEMENT PROBABILITY ANALYSIS
+
+CASE PROFILE:
+- Type: {case_type.title()} Law Case
+- Claim Value: ${case_value:,.2f}
+- Evidence Strength: {evidence_strength * 10:.1f}/10
+- Case Complexity: {complexity:.1%}
+- Jurisdiction: {case_data.get('jurisdiction', 'Federal')}
+- Witness Count: {witness_count}
+- Filing Date: {case_data.get('filing_date', 'Recent')}
+- Judge: {case_data.get('judge_name', 'Standard')}
+
+CASE FACTS:
+{case_facts[:500]}
+
+ADVANCED ANALYSIS REQUIRED:
+Please provide a comprehensive JSON-formatted analysis with the following structure:
+
+{{
+  "settlement_probability": <decimal 0.0-1.0>,
+  "confidence_score": <decimal 0.0-1.0>,
+  "key_risk_factors": [
+    {{"factor": "factor name", "impact": <decimal -1.0 to 1.0>, "likelihood": <decimal 0.0-1.0>}},
+    // ... top 5 factors
+  ],
+  "optimal_timing": "<early|mid|late|mediation|pre_trial|trial_door>",
+  "settlement_range": {{
+    "minimum": <amount>,
+    "likely": <amount>,
+    "maximum": <amount>
+  }},
+  "strategic_factors": {{
+    "plaintiff_leverage": <decimal 0.0-1.0>,
+    "defendant_leverage": <decimal 0.0-1.0>,
+    "time_pressure": <decimal 0.0-1.0>,
+    "economic_factors": <decimal 0.0-1.0>
+  }},
+  "negotiation_recommendations": [
+    // ... top 3 strategic recommendations
+  ],
+  "market_considerations": "<analysis of current legal market trends>",
+  "precedent_analysis": "<relevant case law and precedent factors>",
+  "volatility_assessment": <decimal 0.0-1.0>
+}}
+
+Base your analysis on:
+1. Current legal precedents and market trends
+2. Statistical analysis of similar cases
+3. Economic factors and jurisdictional considerations
+4. Case-specific risk and opportunity factors
+5. Negotiation dynamics and timing optimization
+
+Provide realistic, data-driven probabilities with professional legal insights.
+"""
+        return prompt
+
+    def _parse_enhanced_ai_response(self, response: str, provider: AIProvider) -> Dict[str, Any]:
+        """Parse enhanced AI response with JSON structure support"""
+        try:
+            # Try to parse as JSON first
+            import re
+            import json
+            
+            # Extract JSON block if present
+            json_match = re.search(r'\{.*\}', response, re.DOTALL)
+            if json_match:
+                try:
+                    json_data = json.loads(json_match.group())
+                    return {
+                        'settlement_probability': json_data.get('settlement_probability', 0.5),
+                        'confidence_score': json_data.get('confidence_score', 0.6),
+                        'key_factors': [f.get('factor', 'Unknown') for f in json_data.get('key_risk_factors', [])[:3]],
+                        'risk_factors': json_data.get('key_risk_factors', []),
+                        'optimal_timing': json_data.get('optimal_timing', 'mid'),
+                        'settlement_range': json_data.get('settlement_range', {}),
+                        'strategic_factors': json_data.get('strategic_factors', {}),
+                        'recommendations': json_data.get('negotiation_recommendations', []),
+                        'market_analysis': json_data.get('market_considerations', ''),
+                        'precedent_analysis': json_data.get('precedent_analysis', ''),
+                        'volatility': json_data.get('volatility_assessment', 0.3),
+                        'raw_response': response[:1000]
+                    }
+                except json.JSONDecodeError:
+                    pass
+            
+            # Fallback to text parsing
+            analysis = {
+                'settlement_probability': 0.5,
+                'confidence_score': 0.6,
+                'key_factors': [],
+                'optimal_timing': 'mid',
+                'risk_level': 'medium',
+                'expected_range': (0, 0),
+                'insights': response[:500],
+                'volatility': 0.3
+            }
+            
+            lines = response.split('\n')
+            
+            for line in lines:
+                line_lower = line.strip().lower()
+                
+                if 'settlement_probability' in line_lower or 'probability' in line_lower:
+                    try:
+                        prob_match = re.search(r'(\d*\.?\d+)', line)
+                        if prob_match:
+                            prob = float(prob_match.group(1))
+                            if prob > 1.0:
+                                prob = prob / 100  # Convert percentage
+                            analysis['settlement_probability'] = max(0.0, min(1.0, prob))
+                    except:
+                        pass
+                
+                elif 'confidence' in line_lower:
+                    try:
+                        conf_match = re.search(r'(\d*\.?\d+)', line)
+                        if conf_match:
+                            conf = float(conf_match.group(1))
+                            if conf > 1.0:
+                                conf = conf / 100
+                            analysis['confidence_score'] = max(0.0, min(1.0, conf))
+                    except:
+                        pass
+            
+            return analysis
+            
+        except Exception as e:
+            logger.warning(f"Enhanced AI response parsing failed for {provider.value}: {e}")
+            return {
+                'settlement_probability': 0.5,
+                'confidence_score': 0.4,
+                'key_factors': ['case complexity', 'evidence strength', 'market conditions'],
+                'optimal_timing': 'mid',
+                'risk_level': 'medium',
+                'insights': response[:200] if response else 'Analysis unavailable',
+                'volatility': 0.3
+            }
+
+    def _create_ai_analysis_prompt(self, case_data: Dict[str, Any]) -> str:
         case_type = case_data.get('case_type', 'civil')
         case_value = case_data.get('case_value', 100000)
         evidence_strength = case_data.get('evidence_strength', 0.5)
