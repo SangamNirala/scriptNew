@@ -113,6 +113,7 @@ charset-normalizer>=3.4.0  # Character encoding detection
 # Note: These may require additional system dependencies
 
 # Additional HTTP Processing
+multidict>=6.6.3  # CRITICAL - Required for aiohttp/litellm dependency chain
 cmudict>=1.1.1
 pyphen>=0.17.0
 importlib-resources>=6.5.0
