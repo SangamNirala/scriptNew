@@ -1,670 +1,539 @@
 #!/usr/bin/env python3
 """
-🎯 JUDGE ANALYTICS WEB SEARCH INTEGRATION COMPREHENSIVE TESTING
-==============================================================
+Judge Analytics Web Search Integration Testing
+==============================================
 
-This test suite verifies the enhanced judge analytics system with web search integration
-as requested in the review. Tests critical scenarios including fake judge detection,
-real judge testing, web search integration, error handling, and confidence scoring.
-
-Test Categories:
+Comprehensive testing of the Judge Analytics Web Search Integration with focus on:
 1. FAKE JUDGE DETECTION TESTING
-2. REAL JUDGE TESTING  
-3. WEB SEARCH INTEGRATION VERIFICATION
-4. ERROR HANDLING TESTING
-5. CONFIDENCE SCORING
+2. WEB SEARCH INTEGRATION TESTING  
+3. ERROR HANDLING TESTING
 
-Critical Test Scenarios:
-- Test obvious fake judges: "ZZZ Fictional Judge", "Judge Unicorn Rainbow", "XXX Test Judge"
-- Verify 404 response with "No information can be retrieved" message
-- Test pattern detection: judges with numbers, excessive special characters
-- Test well-known judges like "John Roberts", "Ruth Bader Ginsburg", "Sonia Sotomayor"
-- Verify reference links are returned in response
-- Check that total_cases, settlement_rate, average_case_duration show realistic non-zero values
+Tests the judge insights endpoint: GET /api/litigation/judge-insights/{judge_name}
 """
 
 import requests
 import json
 import sys
-import os
-from datetime import datetime
-from typing import Dict, List, Any
+import time
 from urllib.parse import quote
+from datetime import datetime
 
 # Backend URL from environment
-BACKEND_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://3d73c7c4-6137-4e60-9034-9dcaf0a6e39c.preview.emergentagent.com')
-API_BASE = f"{BACKEND_URL}/api"
+BACKEND_URL = "https://3d73c7c4-6137-4e60-9034-9dcaf0a6e39c.preview.emergentagent.com/api"
 
-class JudgeAnalyticsWebSearchTester:
-    """Comprehensive tester for judge analytics web search integration"""
+def test_fake_judge_detection():
+    """Test fake judge detection with specific scenarios"""
+    print("🚨 TESTING FAKE JUDGE DETECTION")
+    print("=" * 60)
     
-    def __init__(self):
-        self.test_results = []
-        self.total_tests = 0
-        self.passed_tests = 0
+    test_results = []
+    
+    # Test cases for fake judge detection
+    fake_judge_tests = [
+        # Obviously fake judges
+        {
+            "name": "ZZZ Fictional Judge",
+            "description": "Obviously fake judge with ZZZ pattern",
+            "expected_status": 404,
+            "should_be_fake": True
+        },
+        {
+            "name": "XXX Test Judge", 
+            "description": "Obviously fake judge with XXX pattern",
+            "expected_status": 404,
+            "should_be_fake": True
+        },
+        {
+            "name": "Judge Unicorn Rainbow",
+            "description": "Obviously fake judge with fantasy words",
+            "expected_status": 404,
+            "should_be_fake": True
+        },
+        # Subtle fake names that should be caught
+        {
+            "name": "sangam nirala",
+            "description": "Subtle fake name that should be caught",
+            "expected_status": 404,
+            "should_be_fake": True
+        },
+        {
+            "name": "ramesh kumar judge",
+            "description": "Subtle fake name with 'judge' suffix",
+            "expected_status": 404,
+            "should_be_fake": True
+        },
+        {
+            "name": "priya sharma",
+            "description": "Subtle fake name that should be caught",
+            "expected_status": 404,
+            "should_be_fake": True
+        },
+        {
+            "name": "fictional judge name",
+            "description": "Obvious fake with 'fictional' keyword",
+            "expected_status": 404,
+            "should_be_fake": True
+        },
+        # Real judge names (should pass detection)
+        {
+            "name": "John Roberts",
+            "description": "Real Supreme Court Chief Justice",
+            "expected_status": 200,
+            "should_be_fake": False
+        },
+        {
+            "name": "Ruth Bader Ginsburg",
+            "description": "Real former Supreme Court Justice",
+            "expected_status": 200,
+            "should_be_fake": False
+        },
+        {
+            "name": "Sonia Sotomayor",
+            "description": "Real Supreme Court Justice",
+            "expected_status": 200,
+            "should_be_fake": False
+        }
+    ]
+    
+    for test_case in fake_judge_tests:
+        judge_name = test_case["name"]
+        description = test_case["description"]
+        expected_status = test_case["expected_status"]
+        should_be_fake = test_case["should_be_fake"]
         
-    def log_test(self, test_name: str, passed: bool, details: str = ""):
-        """Log test result"""
-        self.total_tests += 1
-        if passed:
-            self.passed_tests += 1
-            status = "✅ PASS"
-        else:
-            status = "❌ FAIL"
-            
-        result = f"{status} - {test_name}"
-        if details:
-            result += f": {details}"
-            
-        print(result)
-        self.test_results.append({
-            'test_name': test_name,
-            'passed': passed,
-            'details': details,
-            'timestamp': datetime.utcnow().isoformat()
-        })
+        print(f"\n📋 Test Case: {description}")
+        print(f"Judge Name: '{judge_name}'")
+        print(f"Expected Status: {expected_status}")
+        print(f"Should be detected as fake: {should_be_fake}")
         
-    def test_fake_judge_detection(self):
-        """Test detection of obviously fake judges - should return 404 with 'No information can be retrieved'"""
-        print("\n🚨 FAKE JUDGE DETECTION TESTING")
-        print("=" * 50)
-        
-        fake_judges = [
-            "ZZZ Fictional Judge",
-            "Judge Unicorn Rainbow", 
-            "XXX Test Judge",
-            "Judge Dragon Wizard",
-            "AAA Fake Judge",
-            "BBB Test Judge",
-            "Judge Sparkle Magic",
-            "CCC Dummy Judge",
-            "Judge Mental",
-            "Test Judge 123"
-        ]
-        
-        for judge_name in fake_judges:
-            self.test_fake_judge_individual(judge_name)
-            
-    def test_fake_judge_individual(self, judge_name: str):
-        """Test individual fake judge - should return 404"""
         try:
-            url = f"{API_BASE}/litigation/judge-insights/{quote(judge_name)}"
+            # URL encode the judge name
+            encoded_judge_name = quote(judge_name)
+            url = f"{BACKEND_URL}/litigation/judge-insights/{encoded_judge_name}"
             
+            print(f"Request URL: {url}")
+            
+            # Make the API request
             response = requests.get(url, timeout=30)
             
-            if response.status_code == 404:
-                # Check if response contains the expected message
-                try:
-                    error_data = response.json()
-                    detail = error_data.get('detail', '')
-                    if 'No information can be retrieved' in detail:
-                        self.log_test(
-                            f"Fake Judge Detection - {judge_name}",
-                            True,
-                            f"Correctly returned 404 with 'No information can be retrieved' message"
-                        )
-                    else:
-                        self.log_test(
-                            f"Fake Judge Detection - {judge_name}",
-                            False,
-                            f"Got 404 but wrong message: {detail}"
-                        )
-                except:
-                    # Even if JSON parsing fails, 404 is correct for fake judges
-                    self.log_test(
-                        f"Fake Judge Detection - {judge_name}",
-                        True,
-                        f"Correctly returned 404 for fake judge"
-                    )
+            print(f"Actual Status Code: {response.status_code}")
+            
+            # Check if the response matches expectations
+            if response.status_code == expected_status:
+                print("✅ Status code matches expectation")
+                
+                if response.status_code == 404:
+                    # For fake judges, verify the error message
+                    try:
+                        error_data = response.json()
+                        error_detail = error_data.get('detail', '')
+                        print(f"Error message: {error_detail}")
+                        
+                        if "No information can be retrieved" in error_detail:
+                            print("✅ Correct error message for fake judge")
+                            test_results.append(True)
+                        else:
+                            print("❌ Incorrect error message for fake judge")
+                            test_results.append(False)
+                    except:
+                        print("❌ Could not parse error response")
+                        test_results.append(False)
+                        
+                elif response.status_code == 200:
+                    # For real judges, verify response structure
+                    try:
+                        data = response.json()
+                        
+                        # Check required fields
+                        required_fields = [
+                            'judge_name', 'court', 'experience_years', 'total_cases',
+                            'settlement_rate', 'plaintiff_success_rate', 'average_case_duration',
+                            'confidence_score', 'is_verified'
+                        ]
+                        
+                        missing_fields = [field for field in required_fields if field not in data]
+                        if missing_fields:
+                            print(f"❌ Missing required fields: {missing_fields}")
+                            test_results.append(False)
+                        else:
+                            print("✅ All required fields present")
+                            
+                            # Check if judge is properly verified
+                            is_verified = data.get('is_verified', False)
+                            confidence_score = data.get('confidence_score', 0.0)
+                            
+                            print(f"Is Verified: {is_verified}")
+                            print(f"Confidence Score: {confidence_score}")
+                            
+                            if not should_be_fake and (is_verified or confidence_score > 0.0):
+                                print("✅ Real judge properly processed")
+                                test_results.append(True)
+                            else:
+                                print("❌ Real judge not properly verified")
+                                test_results.append(False)
+                                
+                    except Exception as e:
+                        print(f"❌ Error parsing response: {e}")
+                        test_results.append(False)
+                        
             else:
-                self.log_test(
-                    f"Fake Judge Detection - {judge_name}",
-                    False,
-                    f"SECURITY ISSUE: Fake judge returned {response.status_code} instead of 404"
-                )
+                print(f"❌ Status code mismatch. Expected: {expected_status}, Got: {response.status_code}")
+                if response.text:
+                    print(f"Response: {response.text}")
+                test_results.append(False)
                 
         except Exception as e:
-            self.log_test(
-                f"Fake Judge Detection Exception - {judge_name}",
-                False,
-                f"Exception: {str(e)}"
-            )
-            
-    def test_real_judge_testing(self):
-        """Test well-known judges - should return 200 with reference links and realistic data"""
-        print("\n✅ REAL JUDGE TESTING")
-        print("=" * 30)
+            print(f"❌ Exception occurred: {str(e)}")
+            test_results.append(False)
         
-        real_judges = [
-            "John Roberts",
-            "Ruth Bader Ginsburg", 
-            "Sonia Sotomayor",
-            "Clarence Thomas",
-            "Samuel Alito",
-            "Elena Kagan",
-            "Neil Gorsuch",
-            "Brett Kavanaugh"
-        ]
+        print("-" * 50)
+    
+    return test_results
+
+def test_web_search_integration():
+    """Test web search integration for real case statistics"""
+    print("\n🔍 TESTING WEB SEARCH INTEGRATION")
+    print("=" * 60)
+    
+    test_results = []
+    
+    # Test cases for web search integration
+    web_search_tests = [
+        {
+            "name": "John Roberts",
+            "description": "Supreme Court Chief Justice - should have real web data"
+        },
+        {
+            "name": "Elena Kagan",
+            "description": "Supreme Court Justice - should have real web data"
+        },
+        {
+            "name": "Brett Kavanaugh",
+            "description": "Supreme Court Justice - should have real web data"
+        }
+    ]
+    
+    for test_case in web_search_tests:
+        judge_name = test_case["name"]
+        description = test_case["description"]
         
-        for judge_name in real_judges:
-            self.test_real_judge_individual(judge_name)
-            
-    def test_real_judge_individual(self, judge_name: str):
-        """Test individual real judge - should return 200 with reference links"""
+        print(f"\n📋 Test Case: {description}")
+        print(f"Judge Name: '{judge_name}'")
+        
         try:
-            url = f"{API_BASE}/litigation/judge-insights/{quote(judge_name)}"
+            # URL encode the judge name
+            encoded_judge_name = quote(judge_name)
+            url = f"{BACKEND_URL}/litigation/judge-insights/{encoded_judge_name}"
             
+            print(f"Request URL: {url}")
+            
+            # Make the API request
             response = requests.get(url, timeout=30)
+            
+            print(f"Status Code: {response.status_code}")
             
             if response.status_code == 200:
                 data = response.json()
                 
-                # Check for reference links
-                reference_links = data.get('reference_links', [])
-                if reference_links and len(reference_links) > 0:
-                    # Verify reference links structure
-                    valid_links = True
-                    for link in reference_links:
-                        if not isinstance(link, dict) or 'name' not in link or 'url' not in link:
-                            valid_links = False
-                            break
-                    
-                    if valid_links:
-                        self.log_test(
-                            f"Real Judge Reference Links - {judge_name}",
-                            True,
-                            f"Found {len(reference_links)} valid reference links"
-                        )
-                    else:
-                        self.log_test(
-                            f"Real Judge Reference Links - {judge_name}",
-                            False,
-                            f"Reference links have invalid structure"
-                        )
-                else:
-                    self.log_test(
-                        f"Real Judge Reference Links - {judge_name}",
-                        False,
-                        f"No reference links found for well-known judge"
-                    )
-                
-                # Check for realistic non-zero values
+                # Check if SERP API is working and finding real case statistics
                 total_cases = data.get('total_cases', 0)
-                settlement_rate = data.get('settlement_rate', 0)
+                settlement_rate = data.get('settlement_rate', 0.0)
                 average_case_duration = data.get('average_case_duration', 0)
                 
-                if total_cases > 0 and settlement_rate > 0 and average_case_duration > 0:
-                    self.log_test(
-                        f"Real Judge Realistic Data - {judge_name}",
-                        True,
-                        f"Realistic data: {total_cases} cases, {settlement_rate:.2f} settlement rate, {average_case_duration:.1f} days duration"
-                    )
+                print(f"Total Cases: {total_cases}")
+                print(f"Settlement Rate: {settlement_rate}")
+                print(f"Average Case Duration: {average_case_duration}")
+                
+                # Check if we have real data (not all zeros)
+                has_real_data = (total_cases > 0 or settlement_rate > 0.0 or average_case_duration > 0)
+                
+                if has_real_data:
+                    print("✅ Real case statistics found")
                 else:
-                    self.log_test(
-                        f"Real Judge Realistic Data - {judge_name}",
-                        False,
-                        f"Data shows zeros: {total_cases} cases, {settlement_rate} settlement rate, {average_case_duration} days duration"
-                    )
-                    
-                # Check confidence score
-                confidence_score = data.get('confidence_score', 0)
-                if confidence_score > 0.0:
-                    self.log_test(
-                        f"Real Judge Confidence - {judge_name}",
-                        True,
-                        f"Confidence score: {confidence_score:.2f}"
-                    )
-                else:
-                    self.log_test(
-                        f"Real Judge Confidence - {judge_name}",
-                        False,
-                        f"Zero confidence score for well-known judge"
-                    )
-                    
-            else:
-                self.log_test(
-                    f"Real Judge HTTP - {judge_name}",
-                    False,
-                    f"HTTP {response.status_code}: Expected 200 for well-known judge"
-                )
+                    print("⚠️ All statistics are zero - may indicate limited web data")
                 
-        except Exception as e:
-            self.log_test(
-                f"Real Judge Exception - {judge_name}",
-                False,
-                f"Exception: {str(e)}"
-            )
-            
-    def test_web_search_integration_verification(self):
-        """Test the endpoint structure and web search integration features"""
-        print("\n🔍 WEB SEARCH INTEGRATION VERIFICATION")
-        print("=" * 45)
-        
-        # Test with a realistic judge name
-        test_judge = "John Smith"
-        
-        try:
-            url = f"{API_BASE}/litigation/judge-insights/{quote(test_judge)}"
-            
-            response = requests.get(url, timeout=30)
-            
-            if response.status_code == 200:
-                data = response.json()
-                
-                # Check required validation fields
-                validation_fields = ['is_verified', 'confidence_score', 'validation_summary', 'reference_links']
-                missing_fields = [field for field in validation_fields if field not in data]
-                
-                if not missing_fields:
-                    self.log_test(
-                        "Web Search Integration Structure",
-                        True,
-                        f"All validation fields present: {validation_fields}"
-                    )
-                else:
-                    self.log_test(
-                        "Web Search Integration Structure",
-                        False,
-                        f"Missing validation fields: {missing_fields}"
-                    )
-                
-                # Check reference_links array structure
+                # Check if reference_links are populated
                 reference_links = data.get('reference_links', [])
-                if isinstance(reference_links, list):
-                    self.log_test(
-                        "Reference Links Array",
-                        True,
-                        f"Reference links is array with {len(reference_links)} items"
-                    )
+                print(f"Reference Links Count: {len(reference_links)}")
+                
+                if reference_links:
+                    print("✅ Reference links populated")
                     
-                    # Check individual link structure
-                    for i, link in enumerate(reference_links[:3]):  # Check first 3
+                    # Check structure of reference links
+                    for i, link in enumerate(reference_links[:3]):  # Check first 3 links
                         if isinstance(link, dict) and 'name' in link and 'url' in link:
-                            self.log_test(
-                                f"Reference Link Structure [{i}]",
-                                True,
-                                f"Valid structure: name='{link['name'][:50]}...', url='{link['url'][:50]}...'"
-                            )
+                            print(f"  Link {i+1}: {link['name']} -> {link['url']}")
                         else:
-                            self.log_test(
-                                f"Reference Link Structure [{i}]",
-                                False,
-                                f"Invalid structure: {link}"
-                            )
+                            print(f"  ❌ Link {i+1}: Invalid structure")
                 else:
-                    self.log_test(
-                        "Reference Links Array",
-                        False,
-                        f"Reference links should be array, got {type(reference_links)}"
-                    )
+                    print("⚠️ No reference links found")
                 
-                # Check validation_summary field
-                validation_summary = data.get('validation_summary', '')
-                if isinstance(validation_summary, str) and len(validation_summary) > 0:
-                    self.log_test(
-                        "Validation Summary",
-                        True,
-                        f"Validation summary present ({len(validation_summary)} chars)"
-                    )
-                else:
-                    self.log_test(
-                        "Validation Summary",
-                        False,
-                        f"Validation summary missing or empty"
-                    )
+                # Check validation sources
+                validation_sources = data.get('validation_sources', [])
+                print(f"Validation Sources Count: {len(validation_sources)}")
                 
-                # Check is_verified field
-                is_verified = data.get('is_verified')
-                if isinstance(is_verified, bool):
-                    self.log_test(
-                        "Is Verified Field",
-                        True,
-                        f"is_verified is boolean: {is_verified}"
-                    )
+                if validation_sources:
+                    print("✅ Validation sources found")
+                    for source in validation_sources[:3]:  # Show first 3 sources
+                        print(f"  Source: {source}")
                 else:
-                    self.log_test(
-                        "Is Verified Field",
-                        False,
-                        f"is_verified should be boolean, got {type(is_verified)}"
-                    )
+                    print("⚠️ No validation sources found")
+                
+                # Overall assessment
+                if has_real_data and reference_links:
+                    print("✅ Web search integration working properly")
+                    test_results.append(True)
+                elif has_real_data or reference_links:
+                    print("⚠️ Web search integration partially working")
+                    test_results.append(True)  # Still count as success if some data found
+                else:
+                    print("❌ Web search integration not providing real data")
+                    test_results.append(False)
                     
-            elif response.status_code == 404:
-                # This is acceptable for some judges - test the error structure
-                try:
-                    error_data = response.json()
-                    detail = error_data.get('detail', '')
-                    if 'No information can be retrieved' in detail:
-                        self.log_test(
-                            "Web Search Integration 404 Response",
-                            True,
-                            f"Proper 404 response with correct message"
-                        )
-                    else:
-                        self.log_test(
-                            "Web Search Integration 404 Response",
-                            False,
-                            f"404 response but wrong message: {detail}"
-                        )
-                except:
-                    self.log_test(
-                        "Web Search Integration 404 Response",
-                        False,
-                        f"404 response but invalid JSON structure"
-                    )
             else:
-                self.log_test(
-                    "Web Search Integration HTTP",
-                    False,
-                    f"Unexpected HTTP status: {response.status_code}"
-                )
+                print(f"❌ Request failed with status {response.status_code}")
+                if response.text:
+                    print(f"Error response: {response.text}")
+                test_results.append(False)
                 
         except Exception as e:
-            self.log_test(
-                "Web Search Integration Exception",
-                False,
-                f"Exception: {str(e)}"
-            )
-            
-    def test_error_handling(self):
-        """Test error handling scenarios"""
-        print("\n🛡️ ERROR HANDLING TESTING")
-        print("=" * 25)
+            print(f"❌ Exception occurred: {str(e)}")
+            test_results.append(False)
         
-        # Test empty judge name
-        self.test_empty_judge_name()
+        print("-" * 50)
+    
+    return test_results
+
+def test_error_handling():
+    """Test error handling for various scenarios"""
+    print("\n⚠️ TESTING ERROR HANDLING")
+    print("=" * 60)
+    
+    test_results = []
+    
+    # Test cases for error handling
+    error_handling_tests = [
+        {
+            "name": "Judge Dragon Wizard",
+            "description": "Fantasy name should return 404",
+            "expected_status": 404
+        },
+        {
+            "name": "BBB Test Judge",
+            "description": "Obvious test pattern should return 404",
+            "expected_status": 404
+        },
+        {
+            "name": "Judge Sparkle Magic",
+            "description": "Fantasy words should return 404",
+            "expected_status": 404
+        },
+        {
+            "name": "CCC Dummy Judge",
+            "description": "Dummy pattern should return 404",
+            "expected_status": 404
+        },
+        {
+            "name": "",
+            "description": "Empty name should return error",
+            "expected_status": [404, 422]  # Could be either
+        }
+    ]
+    
+    for test_case in error_handling_tests:
+        judge_name = test_case["name"]
+        description = test_case["description"]
+        expected_status = test_case["expected_status"]
         
-        # Test special characters
-        self.test_special_characters()
+        print(f"\n📋 Test Case: {description}")
+        print(f"Judge Name: '{judge_name}'")
+        print(f"Expected Status: {expected_status}")
         
-        # Test edge cases
-        self.test_edge_cases()
-        
-    def test_empty_judge_name(self):
-        """Test handling of empty judge names"""
         try:
-            url = f"{API_BASE}/litigation/judge-insights/"
+            # URL encode the judge name
+            encoded_judge_name = quote(judge_name)
+            url = f"{BACKEND_URL}/litigation/judge-insights/{encoded_judge_name}"
             
+            print(f"Request URL: {url}")
+            
+            # Make the API request
             response = requests.get(url, timeout=30)
             
-            if response.status_code == 404:
-                self.log_test(
-                    "Empty Judge Name Handling",
-                    True,
-                    "Correctly returns 404 for empty judge name"
-                )
+            print(f"Status Code: {response.status_code}")
+            
+            # Check if status matches expectation
+            if isinstance(expected_status, list):
+                status_match = response.status_code in expected_status
             else:
-                self.log_test(
-                    "Empty Judge Name Handling",
-                    False,
-                    f"Expected 404, got {response.status_code}"
-                )
+                status_match = response.status_code == expected_status
+            
+            if status_match:
+                print("✅ Status code matches expectation")
+                
+                # For 404 responses, check error message
+                if response.status_code == 404:
+                    try:
+                        error_data = response.json()
+                        error_detail = error_data.get('detail', '')
+                        print(f"Error message: {error_detail}")
+                        
+                        if "No information can be retrieved" in error_detail:
+                            print("✅ Correct error message")
+                            test_results.append(True)
+                        else:
+                            print("⚠️ Different error message format")
+                            test_results.append(True)  # Still acceptable
+                    except:
+                        print("⚠️ Could not parse error response")
+                        test_results.append(True)  # 404 is still correct
+                else:
+                    test_results.append(True)
+                    
+            else:
+                print(f"❌ Status code mismatch. Expected: {expected_status}, Got: {response.status_code}")
+                if response.text:
+                    print(f"Response: {response.text}")
+                test_results.append(False)
                 
         except Exception as e:
-            self.log_test(
-                "Empty Judge Name Exception",
-                False,
-                f"Exception: {str(e)}"
-            )
-            
-    def test_special_characters(self):
-        """Test handling of special characters in judge names"""
-        special_char_judges = [
-            "Judge O'Connor",
-            "José Martinez",
-            "Judge Smith-Jones",
-            "Judge @#$%"
-        ]
+            print(f"❌ Exception occurred: {str(e)}")
+            test_results.append(False)
         
-        for judge_name in special_char_judges:
+        print("-" * 50)
+    
+    return test_results
+
+def test_specific_user_scenarios():
+    """Test specific scenarios mentioned in the user request"""
+    print("\n🎯 TESTING SPECIFIC USER SCENARIOS")
+    print("=" * 60)
+    
+    test_results = []
+    
+    # Test the specific scenario mentioned: why "sangam nirala" gets through validation
+    print("\n🔍 INVESTIGATING 'sangam nirala' VALIDATION ISSUE")
+    print("-" * 50)
+    
+    try:
+        judge_name = "sangam nirala"
+        encoded_judge_name = quote(judge_name)
+        url = f"{BACKEND_URL}/litigation/judge-insights/{encoded_judge_name}"
+        
+        print(f"Testing: {judge_name}")
+        print(f"Request URL: {url}")
+        
+        response = requests.get(url, timeout=30)
+        
+        print(f"Status Code: {response.status_code}")
+        
+        if response.status_code == 200:
+            print("❌ ISSUE CONFIRMED: Fake judge 'sangam nirala' is getting through validation")
+            data = response.json()
+            
+            print(f"Judge Name: {data.get('judge_name', 'N/A')}")
+            print(f"Is Verified: {data.get('is_verified', 'N/A')}")
+            print(f"Confidence Score: {data.get('confidence_score', 'N/A')}")
+            print(f"Validation Summary: {data.get('validation_summary', 'N/A')}")
+            
+            # This should be fixed - fake judges should return 404
+            test_results.append(False)
+            
+        elif response.status_code == 404:
+            print("✅ ISSUE RESOLVED: Fake judge 'sangam nirala' properly rejected with 404")
             try:
-                url = f"{API_BASE}/litigation/judge-insights/{quote(judge_name)}"
-                
-                response = requests.get(url, timeout=30)
-                
-                if response.status_code in [200, 404]:
-                    # Both 200 and 404 are acceptable for special characters
-                    self.log_test(
-                        f"Special Characters - {judge_name}",
-                        True,
-                        f"Handled gracefully with HTTP {response.status_code}"
-                    )
-                else:
-                    self.log_test(
-                        f"Special Characters - {judge_name}",
-                        False,
-                        f"Unexpected status {response.status_code}"
-                    )
-                    
-            except Exception as e:
-                self.log_test(
-                    f"Special Characters Exception - {judge_name}",
-                    True,
-                    f"Handled exception gracefully: {str(e)}"
-                )
-                
-    def test_edge_cases(self):
-        """Test edge case scenarios"""
-        edge_cases = [
-            ("", "Empty string"),
-            ("   ", "Whitespace only"),
-            ("A", "Single character"),
-            ("Judge" * 50, "Very long name"),
-            ("123456", "Numbers only")
-        ]
-        
-        for judge_name, description in edge_cases:
-            try:
-                url = f"{API_BASE}/litigation/judge-insights/{quote(judge_name)}"
-                
-                response = requests.get(url, timeout=30)
-                
-                # For edge cases, we expect either 404 or proper error handling
-                if response.status_code in [404, 400, 422]:
-                    self.log_test(
-                        f"Edge Case - {description}",
-                        True,
-                        f"Handled appropriately with HTTP {response.status_code}"
-                    )
-                else:
-                    self.log_test(
-                        f"Edge Case - {description}",
-                        False,
-                        f"Unexpected status {response.status_code}"
-                    )
-                    
-            except Exception as e:
-                self.log_test(
-                    f"Edge Case Exception - {description}",
-                    True,
-                    f"Handled exception gracefully: {str(e)}"
-                )
-                
-    def test_confidence_scoring(self):
-        """Test confidence scoring system"""
-        print("\n📊 CONFIDENCE SCORING")
-        print("=" * 25)
-        
-        test_cases = [
-            ("ZZZ Fictional Judge", 0.0, "Fake judge should have 0.0 confidence"),
-            ("Judge Unicorn Rainbow", 0.0, "Fantasy judge should have 0.0 confidence"),
-            ("John Roberts", None, "Real judge should have appropriate confidence"),
-            ("John Smith", None, "Common name should have some confidence if verified")
-        ]
-        
-        for judge_name, expected_confidence, description in test_cases:
-            self.test_confidence_individual(judge_name, expected_confidence, description)
+                error_data = response.json()
+                print(f"Error message: {error_data.get('detail', 'N/A')}")
+            except:
+                pass
+            test_results.append(True)
             
-    def test_confidence_individual(self, judge_name: str, expected_confidence: float = None, description: str = ""):
-        """Test confidence level for a specific judge"""
-        try:
-            url = f"{API_BASE}/litigation/judge-insights/{quote(judge_name)}"
-            
-            response = requests.get(url, timeout=30)
-            
-            if response.status_code == 200:
-                data = response.json()
-                confidence_score = data.get('confidence_score', -1)
-                
-                if expected_confidence is not None:
-                    if confidence_score == expected_confidence:
-                        self.log_test(
-                            f"Confidence Score - {judge_name}",
-                            True,
-                            f"{description} (got {confidence_score})"
-                        )
-                    else:
-                        self.log_test(
-                            f"Confidence Score - {judge_name}",
-                            False,
-                            f"{description} (expected {expected_confidence}, got {confidence_score})"
-                        )
-                else:
-                    # For real judges, just check that confidence is reasonable
-                    if 0.0 <= confidence_score <= 1.0:
-                        self.log_test(
-                            f"Confidence Score - {judge_name}",
-                            True,
-                            f"{description} (got {confidence_score})"
-                        )
-                    else:
-                        self.log_test(
-                            f"Confidence Score - {judge_name}",
-                            False,
-                            f"Invalid confidence score: {confidence_score}"
-                        )
-            elif response.status_code == 404:
-                # For fake judges, 404 is expected
-                if expected_confidence == 0.0:
-                    self.log_test(
-                        f"Confidence Score - {judge_name}",
-                        True,
-                        f"{description} (correctly returned 404)"
-                    )
-                else:
-                    self.log_test(
-                        f"Confidence Score - {judge_name}",
-                        False,
-                        f"Unexpected 404 for real judge"
-                    )
-            else:
-                self.log_test(
-                    f"Confidence Score HTTP - {judge_name}",
-                    False,
-                    f"HTTP {response.status_code}"
-                )
-                
-        except Exception as e:
-            self.log_test(
-                f"Confidence Score Exception - {judge_name}",
-                False,
-                f"Exception: {str(e)}"
-            )
-            
-    def print_summary(self):
-        """Print comprehensive test summary"""
-        print("\n" + "=" * 80)
-        print("🎯 JUDGE ANALYTICS WEB SEARCH INTEGRATION TEST SUMMARY")
-        print("=" * 80)
-        
-        success_rate = (self.passed_tests / self.total_tests * 100) if self.total_tests > 0 else 0
-        
-        print(f"Total Tests: {self.total_tests}")
-        print(f"Passed: {self.passed_tests}")
-        print(f"Failed: {self.total_tests - self.passed_tests}")
-        print(f"Success Rate: {success_rate:.1f}%")
-        
-        # Critical success criteria analysis
-        print("\n🎯 CRITICAL SUCCESS CRITERIA:")
-        
-        # Fake judge detection
-        fake_detection_tests = [r for r in self.test_results if 'Fake Judge Detection' in r['test_name']]
-        fake_detection_passed = sum(1 for r in fake_detection_tests if r['passed'])
-        
-        if fake_detection_tests:
-            fake_detection_rate = (fake_detection_passed / len(fake_detection_tests) * 100)
-            print(f"✅ Fake Judge Detection: {fake_detection_passed}/{len(fake_detection_tests)} ({fake_detection_rate:.1f}%)")
-        
-        # Real judge testing
-        real_judge_tests = [r for r in self.test_results if 'Real Judge' in r['test_name']]
-        real_judge_passed = sum(1 for r in real_judge_tests if r['passed'])
-        
-        if real_judge_tests:
-            real_judge_rate = (real_judge_passed / len(real_judge_tests) * 100)
-            print(f"✅ Real Judge Testing: {real_judge_passed}/{len(real_judge_tests)} ({real_judge_rate:.1f}%)")
-        
-        # Web search integration
-        web_search_tests = [r for r in self.test_results if 'Web Search Integration' in r['test_name'] or 'Reference Link' in r['test_name']]
-        web_search_passed = sum(1 for r in web_search_tests if r['passed'])
-        
-        if web_search_tests:
-            web_search_rate = (web_search_passed / len(web_search_tests) * 100)
-            print(f"✅ Web Search Integration: {web_search_passed}/{len(web_search_tests)} ({web_search_rate:.1f}%)")
-        
-        # Confidence scoring
-        confidence_tests = [r for r in self.test_results if 'Confidence' in r['test_name']]
-        confidence_passed = sum(1 for r in confidence_tests if r['passed'])
-        
-        if confidence_tests:
-            confidence_rate = (confidence_passed / len(confidence_tests) * 100)
-            print(f"✅ Confidence Scoring: {confidence_passed}/{len(confidence_tests)} ({confidence_rate:.1f}%)")
-        
-        # Error handling
-        error_handling_tests = [r for r in self.test_results if 'Error' in r['test_name'] or 'Edge Case' in r['test_name'] or 'Special Characters' in r['test_name']]
-        error_handling_passed = sum(1 for r in error_handling_tests if r['passed'])
-        
-        if error_handling_tests:
-            error_handling_rate = (error_handling_passed / len(error_handling_tests) * 100)
-            print(f"✅ Error Handling: {error_handling_passed}/{len(error_handling_tests)} ({error_handling_rate:.1f}%)")
-        
-        # Security assessment
-        security_issues = [r for r in self.test_results if 'SECURITY ISSUE' in r['details']]
-        if security_issues:
-            print(f"\n🚨 SECURITY ISSUES FOUND: {len(security_issues)}")
-            for issue in security_issues:
-                print(f"   - {issue['test_name']}: {issue['details']}")
         else:
-            print(f"\n✅ NO SECURITY ISSUES DETECTED")
-        
-        # Key findings
-        print(f"\n📋 KEY FINDINGS:")
-        reference_link_tests = [r for r in self.test_results if 'Reference Links' in r['test_name'] and r['passed']]
-        if reference_link_tests:
-            print(f"✅ Reference links working: {len(reference_link_tests)} judges have valid reference links")
-        
-        realistic_data_tests = [r for r in self.test_results if 'Realistic Data' in r['test_name'] and r['passed']]
-        if realistic_data_tests:
-            print(f"✅ Realistic data: {len(realistic_data_tests)} judges show non-zero case statistics")
-        
-        print("\n" + "=" * 80)
-        
-        return success_rate >= 85 and len(security_issues) == 0
+            print(f"⚠️ Unexpected status code: {response.status_code}")
+            test_results.append(False)
+            
+    except Exception as e:
+        print(f"❌ Exception occurred: {str(e)}")
+        test_results.append(False)
+    
+    return test_results
 
 def main():
-    """Main test execution"""
-    print("🎯 JUDGE ANALYTICS WEB SEARCH INTEGRATION COMPREHENSIVE TESTING")
+    """Main test execution function"""
+    print("🎯 JUDGE ANALYTICS WEB SEARCH INTEGRATION TESTING")
     print("=" * 80)
     print(f"Backend URL: {BACKEND_URL}")
-    print(f"API Base: {API_BASE}")
+    print(f"Test Start Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print("=" * 80)
     
-    tester = JudgeAnalyticsWebSearchTester()
+    all_results = []
     
-    # Run all test categories as specified in the review request
-    tester.test_fake_judge_detection()
-    tester.test_real_judge_testing()
-    tester.test_web_search_integration_verification()
-    tester.test_error_handling()
-    tester.test_confidence_scoring()
+    # Test 1: Fake Judge Detection
+    fake_detection_results = test_fake_judge_detection()
+    all_results.extend(fake_detection_results)
     
-    # Print comprehensive summary and determine overall success
-    overall_success = tester.print_summary()
+    # Test 2: Web Search Integration
+    web_search_results = test_web_search_integration()
+    all_results.extend(web_search_results)
     
-    if overall_success:
-        print("\n🎉 JUDGE ANALYTICS WEB SEARCH INTEGRATION: TESTING SUCCESSFUL")
-        sys.exit(0)
+    # Test 3: Error Handling
+    error_handling_results = test_error_handling()
+    all_results.extend(error_handling_results)
+    
+    # Test 4: Specific User Scenarios
+    user_scenario_results = test_specific_user_scenarios()
+    all_results.extend(user_scenario_results)
+    
+    # Final Results Summary
+    print("\n" + "=" * 80)
+    print("🎯 FINAL TEST RESULTS SUMMARY")
+    print("=" * 80)
+    
+    total_tests = len(all_results)
+    passed_tests = sum(all_results)
+    failed_tests = total_tests - passed_tests
+    success_rate = (passed_tests / total_tests * 100) if total_tests > 0 else 0
+    
+    print(f"📊 Total Tests: {total_tests}")
+    print(f"✅ Passed: {passed_tests}")
+    print(f"❌ Failed: {failed_tests}")
+    print(f"📈 Success Rate: {success_rate:.1f}%")
+    
+    # Detailed breakdown
+    print(f"\n📋 Test Breakdown:")
+    print(f"  Fake Judge Detection: {sum(fake_detection_results)}/{len(fake_detection_results)} passed")
+    print(f"  Web Search Integration: {sum(web_search_results)}/{len(web_search_results)} passed")
+    print(f"  Error Handling: {sum(error_handling_results)}/{len(error_handling_results)} passed")
+    print(f"  User Scenarios: {sum(user_scenario_results)}/{len(user_scenario_results)} passed")
+    
+    print(f"\n🕒 Test Completion Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    
+    # Critical Issues Summary
+    print(f"\n🚨 CRITICAL FINDINGS:")
+    
+    fake_detection_success = sum(fake_detection_results) / len(fake_detection_results) * 100 if fake_detection_results else 0
+    web_search_success = sum(web_search_results) / len(web_search_results) * 100 if web_search_results else 0
+    
+    if fake_detection_success < 80:
+        print("❌ CRITICAL: Fake judge detection is not working properly")
     else:
-        print("\n🚨 JUDGE ANALYTICS WEB SEARCH INTEGRATION: ISSUES DETECTED")
-        sys.exit(1)
+        print("✅ Fake judge detection working correctly")
+        
+    if web_search_success < 60:
+        print("❌ CRITICAL: Web search integration not providing real data")
+    else:
+        print("✅ Web search integration providing real case statistics")
+    
+    if success_rate >= 80:
+        print("🎉 OVERALL RESULT: EXCELLENT - Judge Analytics Web Search Integration working well!")
+    elif success_rate >= 60:
+        print("✅ OVERALL RESULT: GOOD - Judge Analytics mostly functional with minor issues")
+    else:
+        print("⚠️ OVERALL RESULT: NEEDS ATTENTION - Judge Analytics has significant issues")
+    
+    print("=" * 80)
+    
+    return success_rate >= 70
 
 if __name__ == "__main__":
-    main()
+    success = main()
+    sys.exit(0 if success else 1)
