@@ -374,17 +374,17 @@ const SettlementCalculator = () => {
               <CardTitle>Strategic Settlement Insights</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Factors Favoring Settlement */}
-              {analysis.factors_favoring_settlement && analysis.factors_favoring_settlement.length > 0 && (
+              {/* Key Settlement Factors */}
+              {analysis.key_settlement_factors && analysis.key_settlement_factors.length > 0 && (
                 <div>
-                  <h3 className="text-lg font-semibold mb-2 text-green-700 flex items-center">
+                  <h3 className="text-lg font-semibold mb-2 text-blue-700 flex items-center">
                     <CheckCircle className="h-4 w-4 mr-2" />
-                    Factors Favoring Settlement
+                    Key Settlement Factors
                   </h3>
                   <ul className="space-y-2">
-                    {analysis.factors_favoring_settlement.map((factor, index) => (
-                      <li key={index} className="text-sm text-green-600 flex items-start">
-                        <span className="text-green-400 mr-2">•</span>
+                    {analysis.key_settlement_factors.map((factor, index) => (
+                      <li key={index} className="text-sm text-blue-600 flex items-start">
+                        <span className="text-blue-400 mr-2">•</span>
                         {factor}
                       </li>
                     ))}
@@ -392,36 +392,18 @@ const SettlementCalculator = () => {
                 </div>
               )}
 
-              {/* Settlement Obstacles */}
-              {analysis.settlement_obstacles && analysis.settlement_obstacles.length > 0 && (
+              {/* General Recommendations */}
+              {analysis.recommendations && analysis.recommendations.length > 0 && (
                 <div>
-                  <h3 className="text-lg font-semibold mb-2 text-red-700 flex items-center">
-                    <AlertTriangle className="h-4 w-4 mr-2" />
-                    Settlement Obstacles
-                  </h3>
-                  <ul className="space-y-2">
-                    {analysis.settlement_obstacles.map((obstacle, index) => (
-                      <li key={index} className="text-sm text-red-600 flex items-start">
-                        <span className="text-red-400 mr-2">•</span>
-                        {obstacle}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {/* Negotiation Strategies */}
-              {analysis.negotiation_strategies && analysis.negotiation_strategies.length > 0 && (
-                <div>
-                  <h3 className="text-lg font-semibold mb-2 text-blue-700 flex items-center">
+                  <h3 className="text-lg font-semibold mb-2 text-green-700 flex items-center">
                     <Users className="h-4 w-4 mr-2" />
-                    Recommended Negotiation Strategies
+                    Recommendations
                   </h3>
                   <ul className="space-y-2">
-                    {analysis.negotiation_strategies.map((strategy, index) => (
-                      <li key={index} className="text-sm text-blue-600 flex items-start">
-                        <span className="text-blue-400 mr-2">→</span>
-                        {strategy}
+                    {analysis.recommendations.map((recommendation, index) => (
+                      <li key={index} className="text-sm text-green-600 flex items-start">
+                        <span className="text-green-400 mr-2">→</span>
+                        {recommendation}
                       </li>
                     ))}
                   </ul>
@@ -429,10 +411,10 @@ const SettlementCalculator = () => {
               )}
 
               {/* AI Analysis Summary */}
-              {analysis.ai_analysis_summary && (
+              {analysis.ai_insights && (
                 <div className="p-4 bg-blue-50 rounded-lg">
                   <h3 className="font-semibold mb-2">AI Analysis Summary</h3>
-                  <p className="text-sm text-gray-700">{analysis.ai_analysis_summary}</p>
+                  <p className="text-sm text-gray-700">{analysis.ai_insights}</p>
                 </div>
               )}
             </CardContent>
