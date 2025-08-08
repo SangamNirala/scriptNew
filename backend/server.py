@@ -2759,32 +2759,33 @@ async def generate_audio(request: TextToSpeechRequest):
         logger.error(f"Error generating audio: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error generating audio: {str(e)}")
 
-@api_router.post("/generate-avatar-video", response_model=AvatarVideoResponse)
-async def generate_avatar_video(request: AvatarVideoRequest):
-    """Generate an avatar video from audio using AI-powered lip sync"""
-    logger.info("Avatar video generation requested but feature is not available")
-    raise HTTPException(
-        status_code=503, 
-        detail="Avatar video generation is currently unavailable - dependencies not installed"
-    )
+# Avatar video generation endpoints commented out - dependencies not available
+# @api_router.post("/generate-avatar-video", response_model=AvatarVideoResponse)
+# async def generate_avatar_video(request: AvatarVideoRequest):
+#     """Generate an avatar video from audio using AI-powered lip sync"""
+#     logger.info("Avatar video generation requested but feature is not available")
+#     raise HTTPException(
+#         status_code=503, 
+#         detail="Avatar video generation is currently unavailable - dependencies not installed"
+#     )
 
-@api_router.post("/generate-enhanced-avatar-video", response_model=EnhancedAvatarVideoResponse)
-async def generate_enhanced_avatar_video(request: EnhancedAvatarVideoRequest):
-    """Generate an enhanced avatar video with realistic AI avatars and context-aware backgrounds"""
-    logger.info("Enhanced avatar video generation requested but feature is not available")
-    raise HTTPException(
-        status_code=503, 
-        detail="Enhanced avatar video generation is currently unavailable - dependencies not installed"
-    )
+# @api_router.post("/generate-enhanced-avatar-video", response_model=EnhancedAvatarVideoResponse)
+# async def generate_enhanced_avatar_video(request: EnhancedAvatarVideoRequest):
+#     """Generate an enhanced avatar video with realistic AI avatars and context-aware backgrounds"""
+#     logger.info("Enhanced avatar video generation requested but feature is not available")
+#     raise HTTPException(
+#         status_code=503, 
+#         detail="Enhanced avatar video generation is currently unavailable - dependencies not installed"
+#     )
 
-@api_router.post("/generate-ultra-realistic-avatar-video", response_model=UltraRealisticAvatarVideoResponse)
-async def generate_ultra_realistic_avatar_video(request: UltraRealisticAvatarVideoRequest):
-    """Generate ultra-realistic avatar video with AI-generated faces, perfect lip-sync, and dynamic backgrounds"""
-    logger.info("Ultra-realistic avatar video generation requested but feature is not available")
-    raise HTTPException(
-        status_code=503, 
-        detail="Ultra-realistic avatar video generation is currently unavailable - dependencies not installed"
-    )
+# @api_router.post("/generate-ultra-realistic-avatar-video", response_model=UltraRealisticAvatarVideoResponse)
+# async def generate_ultra_realistic_avatar_video(request: UltraRealisticAvatarVideoRequest):
+#     """Generate ultra-realistic avatar video with AI-generated faces, perfect lip-sync, and dynamic backgrounds"""
+#     logger.info("Ultra-realistic avatar video generation requested but feature is not available")
+#     raise HTTPException(
+#         status_code=503, 
+#         detail="Ultra-realistic avatar video generation is currently unavailable - dependencies not installed"
+#     )
 
 # =============================================================================
 # PHASE 3: ADVANCED ANALYTICS AND VALIDATION ENDPOINTS
