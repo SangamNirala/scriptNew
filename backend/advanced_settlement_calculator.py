@@ -102,45 +102,62 @@ class AdvancedSettlementCalculator(SettlementProbabilityCalculator):
         logger.info("🚀 Advanced Settlement Probability Calculator initialized with multi-AI analysis")
 
     def _initialize_ai_providers(self):
-        """Initialize multiple AI providers for enhanced analysis"""
+        """Initialize multiple AI providers for enhanced analysis with latest models"""
         try:
-            # OpenRouter (free models)
+            # OpenRouter (Latest GPT-4 and Claude models)
             openrouter_key = os.environ.get('OPENROUTER_API_KEY')
             if openrouter_key:
                 self.ai_providers[AIProvider.OPENROUTER] = {
                     'api_key': openrouter_key,
-                    'models': ['microsoft/wizardlm-2-8x22b', 'meta-llama/llama-3.1-70b-instruct'],
-                    'weight': 0.25
+                    'models': [
+                        'openai/gpt-4o-2024-08-06',  # Latest GPT-4o
+                        'anthropic/claude-3.5-sonnet',  # Latest Claude
+                        'meta-llama/llama-3.3-70b-instruct',  # Latest Llama
+                        'qwen/qwen-2.5-72b-instruct'  # Powerful reasoning model
+                    ],
+                    'weight': 0.35,
+                    'capabilities': ['advanced_reasoning', 'legal_analysis', 'quantitative_modeling']
                 }
             
-            # Gemini
+            # Gemini (Latest model with enhanced capabilities)
             gemini_key = os.environ.get('GEMINI_API_KEY')
             if gemini_key:
                 self.ai_providers[AIProvider.GEMINI] = {
                     'api_key': gemini_key,
-                    'models': ['gemini-2.0-flash'],
-                    'weight': 0.30
+                    'models': ['gemini-2.0-flash-exp'],  # Latest experimental model
+                    'weight': 0.30,
+                    'capabilities': ['multimodal_analysis', 'deep_reasoning', 'probabilistic_modeling']
                 }
             
-            # Groq/Grok
+            # Groq (High-speed inference models)
             grok_key = os.environ.get('GROQ_API_KEY')
             if grok_key:
                 self.ai_providers[AIProvider.GROK] = {
                     'api_key': grok_key,
-                    'models': ['mixtral-8x7b-32768'],
-                    'weight': 0.25
+                    'models': [
+                        'llama-3.3-70b-versatile',  # Latest Llama on Groq
+                        'mixtral-8x7b-32768',  # High-context model
+                        'gemma2-9b-it'  # Efficient reasoning model
+                    ],
+                    'weight': 0.25,
+                    'capabilities': ['fast_inference', 'batch_processing', 'real_time_analysis']
                 }
             
-            # HuggingFace
+            # HuggingFace (Open-source models)
             hf_key = os.environ.get('HUGGINGFACE_API_KEY')
             if hf_key:
                 self.ai_providers[AIProvider.HUGGINGFACE] = {
                     'api_key': hf_key,
-                    'models': ['microsoft/DialoGPT-large'],
-                    'weight': 0.20
+                    'models': [
+                        'microsoft/DialoGPT-large',
+                        'microsoft/DialoGPT-medium',
+                        'meta-llama/Llama-2-13b-chat-hf'
+                    ],
+                    'weight': 0.10,
+                    'capabilities': ['specialized_models', 'custom_fine_tuning', 'domain_adaptation']
                 }
             
-            logger.info(f"✅ Initialized {len(self.ai_providers)} AI providers for enhanced analysis")
+            logger.info(f"✅ Enhanced AI providers initialized: {len(self.ai_providers)} providers with latest models (GPT-4o, Claude-3.5, Llama-3.3, Gemini-2.0)")
             
         except Exception as e:
             logger.error(f"❌ AI provider initialization failed: {e}")
