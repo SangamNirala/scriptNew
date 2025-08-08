@@ -667,6 +667,77 @@ const SettlementCalculator = () => {
                   <p className="text-sm text-gray-700">{analysis.ai_insights}</p>
                 </div>
               )}
+
+              {/* Monte Carlo Analysis for Advanced Mode */}
+              {advancedMode && analysis.monte_carlo_results && (
+                <div className="p-4 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg border border-purple-200">
+                  <h3 className="font-semibold mb-3 text-purple-900 flex items-center">
+                    <Activity className="h-4 w-4 mr-2" />
+                    Monte Carlo Risk Analysis
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <h4 className="text-sm font-medium text-purple-800 mb-2">Probability Distribution</h4>
+                      {analysis.monte_carlo_results.percentiles && (
+                        <div className="space-y-2">
+                          {Object.entries(analysis.monte_carlo_results.percentiles).map(([percentile, value]) => (
+                            <div key={percentile} className="flex justify-between items-center">
+                              <span className="text-xs text-gray-600">{percentile} Percentile:</span>
+                              <span className="text-xs font-medium">{(value * 100).toFixed(1)}%</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <h4 className="text-sm font-medium text-purple-800 mb-2">Risk Metrics</h4>
+                      {analysis.monte_carlo_results.risk_metrics && (
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs text-gray-600">Value at Risk (5%):</span>
+                            <span className="text-xs font-medium text-red-600">
+                              {(analysis.monte_carlo_results.risk_metrics.value_at_risk_5 * 100).toFixed(1)}%
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs text-gray-600">Volatility:</span>
+                            <span className="text-xs font-medium">
+                              {(analysis.monte_carlo_results.risk_metrics.volatility * 100).toFixed(1)}%
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {analysis.monte_carlo_results.scenario_probabilities && (
+                    <div>
+                      <h4 className="text-sm font-medium text-purple-800 mb-2">Scenario Probabilities</h4>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                        {Object.entries(analysis.monte_carlo_results.scenario_probabilities).map(([scenario, probability]) => (
+                          <div key={scenario} className="text-center p-2 bg-white rounded border">
+                            <div className="text-xs text-gray-600 capitalize">
+                              {scenario.replace(/_/g, ' ').replace('settlement', '')}
+                            </div>
+                            <div className="text-sm font-medium text-purple-700">
+                              {(probability * 100).toFixed(1)}%
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="mt-3 text-xs text-purple-600 bg-purple-100 p-2 rounded">
+                    Based on {analysis.monte_carlo_results.simulation_count?.toLocaleString()} Monte Carlo simulations
+                    {analysis.monte_carlo_results.convergence_analysis?.converged && 
+                      ` (✓ Converged with ${(analysis.monte_carlo_results.convergence_analysis.stability_score * 100).toFixed(0)}% stability)`
+                    }
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
