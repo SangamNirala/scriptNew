@@ -305,7 +305,6 @@ const ScriptGenerator = () => {
       };
       
       setAudioData(audio);
-      setLastGeneratedAudio(audioBase64); // Store for avatar video generation
       audio.play();
       
     } catch (err) {
