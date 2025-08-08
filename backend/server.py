@@ -13880,6 +13880,199 @@ if LITIGATION_ANALYTICS_AVAILABLE:
                 status_code=500,
                 detail=f"Error calculating settlement probability: {str(e)}"
             )
+
+    @api_router.post("/litigation/settlement-probability-advanced", response_model=AdvancedSettlementAnalysisResponse)
+    async def calculate_advanced_settlement_probability(request: AdvancedSettlementAnalysisRequest):
+        """
+        Advanced Settlement Probability Calculator with Next-Generation Analytics
+        
+        Enhanced features include:
+        - Multi-AI consensus analysis using OpenRouter, Gemini, Groq, and HuggingFace models
+        - Monte Carlo simulation with thousands of probabilistic scenarios
+        - Comparative case analysis with similarity scoring
+        - Real-time market trend integration
+        - Advanced risk assessment with volatility indices
+        - Strategic advantage scoring and negotiation optimization
+        - Interactive scenario modeling with confidence intervals
+        
+        Analysis modes:
+        - 'basic': Standard analysis with enhanced algorithms
+        - 'advanced': Full multi-AI analysis with market trends (default)
+        - 'monte_carlo': Focus on probabilistic simulation
+        - 'comparative': Emphasis on similar case benchmarking
+        - 'real_time': Live market data integration
+        """
+        try:
+            logger.info(f"🚀 Calculating advanced settlement probability for {request.case_type} case (mode: {request.analysis_mode})")
+            
+            # Get advanced settlement calculator
+            advanced_calculator = await get_advanced_settlement_calculator(db)
+            
+            # Convert analysis mode
+            try:
+                analysis_mode = AnalysisMode(request.analysis_mode.lower())
+            except ValueError:
+                analysis_mode = AnalysisMode.ADVANCED  # Default fallback
+            
+            # Convert request to case data with enhanced fields
+            case_data = {
+                "case_id": request.case_id or str(uuid.uuid4()),
+                "case_type": request.case_type,
+                "jurisdiction": request.jurisdiction,
+                "case_value": request.case_value or 100000,
+                "evidence_strength": request.evidence_strength or 0.5,
+                "case_complexity": request.case_complexity or 0.5,
+                "filing_date": request.filing_date,
+                "judge_name": request.judge_name,
+                "case_facts": request.case_facts,
+                "witness_count": request.witness_count,
+                "opposing_party_resources": request.opposing_party_resources
+            }
+            
+            # Set Monte Carlo iterations if specified
+            if request.monte_carlo_iterations and request.monte_carlo_iterations > 1000:
+                advanced_calculator.monte_carlo_iterations = min(request.monte_carlo_iterations, 50000)
+            
+            # Calculate advanced settlement analysis
+            analysis = await advanced_calculator.calculate_advanced_settlement_analysis(case_data, analysis_mode)
+            
+            # Convert scenarios to dict format with enhanced data
+            scenarios = []
+            for scenario in analysis.scenarios:
+                scenarios.append({
+                    "scenario_name": scenario.scenario_name,
+                    "probability": scenario.probability,
+                    "settlement_amount": scenario.settlement_amount,
+                    "timing": scenario.timing.value,
+                    "key_conditions": scenario.key_conditions,
+                    "plaintiff_satisfaction": scenario.plaintiff_satisfaction,
+                    "defendant_satisfaction": scenario.defendant_satisfaction,
+                    "strategic_notes": scenario.strategic_notes
+                })
+            
+            # Prepare Monte Carlo results if available
+            monte_carlo_results = None
+            if hasattr(analysis.metrics, 'monte_carlo_results') and analysis.metrics.monte_carlo_results:
+                mc = analysis.metrics.monte_carlo_results
+                monte_carlo_results = {
+                    "mean_settlement_probability": mc.mean_settlement_probability,
+                    "std_settlement_probability": mc.std_settlement_probability,
+                    "percentiles": mc.percentiles,
+                    "confidence_intervals": mc.confidence_intervals,
+                    "scenario_probabilities": mc.scenario_probabilities,
+                    "risk_metrics": mc.risk_metrics,
+                    "simulation_count": mc.simulation_count,
+                    "convergence_analysis": mc.convergence_analysis
+                }
+            
+            # Prepare comparative cases
+            comparative_cases = []
+            if hasattr(analysis.metrics, 'comparative_cases'):
+                for case in analysis.metrics.comparative_cases[:5]:  # Limit to top 5
+                    comparative_cases.append({
+                        "case_id": case.case_id,
+                        "case_type": case.case_type,
+                        "settlement_amount": case.settlement_amount,
+                        "settlement_probability": case.settlement_probability,
+                        "similarity_score": case.similarity_score,
+                        "key_factors": case.key_factors,
+                        "jurisdiction": case.jurisdiction
+                    })
+            
+            return AdvancedSettlementAnalysisResponse(
+                case_id=analysis.case_id,
+                settlement_probability=analysis.metrics.settlement_probability,
+                optimal_timing=analysis.metrics.optimal_timing.value,
+                plaintiff_settlement_range={
+                    "low": analysis.metrics.plaintiff_settlement_range[0],
+                    "high": analysis.metrics.plaintiff_settlement_range[1]
+                },
+                defendant_settlement_range={
+                    "low": analysis.metrics.defendant_settlement_range[0],
+                    "high": analysis.metrics.defendant_settlement_range[1]
+                },
+                expected_settlement_value=analysis.metrics.expected_settlement_value,
+                settlement_urgency_score=analysis.metrics.settlement_urgency_score,
+                confidence_score=analysis.metrics.confidence_score,
+                key_settlement_factors=analysis.metrics.key_settlement_factors,
+                negotiation_leverage=analysis.metrics.negotiation_leverage,
+                scenarios=scenarios,
+                ai_insights=analysis.ai_insights,
+                recommendations=analysis.recommendations,
+                # Advanced fields
+                monte_carlo_results=monte_carlo_results,
+                ai_consensus_score=getattr(analysis.metrics, 'ai_consensus_score', None),
+                market_trend_adjustment=getattr(analysis.metrics, 'market_trend_adjustment', None),
+                volatility_index=getattr(analysis.metrics, 'volatility_index', None),
+                strategic_advantage_score=getattr(analysis.metrics, 'strategic_advantage_score', None),
+                comparative_cases=comparative_cases,
+                processing_time=getattr(analysis, 'metadata', {}).get('processing_time'),
+                analysis_mode=request.analysis_mode,
+                metadata=getattr(analysis, 'metadata', {})
+            )
+            
+        except Exception as e:
+            logger.error(f"❌ Advanced settlement probability calculation failed: {e}")
+            # Fallback to standard analysis if advanced fails
+            try:
+                logger.info("🔄 Falling back to standard settlement analysis")
+                standard_calculator = await get_settlement_calculator(db)
+                case_data = {
+                    "case_id": request.case_id or str(uuid.uuid4()),
+                    "case_type": request.case_type,
+                    "jurisdiction": request.jurisdiction,
+                    "case_value": request.case_value or 100000,
+                    "evidence_strength": request.evidence_strength or 0.5,
+                    "case_complexity": request.case_complexity or 0.5,
+                    "filing_date": request.filing_date,
+                    "judge_name": request.judge_name
+                }
+                
+                analysis = await standard_calculator.calculate_settlement_probability(case_data)
+                
+                # Convert to advanced response format
+                scenarios = []
+                for scenario in analysis.scenarios:
+                    scenarios.append({
+                        "scenario_name": scenario.scenario_name,
+                        "probability": scenario.probability,
+                        "settlement_amount": scenario.settlement_amount,
+                        "timing": scenario.timing.value,
+                        "key_conditions": scenario.key_conditions,
+                        "plaintiff_satisfaction": scenario.plaintiff_satisfaction,
+                        "defendant_satisfaction": scenario.defendant_satisfaction,
+                        "strategic_notes": scenario.strategic_notes
+                    })
+                
+                return AdvancedSettlementAnalysisResponse(
+                    case_id=analysis.case_id,
+                    settlement_probability=analysis.metrics.settlement_probability,
+                    optimal_timing=analysis.metrics.optimal_timing.value,
+                    plaintiff_settlement_range={
+                        "low": analysis.metrics.plaintiff_settlement_range[0],
+                        "high": analysis.metrics.plaintiff_settlement_range[1]
+                    },
+                    defendant_settlement_range={
+                        "low": analysis.metrics.defendant_settlement_range[0],
+                        "high": analysis.metrics.defendant_settlement_range[1]
+                    },
+                    expected_settlement_value=analysis.metrics.expected_settlement_value,
+                    settlement_urgency_score=analysis.metrics.settlement_urgency_score,
+                    confidence_score=analysis.metrics.confidence_score,
+                    key_settlement_factors=analysis.metrics.key_settlement_factors,
+                    negotiation_leverage=analysis.metrics.negotiation_leverage,
+                    scenarios=scenarios,
+                    ai_insights=analysis.ai_insights,
+                    recommendations=analysis.recommendations,
+                    metadata={"fallback_mode": True, "analysis_mode": "standard"}
+                )
+                
+            except Exception as fallback_error:
+                logger.error(f"❌ Fallback settlement analysis also failed: {fallback_error}")
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Error in advanced settlement analysis: {str(e)}. Fallback also failed: {str(fallback_error)}"
+                )
     
     @api_router.get("/litigation/similar-cases")
     async def find_similar_cases(
