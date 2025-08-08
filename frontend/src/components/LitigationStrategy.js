@@ -369,7 +369,7 @@ const LitigationStrategy = () => {
                 <div className="text-center p-4 bg-orange-50 rounded-lg">
                   <DollarSign className="h-6 w-6 text-orange-600 mx-auto mb-2" />
                   <div className="text-2xl font-bold text-orange-900">
-                    ${recommendations.estimated_costs?.toLocaleString() || 'N/A'}
+                    ${recommendations.estimated_total_cost?.toLocaleString() || 'N/A'}
                   </div>
                   <div className="text-sm text-orange-600">Est. Costs</div>
                 </div>
