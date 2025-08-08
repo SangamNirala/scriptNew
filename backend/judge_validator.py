@@ -208,6 +208,320 @@ class JudgeValidator:
             result.recommended_action = "TECHNICAL_ERROR"
             return result
             
+    def _detect_fake_judge(self, judge_name: str) -> bool:
+        """Enhanced fake judge detection using comprehensive patterns"""
+        judge_name_lower = judge_name.lower().strip()
+        
+        # Check each pattern
+        for pattern in self.fake_patterns:
+            if re.search(pattern, judge_name_lower, re.IGNORECASE):
+                logger.info(f"🚫 Fake judge detected: '{judge_name}' matches pattern: {pattern}")
+                return True
+                
+        return False
+    
+    async def _web_search_judge(self, judge_name: str) -> List[ValidationSource]:
+        """Comprehensive web search for judge information using multiple methods"""
+        sources = []
+        
+        try:
+            # Method 1: Try SERP API if available
+            if self.serp_api_key:
+                sources.extend(await self._search_with_serp_api(judge_name))
+            
+            # Method 2: Search specific legal databases and courts
+            sources.extend(await self._search_legal_sources(judge_name))
+            
+            # Method 3: Use Gemini to analyze search results
+            if sources and self.gemini_api_key:
+                sources = await self._enhance_sources_with_ai(judge_name, sources)
+                
+        except Exception as e:
+            logger.error(f"Web search failed for {judge_name}: {e}")
+        
+        return sources
+    
+    async def _search_with_serp_api(self, judge_name: str) -> List[ValidationSource]:
+        """Search using SERP API for reliable judge information"""
+        sources = []
+        
+        try:
+            # Search for judge with specific legal terms
+            queries = [
+                f'"{judge_name}" judge court decision',
+                f'"{judge_name}" federal court',
+                f'"{judge_name}" state court judge',
+                f'Judge "{judge_name}" legal case'
+            ]
+            
+            for query in queries:
+                url = "https://serpapi.com/search"
+                params = {
+                    "q": query,
+                    "api_key": self.serp_api_key,
+                    "engine": "google",
+                    "num": 10
+                }
+                
+                async with self.session.get(url, params=params) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        organic_results = data.get("organic_results", [])
+                        
+                        for result in organic_results:
+                            title = result.get("title", "")
+                            link = result.get("link", "")
+                            snippet = result.get("snippet", "")
+                            
+                            # Check if result is relevant to the judge
+                            if self._is_relevant_judge_result(judge_name, title, snippet):
+                                confidence = self._calculate_result_confidence(link, title, snippet)
+                                source_type = self._determine_source_type(link)
+                                
+                                source = ValidationSource(
+                                    name=title,
+                                    url=link,
+                                    confidence=confidence,
+                                    source_type=source_type
+                                )
+                                sources.append(source)
+                                
+                        # Break after first successful query with results
+                        if sources:
+                            break
+                            
+        except Exception as e:
+            logger.error(f"SERP API search failed: {e}")
+        
+        return sources
+    
+    async def _search_legal_sources(self, judge_name: str) -> List[ValidationSource]:
+        """Search specific legal databases and court websites"""
+        sources = []
+        
+        try:
+            # CourtListener API search
+            courtlistener_sources = await self._check_courtlistener_enhanced(judge_name)
+            sources.extend(courtlistener_sources)
+            
+            # Justia search
+            justia_sources = await self._search_justia(judge_name)
+            sources.extend(justia_sources)
+            
+            # Google Scholar search
+            scholar_sources = await self._search_google_scholar(judge_name)
+            sources.extend(scholar_sources)
+            
+        except Exception as e:
+            logger.error(f"Legal source search failed: {e}")
+            
+        return sources
+    
+    async def _check_courtlistener_enhanced(self, judge_name: str) -> List[ValidationSource]:
+        """Enhanced CourtListener search"""
+        sources = []
+        
+        try:
+            # Search for judge in CourtListener
+            api_key = os.environ.get('COURTLISTENER_API_KEY')
+            if not api_key:
+                return sources
+                
+            url = "https://www.courtlistener.com/api/rest/v3/people/"
+            params = {
+                "name": judge_name,
+                "format": "json"
+            }
+            headers = {"Authorization": f"Token {api_key}"}
+            
+            async with self.session.get(url, params=params, headers=headers) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    results = data.get("results", [])
+                    
+                    for judge in results:
+                        if judge.get("positions"):
+                            source = ValidationSource(
+                                name=f"CourtListener: {judge.get('name_full', judge_name)}",
+                                url=f"https://www.courtlistener.com/person/{judge.get('id')}/",
+                                confidence=0.9,
+                                source_type="official"
+                            )
+                            sources.append(source)
+                            
+        except Exception as e:
+            logger.error(f"CourtListener enhanced search failed: {e}")
+            
+        return sources
+    
+    async def _search_justia(self, judge_name: str) -> List[ValidationSource]:
+        """Search Justia for judge information"""
+        sources = []
+        
+        try:
+            # Justia search
+            search_url = f"https://law.justia.com/search?q={quote_plus(judge_name + ' judge')}"
+            
+            async with self.session.get(search_url) as response:
+                if response.status == 200:
+                    # Simple check if judge name appears in Justia results
+                    text = await response.text()
+                    if judge_name.lower() in text.lower():
+                        source = ValidationSource(
+                            name=f"Justia Legal Database: {judge_name}",
+                            url=search_url,
+                            confidence=0.7,
+                            source_type="directory"
+                        )
+                        sources.append(source)
+                        
+        except Exception as e:
+            logger.error(f"Justia search failed: {e}")
+            
+        return sources
+    
+    async def _search_google_scholar(self, judge_name: str) -> List[ValidationSource]:
+        """Search Google Scholar for judge citations"""
+        sources = []
+        
+        try:
+            # Google Scholar search URL
+            search_url = f"https://scholar.google.com/scholar?q={quote_plus(f'Judge {judge_name}')}"
+            
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            }
+            
+            async with self.session.get(search_url, headers=headers) as response:
+                if response.status == 200:
+                    text = await response.text()
+                    if judge_name.lower() in text.lower() and "cited by" in text.lower():
+                        source = ValidationSource(
+                            name=f"Google Scholar: {judge_name}",
+                            url=search_url,
+                            confidence=0.6,
+                            source_type="academic"
+                        )
+                        sources.append(source)
+                        
+        except Exception as e:
+            logger.error(f"Google Scholar search failed: {e}")
+            
+        return sources
+    
+    def _is_relevant_judge_result(self, judge_name: str, title: str, snippet: str) -> bool:
+        """Check if search result is relevant to the judge"""
+        content = f"{title} {snippet}".lower()
+        judge_name_lower = judge_name.lower()
+        
+        # Must contain judge name
+        if judge_name_lower not in content:
+            return False
+            
+        # Look for judge-related keywords
+        judge_keywords = [
+            "judge", "court", "decision", "ruling", "opinion", "case", 
+            "legal", "justice", "magistrate", "federal", "state", "district"
+        ]
+        
+        return any(keyword in content for keyword in judge_keywords)
+    
+    def _calculate_result_confidence(self, url: str, title: str, snippet: str) -> float:
+        """Calculate confidence score based on result quality"""
+        confidence = 0.5  # base confidence
+        
+        # Boost for official domains
+        official_domains = [
+            ".gov", "courts.state", "uscourts.gov", "supremecourt.gov",
+            "courtlistener.com", "justia.com", "law.cornell.edu"
+        ]
+        
+        for domain in official_domains:
+            if domain in url:
+                confidence += 0.3
+                break
+        
+        # Boost for title containing "judge"
+        if "judge" in title.lower():
+            confidence += 0.1
+            
+        # Boost for snippet containing legal terms
+        legal_terms = ["court", "decision", "ruling", "case", "opinion"]
+        for term in legal_terms:
+            if term in snippet.lower():
+                confidence += 0.05
+                
+        return min(1.0, confidence)
+    
+    def _determine_source_type(self, url: str) -> str:
+        """Determine source type based on URL"""
+        if ".gov" in url or "courts.state" in url or "uscourts.gov" in url:
+            return "official"
+        elif "justia.com" in url or "law.cornell.edu" in url:
+            return "directory"
+        elif "news" in url or "reuters.com" in url or "ap.org" in url:
+            return "news"
+        elif "scholar.google.com" in url or ".edu" in url:
+            return "academic"
+        else:
+            return "directory"
+    
+    async def _enhance_sources_with_ai(self, judge_name: str, sources: List[ValidationSource]) -> List[ValidationSource]:
+        """Use Gemini to analyze and enhance source reliability"""
+        try:
+            if not sources:
+                return sources
+                
+            # Create prompt for AI analysis
+            sources_text = "\n".join([
+                f"- {source.name}: {source.url} (confidence: {source.confidence})"
+                for source in sources[:5]  # Analyze top 5 sources
+            ])
+            
+            prompt = f"""
+            Analyze these web sources about Judge {judge_name} and determine if they represent a real, verifiable judge:
+
+            Sources found:
+            {sources_text}
+
+            Consider:
+            1. Are these from credible legal/government sources?
+            2. Do they provide specific information about judicial roles/decisions?
+            3. Is this likely a real judge or potentially fake/non-existent?
+
+            Respond with a JSON object:
+            {{
+                "is_real_judge": true/false,
+                "confidence": 0.0-1.0,
+                "reasoning": "brief explanation",
+                "credible_sources_count": number
+            }}
+            """
+            
+            model = genai.GenerativeModel('gemini-pro')
+            response = model.generate_content(prompt)
+            
+            # Parse AI response
+            try:
+                ai_analysis = json.loads(response.text)
+                if not ai_analysis.get("is_real_judge", False):
+                    # AI determined this is not a real judge - return empty sources
+                    logger.info(f"🤖 AI determined {judge_name} is not a real judge: {ai_analysis.get('reasoning')}")
+                    return []
+                else:
+                    # Enhance source confidence based on AI analysis
+                    ai_confidence = ai_analysis.get("confidence", 0.5)
+                    for source in sources:
+                        source.confidence = min(1.0, source.confidence * ai_confidence)
+                        
+            except (json.JSONDecodeError, KeyError) as e:
+                logger.warning(f"Could not parse AI analysis: {e}")
+                
+        except Exception as e:
+            logger.error(f"AI enhancement failed: {e}")
+            
+        return sources
+            
     async def _check_courtlistener(self, judge_name: str) -> List[ValidationSource]:
         """Check CourtListener for judge records"""
         sources = []
