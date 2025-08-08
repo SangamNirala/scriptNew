@@ -353,9 +353,9 @@ const LitigationStrategy = () => {
                 <div className="text-center p-4 bg-green-50 rounded-lg">
                   <Target className="h-6 w-6 text-green-600 mx-auto mb-2" />
                   <div className="text-2xl font-bold text-green-900">
-                    {(recommendations.success_probability * 100).toFixed(1)}%
+                    {(recommendations.confidence_score * 100).toFixed(1)}%
                   </div>
-                  <div className="text-sm text-green-600">Success Probability</div>
+                  <div className="text-sm text-green-600">Confidence Score</div>
                 </div>
 
                 <div className="text-center p-4 bg-purple-50 rounded-lg">
