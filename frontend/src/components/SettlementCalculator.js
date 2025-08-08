@@ -278,6 +278,72 @@ const SettlementCalculator = () => {
               />
             </div>
 
+            {/* Advanced Options */}
+            {advancedMode && (
+              <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg flex items-center">
+                    <Settings className="h-4 w-4 mr-2" />
+                    Advanced Analytics Options
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="analysis_mode">Analysis Mode</Label>
+                      <Select 
+                        value={analysisMode} 
+                        onValueChange={setAnalysisMode}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="basic">Basic Enhanced</SelectItem>
+                          <SelectItem value="advanced">Full Advanced (Recommended)</SelectItem>
+                          <SelectItem value="monte_carlo">Monte Carlo Focus</SelectItem>
+                          <SelectItem value="comparative">Comparative Analysis</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="monte_carlo_iterations">Monte Carlo Iterations</Label>
+                      <Select 
+                        value={monteCarloIterations.toString()} 
+                        onValueChange={(value) => setMonteCarloIterations(parseInt(value))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="5000">5,000 (Fast)</SelectItem>
+                          <SelectItem value="10000">10,000 (Recommended)</SelectItem>
+                          <SelectItem value="25000">25,000 (Comprehensive)</SelectItem>
+                          <SelectItem value="50000">50,000 (Maximum)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-4 text-sm text-blue-700">
+                    <div className="flex items-center">
+                      <Brain className="h-4 w-4 mr-1" />
+                      <span>Multi-AI Consensus</span>
+                    </div>
+                    <div className="flex items-center">
+                      <Activity className="h-4 w-4 mr-1" />
+                      <span>Monte Carlo Simulation</span>
+                    </div>
+                    <div className="flex items-center">
+                      <LineChart className="h-4 w-4 mr-1" />
+                      <span>Market Analysis</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {error && (
               <Alert>
                 <AlertTriangle className="h-4 w-4" />
