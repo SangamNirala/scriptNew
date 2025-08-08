@@ -777,6 +777,105 @@ class SettlementProbabilityCalculator:
         """
         return insights
 
+    def _generate_enhanced_fallback_insights(self, case_data: Dict[str, Any], metrics: SettlementMetrics, scenarios: List[SettlementScenario]) -> str:
+        """Generate enhanced fallback insights when AI services fail"""
+        try:
+            case_value = case_data.get('case_value', 100000)
+            evidence_strength = case_data.get('evidence_strength', 0.5)
+            case_complexity = case_data.get('case_complexity', 0.5)
+            case_type = case_data.get('case_type', 'Civil').title()
+            
+            # Determine risk and strength assessments
+            risk_level = "High" if case_complexity > 0.7 or evidence_strength < 0.4 else \
+                        "Medium" if case_complexity > 0.5 or evidence_strength < 0.6 else "Low"
+            
+            strength_assessment = "Strong" if evidence_strength > 0.7 else \
+                                 "Moderate" if evidence_strength > 0.4 else "Weak"
+            
+            urgency_level = "High" if metrics.settlement_urgency_score > 0.7 else \
+                           "Moderate" if metrics.settlement_urgency_score > 0.4 else "Low"
+            
+            # Calculate settlement efficiency
+            settlement_overlap = max(0, min(metrics.defendant_settlement_range[1], metrics.plaintiff_settlement_range[1]) - 
+                                   max(metrics.defendant_settlement_range[0], metrics.plaintiff_settlement_range[0]))
+            
+            # Get top scenarios
+            top_scenarios = sorted(scenarios, key=lambda s: s.probability, reverse=True)[:3]
+            
+            insights = f"""
+COMPREHENSIVE SETTLEMENT ANALYSIS
+================================
+
+CASE PROFILE:
+• Case Type: {case_type} Law
+• Dispute Value: ${case_value:,.2f}
+• Evidence Strength: {strength_assessment} ({evidence_strength:.0%})
+• Case Complexity: {"High" if case_complexity > 0.7 else "Moderate" if case_complexity > 0.4 else "Low"} ({case_complexity:.0%})
+• Risk Assessment: {risk_level} Risk
+
+SETTLEMENT PROBABILITY ANALYSIS:
+• Overall Settlement Likelihood: {metrics.settlement_probability:.1%}
+• Expected Settlement Value: ${metrics.expected_settlement_value:,.2f} ({(metrics.expected_settlement_value/case_value*100):.0f}% of claim)
+• Settlement Urgency: {urgency_level} ({metrics.settlement_urgency_score:.0%})
+• Optimal Timing: {metrics.optimal_timing.value.replace('_', ' ').title()}
+
+NEGOTIATION POSITION:
+• Plaintiff Leverage: {metrics.negotiation_leverage.get('plaintiff', 0.5):.0%}
+• Defendant Leverage: {metrics.negotiation_leverage.get('defendant', 0.5):.0%}
+• Settlement Ranges:
+  - Plaintiff Range: ${metrics.plaintiff_settlement_range[0]:,.2f} - ${metrics.plaintiff_settlement_range[1]:,.2f}
+  - Defendant Range: ${metrics.defendant_settlement_range[0]:,.2f} - ${metrics.defendant_settlement_range[1]:,.2f}
+  - Overlap Zone: {"$" + f"{settlement_overlap:,.2f}" if settlement_overlap > 0 else "No overlap - negotiation required"}
+
+KEY STRATEGIC RECOMMENDATIONS:
+
+1. SETTLEMENT APPROACH:
+   • {"Pursue aggressive settlement strategy given high probability" if metrics.settlement_probability > 0.7 else "Prepare dual-track approach balancing settlement and trial prep" if metrics.settlement_probability > 0.5 else "Focus on trial preparation while remaining open to settlement opportunities"}
+   • Target settlement timing: {metrics.optimal_timing.value.replace('_', ' ').title()}
+   • {"Initiate discussions promptly due to high urgency" if metrics.settlement_urgency_score > 0.7 else "Maintain steady negotiation pace" if metrics.settlement_urgency_score > 0.4 else "Allow time for case development before serious negotiations"}
+
+2. NEGOTIATION TACTICS:
+   • {"Leverage strong case position for favorable terms" if evidence_strength > 0.7 else "Focus on mutual benefits and cost savings" if evidence_strength < 0.4 else "Balance assertiveness with collaboration"}
+   • Opening position should reflect {strength_assessment.lower()} case strength
+   • {"Consider early mediation to capitalize on settlement momentum" if metrics.settlement_probability > 0.6 else "Use structured negotiation process"}
+
+3. VALUE POSITIONING:
+   • Justify settlement value based on {(metrics.expected_settlement_value/case_value*100):.0f}% of claim value
+   • Emphasize {"certainty and cost savings" if risk_level == "High" else "efficient resolution and business continuity" if case_type == "Commercial" else "fair compensation and closure"}
+   • {"Highlight litigation risks and costs" if case_complexity > 0.6 else "Focus on time and resource efficiency"}
+
+4. RISK MITIGATION:
+   • {"Address complexity-driven uncertainties early" if case_complexity > 0.7 else "Manage standard litigation risks"}
+   • {"Prepare for extended negotiations due to case complexity" if case_complexity > 0.6 else "Expect standard negotiation timeline"}
+   • Consider {"structured settlement terms" if case_value > 500000 else "straightforward monetary resolution"}
+
+TOP SETTLEMENT SCENARIOS:
+{chr(10).join(f"• {s.scenario_name}: {s.probability:.0%} probability (${s.settlement_amount:,.2f})" for s in top_scenarios)}
+
+CRITICAL SUCCESS FACTORS:
+{chr(10).join(f"• {factor}" for factor in metrics.key_settlement_factors[:4])}
+
+This analysis provides a comprehensive framework for settlement strategy. Consider engaging experienced settlement counsel if case complexity or value warrants additional expertise.
+            """
+            
+            logger.info("✅ Generated enhanced fallback settlement insights")
+            return insights.strip()
+            
+        except Exception as e:
+            logger.error(f"❌ Enhanced fallback insights generation failed: {e}")
+            # Ultimate fallback
+            return f"""
+SETTLEMENT ANALYSIS SUMMARY
+
+Settlement probability: {metrics.settlement_probability:.1%}
+Expected value: ${metrics.expected_settlement_value:,.2f}
+Optimal timing: {metrics.optimal_timing.value.replace('_', ' ').title()}
+
+Key factors: {', '.join(metrics.key_settlement_factors[:3]) if metrics.key_settlement_factors else 'Case complexity, economic factors, timing'}
+
+Recommendation: {"Prioritize settlement discussions" if metrics.settlement_probability > 0.6 else "Prepare for both settlement and trial"}
+            """
+
     def _develop_negotiation_strategy(self, case_data: Dict[str, Any], metrics: SettlementMetrics, scenarios: List[SettlementScenario]) -> Dict[str, Any]:
         """Develop comprehensive negotiation strategy"""
         strategy = {
