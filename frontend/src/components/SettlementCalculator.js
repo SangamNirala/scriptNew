@@ -580,6 +580,50 @@ const SettlementCalculator = () => {
               <CardTitle>Strategic Settlement Insights</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* Comparative Cases for Advanced Mode */}
+              {advancedMode && analysis.comparative_cases && analysis.comparative_cases.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold mb-3 text-indigo-700 flex items-center">
+                    <Layers className="h-4 w-4 mr-2" />
+                    Comparative Case Analysis
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {analysis.comparative_cases.slice(0, 4).map((comparativeCase, index) => (
+                      <div key={index} className="p-4 bg-gradient-to-r from-indigo-50 to-blue-50 rounded-lg border border-indigo-200">
+                        <div className="flex justify-between items-start mb-2">
+                          <div className="text-sm font-semibold text-indigo-900">
+                            Similar {comparativeCase.case_type?.replace('_', ' ').title()} Case
+                          </div>
+                          <Badge variant="outline" className="text-xs">
+                            {(comparativeCase.similarity_score * 100).toFixed(0)}% similar
+                          </Badge>
+                        </div>
+                        <div className="space-y-1 text-xs">
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Settlement:</span>
+                            <span className="font-medium">${comparativeCase.settlement_amount?.toLocaleString()}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Probability:</span>
+                            <span className="font-medium">{(comparativeCase.settlement_probability * 100).toFixed(0)}%</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Jurisdiction:</span>
+                            <span className="font-medium">{comparativeCase.jurisdiction}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-3 text-sm text-indigo-600 bg-indigo-50 p-3 rounded">
+                    Analysis based on {analysis.comparative_cases.length} similar cases with average {
+                      analysis.comparative_cases.length > 0 ? 
+                      (analysis.comparative_cases.reduce((sum, c) => sum + (c.similarity_score || 0), 0) / analysis.comparative_cases.length * 100).toFixed(0) 
+                      : 0}% similarity score.
+                  </div>
+                </div>
+              )}
+
               {/* Key Settlement Factors */}
               {analysis.key_settlement_factors && analysis.key_settlement_factors.length > 0 && (
                 <div>
