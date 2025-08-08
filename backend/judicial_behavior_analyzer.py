@@ -22,7 +22,7 @@ import httpx
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 # Import the new validation system
-from .judge_validator import JudgeValidator, JudgeValidationResult
+from judge_validator import JudgeValidator, JudgeValidationResult
 
 logger = logging.getLogger(__name__)
 
