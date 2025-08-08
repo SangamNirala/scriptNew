@@ -22,7 +22,7 @@ import asyncio
 from pathlib import Path
 
 # NLP and ML imports
-import spacy
+# import spacy  # Temporarily disabled due to dependency issues
 from collections import Counter, defaultdict
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
