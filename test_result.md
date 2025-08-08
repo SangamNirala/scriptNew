@@ -328,6 +328,21 @@ TESTING RESULTS: ✅ ALL TESTS PASSED
 READY FOR PRODUCTION: The system can now efficiently collect 15,000+ high-quality legal documents with comprehensive quality controls and detailed progress reporting."
 
 backend:
+  - task: "Settlement Probability Calculator Validation Fix"
+    implemented: true
+    working: "needs_testing"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        -working: false
+        -agent: "user"
+        -comment: "USER REPORTED ISSUE: Settlement Probability Calculator showing validation errors when clicking 'calculate sentiment analysis' and 'run advanced sentiment analysis' buttons. Error: negotiation_leverage.factors Input should be a valid number [type=float_type, input_value={'Strong Evidence': 0.8}, input_type=dict] and negotiation_leverage.balance Input should be a valid number, unable to parse string as a number [type=float_parsing, input_value='plaintiff', input_type=str]. Both endpoints failing with same Pydantic validation errors."
+        -working: "needs_testing"
+        -agent: "main"
+        -comment: "🔧 SETTLEMENT PROBABILITY VALIDATION SCHEMA FIX IMPLEMENTED: Fixed the Pydantic model validation issue causing both settlement probability endpoints to fail. PROBLEM: SettlementAnalysisResponse and AdvancedSettlementAnalysisResponse models defined negotiation_leverage as Dict[str, float], but actual data structure includes nested fields like factors (dict), balance (string), plaintiff/defendant (floats). ROOT CAUSE: In settlement_probability_calculator.py line 1850-1856, negotiation_leverage returns complex structure: {'plaintiff': float, 'defendant': float, 'factors': {'Strong Evidence': 0.8}, 'balance': 'plaintiff', 'difference': float}. SOLUTION: Created new NegotiationLeverageData Pydantic model with correct field types and updated both response models to use it. This should fix validation errors for both 'calculate sentiment analysis' and 'run advanced sentiment analysis' buttons."
+
   - task: "Critical Judge Validation Security Fix"
     implemented: true
     working: true
