@@ -28,7 +28,7 @@ from datetime import datetime
 from typing import Dict, Any, List
 
 # Backend URL from frontend .env
-BACKEND_URL = "https://7b2b85a9-71e7-4e4b-9de7-c790cb927210.preview.emergentagent.com/api"
+BACKEND_URL = "https://291e2644-aa55-4dcc-954c-b73558e2a03c.preview.emergentagent.com/api"
 
 class FewShotTestSuite:
     def __init__(self):

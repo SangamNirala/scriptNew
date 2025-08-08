@@ -4091,8 +4091,8 @@ app.add_middleware(
     allow_credentials=True,
     allow_origins=[
         "*",
-        "https://visual-solver.preview.emergentagent.com",
-        "https://7b2b85a9-71e7-4e4b-9de7-c790cb927210.preview.emergentagent.com",
+        "https://291e2644-aa55-4dcc-954c-b73558e2a03c.preview.emergentagent.com",
+        "https://291e2644-aa55-4dcc-954c-b73558e2a03c.preview.emergentagent.com",
         "http://localhost:3000",
         "http://127.0.0.1:3000"
     ],
