@@ -361,9 +361,9 @@ const LitigationStrategy = () => {
                 <div className="text-center p-4 bg-purple-50 rounded-lg">
                   <Clock className="h-6 w-6 text-purple-600 mx-auto mb-2" />
                   <div className="text-2xl font-bold text-purple-900">
-                    {Math.round(recommendations.estimated_duration / 30)} months
+                    {recommendations.expected_value ? `$${(recommendations.expected_value).toLocaleString()}` : 'N/A'}
                   </div>
-                  <div className="text-sm text-purple-600">Est. Duration</div>
+                  <div className="text-sm text-purple-600">Expected Value</div>
                 </div>
 
                 <div className="text-center p-4 bg-orange-50 rounded-lg">
