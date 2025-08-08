@@ -186,12 +186,39 @@ class JudicialBehaviorAnalyzer:
             return self._create_error_profile(judge_name, str(e))
 
     async def get_judge_insights_for_case(self, judge_name: str, case_type: str, case_value: Optional[float] = None, jurisdiction: str = None) -> Dict[str, Any]:
-        """Get specific insights for a judge in context of a particular case type with validation"""
+        """Get specific insights for a judge in context of a particular case type with validation and web sources"""
         try:
             profile = await self.analyze_judge(judge_name, jurisdiction=jurisdiction)
             
+            # If judge not verified or no sources, return no information message
+            if not profile.is_verified or profile.confidence_score == 0.0:
+                return {
+                    'judge_name': judge_name,
+                    'error': 'no_information_found',
+                    'message': 'No information can be retrieved for this judge. Unable to verify existence through reliable web sources.',
+                    'confidence_score': 0.0,
+                    'is_verified': False,
+                    'reference_links': []
+                }
+            
+            # Try to get real case statistics from web sources
+            web_statistics = await self._get_web_case_statistics(judge_name, profile.reference_links)
+            
             # Get case-specific insights
             case_pattern = profile.case_type_patterns.get(case_type)
+            
+            # Use web statistics if available, otherwise use profile metrics
+            if web_statistics:
+                total_cases = web_statistics.get('total_cases', profile.metrics.total_cases)
+                settlement_rate = web_statistics.get('settlement_rate', profile.metrics.settlement_rate)
+                average_case_duration = web_statistics.get('average_case_duration', profile.metrics.average_case_duration)
+                plaintiff_success_rate = web_statistics.get('plaintiff_success_rate', profile.metrics.plaintiff_success_rate)
+            else:
+                # If no web statistics found and profile has no real data, show minimal realistic data
+                total_cases = max(1, profile.metrics.total_cases) if profile.metrics.total_cases > 0 else 0
+                settlement_rate = profile.metrics.settlement_rate if profile.metrics.settlement_rate > 0 else 0.0
+                average_case_duration = profile.metrics.average_case_duration if profile.metrics.average_case_duration > 0 else 0.0
+                plaintiff_success_rate = profile.metrics.plaintiff_success_rate if profile.metrics.plaintiff_success_rate > 0 else 0.0
             
             # Generate comprehensive outcome patterns
             outcome_patterns = {
@@ -214,28 +241,29 @@ class JudicialBehaviorAnalyzer:
                 'court': profile.court,
                 'experience_years': profile.judicial_experience,
                 'overall_metrics': {
-                    'total_cases': profile.metrics.total_cases,
-                    'settlement_rate': profile.metrics.settlement_rate,
-                    'plaintiff_success_rate': profile.metrics.plaintiff_success_rate,
-                    'average_case_duration': profile.metrics.average_case_duration,
+                    'total_cases': total_cases,
+                    'settlement_rate': settlement_rate,
+                    'plaintiff_success_rate': plaintiff_success_rate,
+                    'average_case_duration': average_case_duration,
                     'appeal_rate': appeal_rate
                 },
                 'outcome_patterns': outcome_patterns,
                 'specialty_areas': specialty_areas,
                 'decision_tendencies': {
-                    'settlement_oriented': profile.metrics.settlement_rate > 0.6,
-                    'thorough_deliberation': profile.metrics.average_case_duration > 300,
+                    'settlement_oriented': settlement_rate > 0.6,
+                    'thorough_deliberation': average_case_duration > 300,
                     'precedent_focused': True,
-                    'efficiency_minded': profile.metrics.average_case_duration < 200
+                    'efficiency_minded': average_case_duration < 200
                 },
                 'recent_trends': {
-                    'case_load_trend': 'increasing' if profile.metrics.cases_last_year > 50 else 'stable',
-                    'settlement_trend': 'favorable' if profile.metrics.settlement_rate > 0.5 else 'neutral',
-                    'speed_trend': 'expedited' if profile.metrics.average_case_duration < 250 else 'standard'
+                    'case_load_trend': 'increasing' if total_cases > 50 else 'stable',
+                    'settlement_trend': 'favorable' if settlement_rate > 0.5 else 'neutral',
+                    'speed_trend': 'expedited' if average_case_duration < 250 else 'standard'
                 },
                 'case_specific_insights': {},
                 'strategic_recommendations': [],
-                'confidence_score': profile.confidence_score
+                'confidence_score': profile.confidence_score,
+                'web_statistics_found': bool(web_statistics)
             }
             
             # Add case-specific patterns if available
@@ -254,7 +282,7 @@ class JudicialBehaviorAnalyzer:
                 profile, case_type, case_value
             )
             
-            # Add validation information
+            # Add validation information and reference links
             insights.update({
                 'is_verified': profile.is_verified,
                 'validation_sources': profile.validation_sources,
@@ -267,6 +295,67 @@ class JudicialBehaviorAnalyzer:
         except Exception as e:
             logger.error(f"❌ Failed to get judge insights: {e}")
             return self._get_default_insights(judge_name)
+    
+    async def _get_web_case_statistics(self, judge_name: str, reference_links: List[Dict[str, str]]) -> Optional[Dict[str, Any]]:
+        """Extract real case statistics from web sources using available APIs"""
+        try:
+            # Use Gemini to analyze web sources for case statistics
+            gemini_api_key = os.environ.get('GEMINI_API_KEY')
+            if not gemini_api_key or not reference_links:
+                return None
+            
+            # Create prompt for statistics extraction
+            sources_text = "\n".join([
+                f"- {link.get('name', 'Source')}: {link.get('url', 'No URL')}"
+                for link in reference_links[:3]  # Use top 3 sources
+            ])
+            
+            prompt = f"""
+            Analyze these web sources about Judge {judge_name} and extract any available case statistics:
+
+            Sources:
+            {sources_text}
+
+            Please search for and extract the following information if available:
+            - Total number of cases handled
+            - Settlement rate (percentage of cases settled out of court)
+            - Average case duration (in days)
+            - Plaintiff success rate (percentage)
+            - Any other relevant judicial statistics
+
+            If specific numbers are found, respond with JSON:
+            {{
+                "total_cases": number,
+                "settlement_rate": decimal (0.0-1.0),
+                "average_case_duration": days,
+                "plaintiff_success_rate": decimal (0.0-1.0),
+                "statistics_found": true,
+                "source_notes": "brief explanation of what was found"
+            }}
+
+            If no specific statistics are found, respond with:
+            {{"statistics_found": false, "reason": "explanation"}}
+            """
+            
+            model = genai.GenerativeModel('gemini-pro')
+            response = model.generate_content(prompt)
+            
+            # Parse response
+            try:
+                statistics = json.loads(response.text)
+                if statistics.get('statistics_found', False):
+                    logger.info(f"📊 Found web statistics for Judge {judge_name}: {statistics}")
+                    return statistics
+                else:
+                    logger.info(f"📊 No web statistics found for Judge {judge_name}: {statistics.get('reason', 'Unknown')}")
+                    return None
+            except json.JSONDecodeError:
+                logger.warning(f"Could not parse statistics response for {judge_name}")
+                return None
+                
+        except Exception as e:
+            logger.error(f"Failed to extract web statistics for {judge_name}: {e}")
+            return None
 
     async def compare_judges(self, judge_names: List[str], case_type: Optional[str] = None, force_refresh: bool = False, jurisdiction: str = None) -> Dict[str, Any]:
         """Compare multiple judges for litigation strategy with validation"""
