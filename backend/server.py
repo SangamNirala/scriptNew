@@ -4091,7 +4091,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_origins=[
         "*",
-        "https://b9143057-2dad-4cfc-90bf-3d79020e2847.preview.emergentagent.com",
+        "https://prompt-helper-7.preview.emergentagent.com",
         "https://b9143057-2dad-4cfc-90bf-3d79020e2847.preview.emergentagent.com",
         "http://localhost:3000",
         "http://127.0.0.1:3000"
