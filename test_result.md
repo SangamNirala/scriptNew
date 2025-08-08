@@ -108,6 +108,8 @@ user_problem_statement: "You are an expert in text-to-speech (TTS) systems and u
 
 **NEW FEATURE REQUEST:** In the Generated Script section, please add a new button labeled "Enhance Image Prompt" positioned below the "Listen" button. When clicked, it should automatically enhance all the image prompts associated with each shot by adding more descriptive text, visual and contextual details, and structuring the prompt in a way that is easily understood by any AI image generators. The goal is to produce high-quality, contextually accurate images when used with AI image generation tools.
 
+**CURRENT ISSUE (January 2025):** User reported unable to generate images - after clicking "enhance image prompt" and then "generate images", error occurs. Issue was caused by missing Python dependencies for Gemini image generation API.
+
   - task: "Phase 2: Master Prompt Template V2.0 & Dynamic Context Integration"
     implemented: true
     working: true
