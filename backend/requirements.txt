@@ -183,3 +183,10 @@ threadpoolctl>=3.6.0       # Required by scikit-learn for thread management
 
 # SpaCy Language Model - English Core Web Small (Direct URL installation)
 https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.1/en_core_web_sm-3.7.1-py3-none-any.whl
+
+google-auth
+tenacity
+orjson
+websockets
+
+
