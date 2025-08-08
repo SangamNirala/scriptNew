@@ -5,7 +5,7 @@ import time
 from datetime import datetime
 
 class AttorneyReviewInvestigator:
-    def __init__(self, base_url="https://ae5c1d44-2d59-430d-90c8-32d3129528b0.preview.emergentagent.com"):
+    def __init__(self, base_url="https://1f56c7dd-e870-4c69-b784-5a49ffdde0a2.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.tests_run = 0
