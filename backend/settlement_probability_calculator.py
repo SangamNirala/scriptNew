@@ -241,90 +241,118 @@ class SettlementProbabilityCalculator:
         return score
 
     async def _calculate_base_settlement_metrics(self, case_data: Dict[str, Any], historical_data: List[Dict]) -> SettlementMetrics:
-        """Calculate base settlement metrics using multiple approaches"""
+        """Calculate enhanced settlement metrics using multiple data sources and sophisticated algorithms"""
         try:
-            # Historical baseline
-            historical_baseline = self._calculate_historical_baseline(historical_data)
+            # Enhanced historical baseline with case-type specific data
+            historical_baseline = self._calculate_enhanced_historical_baseline(historical_data, case_data)
             
-            # Factor-based analysis
-            factor_analysis = self._analyze_settlement_factors(case_data)
+            # Advanced factor-based analysis with real-world weights
+            factor_analysis = self._analyze_enhanced_settlement_factors(case_data)
             
-            # Case-specific adjustments
-            case_adjustments = self._calculate_case_specific_adjustments(case_data)
+            # Market and economic adjustments
+            market_adjustments = self._calculate_market_adjustments(case_data)
             
-            # Combine analyses
-            base_probability = (
-                historical_baseline['settlement_probability'] * 0.40 +
-                factor_analysis['settlement_probability'] * 0.35 +
-                case_adjustments['probability_adjustment'] * 0.25
-            )
+            # Case-specific risk assessment
+            risk_assessment = self._calculate_comprehensive_risk_assessment(case_data)
             
-            # Ensure probability is within valid range
-            settlement_probability = max(0.1, min(0.9, base_probability))
+            # Combine analyses with dynamic weighting based on data quality
+            data_quality_score = self._assess_data_quality(case_data, historical_data)
             
-            # Calculate settlement ranges
+            # Dynamic weighting based on data availability and quality
+            if data_quality_score > 0.8:
+                # High quality data - trust historical and factor analysis more
+                base_probability = (
+                    historical_baseline['settlement_probability'] * 0.45 +
+                    factor_analysis['settlement_probability'] * 0.30 +
+                    market_adjustments['probability_adjustment'] * 0.15 +
+                    risk_assessment['probability_adjustment'] * 0.10
+                )
+            elif data_quality_score > 0.5:
+                # Medium quality - balance approaches
+                base_probability = (
+                    historical_baseline['settlement_probability'] * 0.35 +
+                    factor_analysis['settlement_probability'] * 0.35 +
+                    market_adjustments['probability_adjustment'] * 0.20 +
+                    risk_assessment['probability_adjustment'] * 0.10
+                )
+            else:
+                # Low quality - rely more on general patterns and risk assessment
+                base_probability = (
+                    historical_baseline['settlement_probability'] * 0.25 +
+                    factor_analysis['settlement_probability'] * 0.40 +
+                    market_adjustments['probability_adjustment'] * 0.20 +
+                    risk_assessment['probability_adjustment'] * 0.15
+                )
+            
+            # Apply case-type specific multipliers
+            base_probability = self._apply_case_type_multipliers(base_probability, case_data)
+            
+            # Ensure probability is within realistic range with smoother bounds
+            settlement_probability = max(0.05, min(0.95, base_probability))
+            
+            # Enhanced settlement range calculations
             case_value = case_data.get('case_value', 100000)
+            settlement_ranges = self._calculate_enhanced_settlement_ranges(case_data, factor_analysis, market_adjustments)
             
-            # Plaintiff range (what plaintiff might accept)
-            plaintiff_low = case_value * 0.30  # Minimum acceptable
-            plaintiff_high = case_value * 0.85  # Aggressive target
+            # Calculate expected settlement using multiple methods and take weighted average
+            expected_values = []
             
-            # Defendant range (what defendant might offer)
-            defendant_low = case_value * 0.15   # Conservative offer
-            defendant_high = case_value * 0.60  # Maximum willingness to pay
+            # Method 1: Range overlap midpoint
+            overlap_low = max(settlement_ranges['defendant_low'], settlement_ranges['plaintiff_low'])
+            overlap_high = min(settlement_ranges['defendant_high'], settlement_ranges['plaintiff_high'])
+            if overlap_high > overlap_low:
+                expected_values.append(('range_overlap', (overlap_low + overlap_high) / 2, 0.4))
             
-            # Adjust ranges based on case strength
-            strength_factor = case_data.get('evidence_strength', 0.5)
-            if strength_factor > 0.7:  # Strong plaintiff case
-                plaintiff_low *= 1.2
-                plaintiff_high *= 1.1
-                defendant_low *= 1.3
-                defendant_high *= 1.2
-            elif strength_factor < 0.3:  # Weak plaintiff case
-                plaintiff_low *= 0.7
-                plaintiff_high *= 0.8
-                defendant_low *= 0.8
-                defendant_high *= 0.9
+            # Method 2: Probability-weighted value
+            prob_weighted = case_value * settlement_probability * factor_analysis.get('strength_multiplier', 0.5)
+            expected_values.append(('probability_weighted', prob_weighted, 0.3))
             
-            # Expected settlement value (overlap midpoint)
-            overlap_low = max(defendant_low, plaintiff_low)
-            overlap_high = min(defendant_high, plaintiff_high)
-            expected_value = (overlap_low + overlap_high) / 2 if overlap_high > overlap_low else case_value * 0.4
+            # Method 3: Case-type specific calculation
+            case_type_value = self._calculate_case_type_settlement_value(case_data)
+            expected_values.append(('case_type_specific', case_type_value, 0.3))
             
-            # Calculate optimal timing
-            optimal_timing = self._determine_optimal_timing(case_data, factor_analysis)
+            # Calculate weighted average
+            if expected_values:
+                expected_value = sum(value * weight for _, value, weight in expected_values)
+            else:
+                expected_value = case_value * 0.4
             
-            # Settlement urgency
-            urgency_score = self._calculate_settlement_urgency(case_data, factor_analysis)
+            # Enhanced optimal timing determination
+            optimal_timing = self._determine_enhanced_optimal_timing(case_data, factor_analysis, market_adjustments)
             
-            # Negotiation leverage
-            leverage = self._calculate_negotiation_leverage(case_data, factor_analysis)
+            # Advanced settlement urgency calculation
+            urgency_score = self._calculate_enhanced_settlement_urgency(case_data, factor_analysis, risk_assessment)
             
-            # Key factors
-            key_factors = sorted(
-                factor_analysis['factor_scores'].items(),
-                key=lambda x: x[1],
-                reverse=True
-            )[:5]
-            key_factor_names = [factor.replace('_', ' ').title() for factor, _ in key_factors]
+            # Enhanced negotiation leverage with detailed breakdown
+            leverage = self._calculate_enhanced_negotiation_leverage(case_data, factor_analysis, market_adjustments)
+            
+            # More detailed key factors with impact scores
+            key_factors = self._identify_key_settlement_factors(factor_analysis, risk_assessment, market_adjustments)
+            
+            # Enhanced confidence scoring
+            confidence_score = self._calculate_enhanced_confidence_score(
+                historical_data, factor_analysis, data_quality_score, case_data
+            )
             
             metrics = SettlementMetrics(
                 settlement_probability=settlement_probability,
                 optimal_timing=optimal_timing,
-                plaintiff_settlement_range=(plaintiff_low, plaintiff_high),
-                defendant_settlement_range=(defendant_low, defendant_high),
+                plaintiff_settlement_range=(settlement_ranges['plaintiff_low'], settlement_ranges['plaintiff_high']),
+                defendant_settlement_range=(settlement_ranges['defendant_low'], settlement_ranges['defendant_high']),
                 expected_settlement_value=expected_value,
                 settlement_urgency_score=urgency_score,
-                confidence_score=self._calculate_confidence_score(historical_data, factor_analysis),
-                key_settlement_factors=key_factor_names,
+                confidence_score=confidence_score,
+                key_settlement_factors=key_factors,
                 negotiation_leverage=leverage
             )
+            
+            logger.info(f"✅ Enhanced settlement metrics calculated: {settlement_probability:.1%} probability, ${expected_value:,.0f} expected value, {confidence_score:.1%} confidence")
             
             return metrics
             
         except Exception as e:
-            logger.error(f"❌ Base metrics calculation failed: {e}")
-            return self._create_default_metrics(case_data)
+            logger.error(f"❌ Enhanced metrics calculation failed: {e}")
+            return self._create_enhanced_default_metrics(case_data)
 
     def _calculate_historical_baseline(self, historical_data: List[Dict]) -> Dict[str, Any]:
         """Calculate baseline settlement probability from historical data"""
