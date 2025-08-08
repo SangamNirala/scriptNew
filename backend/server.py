@@ -13653,6 +13653,13 @@ if LITIGATION_ANALYTICS_AVAILABLE:
                 jurisdiction=jurisdiction
             )
             
+            # Check if no information was found
+            if insights.get('error') == 'no_information_found':
+                raise HTTPException(
+                    status_code=404,
+                    detail=insights.get('message', 'No information can be retrieved for this judge')
+                )
+            
             return JudgeInsightsResponse(
                 judge_name=insights['judge_name'],
                 court=insights['court'],
