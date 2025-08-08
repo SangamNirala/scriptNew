@@ -13412,6 +13412,7 @@ try:
     from case_outcome_predictor import get_case_outcome_predictor, CaseFeatures
     from judicial_behavior_analyzer import get_judicial_analyzer
     from settlement_probability_calculator import get_settlement_calculator
+    from advanced_settlement_calculator import get_advanced_settlement_calculator, AnalysisMode
     from litigation_strategy_optimizer import get_litigation_strategy_optimizer, StrategyType
     LITIGATION_ANALYTICS_AVAILABLE = True
     logger.info("✅ Litigation Analytics Engine modules loaded successfully")
