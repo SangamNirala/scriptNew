@@ -664,7 +664,9 @@ const SettlementCalculator = () => {
               {analysis.ai_insights && (
                 <div className="p-4 bg-blue-50 rounded-lg">
                   <h3 className="font-semibold mb-2">AI Analysis Summary</h3>
-                  <p className="text-sm text-gray-700">{analysis.ai_insights}</p>
+                  <div className="text-sm text-gray-700 space-y-3">
+                    {formatAIInsights(analysis.ai_insights)}
+                  </div>
                 </div>
               )}
 
