@@ -74,7 +74,19 @@ const SettlementCalculator = () => {
         case_complexity: parseFloat(caseData.case_complexity)
       };
 
-      const response = await axios.post(`${API}/litigation/settlement-probability`, requestData);
+      // Add advanced options if in advanced mode
+      if (advancedMode) {
+        requestData.analysis_mode = analysisMode;
+        requestData.monte_carlo_iterations = monteCarloIterations;
+        requestData.include_comparative = true;
+        requestData.include_market_analysis = true;
+      }
+
+      const endpoint = advancedMode 
+        ? `${API}/litigation/settlement-probability-advanced` 
+        : `${API}/litigation/settlement-probability`;
+        
+      const response = await axios.post(endpoint, requestData);
       setAnalysis(response.data);
     } catch (err) {
       console.error('Settlement analysis error:', err);
