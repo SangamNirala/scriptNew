@@ -454,9 +454,9 @@ const LitigationStrategy = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {recommendations.strategic_advantages && recommendations.strategic_advantages.length > 0 ? (
+                {recommendations.mitigation_strategies && recommendations.mitigation_strategies.length > 0 ? (
                   <ul className="space-y-2">
-                    {recommendations.strategic_advantages.map((advantage, index) => (
+                    {recommendations.mitigation_strategies.map((advantage, index) => (
                       <li key={index} className="text-sm text-green-600 flex items-start">
                         <span className="text-green-400 mr-2 mt-1">✓</span>
                         {advantage}
