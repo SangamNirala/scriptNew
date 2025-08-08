@@ -41,6 +41,9 @@ Pillow
 
 requests-file
 
+thinc
+
+
 
 # Database Dependencies
 pymongo==4.5.0
@@ -157,3 +160,15 @@ pyphen>=0.17.0
 importlib-resources>=6.5.0
 importlib-metadata>=8.7.0
 jsonschema>=4.25.0
+
+# 1. Networking & Retry Handling
+backoff>=2.0.0         # CRITICAL - Required by LiteLLM for retry functionality
+async-timeout>=4.0.0   # CRITICAL - Required by aiohttp for timeout handling
+
+# 2. Computer Vision & Image Processing
+opencv-python>=4.8.0   # CRITICAL - For avatar generation and image processing (cv2)
+pillow>=10.0.0         # CRITICAL - PIL library for image manipulation
+imageio>=2.34.0        # For image/video I/O operations
+matplotlib>=3.8.0  # For plotting and visualization
+seaborn>=0.13.0  # Enhanced statistical visualizations
+attrs>=23.0.0
