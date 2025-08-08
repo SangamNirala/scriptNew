@@ -360,16 +360,7 @@ const ScriptGenerator = () => {
 
 
 
-  const downloadAvatarVideo = () => {
-    if (avatarVideoData) {
-      const link = document.createElement('a');
-      link.href = avatarVideoData.url;
-      link.download = `avatar-video-${avatarVideoData.requestId}.mp4`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-  };
+
 
   const formatScript = (script) => {
     return script
