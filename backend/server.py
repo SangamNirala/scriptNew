@@ -3975,6 +3975,116 @@ Focus on what specific visual elements, technical details, and professional qual
         logger.error(f"Error in image prompt enhancement: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Image prompt enhancement failed: {str(e)}")
 
+# Image Generation Models
+class ImageGenerationRequest(BaseModel):
+    enhanced_prompts: List[str]  # List of enhanced image prompts
+    video_type: Optional[str] = "general"
+    number_of_images_per_prompt: Optional[int] = 1  # Number of images per prompt
+
+class GeneratedImage(BaseModel):
+    image_base64: str
+    original_prompt: str
+    enhanced_prompt: str
+    image_index: int
+    generation_timestamp: datetime = Field(default_factory=datetime.utcnow)
+
+class ImageGenerationResponse(BaseModel):
+    generated_images: List[GeneratedImage]
+    total_images: int
+    generation_summary: str
+    processing_time: Optional[float] = None
+
+@api_router.post("/generate-images", response_model=ImageGenerationResponse)
+async def generate_images(request: ImageGenerationRequest):
+    """
+    Generate images from enhanced prompts using Gemini's image generation
+    
+    Takes enhanced image prompts from video scripts and generates corresponding images
+    using Google's Imagen model through the Gemini API.
+    """
+    try:
+        import time
+        start_time = time.time()
+        
+        logger.info(f"🎨 Starting image generation for {len(request.enhanced_prompts)} prompts")
+        
+        # Import Gemini Image Generation
+        try:
+            from emergentintegrations.llm.gemeni.image_generation import GeminiImageGeneration
+        except ImportError as e:
+            logger.error(f"Failed to import GeminiImageGeneration: {e}")
+            raise HTTPException(status_code=500, detail="Image generation service not available")
+        
+        # Initialize image generator
+        image_gen = GeminiImageGeneration(api_key=GEMINI_API_KEY)
+        
+        generated_images = []
+        
+        # Process each enhanced prompt
+        for i, enhanced_prompt in enumerate(request.enhanced_prompts):
+            try:
+                # Clean the prompt (remove markdown formatting and brackets)
+                clean_prompt = enhanced_prompt.strip()
+                clean_prompt = re.sub(r'^\[|\]$', '', clean_prompt)  # Remove surrounding brackets
+                clean_prompt = re.sub(r'\*\*([^*]+)\*\*', r'\1', clean_prompt)  # Remove bold markdown
+                clean_prompt = re.sub(r'\*([^*]+)\*', r'\1', clean_prompt)  # Remove italic markdown
+                
+                logger.info(f"🖼️ Generating image {i+1}/{len(request.enhanced_prompts)}: {clean_prompt[:100]}...")
+                
+                # Generate images using Gemini
+                images = await image_gen.generate_images(
+                    prompt=clean_prompt,
+                    model="imagen-3.0-generate-002",
+                    number_of_images=request.number_of_images_per_prompt
+                )
+                
+                # Process generated images
+                for j, image_bytes in enumerate(images):
+                    # Convert image bytes to base64
+                    image_base64 = base64.b64encode(image_bytes).decode('utf-8')
+                    
+                    generated_image = GeneratedImage(
+                        image_base64=image_base64,
+                        original_prompt=enhanced_prompt,
+                        enhanced_prompt=clean_prompt,
+                        image_index=len(generated_images) + 1
+                    )
+                    
+                    generated_images.append(generated_image)
+                    
+                logger.info(f"✅ Successfully generated {len(images)} image(s) for prompt {i+1}")
+                
+            except Exception as prompt_error:
+                logger.error(f"❌ Failed to generate image for prompt {i+1}: {str(prompt_error)}")
+                # Continue with next prompt instead of failing entirely
+                continue
+        
+        processing_time = time.time() - start_time
+        
+        # Generate summary
+        summary = f"Successfully generated {len(generated_images)} images from {len(request.enhanced_prompts)} prompts for {request.video_type} video content in {processing_time:.2f} seconds."
+        
+        response = ImageGenerationResponse(
+            generated_images=generated_images,
+            total_images=len(generated_images),
+            generation_summary=summary,
+            processing_time=processing_time
+        )
+        
+        # Save to database
+        try:
+            await db.generated_images.insert_one(response.dict())
+        except Exception as db_error:
+            logger.warning(f"Failed to save generated images to database: {db_error}")
+        
+        logger.info(f"🎉 Image generation completed: {len(generated_images)} images generated in {processing_time:.2f}s")
+        
+        return response
+        
+    except Exception as e:
+        logger.error(f"Error in image generation: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Image generation failed: {str(e)}")
+
 # Add CORS middleware BEFORE including router
 app.add_middleware(
     CORSMiddleware,
