@@ -649,57 +649,116 @@ class SettlementProbabilityCalculator:
 
     @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10))
     async def _get_ai_settlement_insights(self, case_data: Dict[str, Any], metrics: SettlementMetrics, scenarios: List[SettlementScenario]) -> str:
-        """Get AI-powered settlement insights"""
+        """Get comprehensive AI-powered settlement insights with enhanced reliability"""
         try:
+            # Calculate additional context for better insights
+            case_value = case_data.get('case_value', 100000)
+            evidence_strength = case_data.get('evidence_strength', 0.5)
+            case_complexity = case_data.get('case_complexity', 0.5)
+            
+            # Determine risk profile
+            risk_profile = "High Risk" if case_complexity > 0.7 or evidence_strength < 0.4 else \
+                          "Medium Risk" if case_complexity > 0.5 or evidence_strength < 0.6 else "Low Risk"
+            
+            # Calculate settlement efficiency
+            settlement_range_overlap = max(0, min(metrics.defendant_settlement_range[1], metrics.plaintiff_settlement_range[1]) - 
+                                         max(metrics.defendant_settlement_range[0], metrics.plaintiff_settlement_range[0]))
+            settlement_efficiency = "High" if settlement_range_overlap > case_value * 0.2 else \
+                                  "Medium" if settlement_range_overlap > 0 else "Low"
+            
             insights_prompt = f"""
-            SETTLEMENT ANALYSIS - AI STRATEGIC INSIGHTS
-            
-            CASE OVERVIEW:
-            - Case Type: {case_data.get('case_type', 'Unknown')}
-            - Case Value: ${case_data.get('case_value', 0):,.2f}
-            - Evidence Strength: {case_data.get('evidence_strength', 0.5):.1%}
-            - Jurisdiction: {case_data.get('jurisdiction', 'Unknown')}
-            - Case Complexity: {case_data.get('case_complexity', 0.5):.1%}
-            
-            CALCULATED METRICS:
-            - Settlement Probability: {metrics.settlement_probability:.1%}
-            - Expected Settlement Value: ${metrics.expected_settlement_value:,.2f}
-            - Plaintiff Range: ${metrics.plaintiff_settlement_range[0]:,.2f} - ${metrics.plaintiff_settlement_range[1]:,.2f}
-            - Defendant Range: ${metrics.defendant_settlement_range[0]:,.2f} - ${metrics.defendant_settlement_range[1]:,.2f}
-            - Optimal Timing: {metrics.optimal_timing.value}
-            - Settlement Urgency: {metrics.settlement_urgency_score:.1%}
-            
-            KEY SETTLEMENT FACTORS:
-            {chr(10).join(f'- {factor}' for factor in metrics.key_settlement_factors)}
-            
-            SETTLEMENT SCENARIOS:
-            {chr(10).join(f'- {s.scenario_name}: {s.probability:.1%} probability, ${s.settlement_amount:,.2f}' for s in scenarios)}
-            
-            NEGOTIATION LEVERAGE:
-            - Plaintiff Leverage: {metrics.negotiation_leverage.get('plaintiff', 0.5):.1%}
-            - Defendant Leverage: {metrics.negotiation_leverage.get('defendant', 0.5):.1%}
-            
-            Please provide strategic insights covering:
-            1. Settlement likelihood assessment and key drivers
-            2. Optimal negotiation strategy and timing
-            3. Risk factors that could derail settlement
-            4. Creative settlement structures to consider
-            5. Psychological and business factors influencing parties
-            6. Specific tactical recommendations for maximizing settlement success
-            
-            Focus on practical, actionable insights for litigation attorneys.
+            You are an expert legal settlement analyst providing strategic insights for litigation settlement decisions. Analyze this case comprehensively and provide actionable, reliable insights.
+
+            CASE PROFILE ANALYSIS:
+            ==================
+            Case Type: {case_data.get('case_type', 'Civil').title()} Law
+            Dispute Value: ${case_value:,.2f}
+            Jurisdiction: {case_data.get('jurisdiction', 'General')}
+            Evidence Strength: {evidence_strength:.0%} ({"Strong" if evidence_strength > 0.7 else "Moderate" if evidence_strength > 0.4 else "Weak"})
+            Case Complexity: {case_complexity:.0%} ({"High" if case_complexity > 0.7 else "Moderate" if case_complexity > 0.4 else "Low"})
+            Risk Assessment: {risk_profile}
+            Settlement Efficiency: {settlement_efficiency}
+
+            QUANTITATIVE ANALYSIS:
+            ====================
+            Settlement Probability: {metrics.settlement_probability:.1%}
+            Expected Settlement Value: ${metrics.expected_settlement_value:,.2f} ({(metrics.expected_settlement_value/case_value*100):.0f}% of claim value)
+            Optimal Settlement Timing: {metrics.optimal_timing.value.replace('_', ' ').title()}
+            Settlement Urgency Level: {metrics.settlement_urgency_score:.0%} ({"High" if metrics.settlement_urgency_score > 0.7 else "Moderate" if metrics.settlement_urgency_score > 0.4 else "Low"})
+
+            NEGOTIATION DYNAMICS:
+            ===================
+            Plaintiff Leverage: {metrics.negotiation_leverage.get('plaintiff', 0.5):.0%}
+            Defendant Leverage: {metrics.negotiation_leverage.get('defendant', 0.5):.0%}
+            Power Balance: {"Plaintiff Favored" if metrics.negotiation_leverage.get('plaintiff', 0.5) > 0.6 else "Defendant Favored" if metrics.negotiation_leverage.get('defendant', 0.5) > 0.6 else "Balanced"}
+
+            SETTLEMENT RANGE ANALYSIS:
+            ========================
+            Plaintiff Acceptable Range: ${metrics.plaintiff_settlement_range[0]:,.2f} - ${metrics.plaintiff_settlement_range[1]:,.2f}
+            Defendant Offer Range: ${metrics.defendant_settlement_range[0]:,.2f} - ${metrics.defendant_settlement_range[1]:,.2f}
+            Settlement Window: ${"Yes" if settlement_range_overlap > 0 else "No overlap - negotiation required"} 
+            {"(" + f"${settlement_range_overlap:,.2f} overlap zone" + ")" if settlement_range_overlap > 0 else ""}
+
+            CRITICAL SETTLEMENT FACTORS:
+            ===========================
+            {chr(10).join(f'• {factor}' for factor in metrics.key_settlement_factors[:3])}
+
+            SCENARIO PROBABILITIES:
+            =====================
+            {chr(10).join(f'• {s.scenario_name}: {s.probability:.0%} probability (${s.settlement_amount:,.2f})' for s in scenarios[:3])}
+
+            INSTRUCTIONS: 
+            Based on this comprehensive analysis, provide strategic settlement insights covering:
+            1. KEY STRATEGIC RECOMMENDATIONS (3-4 actionable points)
+            2. OPTIMAL NEGOTIATION APPROACH (timing, tactics, positioning)
+            3. RISK MITIGATION STRATEGIES (2-3 specific recommendations)
+            4. SETTLEMENT VALUE JUSTIFICATION (why this range makes sense)
+            5. TIMING CONSIDERATIONS (why this timing is optimal)
+
+            Focus on practical, actionable advice that considers both legal and business factors. Be specific about dollar amounts and percentages where relevant. Consider the case type's typical settlement patterns and industry standards.
+
+            Provide insights in a professional, confident tone suitable for legal decision-makers.
             """
-            
-            response = await asyncio.to_thread(
-                self.gemini_model.generate_content,
-                insights_prompt
-            )
-            
-            return response.text
-            
+
+            # Try Gemini first
+            try:
+                response = await asyncio.wait_for(
+                    self.gemini_model.generate_content_async(insights_prompt),
+                    timeout=30.0
+                )
+                if response and response.text:
+                    insights = response.text.strip()
+                    if len(insights) > 100:  # Ensure substantial response
+                        logger.info(f"✅ Generated comprehensive AI insights ({len(insights)} chars)")
+                        return insights
+            except Exception as e:
+                logger.warning(f"⚠️ Gemini insights failed: {e}")
+
+            # Fallback to Groq
+            try:
+                response = self.groq_client.chat.completions.create(
+                    model="mixtral-8x7b-32768",
+                    messages=[
+                        {"role": "system", "content": "You are an expert legal settlement analyst providing strategic insights for litigation settlement decisions."},
+                        {"role": "user", "content": insights_prompt}
+                    ],
+                    temperature=0.3,
+                    max_tokens=1500
+                )
+                
+                if response.choices[0].message.content:
+                    insights = response.choices[0].message.content.strip()
+                    logger.info(f"✅ Generated Groq AI insights ({len(insights)} chars)")
+                    return insights
+            except Exception as e:
+                logger.warning(f"⚠️ Groq insights failed: {e}")
+
+            # Enhanced fallback insights
+            return self._generate_enhanced_fallback_insights(case_data, metrics, scenarios)
+
         except Exception as e:
-            logger.warning(f"⚠️ AI insights generation failed: {e}")
-            return self._generate_fallback_insights(case_data, metrics)
+            logger.error(f"❌ AI insights generation failed: {e}")
+            return self._generate_enhanced_fallback_insights(case_data, metrics, scenarios)
 
     def _generate_fallback_insights(self, case_data: Dict[str, Any], metrics: SettlementMetrics) -> str:
         """Generate fallback insights when AI fails"""
