@@ -759,7 +759,7 @@ const ScriptGenerator = () => {
                     </div>
                   )}
                   
-                  {lastGeneratedAudio && selectedVoice && (
+                  {currentAudioBase64 && selectedVoice && (
                     <div className="text-xs text-green-400 flex items-center space-x-2">
                       <span>🎤</span>
                       <span>Audio generated with: <strong>{selectedVoice.display_name}</strong></span>
