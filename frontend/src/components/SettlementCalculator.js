@@ -38,6 +38,9 @@ const SettlementCalculator = () => {
   const [analysis, setAnalysis] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [advancedMode, setAdvancedMode] = useState(false);
+  const [analysisMode, setAnalysisMode] = useState('advanced');
+  const [monteCarloIterations, setMonteCarloIterations] = useState(10000);
 
   const caseTypes = [
     { value: 'commercial', label: 'Commercial' },
