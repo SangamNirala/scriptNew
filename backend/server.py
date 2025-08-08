@@ -13689,6 +13689,9 @@ if LITIGATION_ANALYTICS_AVAILABLE:
                 reference_links=insights.get('reference_links', [])
             )
             
+        except HTTPException:
+            # Re-raise HTTPExceptions (like 404) without modification
+            raise
         except Exception as e:
             logger.error(f"❌ Judge insights failed: {e}")
             raise HTTPException(
