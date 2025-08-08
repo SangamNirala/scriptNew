@@ -370,55 +370,70 @@ class AdvancedSettlementCalculator(SettlementProbabilityCalculator):
             return {'consensus_score': 0.5, 'ai_insights': {}}
 
     async def _get_single_ai_analysis(self, provider: AIProvider, config: Dict, case_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Get analysis from a single AI provider"""
+        """Get analysis from a single AI provider using latest models"""
         try:
-            # Create analysis prompt
-            prompt = self._create_ai_analysis_prompt(case_data)
+            # Create enhanced analysis prompt
+            prompt = self._create_enhanced_ai_analysis_prompt(case_data)
             
             # Initialize chat based on provider
             session_id = f"settlement-analysis-{uuid.uuid4()}"
+            system_message = """You are an expert legal settlement analyst with advanced quantitative modeling capabilities. 
+            Provide detailed probabilistic analysis with numerical precision, risk assessments, and strategic insights.
+            Return structured JSON with settlement_probability (0.0-1.0), confidence_score, risk_factors, and strategic_recommendations."""
             
             if provider == AIProvider.GEMINI:
                 chat = LlmChat(
                     api_key=config['api_key'],
                     session_id=session_id,
-                    system_message="You are an expert legal settlement analyst providing quantitative analysis."
-                ).with_model("gemini", "gemini-2.0-flash").with_max_tokens(2000)
+                    system_message=system_message
+                ).with_model("gemini", "gemini-2.0-flash-exp").with_max_tokens(4000)
                 
             elif provider == AIProvider.OPENROUTER:
-                # Use first available model
-                model = config['models'][0] if config['models'] else 'microsoft/wizardlm-2-8x22b'
+                # Use latest GPT-4o model
+                model = config['models'][0] if config['models'] else 'openai/gpt-4o-2024-08-06'
                 chat = LlmChat(
                     api_key=config['api_key'],
                     session_id=session_id,
-                    system_message="You are an expert legal settlement analyst providing quantitative analysis."
-                ).with_model("openai", model).with_max_tokens(2000)  # OpenRouter uses OpenAI-compatible API
+                    system_message=system_message
+                ).with_model("openrouter", model).with_max_tokens(4000)
                 
             elif provider == AIProvider.GROK:
-                # Use Groq with available model
+                # Use latest Llama model on Groq
+                model = config['models'][0] if config['models'] else 'llama-3.3-70b-versatile'
                 chat = LlmChat(
                     api_key=config['api_key'],
                     session_id=session_id,
-                    system_message="You are an expert legal settlement analyst providing quantitative analysis."
-                ).with_model("openai", "mixtral-8x7b-32768").with_max_tokens(2000)
+                    system_message=system_message
+                ).with_model("groq", model).with_max_tokens(4000)
                 
             else:
                 # Fallback
-                return {'settlement_probability': 0.5, 'provider': provider.value, 'error': 'unsupported provider'}
+                return {
+                    'settlement_probability': 0.5, 
+                    'provider': provider.value, 
+                    'error': 'unsupported provider',
+                    'confidence_score': 0.3
+                }
             
             # Send message
             user_message = UserMessage(text=prompt)
             response = await chat.send_message(user_message)
             
-            # Parse response
-            analysis = self._parse_ai_response(response, provider)
+            # Parse enhanced response
+            analysis = self._parse_enhanced_ai_response(response, provider)
             analysis['provider'] = provider.value
+            analysis['model_capabilities'] = config.get('capabilities', [])
             
             return analysis
             
         except Exception as e:
             logger.warning(f"Single AI analysis failed for {provider.value}: {e}")
-            return {'settlement_probability': 0.5, 'provider': provider.value, 'error': str(e)}
+            return {
+                'settlement_probability': 0.5, 
+                'provider': provider.value, 
+                'error': str(e),
+                'confidence_score': 0.2
+            }
 
     async def _get_enhanced_historical_data(self, case_data: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Get enhanced historical settlement data with better matching"""
