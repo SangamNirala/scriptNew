@@ -239,21 +239,25 @@ def test_judge_comparison():
                         if verification_details:
                             print(f"✅ verification_details present with {len(verification_details)} judges")
                             
-                            # Check each judge's verification details
-                            for judge_name, details in verification_details.items():
-                                print(f"\n🔍 Verification for {judge_name}:")
-                                
-                                # Check required validation fields for each judge
-                                judge_validation_fields = [
-                                    'is_verified', 'confidence_score', 'validation_summary', 'reference_links'
-                                ]
-                                
-                                for field in judge_validation_fields:
-                                    if field in details:
-                                        value = details[field]
-                                        print(f"  ✅ {field}: {value}")
-                                    else:
-                                        print(f"  ❌ {field}: MISSING")
+                            # Check each judge's verification details (it's a list of objects)
+                            if isinstance(verification_details, list):
+                                for i, details in enumerate(verification_details):
+                                    judge_name = details.get('judge_name', f'Judge {i+1}')
+                                    print(f"\n🔍 Verification for {judge_name}:")
+                                    
+                                    # Check required validation fields for each judge
+                                    judge_validation_fields = [
+                                        'is_verified', 'confidence_score', 'validation_summary', 'reference_links'
+                                    ]
+                                    
+                                    for field in judge_validation_fields:
+                                        if field in details:
+                                            value = details[field]
+                                            print(f"  ✅ {field}: {value}")
+                                        else:
+                                            print(f"  ❌ {field}: MISSING")
+                            else:
+                                print(f"❌ verification_details should be list, got {type(verification_details)}")
                         else:
                             print(f"❌ verification_details missing from validation_info")
                         
