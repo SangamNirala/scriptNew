@@ -36,6 +36,7 @@ const ScriptGenerator = () => {
   const [showVoiceSelection, setShowVoiceSelection] = useState(false);
   const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
   const [audioData, setAudioData] = useState(null);
+  const [currentAudioBase64, setCurrentAudioBase64] = useState(null);
   
 
 
