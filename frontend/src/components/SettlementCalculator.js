@@ -9,10 +9,13 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { Alert, AlertDescription } from './ui/alert';
+import { Switch } from './ui/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import {
   Calculator, DollarSign, Target, Clock, TrendingUp,
   AlertTriangle, CheckCircle, RefreshCw, PieChart,
-  BarChart3, Calendar, Users
+  BarChart3, Calendar, Users, Brain, Zap, LineChart,
+  TrendingDown, Activity, Layers, Settings
 } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
