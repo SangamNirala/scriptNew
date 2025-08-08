@@ -585,6 +585,133 @@ const ScriptGenerator = () => {
     }
   };
 
+  const handleGenerateImages = async () => {
+    if (!enhancedImagePrompts) {
+      setImageGenerationError("Please enhance image prompts first.");
+      return;
+    }
+
+    setIsGeneratingImages(true);
+    setImageGenerationError("");
+
+    try {
+      // Extract enhanced image prompts from the enhanced script
+      const promptRegex = /\[([^\]]+)\]/g;
+      const matches = [];
+      let match;
+      while ((match = promptRegex.exec(enhancedImagePrompts)) !== null) {
+        matches.push(match[1]);
+      }
+
+      if (matches.length === 0) {
+        setImageGenerationError("No image prompts found in enhanced script.");
+        return;
+      }
+
+      const response = await axios.post(`${API}/generate-images`, {
+        enhanced_prompts: matches,
+        video_type: videoType,
+        number_of_images_per_prompt: 1
+      });
+
+      setGeneratedImages(response.data.generated_images);
+      
+      // Open new tab with generated images
+      openImageGallery(response.data.generated_images);
+
+    } catch (err) {
+      console.error("Error generating images:", err);
+      if (err.response?.status === 500) {
+        setImageGenerationError("Image generation service temporarily unavailable. Please try again in a moment.");
+      } else {
+        setImageGenerationError("Error generating images. Please try again.");
+      }
+    } finally {
+      setIsGeneratingImages(false);
+    }
+  };
+
+  const openImageGallery = (images) => {
+    // Create HTML content for the new tab
+    const htmlContent = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generated Images - AI Video Script Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
+    <div class="container mx-auto px-4 py-8">
+        <div class="text-center mb-12">
+            <h1 class="text-5xl font-bold text-white mb-4 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                Generated Images
+            </h1>
+            <p class="text-xl text-purple-200">
+                AI-Generated Images from Enhanced Prompts
+            </p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            ${images.map((img, index) => `
+                <div class="bg-white/10 backdrop-blur-lg rounded-lg border border-white/20 p-6">
+                    <div class="aspect-square mb-4 rounded-lg overflow-hidden bg-white/5">
+                        <img src="data:image/png;base64,${img.image_base64}" 
+                             alt="Generated Image ${img.image_index}"
+                             class="w-full h-full object-cover hover:scale-105 transition-transform duration-200"
+                             onclick="this.requestFullscreen()"
+                             style="cursor: zoom-in" />
+                    </div>
+                    <div class="space-y-3">
+                        <h3 class="text-lg font-semibold text-white">Shot ${img.image_index}</h3>
+                        <div class="bg-purple-500/20 rounded-lg p-3">
+                            <h4 class="text-sm font-medium text-purple-300 mb-2">Enhanced Prompt:</h4>
+                            <p class="text-sm text-gray-200 leading-relaxed">${img.enhanced_prompt}</p>
+                        </div>
+                        <button onclick="downloadImage('${img.image_base64}', 'generated-image-${img.image_index}.png')"
+                                class="w-full px-4 py-2 bg-blue-500/20 text-blue-300 rounded-lg hover:bg-blue-500/30 transition-colors flex items-center justify-center space-x-2">
+                            <span>💾</span>
+                            <span>Download Image</span>
+                        </button>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+        
+        <div class="text-center mt-12">
+            <button onclick="window.close()" 
+                    class="px-6 py-3 bg-purple-500/20 text-purple-300 rounded-lg hover:bg-purple-500/30 transition-colors">
+                Close Gallery
+            </button>
+        </div>
+    </div>
+    
+    <script>
+        function downloadImage(base64Data, filename) {
+            const link = document.createElement('a');
+            link.href = 'data:image/png;base64,' + base64Data;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+</html>`;
+
+    // Open new tab with the image gallery
+    const newTab = window.open('', '_blank');
+    newTab.document.write(htmlContent);
+    newTab.document.close();
+  };
+
   const formatScript = (script) => {
     return script
       .replace(/\[([^\]]+)\]/g, '<span class="text-blue-600 font-medium">[$1]</span>')
