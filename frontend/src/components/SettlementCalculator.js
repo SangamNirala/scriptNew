@@ -313,7 +313,7 @@ const SettlementCalculator = () => {
               </div>
 
               {/* Settlement Range */}
-              {analysis.metrics.settlement_range && (
+              {(analysis.plaintiff_settlement_range || analysis.defendant_settlement_range) && (
                 <div>
                   <h3 className="text-lg font-semibold mb-3">Expected Settlement Range</h3>
                   <div className="p-4 bg-gray-50 rounded-lg">
@@ -325,10 +325,10 @@ const SettlementCalculator = () => {
                       <div className="h-8 bg-gradient-to-r from-red-200 via-yellow-200 to-green-200 rounded-full"></div>
                       <div className="absolute top-0 left-0 right-0 h-8 flex items-center justify-between px-4">
                         <span className="text-sm font-semibold text-gray-800">
-                          ${analysis.metrics.settlement_range[0]?.toLocaleString()}
+                          ${(analysis.plaintiff_settlement_range?.low || analysis.defendant_settlement_range?.low || 0).toLocaleString()}
                         </span>
                         <span className="text-sm font-semibold text-gray-800">
-                          ${analysis.metrics.settlement_range[1]?.toLocaleString()}
+                          ${(analysis.plaintiff_settlement_range?.high || analysis.defendant_settlement_range?.high || 0).toLocaleString()}
                         </span>
                       </div>
                     </div>
