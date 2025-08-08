@@ -2782,60 +2782,11 @@ async def generate_enhanced_avatar_video(request: EnhancedAvatarVideoRequest):
 @api_router.post("/generate-ultra-realistic-avatar-video", response_model=UltraRealisticAvatarVideoResponse)
 async def generate_ultra_realistic_avatar_video(request: UltraRealisticAvatarVideoRequest):
     """Generate ultra-realistic avatar video with AI-generated faces, perfect lip-sync, and dynamic backgrounds"""
-    try:
-        logger.info("Starting ultra-realistic avatar video generation")
-        
-        if not request.audio_base64 or request.audio_base64.strip() == "":
-            raise HTTPException(status_code=400, detail="Audio data is required")
-        
-        # Validate avatar style
-        if request.avatar_style not in ["business_professional", "casual"]:
-            raise HTTPException(status_code=400, detail="Invalid avatar style")
-        
-        # Validate gender
-        if request.gender not in ["male", "female", "diverse"]:
-            raise HTTPException(status_code=400, detail="Invalid gender")
-        
-        # Validate avatar index
-        if request.avatar_index not in [1, 2, 3]:
-            raise HTTPException(status_code=400, detail="Invalid avatar index")
-        
-        # Generate ultra-realistic avatar video in a separate thread to avoid blocking
-        import concurrent.futures
-        import asyncio
-        
-        loop = asyncio.get_event_loop()
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            result = await loop.run_in_executor(
-                executor, 
-                ultra_realistic_avatar_generator.generate_ultra_realistic_video,
-                request.audio_base64,
-                request.avatar_style,
-                request.gender,
-                request.avatar_index,
-                request.script_text or ""
-            )
-        
-        logger.info(f"Ultra-realistic avatar video generation completed successfully. Video size: {len(result['video_base64'])} chars")
-        
-        return UltraRealisticAvatarVideoResponse(
-            video_base64=result["video_base64"],
-            duration_seconds=result["duration_seconds"],
-            request_id=result["request_id"],
-            avatar_style=result["avatar_style"],
-            gender=result["gender"],
-            avatar_index=result["avatar_index"],
-            script_segments=result["script_segments"],
-            background_contexts=result["background_contexts"],
-            ai_model_used=result["ai_model_used"],
-            quality_level=result["quality_level"]
-        )
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error generating ultra-realistic avatar video: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Error generating ultra-realistic avatar video: {str(e)}")
+    logger.info("Ultra-realistic avatar video generation requested but feature is not available")
+    raise HTTPException(
+        status_code=503, 
+        detail="Ultra-realistic avatar video generation is currently unavailable - dependencies not installed"
+    )
 
 # =============================================================================
 # PHASE 3: ADVANCED ANALYTICS AND VALIDATION ENDPOINTS
