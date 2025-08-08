@@ -208,7 +208,7 @@ class JudgeValidator:
             result.recommended_action = "TECHNICAL_ERROR"
             return result
             
-    def _detect_fake_judge(self, judge_name: str) -> bool:
+    def _detect_fake_judge(self, judge_name: str) -> dict:
         """Enhanced fake judge detection using comprehensive patterns"""
         judge_name_lower = judge_name.lower().strip()
         
@@ -216,9 +216,15 @@ class JudgeValidator:
         for pattern in self.fake_patterns:
             if re.search(pattern, judge_name_lower, re.IGNORECASE):
                 logger.info(f"🚫 Fake judge detected: '{judge_name}' matches pattern: {pattern}")
-                return True
+                return {
+                    "is_fake": True,
+                    "reason": f"Judge name matches suspicious pattern: {pattern}"
+                }
                 
-        return False
+        return {
+            "is_fake": False,
+            "reason": "Judge name passes basic validation checks"
+        }
     
     async def _web_search_judge(self, judge_name: str) -> List[ValidationSource]:
         """Comprehensive web search for judge information using multiple methods"""
