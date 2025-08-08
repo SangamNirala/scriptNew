@@ -5,7 +5,7 @@ import time
 from datetime import datetime
 
 class LegalQABackendTester:
-    def __init__(self, base_url="https://9fab8018-9d0d-4ad3-b1d4-fa2e59341c08.preview.emergentagent.com"):
+    def __init__(self, base_url="https://2f2d481e-aaaa-4270-8036-472eb5d6f679.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.tests_run = 0
