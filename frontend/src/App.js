@@ -632,8 +632,27 @@ const ScriptGenerator = () => {
   };
 
   const openImageGallery = (images) => {
-    // Create HTML content for the new tab
-    const htmlContent = `
+    try {
+      // Try to open new tab with the image gallery
+      const newTab = window.open('', '_blank');
+      
+      // Check if popup was blocked
+      if (!newTab || newTab.closed || typeof newTab.closed == 'undefined') {
+        console.log("Popup blocked, showing images inline instead");
+        // Fallback: Show images inline by scrolling to the image gallery section
+        setShowInlineGallery(true);
+        // Scroll to the gallery section
+        setTimeout(() => {
+          const gallerySection = document.getElementById('inline-image-gallery');
+          if (gallerySection) {
+            gallerySection.scrollIntoView({ behavior: 'smooth' });
+          }
+        }, 100);
+        return;
+      }
+      
+      // Create HTML content for the new tab
+      const htmlContent = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -706,10 +725,20 @@ const ScriptGenerator = () => {
 </body>
 </html>`;
 
-    // Open new tab with the image gallery
-    const newTab = window.open('', '_blank');
-    newTab.document.write(htmlContent);
-    newTab.document.close();
+      newTab.document.write(htmlContent);
+      newTab.document.close();
+    } catch (error) {
+      console.error("Error opening image gallery:", error);
+      // Fallback: Show images inline
+      setShowInlineGallery(true);
+      // Scroll to the gallery section
+      setTimeout(() => {
+        const gallerySection = document.getElementById('inline-image-gallery');
+        if (gallerySection) {
+          gallerySection.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100);
+    }
   };
 
   const formatScript = (script) => {
