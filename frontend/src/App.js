@@ -318,14 +318,14 @@ const ScriptGenerator = () => {
   };
 
   const handleDownloadAudio = () => {
-    if (!lastGeneratedAudio || !selectedVoice) {
+    if (!currentAudioBase64 || !selectedVoice) {
       setError("No audio available to download.");
       return;
     }
 
     try {
       // Convert base64 to audio blob
-      const audioBytes = atob(lastGeneratedAudio);
+      const audioBytes = atob(currentAudioBase64);
       const audioArray = new Uint8Array(audioBytes.length);
       
       for (let i = 0; i < audioBytes.length; i++) {
