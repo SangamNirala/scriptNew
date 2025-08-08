@@ -13502,6 +13502,26 @@ if LITIGATION_ANALYTICS_AVAILABLE:
         case_complexity: Optional[float] = None
         filing_date: Optional[str] = None
         judge_name: Optional[str] = None
+
+    # Advanced Settlement Analysis Models
+    class AdvancedSettlementAnalysisRequest(BaseModel):
+        case_id: Optional[str] = None
+        case_type: str
+        jurisdiction: str
+        case_value: Optional[float] = None
+        evidence_strength: Optional[float] = None
+        case_complexity: Optional[float] = None
+        filing_date: Optional[str] = None
+        judge_name: Optional[str] = None
+        case_facts: Optional[str] = None
+        witness_count: Optional[int] = None
+        opposing_party_resources: Optional[str] = "medium"
+        # Advanced options
+        analysis_mode: str = "advanced"  # basic, advanced, monte_carlo, comparative, real_time
+        monte_carlo_iterations: Optional[int] = 10000
+        include_comparative: bool = True
+        include_market_analysis: bool = True
+        ai_providers: Optional[List[str]] = None
     
     class SettlementAnalysisResponse(BaseModel):
         case_id: str
