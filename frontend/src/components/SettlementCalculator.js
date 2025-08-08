@@ -393,6 +393,11 @@ const SettlementCalculator = () => {
                   </div>
                   <div className="text-sm text-blue-600">Settlement Probability</div>
                   <Progress value={analysis.settlement_probability * 100} className="mt-2 h-2" />
+                  {advancedMode && analysis.ai_consensus_score && (
+                    <div className="text-xs text-blue-500 mt-1">
+                      AI Consensus: {(analysis.ai_consensus_score * 100).toFixed(0)}%
+                    </div>
+                  )}
                 </div>
 
                 <div className="text-center p-6 bg-green-50 rounded-lg">
@@ -401,6 +406,11 @@ const SettlementCalculator = () => {
                     ${analysis.expected_settlement_value?.toLocaleString() || 'N/A'}
                   </div>
                   <div className="text-sm text-green-600">Expected Settlement</div>
+                  {advancedMode && analysis.volatility_index && (
+                    <div className="text-xs text-green-500 mt-1">
+                      Volatility: {(analysis.volatility_index * 100).toFixed(0)}%
+                    </div>
+                  )}
                 </div>
 
                 <div className="text-center p-6 bg-purple-50 rounded-lg">
@@ -409,8 +419,104 @@ const SettlementCalculator = () => {
                     {formatTiming(analysis.optimal_timing)}
                   </div>
                   <div className="text-sm text-purple-600">Optimal Timing</div>
+                  {advancedMode && analysis.strategic_advantage_score && (
+                    <div className="text-xs text-purple-500 mt-1">
+                      Strategic Advantage: {(analysis.strategic_advantage_score * 100).toFixed(0)}%
+                    </div>
+                  )}
                 </div>
               </div>
+
+              {/* Advanced Metrics Display */}
+              {advancedMode && (analysis.monte_carlo_results || analysis.market_trend_adjustment !== null) && (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                    <Activity className="h-5 w-5 mr-2" />
+                    Advanced Analytics
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {/* Monte Carlo Results */}
+                    {analysis.monte_carlo_results && (
+                      <div className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
+                        <div className="flex items-center mb-2">
+                          <PieChart className="h-4 w-4 text-blue-600 mr-2" />
+                          <span className="text-sm font-semibold text-blue-900">Monte Carlo</span>
+                        </div>
+                        <div className="space-y-1 text-xs">
+                          <div>Mean: {(analysis.monte_carlo_results.mean_settlement_probability * 100).toFixed(1)}%</div>
+                          <div>Std Dev: ±{(analysis.monte_carlo_results.std_settlement_probability * 100).toFixed(1)}%</div>
+                          <div>Simulations: {analysis.monte_carlo_results.simulation_count?.toLocaleString()}</div>
+                          {analysis.monte_carlo_results.confidence_intervals?.['95%'] && (
+                            <div className="text-blue-600 font-medium">
+                              95% CI: {(analysis.monte_carlo_results.confidence_intervals['95%'][0] * 100).toFixed(0)}%-{(analysis.monte_carlo_results.confidence_intervals['95%'][1] * 100).toFixed(0)}%
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Market Trends */}
+                    {analysis.market_trend_adjustment !== null && (
+                      <div className="p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg border border-green-200">
+                        <div className="flex items-center mb-2">
+                          <LineChart className="h-4 w-4 text-green-600 mr-2" />
+                          <span className="text-sm font-semibold text-green-900">Market Trends</span>
+                        </div>
+                        <div className="space-y-1 text-xs">
+                          <div className={`font-medium ${analysis.market_trend_adjustment >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            {analysis.market_trend_adjustment >= 0 ? '+' : ''}{(analysis.market_trend_adjustment * 100).toFixed(1)}%
+                          </div>
+                          <div className="text-gray-600">
+                            {analysis.market_trend_adjustment > 0.02 ? 'Favorable' : 
+                             analysis.market_trend_adjustment < -0.02 ? 'Challenging' : 'Neutral'}
+                          </div>
+                          <div className="text-gray-500">Market conditions</div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* AI Analysis */}
+                    {analysis.ai_consensus_score && (
+                      <div className="p-4 bg-gradient-to-br from-purple-50 to-violet-50 rounded-lg border border-purple-200">
+                        <div className="flex items-center mb-2">
+                          <Brain className="h-4 w-4 text-purple-600 mr-2" />
+                          <span className="text-sm font-semibold text-purple-900">AI Consensus</span>
+                        </div>
+                        <div className="space-y-1 text-xs">
+                          <div className="font-medium text-purple-600">
+                            {(analysis.ai_consensus_score * 100).toFixed(0)}% Agreement
+                          </div>
+                          <div className="text-gray-600">
+                            {analysis.ai_consensus_score > 0.8 ? 'High' : 
+                             analysis.ai_consensus_score > 0.6 ? 'Medium' : 'Mixed'} Consensus
+                          </div>
+                          <div className="text-gray-500">Multi-AI analysis</div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Processing Time */}
+                    {analysis.processing_time && (
+                      <div className="p-4 bg-gradient-to-br from-gray-50 to-slate-50 rounded-lg border border-gray-200">
+                        <div className="flex items-center mb-2">
+                          <Zap className="h-4 w-4 text-gray-600 mr-2" />
+                          <span className="text-sm font-semibold text-gray-900">Performance</span>
+                        </div>
+                        <div className="space-y-1 text-xs">
+                          <div className="font-medium text-gray-600">
+                            {analysis.processing_time.toFixed(2)}s
+                          </div>
+                          <div className="text-gray-500">Analysis time</div>
+                          <div className="text-gray-500 capitalize">
+                            {analysis.analysis_mode || 'advanced'} mode
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Settlement Range */}
               {(analysis.plaintiff_settlement_range || analysis.defendant_settlement_range) && (
