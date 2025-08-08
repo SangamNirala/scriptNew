@@ -20,7 +20,7 @@ import time
 from datetime import datetime
 
 # Get backend URL from environment
-BACKEND_URL = os.getenv('REACT_APP_BACKEND_URL', 'https://713b7daa-6e2b-44d9-8b8d-1458f53c5728.preview.emergentagent.com')
+BACKEND_URL = os.getenv('REACT_APP_BACKEND_URL', 'https://9fab8018-9d0d-4ad3-b1d4-fa2e59341c08.preview.emergentagent.com')
 API_BASE = f"{BACKEND_URL}/api"
 
 class SpecificScenariosTestSuite:

@@ -8,7 +8,7 @@ import json
 from datetime import datetime
 
 def test_initialization():
-    base_url = "https://713b7daa-6e2b-44d9-8b8d-1458f53c5728.preview.emergentagent.com"
+    base_url = "https://9fab8018-9d0d-4ad3-b1d4-fa2e59341c08.preview.emergentagent.com"
     api_url = f"{base_url}/api"
     
     print("🔍 Testing Knowledge Base Initialization...")
