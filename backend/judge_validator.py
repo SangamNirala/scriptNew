@@ -430,3 +430,161 @@ class JudgeValidator:
             
         except:
             return False
+            
+    def _detect_fake_judge(self, judge_name: str) -> Dict[str, Any]:
+        """
+        Detect obviously fake or fictional judge names
+        
+        This method implements multiple patterns to identify fake judges:
+        - Names with repeated letters (ZZZ, XXX, AAA)
+        - Names containing fictional indicators
+        - Names with test data patterns
+        - Names with non-realistic patterns
+        
+        Returns:
+            Dict with 'is_fake' boolean and 'reason' string
+        """
+        try:
+            # Normalize the name for analysis
+            name_lower = judge_name.lower().strip()
+            name_parts = judge_name.strip().split()
+            
+            # Pattern 1: Names starting with repeated letters (ZZZ, XXX, AAA, etc.)
+            repeated_letter_patterns = [
+                'zzz', 'xxx', 'aaa', 'bbb', 'ccc', 'ddd', 'eee', 'fff', 
+                'ggg', 'hhh', 'iii', 'jjj', 'kkk', 'lll', 'mmm', 'nnn',
+                'ooo', 'ppp', 'qqq', 'rrr', 'sss', 'ttt', 'uuu', 'vvv',
+                'www', 'yyy'
+            ]
+            
+            for pattern in repeated_letter_patterns:
+                if name_lower.startswith(pattern):
+                    return {
+                        'is_fake': True,
+                        'reason': f"Name starts with repeated letters pattern '{pattern}' which indicates test data"
+                    }
+            
+            # Pattern 2: Explicit fictional indicators
+            fictional_indicators = [
+                'fictional', 'fake', 'test', 'dummy', 'sample', 'example',
+                'nonexistent', 'non-existent', 'placeholder', 'mock', 'demo'
+            ]
+            
+            for indicator in fictional_indicators:
+                if indicator in name_lower:
+                    return {
+                        'is_fake': True,
+                        'reason': f"Name contains fictional indicator '{indicator}'"
+                    }
+            
+            # Pattern 3: Obviously fictional words that don't belong in judge names
+            fantasy_words = [
+                'unicorn', 'dragon', 'wizard', 'fairy', 'magic', 'rainbow',
+                'sparkle', 'mystical', 'enchanted', 'phoenix', 'griffin',
+                'mermaid', 'vampire', 'zombie', 'robot', 'alien', 'superhero'
+            ]
+            
+            for word in fantasy_words:
+                if word in name_lower:
+                    return {
+                        'is_fake': True,
+                        'reason': f"Name contains fantasy/fictional word '{word}' inappropriate for judicial names"
+                    }
+            
+            # Pattern 4: Sequential/pattern names (like Judge A, Judge B, Judge 1, Judge 2)
+            sequential_patterns = [
+                r'^judge [a-z]$',  # Judge A, Judge B, etc.
+                r'^judge \d+$',    # Judge 1, Judge 2, etc.
+                r'^test judge \d*$',  # Test Judge, Test Judge 1, etc.
+                r'^\w+ \d+$',      # Smith 1, Jones 2, etc.
+            ]
+            
+            import re
+            for pattern in sequential_patterns:
+                if re.match(pattern, name_lower):
+                    return {
+                        'is_fake': True,
+                        'reason': f"Name follows sequential/test pattern which indicates placeholder data"
+                    }
+            
+            # Pattern 5: Names that are too short or have unusual characteristics
+            if len(name_parts) == 0:
+                return {
+                    'is_fake': True,
+                    'reason': "Empty or whitespace-only name"
+                }
+                
+            # Single character names or names with all identical characters
+            if len(name_parts) == 1 and len(name_parts[0]) <= 2:
+                return {
+                    'is_fake': True,
+                    'reason': "Name is too short to be realistic"
+                }
+                
+            # Check for names where all characters are identical
+            for part in name_parts:
+                if len(set(part.lower())) == 1 and len(part) > 1:  # All same character
+                    return {
+                        'is_fake': True,
+                        'reason': f"Name part '{part}' contains only repeated characters"
+                    }
+            
+            # Pattern 6: Names with excessive punctuation or special characters
+            special_char_count = sum(1 for char in judge_name if not char.isalnum() and char not in [' ', '.', '-', "'"])
+            if special_char_count > 2:
+                return {
+                    'is_fake': True,
+                    'reason': f"Name contains excessive special characters ({special_char_count})"
+                }
+            
+            # Pattern 7: Names that are clearly humorous or pun-based
+            humorous_patterns = [
+                'judge mental', 'judge me', 'judge judy', 'judge dread', 'judge doom',
+                'hangin', 'hanging', 'sue', 'bill', 'will', 'may', 'april'
+            ]
+            
+            # Only flag if the entire name matches humorous patterns (to avoid false positives)
+            full_name_lower = ' '.join(name_lower.split())
+            for pattern in humorous_patterns:
+                if pattern in full_name_lower and len(full_name_lower.split()) <= 3:
+                    # Additional check to avoid false positives for common names
+                    if 'judge' in pattern or full_name_lower == pattern:
+                        return {
+                            'is_fake': True,
+                            'reason': f"Name appears to be humorous/pun-based: '{pattern}'"
+                        }
+            
+            # Pattern 8: Names with numbers (judges typically don't have numbers in their names)
+            if any(char.isdigit() for char in judge_name):
+                return {
+                    'is_fake': True,
+                    'reason': "Judicial names typically don't contain numbers"
+                }
+            
+            # Pattern 9: Check for names that are common test names or placeholders
+            common_test_names = [
+                'john doe', 'jane doe', 'john smith', 'jane smith', 
+                'foo bar', 'foo', 'bar', 'baz', 'qux',
+                'lorem ipsum', 'lorem', 'ipsum'
+            ]
+            
+            if full_name_lower in common_test_names:
+                return {
+                    'is_fake': True,
+                    'reason': f"Name '{judge_name}' is a common placeholder/test name"
+                }
+            
+            # If none of the fake patterns match, the name passes initial screening
+            return {
+                'is_fake': False,
+                'reason': "No obvious fake patterns detected"
+            }
+            
+        except Exception as e:
+            logger.warning(f"⚠️ Error in fake judge detection for {judge_name}: {e}")
+            # On error, err on the side of caution and allow the name through
+            # but log the issue for investigation
+            return {
+                'is_fake': False,
+                'reason': f"Error in detection logic: {str(e)}"
+            }
