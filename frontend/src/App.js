@@ -742,6 +742,16 @@ const ScriptGenerator = () => {
     }
   };
 
+  // Function to download images
+  const downloadImage = (base64Data, filename) => {
+    const link = document.createElement('a');
+    link.href = 'data:image/png;base64,' + base64Data;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const formatScript = (script) => {
     return script
       .replace(/\[([^\]]+)\]/g, '<span class="text-blue-600 font-medium">[$1]</span>')
