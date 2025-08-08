@@ -403,7 +403,501 @@ class AdvancedSettlementCalculator(SettlementProbabilityCalculator):
             logger.warning(f"Single AI analysis failed for {provider.value}: {e}")
             return {'settlement_probability': 0.5, 'provider': provider.value, 'error': str(e)}
 
-    def _create_ai_analysis_prompt(self, case_data: Dict[str, Any]) -> str:
+    async def _get_enhanced_historical_data(self, case_data: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Get enhanced historical settlement data with better matching"""
+        try:
+            # Use parent method as base
+            base_data = await super()._get_historical_settlement_data(case_data)
+            
+            # Add enhanced filtering and weighting
+            enhanced_data = []
+            for settlement in base_data:
+                # Calculate enhanced similarity score
+                similarity = self._calculate_enhanced_similarity(settlement, case_data)
+                settlement['enhanced_similarity'] = similarity
+                if similarity > 0.3:  # Threshold for relevance
+                    enhanced_data.append(settlement)
+            
+            # Sort by enhanced similarity
+            enhanced_data.sort(key=lambda x: x['enhanced_similarity'], reverse=True)
+            
+            return enhanced_data[:15]  # Top 15 most similar cases
+            
+        except Exception as e:
+            logger.warning(f"Enhanced historical data retrieval failed: {e}")
+            return await super()._get_historical_settlement_data(case_data)
+
+    def _calculate_enhanced_similarity(self, settlement: Dict[str, Any], case_data: Dict[str, Any]) -> float:
+        """Calculate enhanced similarity score between cases"""
+        score = 0.0
+        max_score = 0.0
+        
+        # Case type similarity (weight: 0.3)
+        if settlement.get('case_type') == case_data.get('case_type'):
+            score += 0.3
+        max_score += 0.3
+        
+        # Jurisdiction similarity (weight: 0.2)
+        if settlement.get('jurisdiction') == case_data.get('jurisdiction'):
+            score += 0.2
+        max_score += 0.2
+        
+        # Case value similarity (weight: 0.25)
+        if case_data.get('case_value') and settlement.get('case_value'):
+            case_value = case_data['case_value']
+            settlement_value = settlement['case_value']
+            
+            if case_value > 0 and settlement_value > 0:
+                ratio = min(case_value, settlement_value) / max(case_value, settlement_value)
+                score += ratio * 0.25
+            
+        max_score += 0.25
+        
+        # Complexity similarity (weight: 0.15)
+        if case_data.get('case_complexity') is not None and settlement.get('case_complexity') is not None:
+            complexity_diff = abs(case_data['case_complexity'] - settlement['case_complexity'])
+            complexity_similarity = 1 - complexity_diff
+            score += complexity_similarity * 0.15
+        max_score += 0.15
+        
+        # Evidence strength similarity (weight: 0.1)
+        if case_data.get('evidence_strength') is not None and settlement.get('evidence_strength') is not None:
+            evidence_diff = abs(case_data['evidence_strength'] - settlement['evidence_strength'])
+            evidence_similarity = 1 - (evidence_diff / 10)  # Normalize to 0-1
+            score += max(0, evidence_similarity) * 0.1
+        max_score += 0.1
+        
+        return score / max_score if max_score > 0 else 0.0
+
+    async def _calculate_enhanced_base_metrics(self, case_data: Dict[str, Any], historical_data: List[Dict]) -> AdvancedSettlementMetrics:
+        """Calculate enhanced base metrics with improved algorithms"""
+        try:
+            # Use parent method as starting point
+            standard_metrics = await super()._calculate_base_settlement_metrics(case_data, historical_data)
+            
+            # Convert to advanced metrics
+            enhanced_metrics = AdvancedSettlementMetrics(
+                settlement_probability=standard_metrics.settlement_probability,
+                optimal_timing=standard_metrics.optimal_timing,
+                plaintiff_settlement_range=standard_metrics.plaintiff_settlement_range,
+                defendant_settlement_range=standard_metrics.defendant_settlement_range,
+                expected_settlement_value=standard_metrics.expected_settlement_value,
+                settlement_urgency_score=standard_metrics.settlement_urgency_score,
+                confidence_score=standard_metrics.confidence_score,
+                key_settlement_factors=standard_metrics.key_settlement_factors,
+                negotiation_leverage=standard_metrics.negotiation_leverage
+            )
+            
+            # Add enhanced calculations
+            enhanced_metrics.volatility_index = self._calculate_volatility_index(case_data, historical_data)
+            enhanced_metrics.dynamic_factors = self._analyze_dynamic_factors(case_data)
+            enhanced_metrics.strategic_advantage_score = self._calculate_strategic_advantage(enhanced_metrics)
+            
+            return enhanced_metrics
+            
+        except Exception as e:
+            logger.error(f"Enhanced base metrics calculation failed: {e}")
+            # Fallback to creating default advanced metrics
+            return self._create_default_advanced_metrics(case_data)
+
+    def _calculate_volatility_index(self, case_data: Dict[str, Any], historical_data: List[Dict]) -> float:
+        """Calculate settlement outcome volatility"""
+        try:
+            if not historical_data:
+                return 0.5  # Default moderate volatility
+            
+            # Calculate standard deviation of historical settlement probabilities
+            probabilities = []
+            for case in historical_data:
+                if case.get('settlement_probability'):
+                    probabilities.append(case['settlement_probability'])
+                elif case.get('outcome') == 'settlement':
+                    probabilities.append(0.8)  # Assume 80% for settled cases
+                else:
+                    probabilities.append(0.2)  # 20% for non-settled
+            
+            if len(probabilities) < 2:
+                return 0.3  # Low volatility for insufficient data
+            
+            volatility = np.std(probabilities)
+            
+            # Adjust for case complexity and other factors
+            complexity = case_data.get('case_complexity', 0.5)
+            evidence_strength = case_data.get('evidence_strength', 5) / 10
+            
+            # Higher complexity increases volatility
+            volatility += complexity * 0.1
+            
+            # Weaker evidence increases volatility
+            if evidence_strength < 0.5:
+                volatility += (0.5 - evidence_strength) * 0.2
+            
+            return min(1.0, max(0.0, volatility))
+            
+        except Exception as e:
+            logger.warning(f"Volatility calculation failed: {e}")
+            return 0.4
+
+    def _analyze_dynamic_factors(self, case_data: Dict[str, Any]) -> Dict[str, float]:
+        """Analyze dynamic factors affecting settlement"""
+        factors = {}
+        
+        # Time pressure factor
+        if case_data.get('filing_date'):
+            try:
+                if isinstance(case_data['filing_date'], str):
+                    filing_date = datetime.fromisoformat(case_data['filing_date'])
+                else:
+                    filing_date = case_data['filing_date']
+                
+                days_since_filing = (datetime.utcnow() - filing_date).days
+                
+                if days_since_filing > 730:  # 2+ years
+                    factors['time_pressure'] = 0.8
+                elif days_since_filing > 365:  # 1+ year
+                    factors['time_pressure'] = 0.6
+                else:
+                    factors['time_pressure'] = 0.3
+            except:
+                factors['time_pressure'] = 0.5
+        else:
+            factors['time_pressure'] = 0.5
+        
+        # Economic pressure
+        case_value = case_data.get('case_value', 0)
+        if case_value > 1000000:
+            factors['economic_pressure'] = 0.7
+        elif case_value > 100000:
+            factors['economic_pressure'] = 0.5
+        else:
+            factors['economic_pressure'] = 0.3
+        
+        # Evidence dynamics
+        evidence_strength = case_data.get('evidence_strength', 5) / 10
+        if evidence_strength > 0.8:
+            factors['evidence_confidence'] = 0.9
+        elif evidence_strength < 0.3:
+            factors['evidence_risk'] = 0.8
+        else:
+            factors['evidence_balance'] = 0.6
+        
+        # Complexity factor
+        complexity = case_data.get('case_complexity', 0.5)
+        factors['complexity_risk'] = complexity
+        
+        # Resource disparity
+        opposing_resources = case_data.get('opposing_party_resources', 'medium')
+        resource_map = {
+            'very_high': 0.8,
+            'high': 0.6,
+            'medium': 0.5,
+            'low': 0.3
+        }
+        factors['resource_pressure'] = resource_map.get(opposing_resources, 0.5)
+        
+        return factors
+
+    async def _find_similar_cases_enhanced(self, case_data: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Find similar cases with enhanced matching"""
+        try:
+            # Build enhanced query with multiple criteria
+            base_query = {
+                'outcome': 'settlement',
+                'settlement_amount': {'$exists': True, '$gt': 0}
+            }
+            
+            # Case type filter
+            if case_data.get('case_type'):
+                base_query['case_type'] = case_data['case_type']
+            
+            # Jurisdiction filter
+            if case_data.get('jurisdiction'):
+                base_query['jurisdiction'] = case_data['jurisdiction']
+            
+            # Execute query
+            similar_cases = await self.db.settlement_data.find(base_query).limit(50).to_list(50)
+            
+            # Calculate similarity scores and sort
+            scored_cases = []
+            for case in similar_cases:
+                similarity = self._calculate_enhanced_similarity(case, case_data)
+                if similarity > 0.2:  # Minimum similarity threshold
+                    case['similarity_score'] = similarity
+                    scored_cases.append(case)
+            
+            # Sort by similarity and return top matches
+            scored_cases.sort(key=lambda x: x['similarity_score'], reverse=True)
+            
+            return scored_cases[:10]  # Top 10 similar cases
+            
+        except Exception as e:
+            logger.error(f"Enhanced similar cases search failed: {e}")
+            return []
+
+    def _analyze_case_patterns(self, similar_cases: List[Dict[str, Any]], case_data: Dict[str, Any]) -> str:
+        """Analyze patterns in similar cases"""
+        if not similar_cases:
+            return "No comparable cases available for pattern analysis"
+        
+        # Calculate averages
+        avg_settlement_amount = np.mean([c.get('settlement_amount', 0) for c in similar_cases if c.get('settlement_amount')])
+        avg_case_value = np.mean([c.get('case_value', 0) for c in similar_cases if c.get('case_value')])
+        
+        settlement_ratio = avg_settlement_amount / avg_case_value if avg_case_value > 0 else 0.5
+        
+        # Analyze timing patterns
+        timing_counts = Counter([c.get('settlement_timing', 'mid') for c in similar_cases])
+        most_common_timing = timing_counts.most_common(1)[0][0] if timing_counts else 'mid'
+        
+        analysis = f"""
+Based on analysis of {len(similar_cases)} similar {case_data.get('case_type', 'civil')} cases:
+
+• Average settlement rate: {settlement_ratio:.1%} of claim value
+• Most common settlement timing: {most_common_timing.replace('_', ' ')}
+• Pattern confidence: {'High' if len(similar_cases) > 5 else 'Medium' if len(similar_cases) > 2 else 'Low'}
+
+This suggests {case_data.get('case_type', 'civil')} cases in {case_data.get('jurisdiction', 'this jurisdiction')} typically settle for {settlement_ratio:.1%} of the claimed amount.
+"""
+        
+        return analysis
+
+    def _extract_pattern_insights(self, similar_cases: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Extract insights from case patterns"""
+        if not similar_cases:
+            return {}
+        
+        insights = {
+            'total_cases': len(similar_cases),
+            'avg_similarity': np.mean([c.get('similarity_score', 0) for c in similar_cases]),
+            'settlement_range': {
+                'min': min([c.get('settlement_amount', 0) for c in similar_cases if c.get('settlement_amount', 0) > 0], default=0),
+                'max': max([c.get('settlement_amount', 0) for c in similar_cases], default=0),
+                'median': np.median([c.get('settlement_amount', 0) for c in similar_cases if c.get('settlement_amount', 0) > 0])
+            },
+            'common_factors': self._identify_common_factors(similar_cases),
+            'success_indicators': self._identify_success_indicators(similar_cases)
+        }
+        
+        return insights
+
+    def _identify_common_factors(self, cases: List[Dict[str, Any]]) -> List[str]:
+        """Identify common factors across similar cases"""
+        factors = []
+        
+        # Case type consistency
+        case_types = [c.get('case_type') for c in cases]
+        if len(set(case_types)) == 1:
+            factors.append(f"Consistent case type: {case_types[0]}")
+        
+        # Jurisdiction patterns
+        jurisdictions = [c.get('jurisdiction') for c in cases]
+        jurisdiction_counts = Counter(jurisdictions)
+        if jurisdiction_counts:
+            top_jurisdiction = jurisdiction_counts.most_common(1)[0]
+            if top_jurisdiction[1] > len(cases) * 0.5:
+                factors.append(f"Common jurisdiction: {top_jurisdiction[0]}")
+        
+        # Settlement timing patterns
+        timings = [c.get('settlement_timing') for c in cases if c.get('settlement_timing')]
+        if timings:
+            timing_counts = Counter(timings)
+            top_timing = timing_counts.most_common(1)[0]
+            if top_timing[1] > len(timings) * 0.4:
+                factors.append(f"Typical timing: {top_timing[0].replace('_', ' ')}")
+        
+        return factors
+
+    def _identify_success_indicators(self, cases: List[Dict[str, Any]]) -> List[str]:
+        """Identify factors that indicate successful settlements"""
+        indicators = []
+        
+        # High settlement ratios
+        high_settlements = [c for c in cases if c.get('settlement_amount', 0) > c.get('case_value', 1) * 0.7]
+        if len(high_settlements) > len(cases) * 0.3:
+            indicators.append("Strong evidence often leads to favorable settlements")
+        
+        # Quick settlements
+        early_settlements = [c for c in cases if c.get('settlement_timing') in ['early', 'mediation']]
+        if len(early_settlements) > len(cases) * 0.4:
+            indicators.append("Early settlement discussions typically successful")
+        
+        # Complex case outcomes
+        complex_cases = [c for c in cases if c.get('case_complexity', 0) > 0.7]
+        if complex_cases:
+            avg_complex_ratio = np.mean([c.get('settlement_amount', 0) / max(c.get('case_value', 1), 1) for c in complex_cases])
+            if avg_complex_ratio > 0.6:
+                indicators.append("Complex cases often drive higher settlement values")
+        
+        return indicators
+
+    def _create_default_advanced_metrics(self, case_data: Dict[str, Any]) -> AdvancedSettlementMetrics:
+        """Create default advanced metrics when calculation fails"""
+        case_value = case_data.get('case_value', 100000)
+        
+        return AdvancedSettlementMetrics(
+            settlement_probability=0.6,
+            optimal_timing=SettlementTiming.MID,
+            plaintiff_settlement_range=(case_value * 0.4, case_value * 0.8),
+            defendant_settlement_range=(case_value * 0.3, case_value * 0.7),
+            expected_settlement_value=case_value * 0.55,
+            settlement_urgency_score=0.5,
+            confidence_score=0.4,
+            key_settlement_factors=["Case complexity", "Economic factors", "Time considerations"],
+            negotiation_leverage={'plaintiff': 0.5, 'defendant': 0.5},
+            volatility_index=0.3,
+            strategic_advantage_score=0.5,
+            dynamic_factors={'complexity_risk': 0.5, 'economic_pressure': 0.5}
+        )
+
+    def _develop_advanced_strategy(
+        self, 
+        case_data: Dict[str, Any], 
+        metrics: AdvancedSettlementMetrics, 
+        scenarios: List[SettlementScenario]
+    ) -> Dict[str, Any]:
+        """Develop advanced negotiation strategy"""
+        
+        # Use base strategy as foundation
+        base_strategy = super()._develop_negotiation_strategy(case_data, metrics, scenarios)
+        
+        # Enhance with advanced analytics
+        advanced_strategy = base_strategy.copy()
+        
+        # Add AI-driven insights
+        if hasattr(metrics, 'ai_consensus_score') and metrics.ai_consensus_score > 0.7:
+            advanced_strategy['ai_confidence'] = 'high'
+            advanced_strategy['ai_recommendations'] = [
+                "Multiple AI models show high agreement on settlement probability",
+                "Consider accelerated negotiation timeline",
+                "Focus on data-driven value justification"
+            ]
+        
+        # Add Monte Carlo insights
+        if hasattr(metrics, 'monte_carlo_results') and metrics.monte_carlo_results:
+            mc = metrics.monte_carlo_results
+            advanced_strategy['risk_profile'] = {
+                'volatility': mc.std_settlement_probability,
+                'confidence_90': mc.confidence_intervals.get('90%', (0, 0)),
+                'downside_risk': mc.risk_metrics.get('value_at_risk_5%', 0),
+                'upside_potential': mc.percentiles.get('90th', 0)
+            }
+        
+        # Add market timing insights
+        if metrics.market_trend_adjustment != 0:
+            if metrics.market_trend_adjustment > 0.02:
+                advanced_strategy['market_timing'] = "favorable"
+                advanced_strategy['timing_advice'] = "Accelerate negotiations to capitalize on favorable market conditions"
+            elif metrics.market_trend_adjustment < -0.02:
+                advanced_strategy['market_timing'] = "challenging"
+                advanced_strategy['timing_advice'] = "Consider delaying or restructuring settlement approach"
+            else:
+                advanced_strategy['market_timing'] = "neutral"
+        
+        return advanced_strategy
+
+    def _assess_advanced_risks(
+        self, 
+        case_data: Dict[str, Any], 
+        metrics: AdvancedSettlementMetrics, 
+        monte_carlo: Optional[Any]
+    ) -> Dict[str, Any]:
+        """Assess advanced risks with enhanced analytics"""
+        
+        # Base risk assessment
+        base_risks = super()._assess_settlement_risks(case_data, metrics)
+        
+        # Enhanced risk analysis
+        advanced_risks = base_risks.copy()
+        
+        # Add volatility-based risks
+        if metrics.volatility_index > 0.2:
+            advanced_risks['high_risks'].append("High outcome volatility increases settlement uncertainty")
+            advanced_risks['mitigation_strategies']['volatility'] = "Use structured settlement with milestone payments"
+        
+        # Add Monte Carlo risk insights
+        if monte_carlo and hasattr(monte_carlo, 'risk_metrics'):
+            risk_metrics = monte_carlo.risk_metrics
+            
+            if risk_metrics.get('value_at_risk_5%', 0) < 0.3:
+                advanced_risks['high_risks'].append("Significant downside risk in worst-case scenarios")
+            
+            if risk_metrics.get('volatility', 0) > 0.15:
+                advanced_risks['medium_risks'].append("Moderate outcome volatility requires scenario planning")
+        
+        # Add AI consensus risks
+        if hasattr(metrics, 'ai_consensus_score') and metrics.ai_consensus_score < 0.5:
+            advanced_risks['medium_risks'].append("Low AI consensus suggests uncertain outcome")
+            advanced_risks['mitigation_strategies']['ai_uncertainty'] = "Gather additional case data for better prediction"
+        
+        # Calculate enhanced risk score
+        total_risks = len(advanced_risks.get('high_risks', [])) * 0.8 + len(advanced_risks.get('medium_risks', [])) * 0.5
+        advanced_risks['enhanced_risk_score'] = min(1.0, total_risks / 10)
+        
+        return advanced_risks
+
+    def _generate_intelligent_recommendations(
+        self, 
+        case_data: Dict[str, Any], 
+        metrics: AdvancedSettlementMetrics, 
+        scenarios: List[SettlementScenario], 
+        risks: Dict[str, Any]
+    ) -> List[str]:
+        """Generate intelligent recommendations based on advanced analytics"""
+        
+        recommendations = []
+        
+        # Probability-based recommendations
+        if metrics.settlement_probability > 0.8:
+            recommendations.append(f"Exceptional settlement probability ({metrics.settlement_probability:.0%}) - pursue aggressive settlement strategy")
+        elif metrics.settlement_probability > 0.6:
+            recommendations.append(f"Strong settlement prospects ({metrics.settlement_probability:.0%}) - prioritize negotiation preparation")
+        elif metrics.settlement_probability < 0.4:
+            recommendations.append(f"Lower settlement likelihood ({metrics.settlement_probability:.0%}) - prepare robust trial strategy alongside settlement efforts")
+        
+        # AI consensus recommendations
+        if hasattr(metrics, 'ai_consensus_score'):
+            if metrics.ai_consensus_score > 0.8:
+                recommendations.append("High AI consensus provides strong analytical foundation for settlement decisions")
+            elif metrics.ai_consensus_score < 0.5:
+                recommendations.append("Mixed AI analysis suggests gathering additional case intelligence before major settlement decisions")
+        
+        # Monte Carlo recommendations
+        if hasattr(metrics, 'monte_carlo_results') and metrics.monte_carlo_results:
+            mc = metrics.monte_carlo_results
+            if mc.std_settlement_probability > 0.15:
+                recommendations.append(f"High outcome variability ({mc.std_settlement_probability:.0%}) - consider structured settlement to manage uncertainty")
+            
+            confidence_90 = mc.confidence_intervals.get('90%', (0, 0))
+            if confidence_90[1] - confidence_90[0] > 0.3:
+                recommendations.append("Wide confidence intervals suggest comprehensive scenario planning essential")
+        
+        # Market timing recommendations
+        if abs(metrics.market_trend_adjustment) > 0.02:
+            if metrics.market_trend_adjustment > 0:
+                recommendations.append(f"Favorable market trends (+{metrics.market_trend_adjustment:.1%}) - accelerate settlement discussions")
+            else:
+                recommendations.append(f"Challenging market conditions ({metrics.market_trend_adjustment:+.1%}) - consider timeline adjustments")
+        
+        # Strategic advantage recommendations
+        if metrics.strategic_advantage_score > 0.7:
+            recommendations.append("Strong strategic position supports assertive negotiation approach")
+        elif metrics.strategic_advantage_score < 0.4:
+            recommendations.append("Weaker position suggests collaborative settlement approach with creative structuring")
+        
+        # Risk-based recommendations
+        if risks.get('enhanced_risk_score', 0.5) > 0.7:
+            recommendations.append("High risk profile requires comprehensive mitigation strategy and conservative settlement planning")
+        
+        # Timing optimization
+        best_scenario = max(scenarios, key=lambda s: s.probability * s.plaintiff_satisfaction) if scenarios else None
+        if best_scenario:
+            recommendations.append(f"Optimal settlement window: {best_scenario.scenario_name} approach with {best_scenario.timing.value.replace('_', ' ')} timing")
+        
+        # Value optimization
+        if metrics.expected_settlement_value > case_data.get('case_value', 0) * 0.7:
+            recommendations.append(f"Strong expected value (${metrics.expected_settlement_value:,.0f}) supports premium settlement targeting")
+        
+        return recommendations[:8]  # Limit to top 8 recommendations
         """Create structured prompt for AI analysis"""
         case_type = case_data.get('case_type', 'civil')
         case_value = case_data.get('case_value', 100000)
