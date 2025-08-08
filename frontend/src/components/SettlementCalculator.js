@@ -354,17 +354,17 @@ const SettlementCalculator = () => {
             <Button 
               type="submit" 
               disabled={loading || !caseData.case_type || !caseData.case_value}
-              className="w-full"
+              className={`w-full ${advancedMode ? 'bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600' : ''}`}
             >
               {loading ? (
                 <>
                   <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                  Calculating Settlement Probability...
+                  {advancedMode ? 'Running Advanced AI Analysis...' : 'Calculating Settlement Probability...'}
                 </>
               ) : (
                 <>
-                  <Calculator className="h-4 w-4 mr-2" />
-                  Calculate Settlement Analysis
+                  {advancedMode ? <Brain className="h-4 w-4 mr-2" /> : <Calculator className="h-4 w-4 mr-2" />}
+                  {advancedMode ? 'Run Advanced Settlement Analysis' : 'Calculate Settlement Analysis'}
                 </>
               )}
             </Button>
