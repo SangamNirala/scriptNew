@@ -13523,6 +13523,13 @@ if LITIGATION_ANALYTICS_AVAILABLE:
         include_market_analysis: bool = True
         ai_providers: Optional[List[str]] = None
     
+    class NegotiationLeverageData(BaseModel):
+        plaintiff: float
+        defendant: float
+        factors: Dict[str, float]
+        balance: str
+        difference: float
+
     class SettlementAnalysisResponse(BaseModel):
         case_id: str
         settlement_probability: float
@@ -13533,7 +13540,7 @@ if LITIGATION_ANALYTICS_AVAILABLE:
         settlement_urgency_score: float
         confidence_score: float
         key_settlement_factors: List[str]
-        negotiation_leverage: Dict[str, float]
+        negotiation_leverage: NegotiationLeverageData
         scenarios: List[Dict[str, Any]] = []
         ai_insights: str = ""
         recommendations: List[str] = []
