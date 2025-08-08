@@ -94,12 +94,33 @@ class JudgeValidationResult:
             self.recommended_action = "NO_INFORMATION_FOUND"
 
 class JudgeValidator:
-    """Comprehensive judge validation using multiple free sources"""
+    """Comprehensive judge validation using multiple free sources and real web search"""
     
     def __init__(self):
         self.session = None
         self.cache = {}  # Simple in-memory cache
         self.cache_duration = timedelta(hours=24)  # Cache for 24 hours
+        
+        # Initialize APIs from environment
+        self.serp_api_key = os.environ.get('SERP_API_KEY')
+        self.gemini_api_key = os.environ.get('GEMINI_API_KEY')
+        
+        # Initialize Gemini
+        if self.gemini_api_key:
+            genai.configure(api_key=self.gemini_api_key)
+        
+        # Enhanced fake judge detection patterns
+        self.fake_patterns = [
+            r'[A-Z]{3,}',  # Three or more consecutive capitals (ZZZ, XXX)
+            r'.*fake.*|.*test.*|.*dummy.*',  # Obvious fake indicators
+            r'.*unicorn.*|.*dragon.*|.*wizard.*|.*magic.*|.*rainbow.*',  # Fantasy words
+            r'judge [A-Z]$|judge \d+',  # Sequential patterns (Judge A, Judge 1)
+            r'^[A-Za-z]{1,3}$',  # Too short names
+            r'.*[!@#$%^&*()_+={}|\[\]\\:";\'<>?,./]{3,}.*',  # Excessive special chars
+            r'.*sparkle.*|.*glitter.*|.*fairy.*',  # More fantasy words
+            r'.*\d.*',  # Names containing numbers
+            r'^(test|demo|sample|example).*judge.*',  # Test placeholders
+        ]
         
     async def __aenter__(self):
         """Async context manager entry"""
