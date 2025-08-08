@@ -196,6 +196,15 @@ class JudgeValidator:
                         if isinstance(source, ValidationSource):
                             result.add_source(source)
             
+            # If no sources found, return no information available
+            if not result.sources or result.confidence_score == 0.0:
+                logger.info(f"❌ No reliable information found for Judge {judge_name}")
+                result.is_verified = False
+                result.confidence_score = 0.0
+                result.validation_summary = f"No information can be retrieved for Judge {judge_name}. Unable to verify existence through reliable sources."
+                result.recommended_action = "NO_INFORMATION_FOUND"
+                return result
+            
             # Cache the result
             self.cache[cache_key] = (result, datetime.utcnow())
             
