@@ -37,22 +37,7 @@ const ScriptGenerator = () => {
   const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
   const [audioData, setAudioData] = useState(null);
   
-  // Avatar video state
-  const [isGeneratingVideo, setIsGeneratingVideo] = useState(false);
-  const [avatarVideoData, setAvatarVideoData] = useState(null);
-  const [lastGeneratedAudio, setLastGeneratedAudio] = useState(null);
 
-  // Enhanced avatar generation state
-  const [avatarOption, setAvatarOption] = useState("default");
-  const [userImageFile, setUserImageFile] = useState(null);
-  const [userImageBase64, setUserImageBase64] = useState(null);
-  const [showAvatarOptions, setShowAvatarOptions] = useState(false);
-
-  // Ultra-realistic avatar generation state
-  const [showUltraRealisticOptions, setShowUltraRealisticOptions] = useState(false);
-  const [ultraAvatarStyle, setUltraAvatarStyle] = useState("business_professional");
-  const [ultraAvatarGender, setUltraAvatarGender] = useState("female");
-  const [ultraAvatarIndex, setUltraAvatarIndex] = useState(1);
 
   // AI-optimized script generation state
   const [showAIScriptOptions, setShowAIScriptOptions] = useState(false);
