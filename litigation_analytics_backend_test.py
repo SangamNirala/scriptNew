@@ -31,7 +31,7 @@ from typing import Dict, Any, List
 class LitigationAnalyticsBackendTester:
     def __init__(self):
         # Use the production backend URL from frontend/.env
-        self.base_url = "https://82991f44-933f-4953-9a75-215abfd54da0.preview.emergentagent.com/api"
+        self.base_url = "https://61ff957a-2de2-4e6f-a567-0aa588d69564.preview.emergentagent.com/api"
         self.session = requests.Session()
         self.session.headers.update({
             'Content-Type': 'application/json',
