@@ -11,7 +11,7 @@ import base64
 from datetime import datetime
 
 class SignatureFocusedTester:
-    def __init__(self, base_url="https://a16cacda-36dd-4b7c-938e-2fc7043a6190.preview.emergentagent.com"):
+    def __init__(self, base_url="https://3d73c7c4-6137-4e60-9034-9dcaf0a6e39c.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.tests_run = 0
