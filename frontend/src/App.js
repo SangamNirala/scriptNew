@@ -1122,7 +1122,37 @@ const ScriptGenerator = () => {
                         <span>📋</span>
                         <span>Copy Enhanced Prompts</span>
                       </button>
+                      
+                      {/* Generate Image Button */}
+                      <button
+                        onClick={handleGenerateImages}
+                        disabled={isGeneratingImages}
+                        className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center space-x-2 ${
+                          isGeneratingImages 
+                            ? 'bg-pink-500/20 text-pink-300 cursor-not-allowed' 
+                            : 'bg-pink-500/20 text-pink-300 hover:bg-pink-500/30'
+                        }`}
+                      >
+                        {isGeneratingImages ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-pink-300"></div>
+                            <span>Generating...</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>🖼️</span>
+                            <span>Generate Images</span>
+                          </>
+                        )}
+                      </button>
                     </div>
+                    
+                    {/* Image Generation Error Display */}
+                    {imageGenerationError && (
+                      <div className="mt-4 p-3 bg-red-500/20 border border-red-300/20 rounded-lg">
+                        <p className="text-red-300 text-sm">{imageGenerationError}</p>
+                      </div>
+                    )}
                   </div>
                 )}
                 
