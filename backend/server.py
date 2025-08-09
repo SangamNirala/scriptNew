@@ -16,6 +16,10 @@ import io
 import tempfile
 import asyncio
 import re
+# Translation imports
+from googletrans import Translator
+from deep_translator import GoogleTranslator
+import time
 # Avatar generator imports removed - dependencies not available
 from lib.context_integration import ContextIntegrationSystem
 # Phase 3: Advanced Analytics and Validation Components
