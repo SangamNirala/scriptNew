@@ -767,6 +767,83 @@ const ScriptGenerator = () => {
       .replace(/\n/g, '<br/>');
   };
 
+  // Translation handler
+  const handleTranslateScript = async (targetLanguage) => {
+    if (!generatedScript) {
+      setError("Please generate a script first before translating.");
+      return;
+    }
+
+    // If switching back to English, show original script
+    if (targetLanguage === "en") {
+      if (originalScript) {
+        setGeneratedScript(originalScript);
+        setCurrentLanguage("en");
+        return;
+      }
+      // If no original cached, current script is already in English
+      setCurrentLanguage("en");
+      return;
+    }
+
+    // Save original script if not already saved
+    if (!originalScript) {
+      setOriginalScript(generatedScript);
+    }
+
+    setIsTranslating(true);
+    setError("");
+
+    try {
+      // Extract only the actual script content, not image prompts
+      // Image prompts are in [brackets] - keep them in English
+      const scriptParts = [];
+      const imageParts = [];
+      
+      // Split script by image prompts to preserve them
+      const parts = generatedScript.split(/(\[[^\]]+\])/g);
+      
+      parts.forEach(part => {
+        if (part.match(/^\[[^\]]+\]$/)) {
+          // This is an image prompt - keep in English
+          imageParts.push(part);
+          scriptParts.push("__IMAGE_PLACEHOLDER__");
+        } else {
+          scriptParts.push(part);
+        }
+      });
+
+      const textToTranslate = scriptParts.join("");
+
+      const response = await axios.post(`${API}/translate-script`, {
+        text: textToTranslate,
+        source_language: "en",
+        target_language: targetLanguage
+      });
+
+      if (response.data.success) {
+        // Replace placeholders with original image prompts
+        let translatedText = response.data.translated_text;
+        let imageIndex = 0;
+        translatedText = translatedText.replace(/__IMAGE_PLACEHOLDER__/g, () => {
+          return imageParts[imageIndex++] || "";
+        });
+
+        setGeneratedScript(translatedText);
+        setTranslatedScript(translatedText);
+        setCurrentLanguage(targetLanguage);
+      } else {
+        setError("Translation failed. Please try again.");
+      }
+    } catch (err) {
+      console.error("Translation error:", err);
+      setError("Translation service is temporarily unavailable. Please try again later.");
+    } finally {
+      setIsTranslating(false);
+      setShowLanguageDropdown(false);
+    }
+  };
+
   const formatEnhancedPrompt = (text) => {
     return text
       .replace(/\n\n/g, '<br/><br/>') // Double line breaks for paragraphs
