@@ -156,6 +156,9 @@ backend:
         - working: false
           agent: "main"
           comment: "Implemented new /api/translate-script endpoint using deep-translator (Google). Preserves [bracketed] image prompts in English via placeholder masking/unmasking, chunks long texts (>4500 chars), gentle rate limiting between chunks, and robust error handling (503 on translator unavailability, 500 on unexpected errors). Request/response Pydantic models added. Ready for backend testing."
+        - working: false
+          agent: "main"
+          comment: "FIX: Strengthened placeholder restoration to handle Google truncation (e.g., '§§BR_0§§' → '§§BR_0§'). Added tolerant regex that matches 1–3 leading/trailing section marks and optional spaces. NEW: Also preserve AI IMAGE PROMPT quoted content (AI IMAGE PROMPT: \"...\") in English by masking with §§IP_i§§ during translation and restoring after. Frontend updated to stop doing its own placeholder splitting and now delegates preservation to backend, preventing double-masking bugs that produced '__IMAGE_PLACEHOLDER__' artifacts. Ready for re-testing with edge cases."
 
   - task: "Enhance Image Prompt Button and Functionality"
     implemented: true
