@@ -2878,7 +2878,6 @@ async def translate_script(request: ScriptTranslationRequest):
                     restored_text = restored_text.replace(placeholder_lower, seg)
                 else:
                     # Try case-insensitive replacement using regex
-                    import re
                     pattern = re.compile(re.escape(placeholder), re.IGNORECASE)
                     restored_text = pattern.sub(seg, restored_text)
 
