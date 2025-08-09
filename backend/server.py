@@ -2896,6 +2896,9 @@ async def translate_script(request: ScriptTranslationRequest):
                 detail="Translation service temporarily unavailable. Please try again later.",
             )
 
+    except HTTPException:
+        # Re-raise HTTPExceptions (like 503 from translation service) without modification
+        raise
     except Exception as e:
         logger.error(f"Translation error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Translation error: {str(e)}")
