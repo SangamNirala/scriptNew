@@ -145,6 +145,18 @@ user_problem_statement: "You are an expert in text-to-speech (TTS) systems and u
           comment: "🎉 PHASE 2 COMPREHENSIVE TESTING COMPLETED WITH EXCELLENT RESULTS: Successfully verified all Phase 2 Master Prompt Template V2.0 and Dynamic Context Integration functionality. CORE ISSUE RESOLVED: ✅ 'Error loading voices. Please refresh the page.' issue completely fixed - /api/voices endpoint working perfectly, returning 8 voices with proper structure (name, display_name, language, gender) and good variety (multiple genders and languages). ENHANCE PROMPT API VERIFIED: ✅ /api/enhance-prompt endpoint working excellently with review request sample data ('Create a video about healthy cooking tips', video_type: 'educational', industry_focus: 'health') - returns comprehensive enhanced prompts with all required fields: original_prompt, audience_analysis, enhancement_variations (3 variations), quality_metrics (7.0/10 overall score, 182.1x improvement ratio), recommendation, industry_insights, enhancement_methodology. BACKEND SERVICE STATUS: ✅ All backend services running properly - confirmed 3/3 core endpoints working (root, voices, scripts). DEPENDENCY VERIFICATION: ✅ All required dependencies properly installed and working: emergentintegrations (Gemini API), edge-tts (voice generation), MongoDB (database connection). PERFORMANCE: Enhanced prompt processing takes 30+ seconds due to complex AI processing but completes successfully with comprehensive results. Phase 2 functionality fully operational and meets all review request requirements."
 
 backend:
+  - task: "Script Language Translation Endpoint"
+    implemented: true
+    working: "NA"
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: false
+          agent: "main"
+          comment: "Implemented new /api/translate-script endpoint using deep-translator (Google). Preserves [bracketed] image prompts in English via placeholder masking/unmasking, chunks long texts (>4500 chars), gentle rate limiting between chunks, and robust error handling (503 on translator unavailability, 500 on unexpected errors). Request/response Pydantic models added. Ready for backend testing."
+
   - task: "Enhance Image Prompt Button and Functionality"
     implemented: true
     working: true
