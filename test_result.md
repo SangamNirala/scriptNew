@@ -538,14 +538,23 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Complete Frontend Testing - Enhanced Prompt Generation"
-    - "Complete Frontend Testing - Script Generation"  
-    - "Complete Frontend Testing - Enhanced Image Prompt Generation"
-    - "Complete Frontend Testing - Image Generation from Enhanced Prompts"
+    - "Backend: Translation Endpoint - /api/translate-script"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
   
+  - task: "Backend: Translation Endpoint - /api/translate-script"
+    implemented: true
+    working: "NA"
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Please test /api/translate-script for: 1) Basic en→hi translation, 2) Bracket preservation ([...]) remains English, 3) Chunking works for >5000 chars, 4) Error handling: invalid lang code returns 503, 5) Performance: translation within 30s for ~10k chars."
+
   - task: "Complete Frontend Testing - Enhanced Prompt Generation"
     implemented: true
     working: true
