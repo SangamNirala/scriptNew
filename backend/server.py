@@ -2812,65 +2812,81 @@ class ScriptTranslationResponse(BaseModel):
 async def translate_script(request: ScriptTranslationRequest):
     """
     Translate script content from one language to another.
-    Uses deep-translator with GoogleTranslator for reliable translation.
+    - Uses deep-translator with GoogleTranslator by default (free, no key)
+    - Preserves any text inside square brackets [ ... ] exactly as-is (do NOT translate image prompts)
+    - Preserves overall formatting like brackets [] and parentheses ()
+    - Chunks long texts (>4500 chars) to avoid provider limits
     """
     try:
         logger.info(f"Translation requested: {request.source_language} -> {request.target_language}")
-        
-        # Use deep-translator with GoogleTranslator
+
+        original_text = request.text or ""
+
+        # 1) Mask all [ ... ] segments so they remain in English and keep positions
+        # We use distinctive placeholders unlikely to be altered by translators
+        bracket_pattern = re.compile(r"\[[^\]]+\]")
+        bracket_segments = bracket_pattern.findall(original_text)
+        placeholders = []
+        masked_text = original_text
+        for i, seg in enumerate(bracket_segments):
+            placeholder = f"§§BR_{i}§§"
+            placeholders.append(placeholder)
+            masked_text = masked_text.replace(seg, placeholder, 1)
+
+        # 2) Prepare chunks for translation (on the masked text)
         try:
-            # For long texts, use chunking with deep-translator
-            if len(request.text) > 4500:
-                # Split text into smaller chunks
-                words = request.text.split()
+            if len(masked_text) > 4500:
+                words = masked_text.split()
                 chunks = []
                 current_chunk = []
                 current_length = 0
-                
                 for word in words:
+                    # +1 for space
                     if current_length + len(word) + 1 < 4500:
                         current_chunk.append(word)
                         current_length += len(word) + 1
                     else:
                         if current_chunk:
-                            chunks.append(' '.join(current_chunk))
+                            chunks.append(" ".join(current_chunk))
                         current_chunk = [word]
                         current_length = len(word)
-                
                 if current_chunk:
-                    chunks.append(' '.join(current_chunk))
+                    chunks.append(" ".join(current_chunk))
             else:
-                chunks = [request.text]
-            
+                chunks = [masked_text]
+
+            # 3) Translate each chunk using deep-translator
+            translator = GoogleTranslator(source=request.source_language or "auto", target=request.target_language)
             translated_chunks = []
-            translator = GoogleTranslator(source=request.source_language, target=request.target_language)
-            
-            for chunk in chunks:
+            for idx, chunk in enumerate(chunks):
                 if chunk.strip():
                     if len(chunks) > 1:
-                        time.sleep(0.5)  # Rate limiting
-                    
-                    result = translator.translate(chunk)
-                    translated_chunks.append(result)
-            
-            translated_text = ' '.join(translated_chunks)
-            
+                        time.sleep(0.5)  # gentle rate limit between chunk calls
+                    translated_chunk = translator.translate(chunk)
+                    translated_chunks.append(translated_chunk)
+            translated_masked_text = " ".join(translated_chunks)
+
+            # 4) Unmask the [ ... ] segments back to original English in correct order
+            restored_text = translated_masked_text
+            for i, seg in enumerate(bracket_segments):
+                placeholder = f"§§BR_{i}§§"
+                restored_text = restored_text.replace(placeholder, seg)
+
             return ScriptTranslationResponse(
-                original_text=request.text,
-                translated_text=translated_text,
+                original_text=original_text,
+                translated_text=restored_text,
                 source_language=request.source_language,
                 target_language=request.target_language,
                 translation_service="deep-translator (Google)",
-                success=True
+                success=True,
             )
-            
-        except Exception as e:
-            logger.error(f"Translation service failed: {str(e)}")
+        except Exception as te:
+            logger.error(f"Translation service failed: {str(te)}")
             raise HTTPException(
-                status_code=503, 
-                detail=f"Translation service temporarily unavailable. Please try again later."
+                status_code=503,
+                detail="Translation service temporarily unavailable. Please try again later.",
             )
-    
+
     except Exception as e:
         logger.error(f"Translation error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Translation error: {str(e)}")
