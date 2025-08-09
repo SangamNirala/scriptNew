@@ -2813,117 +2813,64 @@ class ScriptTranslationResponse(BaseModel):
 async def translate_script(request: ScriptTranslationRequest):
     """
     Translate script content from one language to another.
-    Supports multiple translation services with fallback options.
+    Uses deep-translator with GoogleTranslator for reliable translation.
     """
     try:
         logger.info(f"Translation requested: {request.source_language} -> {request.target_language}")
         
-        # Primary method: googletrans (free, no API key required)
+        # Use deep-translator with GoogleTranslator
         try:
-            translator = Translator()
-            
-            # For very long texts, split into chunks to avoid rate limits
-            text_chunks = []
-            if len(request.text) > 5000:
-                # Split by sentences/paragraphs to maintain context
-                paragraphs = request.text.split('\n')
-                current_chunk = ""
+            # For long texts, use chunking with deep-translator
+            if len(request.text) > 4500:
+                # Split text into smaller chunks
+                words = request.text.split()
+                chunks = []
+                current_chunk = []
+                current_length = 0
                 
-                for paragraph in paragraphs:
-                    if len(current_chunk + paragraph) < 4500:  # Leave room for safety
-                        current_chunk += paragraph + '\n'
+                for word in words:
+                    if current_length + len(word) + 1 < 4500:
+                        current_chunk.append(word)
+                        current_length += len(word) + 1
                     else:
                         if current_chunk:
-                            text_chunks.append(current_chunk.strip())
-                        current_chunk = paragraph + '\n'
+                            chunks.append(' '.join(current_chunk))
+                        current_chunk = [word]
+                        current_length = len(word)
                 
                 if current_chunk:
-                    text_chunks.append(current_chunk.strip())
+                    chunks.append(' '.join(current_chunk))
             else:
-                text_chunks = [request.text]
+                chunks = [request.text]
             
             translated_chunks = []
+            translator = GoogleTranslator(source=request.source_language, target=request.target_language)
             
-            for chunk in text_chunks:
-                if chunk.strip():  # Only translate non-empty chunks
-                    # Add small delay to avoid rate limits
-                    if len(text_chunks) > 1:
-                        time.sleep(0.5)
+            for chunk in chunks:
+                if chunk.strip():
+                    if len(chunks) > 1:
+                        time.sleep(0.5)  # Rate limiting
                     
-                    result = translator.translate(
-                        chunk, 
-                        src=request.source_language, 
-                        dest=request.target_language
-                    )
-                    translated_chunks.append(result.text)
+                    result = translator.translate(chunk)
+                    translated_chunks.append(result)
             
-            translated_text = '\n'.join(translated_chunks)
+            translated_text = ' '.join(translated_chunks)
             
             return ScriptTranslationResponse(
                 original_text=request.text,
                 translated_text=translated_text,
                 source_language=request.source_language,
                 target_language=request.target_language,
-                translation_service="googletrans",
+                translation_service="deep-translator (Google)",
                 success=True
             )
             
         except Exception as e:
-            logger.warning(f"googletrans failed: {str(e)}, trying fallback")
-            
-            # Fallback method: deep-translator with GoogleTranslator
-            try:
-                # For long texts, use chunking with deep-translator too
-                if len(request.text) > 4500:
-                    # Split text into smaller chunks
-                    words = request.text.split()
-                    chunks = []
-                    current_chunk = []
-                    current_length = 0
-                    
-                    for word in words:
-                        if current_length + len(word) + 1 < 4500:
-                            current_chunk.append(word)
-                            current_length += len(word) + 1
-                        else:
-                            if current_chunk:
-                                chunks.append(' '.join(current_chunk))
-                            current_chunk = [word]
-                            current_length = len(word)
-                    
-                    if current_chunk:
-                        chunks.append(' '.join(current_chunk))
-                else:
-                    chunks = [request.text]
-                
-                translated_chunks = []
-                translator = GoogleTranslator(source=request.source_language, target=request.target_language)
-                
-                for chunk in chunks:
-                    if chunk.strip():
-                        if len(chunks) > 1:
-                            time.sleep(0.5)  # Rate limiting
-                        
-                        result = translator.translate(chunk)
-                        translated_chunks.append(result)
-                
-                translated_text = ' '.join(translated_chunks)
-                
-                return ScriptTranslationResponse(
-                    original_text=request.text,
-                    translated_text=translated_text,
-                    source_language=request.source_language,
-                    target_language=request.target_language,
-                    translation_service="deep-translator (Google)",
-                    success=True
-                )
-                
-            except Exception as e2:
-                logger.error(f"All translation services failed. googletrans: {str(e)}, deep-translator: {str(e2)}")
-                raise HTTPException(
-                    status_code=503, 
-                    detail=f"Translation service temporarily unavailable. Please try again later."
-                )
+            logger.error(f"Translation service failed: {str(e)}")
+            raise HTTPException(
+                status_code=503, 
+                detail=f"Translation service temporarily unavailable. Please try again later."
+            )
     
     except Exception as e:
         logger.error(f"Translation error: {str(e)}")
