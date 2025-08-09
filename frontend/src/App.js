@@ -1187,7 +1187,7 @@ const ScriptGenerator = () => {
                     </button>
 
                     {/* Change Language Button */}
-                    <div className="relative">
+                    <div className="relative language-dropdown">
                       <button
                         onClick={() => setShowLanguageDropdown(!showLanguageDropdown)}
                         disabled={isTranslating || isEditingScript || !generatedScript}
