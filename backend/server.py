@@ -2826,12 +2826,54 @@ async def translate_script(request: ScriptTranslationRequest):
         # We use distinctive placeholders unlikely to be altered by translators
         bracket_pattern = re.compile(r"\[[^\]]+\]")
         bracket_segments = bracket_pattern.findall(original_text)
-        placeholders = []
         masked_text = original_text
+        
+        # Replace bracketed segments with placeholders
         for i, seg in enumerate(bracket_segments):
             placeholder = f"§§BR_{i}§§"
-            placeholders.append(placeholder)
             masked_text = masked_text.replace(seg, placeholder, 1)
+        
+        # Also mask AI IMAGE PROMPT quoted content (keep English)
+        # Example line: AI IMAGE PROMPT: "..."
+        ai_image_pattern = re.compile(r"(AI\s+IMAGE\s+PROMPT\s*:?\s*)([\"“])([^\"”]+)([\"”])", re.IGNORECASE)
+        ai_image_segments = []  # store full quoted substrings including quotes
+        def _ai_masker(m):
+            idx = len(ai_image_segments)
+            full_quoted = m.group(2) + m.group(3) + m.group(4)
+            ai_image_segments.append(full_quoted)
+            return f"{m.group(1)}§§IP_{idx}§§"
+        masked_text = ai_image_pattern.sub(_ai_masker, masked_text)
+
+        # Helper to restore placeholders robustly after translation
+        def _restore_placeholders(text, segments, prefix):
+            restored = text
+            for i, seg in enumerate(segments):
+                canonical = f"§§{prefix}_{i}§§"
+                # Build tolerant regex: allow 1-3 leading/trailing §, optional spaces, and optional missing trailing §
+                pattern = re.compile(rf"[§]{1,3}\s*{prefix}_{i}\s*[§]{{0,3}}", re.IGNORECASE)
+                # If not found, try more permissive variants including plain token
+                if not pattern.search(restored):
+                    alt_patterns = [
+                        re.compile(rf"{prefix}_{i}", re.IGNORECASE),
+                        re.compile(rf"[§]{0,3}\s*{prefix}\s*_\s*{i}\s*[§]{{0,3}}", re.IGNORECASE),
+                    ]
+                    found = False
+                    for p in alt_patterns:
+                        if p.search(restored):
+                            restored = p.sub(seg, restored, count=1)
+                            found = True
+                            break
+                    if not found:
+                        # last attempt: direct string replace for common truncation like '§§BR_i§'
+                        common_var_1 = f"§§{prefix}_{i}§"
+                        common_var_2 = f"§{prefix}_{i}§§"
+                        if common_var_1 in restored:
+                            restored = restored.replace(common_var_1, seg)
+                        elif common_var_2 in restored:
+                            restored = restored.replace(common_var_2, seg)
+                else:
+                    restored = pattern.sub(seg, restored, count=1)
+            return restored
 
         # 2) Prepare chunks for translation (on the masked text)
         try:
@@ -2866,30 +2908,12 @@ async def translate_script(request: ScriptTranslationRequest):
                     translated_chunks.append(translated_chunk)
             translated_masked_text = " ".join(translated_chunks)
 
-            # 4) Unmask the [ ... ] segments back to original English in correct order
+            # 4) Unmask preserved segments (image prompts and bracketed) back to original English
             restored_text = translated_masked_text
-            for i, seg in enumerate(bracket_segments):
-                placeholder = f"§§BR_{i}§§"
-                # Try multiple case variations that translator might produce
-                variations = [
-                    f"§§BR_{i}§§",  # Original uppercase
-                    f"§§br_{i}§§",  # Lowercase
-                    f"§§Br_{i}§§",  # Mixed case
-                    f"§§bR_{i}§§",  # Mixed case
-                ]
-                
-                replaced = False
-                for variation in variations:
-                    if variation in restored_text:
-                        restored_text = restored_text.replace(variation, seg)
-                        replaced = True
-                        break
-                
-                # If none of the variations worked, try regex case-insensitive
-                if not replaced:
-                    pattern = re.compile(re.escape(placeholder), re.IGNORECASE)
-                    if pattern.search(restored_text):
-                        restored_text = pattern.sub(seg, restored_text)
+            # First restore AI image prompt quoted content
+            restored_text = _restore_placeholders(restored_text, ai_image_segments, "IP")
+            # Then restore bracketed segments
+            restored_text = _restore_placeholders(restored_text, bracket_segments, "BR")
 
             return ScriptTranslationResponse(
                 original_text=original_text,
