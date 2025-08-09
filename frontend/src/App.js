@@ -108,6 +108,18 @@ const ScriptGenerator = () => {
     fetchVoices();
   }, []);
 
+  // Close language dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!event.target.closest('.language-dropdown') && showLanguageDropdown) {
+        setShowLanguageDropdown(false);
+      }
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [showLanguageDropdown]);
+
   const handleEnhancePrompt = async () => {
     if (!prompt.trim()) {
       setError("Please enter a prompt first");
