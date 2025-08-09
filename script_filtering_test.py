@@ -19,7 +19,7 @@ import sys
 import re
 
 # Get backend URL from frontend .env
-BACKEND_URL = "https://57ddad44-739c-4487-b1cc-36db80fa8192.preview.emergentagent.com/api"
+BACKEND_URL = "https://d4bc3e4b-9123-4ba2-8801-6a24a3b446a2.preview.emergentagent.com/api"
 
 class ScriptFilteringTester:
     def __init__(self):
