@@ -814,24 +814,30 @@ const ScriptGenerator = () => {
 
     try {
       // Extract only the actual script content, not image prompts
-      // Image prompts are in [brackets] - keep them in English
-      const scriptParts = [];
-      const imageParts = [];
-      
-      // Split script by image prompts to preserve them
-      const parts = generatedScript.split(/(\[[^\]]+\])/g);
-      
-      parts.forEach(part => {
-        if (part.match(/^\[[^\]]+\]$/)) {
-          // This is an image prompt - keep in English
-          imageParts.push(part);
-          scriptParts.push("__IMAGE_PLACEHOLDER__");
-        } else {
-          scriptParts.push(part);
-        }
+      // Preserve:
+      // 1) [bracketed] image prompts
+      // 2) AI IMAGE PROMPT: "..." quoted English prompts
+      const bracketPlaceholders = [];
+      const bracketSegments = [];
+
+      // Mask [ ... ] segments with placeholders BR_i so backend can also preserve
+      let workingText = generatedScript.replace(/\[[^\]]+\]/g, (m) => {
+        const idx = bracketSegments.length;
+        bracketSegments.push(m);
+        const ph = `§§BR_${idx}§§`;
+        bracketPlaceholders.push(ph);
+        return ph;
       });
 
-      const textToTranslate = scriptParts.join("");
+      // Mask AI IMAGE PROMPT quoted content with IP_i placeholders to keep English
+      const aiSegments = [];
+      workingText = workingText.replace(/(AI\s+IMAGE\s+PROMPT\s*:?\s*)([\"“])([^\"”]+)([\"”])/gi, (match, p1, q1, inner, q2) => {
+        const idx = aiSegments.length;
+        aiSegments.push(q1 + inner + q2);
+        return `${p1}§§IP_${idx}§§`;
+      });
+
+      const textToTranslate = workingText;
 
       const response = await axios.post(`${API}/translate-script`, {
         text: textToTranslate,
