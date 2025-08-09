@@ -4091,10 +4091,10 @@ app.add_middleware(
     allow_credentials=True,
     allow_origins=[
         "*",
-        "https://cross-origin-fix-3.preview.emergentagent.com",
-        "https://prompt-tester-1.preview.emergentagent.com",
-        "https://dd694e3b-a30b-41f0-bc6e-bb4a5f83262e.preview.emergentagent.com",
-        "https://321430b1-2683-4400-affa-98fd71c5d170.preview.emergentagent.com",
+        "https://785b8761-f285-408b-9858-671237e502b8.preview.emergentagent.com",
+        "https://785b8761-f285-408b-9858-671237e502b8.preview.emergentagent.com",
+        "https://785b8761-f285-408b-9858-671237e502b8.preview.emergentagent.com",
+        "https://785b8761-f285-408b-9858-671237e502b8.preview.emergentagent.com",
         "http://localhost:3000",
         "http://127.0.0.1:3000"
     ],
