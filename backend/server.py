@@ -2870,7 +2870,17 @@ async def translate_script(request: ScriptTranslationRequest):
             restored_text = translated_masked_text
             for i, seg in enumerate(bracket_segments):
                 placeholder = f"§§BR_{i}§§"
-                restored_text = restored_text.replace(placeholder, seg)
+                # Handle case where translator might change case of placeholder
+                placeholder_lower = f"§§br_{i}§§"
+                if placeholder in restored_text:
+                    restored_text = restored_text.replace(placeholder, seg)
+                elif placeholder_lower in restored_text:
+                    restored_text = restored_text.replace(placeholder_lower, seg)
+                else:
+                    # Try case-insensitive replacement using regex
+                    import re
+                    pattern = re.compile(re.escape(placeholder), re.IGNORECASE)
+                    restored_text = pattern.sub(seg, restored_text)
 
             return ScriptTranslationResponse(
                 original_text=original_text,
