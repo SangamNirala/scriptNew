@@ -198,3 +198,7 @@ textstat>=0.7.8
 
 # HTML Processing - CRITICAL FIX
 lxml_html_clean>=0.4.2
+
+# Translation Dependencies
+googletrans==4.0.0rc1
+deep-translator>=1.11.4
