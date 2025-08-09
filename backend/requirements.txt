@@ -197,3 +197,13 @@ backoff>=2.2.1
 async-timeout>=4.0.0
 lxml[html_clean]
 scikit-learn
+
+
+edge-tts 
+opencv-python 
+pydub 
+google-search-results 
+beautifulsoup4 
+newspaper3k 
+textstat 
+lxml[html_clean]
