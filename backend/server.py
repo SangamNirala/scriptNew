@@ -17,7 +17,6 @@ import tempfile
 import asyncio
 import re
 # Translation imports
-from googletrans import Translator
 from deep_translator import GoogleTranslator
 import time
 # Avatar generator imports removed - dependencies not available
