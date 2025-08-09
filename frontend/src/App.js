@@ -813,46 +813,17 @@ const ScriptGenerator = () => {
     setError("");
 
     try {
-      // Extract only the actual script content, not image prompts
-      // Preserve:
-      // 1) [bracketed] image prompts
-      // 2) AI IMAGE PROMPT: "..." quoted English prompts
-      const bracketPlaceholders = [];
-      const bracketSegments = [];
-
-      // Mask [ ... ] segments with placeholders BR_i so backend can also preserve
-      let workingText = generatedScript.replace(/\[[^\]]+\]/g, (m) => {
-        const idx = bracketSegments.length;
-        bracketSegments.push(m);
-        const ph = `§§BR_${idx}§§`;
-        bracketPlaceholders.push(ph);
-        return ph;
-      });
-
-      // Mask AI IMAGE PROMPT quoted content with IP_i placeholders to keep English
-      const aiSegments = [];
-      workingText = workingText.replace(/(AI\s+IMAGE\s+PROMPT\s*:?\s*)([\"“])([^\"”]+)([\"”])/gi, (match, p1, q1, inner, q2) => {
-        const idx = aiSegments.length;
-        aiSegments.push(q1 + inner + q2);
-        return `${p1}§§IP_${idx}§§`;
-      });
-
-      const textToTranslate = workingText;
-
+      // Delegate preservation rules to backend which:
+      // - Keeps [bracketed] image prompts in English
+      // - Keeps AI IMAGE PROMPT quoted content in English
       const response = await axios.post(`${API}/translate-script`, {
-        text: textToTranslate,
+        text: generatedScript,
         source_language: "en",
         target_language: targetLanguage
       });
 
       if (response.data.success) {
-        // Replace placeholders with original image prompts
-        let translatedText = response.data.translated_text;
-        let imageIndex = 0;
-        translatedText = translatedText.replace(/__IMAGE_PLACEHOLDER__/g, () => {
-          return imageParts[imageIndex++] || "";
-        });
-
+        const translatedText = response.data.translated_text;
         setGeneratedScript(translatedText);
         setTranslatedScript(translatedText);
         setCurrentLanguage(targetLanguage);
