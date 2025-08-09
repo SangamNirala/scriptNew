@@ -193,6 +193,12 @@ const ScriptGenerator = () => {
       setGeneratedScript(response.data.generated_script);
       setCurrentScriptId(response.data.id); // Store the script ID
       setGeneratedWithPrompt(promptTypeLabel);
+      
+      // Reset translation state for new script
+      setCurrentLanguage("en");
+      setOriginalScript("");
+      setTranslatedScript("");
+      
       fetchScripts(); // Refresh the list
     } catch (err) {
       setError("Error generating script. Please try again.");
