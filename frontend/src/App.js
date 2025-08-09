@@ -58,6 +58,13 @@ const ScriptGenerator = () => {
   const [imageGenerationError, setImageGenerationError] = useState("");
   const [showInlineGallery, setShowInlineGallery] = useState(false);
 
+  // Translation state
+  const [currentLanguage, setCurrentLanguage] = useState("en");
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [originalScript, setOriginalScript] = useState("");
+  const [translatedScript, setTranslatedScript] = useState("");
+  const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
+
   // Ultra-realistic avatar generation state
   const [showUltraRealisticOptions, setShowUltraRealisticOptions] = useState(false);
   const [ultraAvatarStyle, setUltraAvatarStyle] = useState("business_professional");
