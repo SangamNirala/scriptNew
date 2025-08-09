@@ -2839,9 +2839,10 @@ async def translate_script(request: ScriptTranslationRequest):
         ai_image_segments = []  # store full quoted substrings including quotes
         def _ai_masker(m):
             idx = len(ai_image_segments)
-            full_quoted = m.group(2) + m.group(3) + m.group(4)
-            ai_image_segments.append(full_quoted)
-            return f"{m.group(1)}§§IP_{idx}§§"
+            # Preserve the entire AI IMAGE PROMPT structure including the prefix
+            full_structure = m.group(1) + m.group(2) + m.group(3) + m.group(4)
+            ai_image_segments.append(full_structure)
+            return f"§§IP_{idx}§§"
         masked_text = ai_image_pattern.sub(_ai_masker, masked_text)
 
         # Helper to restore placeholders robustly after translation
