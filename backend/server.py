@@ -2350,8 +2350,8 @@ def extract_clean_script(raw_script):
     - Duplicate content (same text in CHARACTER and DIALOGUE fields)
     """
     
-    # First, check if this is a dialogue-only format with timestamps like [0:00-0:03]
-    if re.search(r'\[\d+:\d+\s*[-–]\s*\d+:\d+\]', raw_script):
+    # First, check if this is a dialogue-only format with timestamps (both [0:00-0:03] and 0:00-0:03 formats)
+    if re.search(r'\[\d+:\d+\s*[-–]\s*\d+:\d+\]', raw_script) or re.search(r'(?:^|\n)\d+:\d+\s*[-–]\s*\d+:\d+(?:\n|$)', raw_script):
         return extract_dialogue_with_timestamps(raw_script)
     
     # Check if this is a modern script format with [DIALOGUE:] markers
