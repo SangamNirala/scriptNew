@@ -6,7 +6,7 @@ Quick Script Editing Test
 import requests
 import json
 
-BACKEND_URL = "https://f5f1bcd3-1e7e-4f94-9ffa-0d0d9163f7bc.preview.emergentagent.com/api"
+BACKEND_URL = "https://465ecec1-f9fe-4136-bbe9-ca96b3d072cc.preview.emergentagent.com/api"
 
 def test_script_editing():
     session = requests.Session()

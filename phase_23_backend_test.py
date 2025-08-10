@@ -39,7 +39,7 @@ from lib.prompt_template_registry import PromptTemplateRegistry, TemplateContent
 from lib.enhanced_prompt_architecture import EnhancedPromptArchitecture
 
 # Test configuration
-BACKEND_URL = "https://f5f1bcd3-1e7e-4f94-9ffa-0d0d9163f7bc.preview.emergentagent.com"
+BACKEND_URL = "https://465ecec1-f9fe-4136-bbe9-ca96b3d072cc.preview.emergentagent.com"
 API_BASE_URL = f"{BACKEND_URL}/api"
 
 class Phase23TestSuite:
