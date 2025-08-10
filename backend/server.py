@@ -2739,15 +2739,16 @@ def extract_dialogue_only_script(raw_script):
 
 @api_router.get("/voices", response_model=List[VoiceOption])
 async def get_available_voices():
-    """Get list of available TTS voices"""
+    """Get list of available TTS voices including Hindi voices for multilingual support"""
     try:
         voices = await edge_tts.list_voices()
         
         # Filter and format voices for better user experience
         voice_options = []
         
-        # Select popular voices with good variety
+        # Select popular voices with good variety - INCLUDING HINDI VOICES
         popular_voices = {
+            # English voices
             "en-US-AriaNeural": {"display": "Aria (US Female - Natural)", "gender": "Female"},
             "en-US-DavisNeural": {"display": "Davis (US Male - Natural)", "gender": "Male"}, 
             "en-US-JennyNeural": {"display": "Jenny (US Female - Friendly)", "gender": "Female"},
@@ -2757,7 +2758,10 @@ async def get_available_voices():
             "en-AU-NatashaNeural": {"display": "Natasha (Australian Female)", "gender": "Female"},
             "en-AU-WilliamNeural": {"display": "William (Australian Male)", "gender": "Male"},
             "en-CA-ClaraNeural": {"display": "Clara (Canadian Female)", "gender": "Female"},
-            "en-CA-LiamNeural": {"display": "Liam (Canadian Male)", "gender": "Male"}
+            "en-CA-LiamNeural": {"display": "Liam (Canadian Male)", "gender": "Male"},
+            # Hindi voices - CRITICAL FIX for Hindi audio generation bug
+            "hi-IN-SwaraNeural": {"display": "Swara (Hindi Female - Natural)", "gender": "Female"},
+            "hi-IN-MadhurNeural": {"display": "Madhur (Hindi Male - Natural)", "gender": "Male"}
         }
         
         for voice in voices:
