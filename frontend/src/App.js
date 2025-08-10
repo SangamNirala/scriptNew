@@ -261,6 +261,17 @@ const ScriptGenerator = () => {
       setDialogueOnlyScript(extractDialogueOnly(response.data.generated_script));
       setCurrentScriptId(response.data.id); // Store the script ID
       setGeneratedWithPrompt("ai-optimized");
+      
+      // Reset translation state for new AI script
+      setCurrentLanguage("en");
+      setOriginalScript("");
+      setTranslatedScript("");
+      
+      // Reset dialogue translation state for new AI script
+      setDialogueLanguage("en");
+      setOriginalDialogue("");
+      setTranslatedDialogue("");
+      
       fetchScripts(); // Refresh the scripts list
     } catch (err) {
       setError("Error generating AI-optimized script. Please try again.");
