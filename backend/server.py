@@ -95,7 +95,7 @@ class StatusCheckCreate(BaseModel):
 class ScriptRequest(BaseModel):
     prompt: str
     video_type: Optional[str] = "general"  # general, educational, entertainment, marketing
-    duration: Optional[str] = "short"  # short (30s-1min), medium (1-3min), long (3-5min)
+    duration: Optional[str] = "short"  # short (30s-1min), medium (1-3min), long (3-5min), extended_5 (5-10min), extended_10 (10-15min), extended_15 (15-20min), extended_20 (20-25min), extended_25 (25-30min)
 
 class AIVideoScriptRequest(BaseModel):
     prompt: str
