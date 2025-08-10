@@ -624,7 +624,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Add Edit/Listen/Download to Dialogue Only section"
+    - "Phase 1 Duration Management System Enhancement - COMPLETED"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
