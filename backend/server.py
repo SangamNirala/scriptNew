@@ -5085,9 +5085,9 @@ async def get_template_system_status():
                 "phase_2_4_complete": True
             },
             "next_phases": {
-                "phase_2_4": "25-30 Minute Template Implementation - Pending",
                 "phase_3": "Integration with Existing Systems - Ready",
-                "current_milestone": "Phase 2.3 Complete - 20-25 Minute Template Implemented"
+                "phase_4": "API Integration & Endpoints - Ready", 
+                "current_milestone": "Phase 2.4 Complete - 25-30 Minute Template Implemented"
             },
             "timestamp": datetime.utcnow().isoformat()
         }
