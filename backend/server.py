@@ -4988,9 +4988,6 @@ async def generate_complete_advanced_script(request: AdvancedScriptCompleteReque
         logger.error(f"Error in Complete Advanced Script Generation: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Complete advanced script generation failed: {str(e)}")
 
-# Include the router in the main app
-app.include_router(api_router)
-
 # TEST ENDPOINT: Phase 1.1-2.2 Enhanced Prompt Template System Demo
 @api_router.get("/template-system-status")
 async def get_template_system_status():
@@ -5073,6 +5070,9 @@ async def get_template_system_status():
             },
             "timestamp": datetime.utcnow().isoformat()
         }
+
+# Include the router in the main app
+app.include_router(api_router)
 
 # Configure logging
 logging.basicConfig(
