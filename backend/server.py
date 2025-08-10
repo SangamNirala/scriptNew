@@ -4241,10 +4241,10 @@ app.add_middleware(
     allow_credentials=True,
     allow_origins=[
         "*",
-        "https://d4bc3e4b-9123-4ba2-8801-6a24a3b446a2.preview.emergentagent.com",
-        "https://d4bc3e4b-9123-4ba2-8801-6a24a3b446a2.preview.emergentagent.com",
-        "https://d4bc3e4b-9123-4ba2-8801-6a24a3b446a2.preview.emergentagent.com",
-        "https://d4bc3e4b-9123-4ba2-8801-6a24a3b446a2.preview.emergentagent.com",
+        "https://5f8b513f-747d-4b08-80bc-24b0ea384cf7.preview.emergentagent.com",
+        "https://5f8b513f-747d-4b08-80bc-24b0ea384cf7.preview.emergentagent.com",
+        "https://5f8b513f-747d-4b08-80bc-24b0ea384cf7.preview.emergentagent.com",
+        "https://5f8b513f-747d-4b08-80bc-24b0ea384cf7.preview.emergentagent.com",
         "http://localhost:3000",
         "http://127.0.0.1:3000"
     ],

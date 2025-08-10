@@ -11,8 +11,8 @@ from datetime import datetime
 import sys
 
 # Get backend URL from frontend .env
-BACKEND_URL = "https://d4bc3e4b-9123-4ba2-8801-6a24a3b446a2.preview.emergentagent.com/api"
-FRONTEND_ORIGIN = "https://d4bc3e4b-9123-4ba2-8801-6a24a3b446a2.preview.emergentagent.com"
+BACKEND_URL = "https://5f8b513f-747d-4b08-80bc-24b0ea384cf7.preview.emergentagent.com/api"
+FRONTEND_ORIGIN = "https://5f8b513f-747d-4b08-80bc-24b0ea384cf7.preview.emergentagent.com"
 
 class CORSImageTester:
     def __init__(self):
@@ -221,7 +221,7 @@ class CORSImageTester:
         print("\n=== Testing CORS with Different Origins ===")
         
         test_origins = [
-            "https://d4bc3e4b-9123-4ba2-8801-6a24a3b446a2.preview.emergentagent.com",  # Expected frontend origin
+            "https://5f8b513f-747d-4b08-80bc-24b0ea384cf7.preview.emergentagent.com",  # Expected frontend origin
             "https://example.com",  # Different origin
             "http://localhost:3000",  # Local development
         ]
