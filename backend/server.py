@@ -2814,6 +2814,7 @@ async def translate_script(request: ScriptTranslationRequest):
     Translate script content from one language to another.
     - Uses deep-translator with GoogleTranslator by default (free, no key)
     - Preserves any text inside square brackets [ ... ] exactly as-is (do NOT translate image prompts)
+    - Preserves AI IMAGE PROMPT quoted content exactly as-is in English
     - Preserves overall formatting like brackets [] and parentheses ()
     - Chunks long texts (>4500 chars) to avoid provider limits
     """
