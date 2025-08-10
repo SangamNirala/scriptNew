@@ -1079,12 +1079,28 @@ class DurationSpecificPromptGenerator:
                     customized_template, customization_options
                 )
             
-            # Update metadata
-            customized_template["template_metadata"]["customization_applied"] = {
-                "video_type": video_type,
-                "customization_timestamp": datetime.utcnow().isoformat(),
-                "additional_options": bool(customization_options)
-            }
+            # Update metadata - check if template has creation_metadata or template_metadata
+            if "creation_metadata" in customized_template:
+                customized_template["creation_metadata"]["customization_applied"] = {
+                    "video_type": video_type,
+                    "customization_timestamp": datetime.utcnow().isoformat(),
+                    "additional_options": bool(customization_options)
+                }
+            elif "template_metadata" in customized_template:
+                customized_template["template_metadata"]["customization_applied"] = {
+                    "video_type": video_type,
+                    "customization_timestamp": datetime.utcnow().isoformat(),
+                    "additional_options": bool(customization_options)
+                }
+            else:
+                # Create metadata if it doesn't exist
+                customized_template["template_metadata"] = {
+                    "customization_applied": {
+                        "video_type": video_type,
+                        "customization_timestamp": datetime.utcnow().isoformat(),
+                        "additional_options": bool(customization_options)
+                    }
+                }
             
             # Update metrics
             self.generation_metrics["customizations_applied"] += 1
