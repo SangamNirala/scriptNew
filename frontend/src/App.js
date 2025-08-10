@@ -255,6 +255,7 @@ const ScriptGenerator = () => {
   };
 
   const handlePlayScript = () => {
+    setAudioTarget("script");
     if (isPlaying) {
       // Stop current playback
       if (audioData) {
