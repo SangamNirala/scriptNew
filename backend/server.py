@@ -2603,10 +2603,12 @@ def extract_dialogue_with_timestamps(raw_script):
         if not line:
             continue
             
-        # Skip lines that are just timestamps (both bracketed and bare formats)
+        # Skip lines that are just timestamps (all supported formats)
         if re.match(r'^\[\d+:\d+\s*[-–]\s*\d+:\d+\]$', line):  # [0:00-0:03]
             continue
         if re.match(r'^\d+:\d+\s*[-–]\s*\d+:\d+$', line):  # 0:00-0:03 (bare format)
+            continue
+        if re.match(r'^\(\d+:\s*\d+\s*[-–]\s*\d+:\s*\d+', line):  # (0: 00-0: 03 (parenthesized with spaces)
             continue
             
         # Extract content after timestamp markers (bracketed format)
