@@ -788,6 +788,31 @@ const ScriptGenerator = () => {
       .replace(/\n/g, '<br/>');
   };
 
+  // Function to extract only dialogue (timestamps + spoken lines) from the full script
+  const extractDialogueOnly = (script) => {
+    return script
+      // Remove all AI IMAGE PROMPT lines completely
+      .replace(/AI IMAGE PROMPT:.*$/gim, '')
+      // Remove all content in square brackets [content]
+      .replace(/\[[^\]]*\]/g, '')
+      // Keep timestamps in parentheses but remove speaker directions
+      .replace(/\((?![\d:.\-\s]+\))([^)]*)\)/g, '') // Remove parentheses that don't contain timestamps
+      // Clean up extra whitespace and empty lines
+      .replace(/\n\s*\n+/g, '\n\n')
+      .replace(/^\s+|\s+$/g, '') // Trim start and end
+      .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+      .replace(/ +\n/g, '\n') // Remove trailing spaces before newlines
+      .trim();
+  };
+
+  // Function to format dialogue-only script for display
+  const formatDialogueScript = (script) => {
+    return script
+      .replace(/\(([^)]*[\d:.\-]+[^)]*)\)/g, '<span class="text-purple-400 font-medium">($1)</span>') // Highlight timestamps
+      .replace(/\*\*([^*]+)\*\*/g, '<strong class="font-bold">$1</strong>')
+      .replace(/\n/g, '<br/>');
+  };
+
   // Translation handler
   const handleTranslateScript = async (targetLanguage) => {
     if (!generatedScript) {
