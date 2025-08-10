@@ -40,6 +40,10 @@ from lib.advanced_script_generator import ChainOfThoughtScriptGenerator
 from lib.few_shot_script_generator import FewShotScriptGenerator, ContextProfile
 # Phase 1: Advanced Segmented Script Generation System
 from lib.advanced_segmented_generator import AdvancedScriptGenerator
+# Phase 2: Advanced Script Generation Logic - Complete Implementation
+from lib.content_depth_scaling_engine import ContentDepthScalingEngine
+from lib.quality_consistency_engine import QualityConsistencyEngine
+from lib.advanced_generation_workflow import AdvancedGenerationWorkflow
 
 
 ROOT_DIR = Path(__file__).parent
