@@ -794,72 +794,62 @@ const ScriptGenerator = () => {
   // Function to extract only dialogue (timestamps + spoken lines) from the full script
   const extractDialogueOnly = (script) => {
     const lines = script.split('\n');
-    const dialogueLines = [];
+    const dialogueEntries = [];
     
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i].trim();
       
-      // Look for dialogue patterns like **[DIALOGUE:]** or [DIALOGUE:]
-      if (line.includes('[DIALOGUE:]') || line.includes('**[DIALOGUE:]**')) {
-        // Extract the dialogue content after the [DIALOGUE:] marker
-        const dialogueMatch = line.match(/\*?\*?\[DIALOGUE:\]\*?\*?\s*(.+)/);
-        if (dialogueMatch) {
-          let dialogueText = dialogueMatch[1].trim();
-          // Remove any remaining formatting like quotes, parentheses with voice directions
-          dialogueText = dialogueText
-            .replace(/^\(.*?\)\s*/, '') // Remove voice directions at start like "(Upbeat, friendly voice)"
-            .replace(/^["'"']|["'"']$/g, '') // Remove surrounding quotes
-            .trim();
-          
-          if (dialogueText) {
-            dialogueLines.push(dialogueText);
-          }
-        }
-      }
-      
-      // Also look for timestamp patterns that might be associated with dialogue
-      else if (line.match(/\*?\*?\[\d+:\d+[-–]\d+:\d+\]\s*AI\s+IMAGE\s+PROMPT/i)) {
-        // Extract timestamp from AI IMAGE PROMPT lines
-        const timestampMatch = line.match(/\*?\*?\[(\d+:\d+[-–]\d+:\d+)\]/);
-        if (timestampMatch && i + 2 < lines.length) {
-          // Look for dialogue in the next few lines
-          for (let j = i + 1; j <= Math.min(i + 3, lines.length - 1); j++) {
-            const nextLine = lines[j].trim();
-            if (nextLine.includes('[DIALOGUE:]')) {
-              const dialogueMatch = nextLine.match(/\*?\*?\[DIALOGUE:\]\*?\*?\s*(.+)/);
-              if (dialogueMatch) {
-                let dialogueText = dialogueMatch[1].trim();
-                dialogueText = dialogueText
-                  .replace(/^\(.*?\)\s*/, '')
-                  .replace(/^["'"']|["'"']$/g, '')
-                  .trim();
-                
-                if (dialogueText) {
-                  dialogueLines.push(`${timestampMatch[1]}\n${dialogueText}`);
-                }
+      // Look for timestamp patterns that appear before dialogue
+      const timestampMatch = line.match(/\*?\*?\[(\d+:\d+[-–]\d+:\d+)\]\s*AI\s+IMAGE\s+PROMPT/i);
+      if (timestampMatch) {
+        const timestamp = timestampMatch[1];
+        
+        // Look for the corresponding dialogue in the next few lines
+        for (let j = i + 1; j <= Math.min(i + 5, lines.length - 1); j++) {
+          const nextLine = lines[j].trim();
+          if (nextLine.includes('[DIALOGUE:]')) {
+            const dialogueMatch = nextLine.match(/\*?\*?\[DIALOGUE:\]\*?\*?\s*(.+)/);
+            if (dialogueMatch) {
+              let dialogueText = dialogueMatch[1].trim();
+              // Clean the dialogue text
+              dialogueText = dialogueText
+                .replace(/^\(.*?\)\s*/, '') // Remove voice directions like "(Upbeat voice)"
+                .replace(/^["'"']|["'"']$/g, '') // Remove surrounding quotes
+                .trim();
+              
+              if (dialogueText && dialogueText.length > 5) {
+                dialogueEntries.push(`${timestamp}\n${dialogueText}`);
               }
-              break;
             }
+            break;
           }
         }
       }
     }
     
-    // If no structured dialogue found, try alternative extraction method
-    if (dialogueLines.length === 0) {
-      // Look for quoted dialogue that appears to be spoken content
-      const quotedDialogue = script.match(/"([^"]*(?:every day|success|growth|together|keep|creativity|future|believe)[^"]*)"/gi);
-      if (quotedDialogue) {
-        quotedDialogue.forEach((quote, index) => {
-          let cleanQuote = quote.replace(/^"|"$/g, '').trim();
-          if (cleanQuote && cleanQuote.length > 10 && !cleanQuote.includes('AI IMAGE PROMPT')) {
-            dialogueLines.push(cleanQuote);
+    // If no structured entries found, try to extract quoted dialogue
+    if (dialogueEntries.length === 0) {
+      const quotedMatches = script.match(/"([^"]{10,}[^"]*?)"/g);
+      if (quotedMatches) {
+        quotedMatches.forEach(match => {
+          let cleanDialogue = match.replace(/^"|"$/g, '').trim();
+          // Filter out AI image prompts and other non-dialogue content
+          if (cleanDialogue && 
+              !cleanDialogue.includes('AI IMAGE PROMPT') && 
+              !cleanDialogue.includes('shot') &&
+              !cleanDialogue.includes('camera') &&
+              !cleanDialogue.includes('photography') &&
+              cleanDialogue.length > 10 && 
+              cleanDialogue.length < 200) {
+            dialogueEntries.push(cleanDialogue);
           }
         });
       }
     }
     
-    return dialogueLines.join('\n\n');
+    // Remove duplicates and return formatted result
+    const uniqueEntries = [...new Set(dialogueEntries)];
+    return uniqueEntries.join('\n\n');
   };
 
   // Function to format dialogue-only script for display
