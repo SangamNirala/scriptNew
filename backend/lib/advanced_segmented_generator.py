@@ -1,14 +1,22 @@
 """
 Advanced Segmented Script Generator - Phase 1: Core Segmentation System
+Enhanced with Phase 2: Narrative Continuity System
 
 This module implements intelligent script segmentation for long-form video content (15-30 minutes).
 It breaks complex scripts into manageable segments while maintaining narrative coherence.
 
-Features:
+Phase 1 Features:
 - Dynamic duration-based segment calculation
 - Intelligent segment planning and coordination
 - Content density optimization per segment
 - Cross-segment narrative structure management
+
+Phase 2 Features:
+- Narrative Continuity System integration
+- Story Arc Management across segments
+- Character Consistency Engine
+- Theme Continuity Tracking
+- Transition Generation between segments
 """
 
 import logging
@@ -17,6 +25,9 @@ from typing import Dict, Any, List, Tuple
 from datetime import datetime
 from emergentintegrations.llm.chat import LlmChat, UserMessage
 import asyncio
+
+# Import Phase 2: Narrative Continuity System
+from .narrative_continuity_system import NarrativeContinuitySystem
 
 logger = logging.getLogger(__name__)
 
