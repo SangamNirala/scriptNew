@@ -827,6 +827,7 @@ const ScriptGenerator = () => {
     if (targetLanguage === "en") {
       if (originalScript) {
         setGeneratedScript(originalScript);
+        setDialogueOnlyScript(extractDialogueOnly(originalScript));
         setCurrentLanguage("en");
         return;
       }
