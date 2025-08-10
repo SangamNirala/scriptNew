@@ -606,8 +606,8 @@ class Phase2NarrativeContinuityTester:
         # Test generation context structure
         self.test_generation_context_structure()
         
-        # Print summary
-        self.print_summary()
+        # Print summary and return results
+        return self.print_summary()
 
     def print_summary(self):
         """Print test summary"""
