@@ -1280,8 +1280,95 @@ const ScriptGenerator = () => {
                       className="px-4 py-2 bg-purple-500/20 text-purple-300 rounded-lg hover:bg-purple-500/30 transition-colors flex items-center space-x-2"
                     >
                       <span>📋</span>
-                      <span>Copy Dialogue</span>
+                      <span>Copy</span>
                     </button>
+
+                    {/* Edit Dialogue Button */}
+                    {!isEditingDialogue && (
+                      <button
+                        onClick={handleEditDialogue}
+                        disabled={isGeneratingAudio}
+                        className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center space-x-2 ${
+                          isGeneratingAudio
+                            ? 'bg-gray-500/20 text-gray-400 cursor-not-allowed opacity-75'
+                            : 'bg-blue-500/20 text-blue-300 hover:bg-blue-500/30'
+                        }`}
+                      >
+                        <span>✏️</span>
+                        <span>Edit</span>
+                      </button>
+                    )}
+
+                    {/* Save/Cancel when editing */}
+                    {isEditingDialogue && (
+                      <>
+                        <button
+                          onClick={handleSaveDialogue}
+                          disabled={!hasUnsavedDialogueChanges || isSavingDialogue}
+                          className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center space-x-2 ${
+                            !hasUnsavedDialogueChanges || isSavingDialogue
+                              ? 'bg-gray-500/20 text-gray-400 cursor-not-allowed opacity-75'
+                              : 'bg-green-500/20 text-green-300 hover:bg-green-500/30'
+                          }`}
+                        >
+                          {isSavingDialogue ? (
+                            <>
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-300"></div>
+                              <span>Saving...</span>
+                            </>
+                          ) : (
+                            <>
+                              <span>💾</span>
+                              <span>Save</span>
+                            </>
+                          )}
+                        </button>
+                        <button
+                          onClick={handleCancelEditDialogue}
+                          disabled={isSavingDialogue}
+                          className="px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center space-x-2 bg-red-500/20 text-red-300 hover:bg-red-500/30"
+                        >
+                          <span>❌</span>
+                          <span>Cancel</span>
+                        </button>
+                      </>
+                    )}
+
+                    {/* Listen Dialogue Button */}
+                    <button
+                      onClick={handlePlayDialogue}
+                      disabled={isGeneratingAudio || isEditingDialogue}
+                      className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center space-x-2 ${
+                        isPlaying
+                          ? 'bg-red-500/20 text-red-300 hover:bg-red-500/30'
+                          : isGeneratingAudio || isEditingDialogue
+                          ? 'bg-gray-500/20 text-gray-400 cursor-not-allowed opacity-75'
+                          : 'bg-green-500/20 text-green-300 hover:bg-green-500/30'
+                      }`}
+                    >
+                      {isGeneratingAudio ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-yellow-300"></div>
+                          <span>Generating...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>{isPlaying ? '⏹️' : '🎵'}</span>
+                          <span>{isPlaying ? 'Stop' : 'Listen'}</span>
+                        </>
+                      )}
+                    </button>
+
+                    {/* Download Dialogue Audio Button */}
+                    {lastGeneratedAudio && lastAudioTarget === 'dialogue' && (
+                      <button
+                        onClick={handleDownloadAudio}
+                        className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 flex items-center space-x-2"
+                      >
+                        <span>💾</span>
+                        <span>Download Audio</span>
+                      </button>
+                    )}
                   </div>
                 </div>
                 
