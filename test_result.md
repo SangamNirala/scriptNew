@@ -130,6 +130,8 @@ user_problem_statement: "You are an expert in text-to-speech (TTS) systems and u
 
 **EXPECTED RESULT:** The Listen button in the Dialogue Only section should now generate audio WITHOUT timestamps, speaking only the actual dialogue content, matching the behavior of the Generated Script section.
 
+**CONTINUATION REQUEST FOR PHASE 2.4:** Complete testing process for Phase 2.4: 25-30 Minute Template Implementation. Need to verify all template features including: Expertise "25-30 Minute Comprehensive Content Architect, elite specialist", 5-6 segments with master-level storytelling frameworks, comprehensive content architecture with broadcast-quality structuring, peak engagement distribution across maximum duration, professional-grade content flow management, broadcast/documentary-quality content standards, and template length of 500+ words specialized instructions.
+
   - task: "Image Generation Endpoint Backend"
     implemented: true
     working: true
