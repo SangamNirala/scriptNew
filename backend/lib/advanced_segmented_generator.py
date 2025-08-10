@@ -642,3 +642,138 @@ class AdvancedScriptGenerator:
         except Exception as e:
             logger.error(f"Error getting segment generation context: {str(e)}")
             return {"error": str(e)}
+    
+    async def generate_advanced_script_with_continuity(self,
+                                                      prompt: str,
+                                                      video_type: str = "general",
+                                                      duration: str = "medium") -> Dict[str, Any]:
+        """
+        Phase 2: Advanced script generation with complete narrative continuity system
+        
+        This method combines Phase 1 segmentation with Phase 2 narrative continuity
+        to create a comprehensive script generation framework.
+        
+        Args:
+            prompt: Original user prompt
+            video_type: Type of video content
+            duration: Target duration
+            
+        Returns:
+            Complete script generation result with segmentation and narrative continuity
+        """
+        try:
+            logger.info(f"🎭 Starting Phase 2 Advanced Script Generation with Narrative Continuity")
+            logger.info(f"Request: {prompt[:100]}..., Duration: {duration}, Type: {video_type}")
+            
+            # Phase 1: Execute existing segmentation logic
+            phase1_result = await self.generate_advanced_script(prompt, video_type, duration)
+            
+            if phase1_result.get("status") != "success":
+                return phase1_result
+            
+            # Extract Phase 1 context
+            generation_context = phase1_result.get("generation_context", {})
+            segment_plan = generation_context.get("segment_plan", {})
+            
+            # Phase 2: Execute narrative continuity analysis
+            logger.info("🎭 Phase 2: Executing Narrative Continuity Analysis...")
+            
+            narrative_continuity = await self.narrative_continuity_system.analyze_narrative_continuity(
+                original_prompt=prompt,
+                video_type=video_type,
+                segment_plan=segment_plan
+            )
+            
+            if not narrative_continuity.get('narrative_continuity_complete'):
+                logger.error("Narrative continuity analysis failed")
+                return {
+                    "status": "error",
+                    "error": f"Narrative continuity analysis failed: {narrative_continuity.get('error', 'Unknown error')}",
+                    "phase": "narrative_continuity_failed"
+                }
+            
+            # Combine Phase 1 and Phase 2 results
+            enhanced_generation_context = {
+                **generation_context,
+                "narrative_continuity": narrative_continuity,
+                "phase2_complete": True
+            }
+            
+            return {
+                "status": "success",
+                "phase": "narrative_continuity_complete",
+                "original_prompt": prompt,
+                "video_type": video_type,
+                "duration": duration,
+                "generation_context": enhanced_generation_context,
+                "phase1_results": {
+                    "segmentation_analysis": generation_context.get("segmentation_analysis", {}),
+                    "segment_plan": generation_context.get("segment_plan", {}),
+                    "coordination_context": generation_context.get("coordination_context", {})
+                },
+                "phase2_results": narrative_continuity,
+                "next_steps": "Ready for actual segment content generation with narrative continuity",
+                "timestamp": datetime.utcnow().isoformat()
+            }
+            
+        except Exception as e:
+            logger.error(f"Error in Phase 2 advanced script generation: {str(e)}")
+            return {
+                "status": "error",
+                "error": str(e),
+                "phase": "phase2_failed"
+            }
+    
+    def get_segment_narrative_context(self, 
+                                    enhanced_generation_context: Dict[str, Any], 
+                                    segment_number: int) -> Dict[str, Any]:
+        """
+        Get enhanced narrative context for generating a specific segment (Phase 2)
+        
+        This combines Phase 1 segmentation context with Phase 2 narrative continuity context
+        to provide comprehensive context for segment generation.
+        
+        Args:
+            enhanced_generation_context: Context from generate_advanced_script_with_continuity
+            segment_number: Segment to generate (1-indexed)
+            
+        Returns:
+            Enhanced context combining segmentation and narrative continuity
+        """
+        try:
+            # Get Phase 1 context
+            phase1_context = self.get_segment_generation_context(enhanced_generation_context, segment_number)
+            
+            # Get Phase 2 narrative context
+            narrative_continuity = enhanced_generation_context.get("narrative_continuity", {})
+            narrative_context = self.narrative_continuity_system.get_segment_narrative_context(
+                narrative_continuity, segment_number
+            )
+            
+            # Combine both contexts
+            return {
+                "segment_number": segment_number,
+                "total_segments": phase1_context.get("total_segments", 1),
+                
+                # Phase 1: Segmentation Context
+                "segmentation_context": {
+                    "segment_context": phase1_context.get("segment_context", {}),
+                    "segment_outline": phase1_context.get("segment_outline", {}),
+                    "coordination_requirements": phase1_context.get("coordination_requirements", {})
+                },
+                
+                # Phase 2: Narrative Continuity Context
+                "narrative_context": narrative_context,
+                
+                # Combined readiness flags
+                "ready_for_content_generation": phase1_context.get("ready_for_content_generation", False),
+                "narrative_continuity_ready": not bool(narrative_context.get("error")),
+                
+                # Enhancement flags
+                "phase1_complete": True,
+                "phase2_complete": enhanced_generation_context.get("phase2_complete", False)
+            }
+            
+        except Exception as e:
+            logger.error(f"Error getting enhanced segment narrative context: {str(e)}")
+            return {"error": str(e)}
