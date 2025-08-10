@@ -266,7 +266,7 @@ DURATION_PROMPT_TEMPLATES = {
     
     "extended_20": TemplateSpecification(
         duration_category=DurationCategory.EXTENDED_20,
-        name="20-25 Minute Deep Dive Expert",
+        name="20-25 Minute Deep Dive Content Expert",
         expertise_level=ExpertiseLevel.EXPERT,
         segments="4-5 segments",
         segment_count_range=(4, 5),
