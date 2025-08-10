@@ -511,6 +511,27 @@ class ImagePromptEnhancementResponse(BaseModel):
     enhancement_summary: List[str]
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
+# Phase 1: Advanced Segmented Script Generation Models
+class AdvancedScriptRequest(BaseModel):
+    prompt: str
+    video_type: Optional[str] = "general"  # general, educational, entertainment, marketing
+    duration: Optional[str] = "medium"  # short, medium, long, extended_5, extended_10, extended_15, extended_20, extended_25
+    enable_segmentation: Optional[bool] = True  # Enable advanced segmentation for longer content
+
+class AdvancedScriptResponse(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    original_prompt: str
+    video_type: str
+    duration: str
+    segmentation_analysis: Dict[str, Any]
+    segment_plan: Dict[str, Any]
+    coordination_context: Dict[str, Any]
+    generation_strategy: str  # "single_pass" or "segmented"
+    ready_for_generation: bool
+    phase_completed: str
+    next_steps: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
 # Add your routes to the router instead of directly to app
 @api_router.get("/")
 async def root():
