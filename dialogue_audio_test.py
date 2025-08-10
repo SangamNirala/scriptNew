@@ -12,7 +12,7 @@ import sys
 import re
 
 # Get backend URL from frontend .env
-BACKEND_URL = "https://14b722c7-16e7-42ab-b151-89e786c63a59.preview.emergentagent.com/api"
+BACKEND_URL = "https://467011d2-4cab-470e-9ba7-13bd14a7440b.preview.emergentagent.com/api"
 
 class DialogueAudioTester:
     def __init__(self):

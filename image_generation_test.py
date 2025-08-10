@@ -12,7 +12,7 @@ import os
 from typing import Dict, List, Any
 
 # Get backend URL from environment
-BACKEND_URL = os.getenv('REACT_APP_BACKEND_URL', 'https://14b722c7-16e7-42ab-b151-89e786c63a59.preview.emergentagent.com')
+BACKEND_URL = os.getenv('REACT_APP_BACKEND_URL', 'https://467011d2-4cab-470e-9ba7-13bd14a7440b.preview.emergentagent.com')
 API_BASE = f"{BACKEND_URL}/api"
 
 class ImageGenerationTester:
