@@ -88,10 +88,13 @@ class EnhancedWorkflowManager:
     """
     
     def __init__(self):
+        # Get API key from environment
+        self.api_key = os.environ.get('GEMINI_API_KEY', 'fallback_key')
+        
         # Initialize component managers
         self.duration_generator = DurationSpecificPromptGenerator()
         self.prompt_architecture = EnhancedPromptArchitecture()
-        self.segmentation_generator = AdvancedScriptGenerator()
+        self.segmentation_generator = AdvancedScriptGenerator(self.api_key)
         self.integration_manager = TemplateIntegrationManager(
             enhanced_prompt_architecture=self.prompt_architecture,
             template_generator=self.duration_generator,
