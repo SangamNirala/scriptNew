@@ -1710,7 +1710,7 @@ PROFESSIONAL PRODUCTION QUALITY:
                     "generator_id": self.generator_id,
                     "initialized_at": self.initialized_at.isoformat(),
                     "uptime_hours": round(uptime_seconds / 3600, 2),
-                    "version": "2.2.0",  # Updated version for Phase 2.2
+                    "version": "2.3.0",  # Updated version for Phase 2.3
                     "status": "operational"
                 },
                 
