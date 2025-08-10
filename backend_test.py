@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 class HindiAudioGenerationTester:
     def __init__(self):
         # Use production backend URL from frontend/.env
-        self.base_url = "https://5f52b486-d0b4-46b2-8fa8-5d44d397cf85.preview.emergentagent.com/api"
+        self.base_url = "https://fdb88e2d-1c56-4983-889f-10699a9a2d8a.preview.emergentagent.com/api"
         self.session = requests.Session()
         self.session.headers.update({
             'Content-Type': 'application/json',
@@ -556,7 +556,7 @@ from datetime import datetime
 import sys
 
 # Get backend URL from frontend .env
-BACKEND_URL = "https://5f52b486-d0b4-46b2-8fa8-5d44d397cf85.preview.emergentagent.com/api"
+BACKEND_URL = "https://fdb88e2d-1c56-4983-889f-10699a9a2d8a.preview.emergentagent.com/api"
 
 class ScriptGenerationTester:
     def __init__(self):

@@ -12,7 +12,7 @@ import sys
 import base64
 
 # Get backend URL from frontend .env
-BACKEND_URL = "https://5f52b486-d0b4-46b2-8fa8-5d44d397cf85.preview.emergentagent.com/api"
+BACKEND_URL = "https://fdb88e2d-1c56-4983-889f-10699a9a2d8a.preview.emergentagent.com/api"
 
 class TTSScriptProcessingTester:
     def __init__(self):
