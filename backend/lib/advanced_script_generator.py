@@ -469,21 +469,41 @@ Create a detailed engagement strategy with specific tactics, timing, and impleme
         reasoning_chain: Dict[str, Any], 
         enhanced_context: Dict[str, Any]
     ) -> Dict[str, Any]:
-        """Step 5: Develop actual script content based on reasoning chain"""
+        """Step 5: Develop actual script content based on reasoning chain with template enhancement"""
+        
+        # Extract template context
+        template_config = enhanced_context.get("template_config", {})
+        enhanced_prompt = enhanced_context.get("enhanced_prompt", "")
+        segmentation_plan = enhanced_context.get("segmentation_plan", {})
+        
+        # Build template-enhanced system message
+        system_message = """You are an elite script writer with the ability to synthesize complex strategic insights into compelling, production-ready video scripts.
+        
+        Your capabilities include:
+        - Translating strategic frameworks into engaging narrative content
+        - Optimizing language for maximum emotional and psychological impact
+        - Integrating complex requirements seamlessly into natural-flowing content
+        - Creating visually-rich, production-ready script specifications
+        - Balancing entertainment value with informational content
+        - Template-enhanced script generation with professional optimization
+        
+        Generate scripts that perfectly execute the strategic vision while remaining engaging and natural."""
+        
+        # Add template-specific guidance if available
+        if template_config and enhanced_prompt:
+            template_name = template_config.get("template_name", "Unknown Template")
+            system_message += f"""
+
+TEMPLATE INTEGRATION ACTIVE:
+- Active Template: {template_name}
+- Use the enhanced prompt specifications as your primary guide
+- Incorporate template-specific expertise and structure requirements
+- Ensure output meets template quality and formatting standards"""
         
         content_chat = LlmChat(
             api_key=self.api_key,
             session_id=f"cot-content-{datetime.utcnow().timestamp()}",
-            system_message="""You are an elite script writer with the ability to synthesize complex strategic insights into compelling, production-ready video scripts.
-            
-            Your capabilities include:
-            - Translating strategic frameworks into engaging narrative content
-            - Optimizing language for maximum emotional and psychological impact
-            - Integrating complex requirements seamlessly into natural-flowing content
-            - Creating visually-rich, production-ready script specifications
-            - Balancing entertainment value with informational content
-            
-            Generate scripts that perfectly execute the strategic vision while remaining engaging and natural."""
+            system_message=system_message
         ).with_model("gemini", "gemini-2.0-flash")
         
         # Synthesize all reasoning chain insights
@@ -493,7 +513,7 @@ Create a detailed engagement strategy with specific tactics, timing, and impleme
         engagement_tactics = reasoning_chain["step_4"].get("engagement_tactics", {})
         
         content_prompt = f"""
-SCRIPT CONTENT DEVELOPMENT:
+TEMPLATE-ENHANCED SCRIPT CONTENT DEVELOPMENT:
 
 ORIGINAL PROMPT: "{prompt}"
 
@@ -503,6 +523,15 @@ STRATEGIC SYNTHESIS:
 - Narrative Architecture: {structural_design}
 - Engagement Strategy: {engagement_tactics}
 
+TEMPLATE INTEGRATION CONTEXT:
+{json.dumps(template_config, indent=2) if template_config else "No template integration"}
+
+ENHANCED PROMPT SPECIFICATIONS:
+{enhanced_prompt[:500] + "..." if len(enhanced_prompt) > 500 else enhanced_prompt}
+
+SEGMENTATION REQUIREMENTS:
+{json.dumps(segmentation_plan, indent=2) if segmentation_plan else "No segmentation requirements"}
+
 SCRIPT DEVELOPMENT REQUIREMENTS:
 
 1. IMPLEMENT STRATEGIC ARCHITECTURE:
@@ -510,8 +539,15 @@ SCRIPT DEVELOPMENT REQUIREMENTS:
    - Integrate all identified engagement tactics naturally
    - Maintain optimal pacing and emotional arc
    - Include all specified retention and interaction elements
+   - Follow template-specific structural guidelines
 
-2. AUDIENCE-OPTIMIZED LANGUAGE:
+2. TEMPLATE COMPLIANCE:
+   - Adhere to enhanced prompt specifications
+   - Maintain template-defined expertise level and tone
+   - Implement template-specific segment requirements
+   - Follow template quality and formatting standards
+
+3. AUDIENCE-OPTIMIZED LANGUAGE:
    - Use language patterns that resonate with target audience
    - Incorporate appropriate tone, complexity, and style
    - Address identified concerns and motivations directly
