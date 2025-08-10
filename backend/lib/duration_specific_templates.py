@@ -1757,7 +1757,8 @@ PROFESSIONAL PRODUCTION QUALITY:
                     "video_type_customizer": "operational",
                     "template_validator": "operational",
                     "base_generator": "operational",
-                    "extended_15_template_generator": "operational"  # New component
+                    "extended_15_template_generator": "operational",  # Phase 2.2
+                    "extended_20_template_generator": "operational"   # Phase 2.3
                 }
             }
             
