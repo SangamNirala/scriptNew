@@ -110,6 +110,26 @@ user_problem_statement: "You are an expert in text-to-speech (TTS) systems and u
 
 **CURRENT ISSUE (January 2025) - RESOLVED:** User reported unable to generate images - after clicking "enhance image prompt" and then "generate images", error occurs: "TypeError: Cannot read properties of null (reading 'document')". The root cause was that window.open() was returning null due to popup blockers, and the code was trying to access .document on null object. FIXED by implementing proper error handling and fallback inline image gallery display.
 
+**NEW CRITICAL ISSUE (January 2025) - FIXED:** Audio Generation Issue in Dialogue Only Section - When users click the "Listen" button in the Dialogue Only section, the audio includes both dialogue content AND timestamps (like "[0:00-0:03]"), which sounds unnatural. However, the "Listen" button in the Generated Script section works correctly - it only speaks the dialogue content without timestamps. 
+
+**ROOT CAUSE IDENTIFIED AND RESOLVED:** The issue was in the backend `extract_clean_script()` function. The frontend's `extractDialogueOnly` function creates dialogue content with bare timestamps like "0:00-0:03" (without square brackets), but the backend was only configured to detect timestamps in square brackets "[0:00-0:03]". When bare timestamps weren't detected, they weren't being removed during text processing, causing them to be spoken in the audio.
+
+**FIX IMPLEMENTED (January 2025):**
+1. ✅ Updated `extract_clean_script()` function to detect both bracketed `[0:00-0:03]` and bare `0:00-0:03` timestamp formats
+2. ✅ Enhanced `extract_dialogue_with_timestamps()` function to handle both timestamp formats:
+   - Added detection for bare timestamp lines: `0:00-0:03`
+   - Added timestamp removal for both formats during processing
+   - Enhanced final cleanup to remove any remaining timestamps
+3. ✅ Updated regex patterns to catch timestamps both at line beginnings and throughout text
+4. ✅ Maintained backward compatibility with existing Generated Script functionality
+
+**TECHNICAL CHANGES:**
+- Modified `extract_clean_script()` function detection regex to include `(?:^|\n)\d+:\d+\s*[-–]\s*\d+:\d+(?:\n|$)` pattern
+- Enhanced `extract_dialogue_with_timestamps()` function with bare timestamp handling
+- Added comprehensive timestamp cleanup in final processing stage
+
+**EXPECTED RESULT:** The Listen button in the Dialogue Only section should now generate audio WITHOUT timestamps, speaking only the actual dialogue content, matching the behavior of the Generated Script section.
+
   - task: "Image Generation Endpoint Backend"
     implemented: true
     working: true
