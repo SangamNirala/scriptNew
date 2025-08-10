@@ -1167,6 +1167,11 @@ const ScriptGenerator = () => {
                     <option value="short">Short (30s-1min)</option>
                     <option value="medium">Medium (1-3min)</option>
                     <option value="long">Long (3-5min)</option>
+                    <option value="extended_5">Extended (5-10min)</option>
+                    <option value="extended_10">Extended (10-15min)</option>
+                    <option value="extended_15">Extended (15-20min)</option>
+                    <option value="extended_20">Extended (20-25min)</option>
+                    <option value="extended_25">Extended (25-30min)</option>
                   </select>
                 </div>
               </div>
