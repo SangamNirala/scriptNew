@@ -5105,6 +5105,183 @@ async def get_template_system_status():
             "timestamp": datetime.utcnow().isoformat()
         }
 
+# PHASE 3.1: VIDEO TYPE CUSTOMIZATION SYSTEM ENDPOINTS
+# ===================================================
+
+class TemplateCustomizationRequest(BaseModel):
+    """Request model for Phase 3.1 template customization"""
+    base_template: Dict[str, Any] = Field(..., description="Base template to customize")
+    video_type: str = Field(..., description="Video type: educational, marketing, entertainment, general")
+    additional_options: Optional[Dict[str, Any]] = Field(None, description="Additional customization options")
+
+class TemplateCustomizationResponse(BaseModel):
+    """Response model for Phase 3.1 template customization"""
+    customized_template: Dict[str, Any] = Field(..., description="Customized template with video type adaptations")
+    customization_metadata: Dict[str, Any] = Field(..., description="Metadata about applied customizations")
+    video_type: str = Field(..., description="Applied video type")
+    success: bool = Field(..., description="Customization success status")
+
+@api_router.post("/customize-template", response_model=TemplateCustomizationResponse)
+async def customize_template_endpoint(request: TemplateCustomizationRequest):
+    """
+    Phase 3.1 Video Type Customization System - Main Endpoint
+    
+    Customize base templates for different video categories with specialized optimization techniques.
+    Supports educational, marketing, entertainment, and general video types.
+    """
+    try:
+        logger.info(f"🎯 Phase 3.1 template customization request: {request.video_type}")
+        
+        # Apply Phase 3.1 template customization
+        customized_template = duration_specific_prompt_generator.customize_template(
+            request.base_template, 
+            request.video_type
+        )
+        
+        # Apply additional options if provided
+        if request.additional_options:
+            customized_template = await duration_specific_prompt_generator.customize_template(
+                customized_template,
+                request.video_type,
+                request.additional_options
+            )
+        
+        # Extract customization metadata
+        customization_metadata = customized_template.get("phase_3_1_metadata", {})
+        video_type_customization = customized_template.get("video_type_customization", {})
+        
+        response_metadata = {
+            **customization_metadata,
+            "video_type_framework": video_type_customization.get("customization_framework", {}),
+            "applied_adaptations": customized_template.get("phase_3_1_metadata", {}).get("adaptations_applied", {}),
+            "optimization_techniques": video_type_customization.get("optimization_techniques", {}),
+            "specialized_elements": video_type_customization.get("specialized_elements", {})
+        }
+        
+        logger.info(f"✅ Phase 3.1 template customization completed for {request.video_type}")
+        
+        return TemplateCustomizationResponse(
+            customized_template=customized_template,
+            customization_metadata=response_metadata,
+            video_type=request.video_type,
+            success=True
+        )
+        
+    except TemplateValidationError as e:
+        logger.error(f"Phase 3.1 template customization validation error: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Template customization validation failed: {str(e)}")
+    except Exception as e:
+        logger.error(f"Phase 3.1 template customization error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Template customization failed: {str(e)}")
+
+@api_router.get("/video-type-frameworks")
+async def get_video_type_frameworks():
+    """
+    Get all available video type customization frameworks
+    
+    Returns comprehensive information about Phase 3.1 video type adaptations
+    """
+    try:
+        customizer = duration_specific_prompt_generator.video_type_customizer
+        
+        frameworks_info = {}
+        for video_type in ["educational", "marketing", "entertainment", "general"]:
+            framework = customizer.get_customization_framework(video_type)
+            
+            frameworks_info[video_type] = {
+                "framework": framework,
+                "specialized_techniques": customizer._get_specialized_techniques(video_type),
+                "optimization_strategies": customizer._get_optimization_strategies(video_type),
+                "engagement_patterns": customizer._get_engagement_patterns(video_type),
+                "content_adaptations": customizer._get_content_structure_adaptations(video_type)
+            }
+        
+        return {
+            "phase_implementation": "3.1_video_type_customization",
+            "supported_video_types": ["educational", "marketing", "entertainment", "general"],
+            "frameworks": frameworks_info,
+            "customization_capabilities": {
+                "educational": "Learning objectives, knowledge retention, progressive complexity, interactive elements",
+                "marketing": "Conversion optimization, persuasive storytelling, emotional triggers, CTAs",
+                "entertainment": "Engagement maximization, emotional design, surprise elements, participation",
+                "general": "Universal appeal, balanced content, versatile structure, inclusive design"
+            },
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting video type frameworks: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get video type frameworks: {str(e)}")
+
+@api_router.post("/template-customization-test")
+async def test_template_customization():
+    """
+    Test endpoint for Phase 3.1 template customization system
+    
+    Tests all video types with sample templates
+    """
+    try:
+        logger.info("🧪 Testing Phase 3.1 template customization system")
+        
+        # Create a sample base template
+        sample_template = {
+            "template_id": "test_template_001",
+            "template_name": "Test Base Template",
+            "duration_category": "extended_15",
+            "expertise_level": "specialist",
+            "system_prompt": "You are a professional video content specialist with expertise in creating engaging 15-20 minute content.",
+            "expertise_description": "15+ years experience in video content creation",
+            "framework_instructions": "Create compelling, well-structured video content",
+            "segment_guidelines": "Optimize for 3-4 segments with clear transitions"
+        }
+        
+        test_results = {}
+        video_types = ["educational", "marketing", "entertainment", "general"]
+        
+        for video_type in video_types:
+            try:
+                customized = duration_specific_prompt_generator.customize_template(
+                    sample_template, video_type
+                )
+                
+                test_results[video_type] = {
+                    "success": True,
+                    "customization_applied": bool(customized.get("video_type_customization")),
+                    "phase_3_1_metadata": bool(customized.get("phase_3_1_metadata")),
+                    "enhancements_added": bool(customized.get(f"{video_type}_enhancements")),
+                    "system_prompt_enhanced": len(customized.get("system_prompt", "")) > len(sample_template.get("system_prompt", "")),
+                    "adaptations_count": len(customized.get("phase_3_1_metadata", {}).get("adaptations_applied", {}))
+                }
+                
+            except Exception as e:
+                test_results[video_type] = {
+                    "success": False,
+                    "error": str(e)
+                }
+        
+        # Calculate overall success rate
+        successful_tests = sum(1 for result in test_results.values() if result.get("success", False))
+        success_rate = (successful_tests / len(video_types)) * 100
+        
+        logger.info(f"✅ Phase 3.1 template customization test completed: {success_rate}% success rate")
+        
+        return {
+            "phase_implementation": "3.1_video_type_customization",
+            "test_summary": {
+                "total_tests": len(video_types),
+                "successful_tests": successful_tests,
+                "success_rate_percent": success_rate,
+                "all_video_types_working": success_rate == 100.0
+            },
+            "detailed_results": test_results,
+            "supported_video_types": video_types,
+            "test_timestamp": datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Phase 3.1 template customization test failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Template customization test failed: {str(e)}")
+
 # Include the router in the main app
 app.include_router(api_router)
 
