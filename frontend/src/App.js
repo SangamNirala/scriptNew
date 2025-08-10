@@ -36,6 +36,7 @@ const ScriptGenerator = () => {
   const [showVoiceSelection, setShowVoiceSelection] = useState(false);
   const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
   const [audioData, setAudioData] = useState(null);
+  const [lastAudioTarget, setLastAudioTarget] = useState(null); // 'script' | 'dialogue'
   
   // Avatar video state
   const [isGeneratingVideo, setIsGeneratingVideo] = useState(false);
