@@ -2608,6 +2608,8 @@ def extract_dialogue_with_timestamps(raw_script):
             continue
         if re.match(r'^\d+:\d+\s*[-–]\s*\d+:\d+$', line):  # 0:00-0:03 (bare format)
             continue
+        if re.match(r'^\d+:\s*\d+\s*[-–]\s*\d+:\s*\d+$', line):  # 0: 03-0: 06 (spaces around colons)
+            continue
         if re.match(r'^\(\d+:\s*\d+\s*[-–]\s*\d+:\s*\d+', line):  # (0: 00-0: 03 (parenthesized with spaces)
             continue
             
