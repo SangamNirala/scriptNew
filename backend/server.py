@@ -2626,6 +2626,7 @@ def extract_dialogue_with_timestamps(raw_script):
         # Remove timestamps from the beginning of lines (all supported formats)
         line = re.sub(r'^\[\d+:\d+\s*[-–]\s*\d+:\d+\]\s*', '', line)  # Remove [0:00-0:03]
         line = re.sub(r'^\d+:\d+\s*[-–]\s*\d+:\d+\s*', '', line)  # Remove 0:00-0:03
+        line = re.sub(r'^\d+:\s*\d+\s*[-–]\s*\d+:\s*\d+\s*', '', line)  # Remove 0: 03-0: 06
         line = re.sub(r'^\(\d+:\s*\d+\s*[-–]\s*\d+:\s*\d+[^\)]*\)?\s*', '', line)  # Remove (0: 00-0: 03
             
         # Skip common production elements
