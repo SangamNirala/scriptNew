@@ -7,7 +7,7 @@ import requests
 import json
 
 # Get backend URL from frontend .env
-BACKEND_URL = "https://85c6306c-93f8-4f72-a6c5-a7fa0785c40b.preview.emergentagent.com/api"
+BACKEND_URL = "https://818d214a-61c3-4c1b-9e85-1b348a4dafc5.preview.emergentagent.com/api"
 
 def test_specific_case():
     """Test the specific failing case"""
