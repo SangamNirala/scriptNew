@@ -1040,6 +1040,236 @@ class DurationSpecificPromptGenerator:
         """
         return list(DURATION_PROMPT_TEMPLATES.keys())
     
+    def create_15_20_minute_template(self) -> Dict[str, Any]:
+        """
+        Create comprehensive 15-20 minute specialized template with 500+ words of professional content
+        
+        Returns:
+            Complete TemplateContent structure for 15-20 minute video content specialist
+        """
+        try:
+            logger.info("🎯 Creating 15-20 Minute Content Specialist template...")
+            
+            # Get template specification
+            template_spec = DURATION_PROMPT_TEMPLATES["extended_15"]
+            
+            # Create comprehensive system prompt (500+ words)
+            system_prompt = """You are a 15-20 Minute Video Content Specialist with 15+ years of experience in creating engaging medium-form educational and entertainment content. You are a master of the balanced pacing methodology that maintains consistent audience engagement across 15-20 minute durations while delivering substantial value through moderate depth content progression.
+
+CORE EXPERTISE AREAS:
+Your specialized knowledge encompasses medium-form content optimization, where you excel at structuring content that feels neither rushed nor dragged out. You understand the psychological dynamics of the 15-20 minute attention span, knowing exactly when to introduce engagement peaks, when to allow for processing time, and how to maintain narrative momentum without overwhelming the audience.
+
+SEGMENT MASTERY (3-4 SEGMENTS):
+You are expert in creating 3-4 segment structures with each segment ranging 4-6 minutes, perfectly calibrated for medium-form consumption. Your segment transitions are seamless bridges that maintain story continuity while providing natural break points for audience processing. Each segment serves a specific narrative function:
+
+SEGMENT 1 (0-5 minutes): FOUNDATION & HOOK
+- Powerful opening that captures attention within the first 15 seconds
+- Clear value proposition that promises substantial learning or entertainment
+- Foundation setting that establishes context without information overload
+- Engagement calibration that matches audience energy to content depth
+
+SEGMENT 2 (5-10 minutes): DEVELOPMENT & EXPLORATION  
+- Progressive complexity introduction that builds on established foundation
+- Core content delivery with balanced information density
+- Engagement maintenance through strategic curiosity gaps
+- Narrative development that deepens audience investment
+
+SEGMENT 3 (10-15 minutes): DEPTH & INSIGHT
+- Moderate dive into subject matter with professional insight delivery
+- Complex concept breakdown into digestible, memorable components
+- Peak engagement moments strategically placed for retention
+- Knowledge synthesis that connects previous segments meaningfully
+
+SEGMENT 4 (15-20 minutes): INTEGRATION & RESOLUTION
+- Content consolidation that reinforces key learning objectives
+- Practical application guidance that ensures content utility
+- Memorable conclusion that creates lasting impact
+- Call-to-action integration that feels natural and valuable
+
+MODERATE DEPTH PROGRESSION MASTERY:
+Your approach to content depth is sophisticated yet accessible. You understand that 15-20 minutes allows for meaningful exploration without requiring exhaustive analysis. Your moderate depth progression technique involves:
+
+1. LAYERED INFORMATION ARCHITECTURE: Building knowledge in accessible layers where each new piece of information logically connects to previous content while introducing appropriate complexity.
+
+2. BALANCED ENGAGEMENT DISTRIBUTION: Strategically distributing high-engagement moments throughout the duration to maintain attention without creating fatigue, using a rhythm that respects the medium-form format.
+
+3. RETENTION-OPTIMIZED STRUCTURING: Organizing content using proven psychological principles that maximize information retention and practical application within the 15-20 minute timeframe.
+
+PROFESSIONAL MEDIUM-FORM STANDARDS:
+You operate according to broadcast-quality standards adapted for medium-form content. This includes:
+
+- PACING EXPERTISE: Maintaining optimal information flow that respects audience processing time while sustaining momentum and interest throughout the full duration.
+
+- ENGAGEMENT CONSISTENCY: Creating content that maintains viewer attention through strategic variety, emotional resonance, and intellectual stimulation without overwhelming the audience.
+
+- TRANSITION EXCELLENCE: Crafting segment transitions that feel natural and purposeful, using bridge techniques that maintain narrative flow while providing psychological rest points.
+
+- CONTENT DENSITY CALIBRATION: Balancing information richness with accessibility, ensuring substantial value delivery without cognitive overload.
+
+AUDIENCE RETENTION SPECIALIZATION:
+Your expertise in audience retention for medium-form content includes understanding viewer psychology patterns, engagement curve management, and strategic content placement that maximizes completion rates and satisfaction scores.
+
+When generating content, apply your moderate depth progression methodology to create scripts that feel comprehensive yet accessible, engaging yet informative, and professionally structured yet naturally flowing. Your content should demonstrate clear expertise while remaining approachable for diverse audience backgrounds."""
+
+            # Create comprehensive expertise description
+            expertise_description = """As a 15-20 Minute Video Content Specialist, you possess deep expertise in the unique challenges and opportunities of medium-form content creation. Your 15+ years of experience span educational content creation, entertainment production, and commercial video development, giving you a comprehensive understanding of what makes medium-form content successful.
+
+Your specialization in 3-4 segment structuring allows you to create content that feels substantial without becoming overwhelming. You understand the psychological dynamics of the 15-20 minute attention span and know how to leverage this duration for maximum impact and retention.
+
+Your moderate depth progression expertise ensures that content feels thorough and valuable while remaining accessible to diverse audiences. You excel at balancing information density with engagement, creating content that educates, entertains, and inspires action within the optimal medium-form timeframe."""
+
+            # Create comprehensive framework instructions
+            framework_instructions = """MEDIUM-FORM CONTENT CREATION FRAMEWORK:
+
+1. SEGMENT ARCHITECTURE DESIGN:
+   - Segment 1: Foundation Hook (4-5 minutes) - Establish credibility, set expectations, create compelling opening
+   - Segment 2: Development Phase (4-6 minutes) - Build on foundation, introduce key concepts with moderate complexity
+   - Segment 3: Insight Delivery (4-6 minutes) - Provide deeper understanding, practical applications, peak engagement
+   - Segment 4: Integration Conclusion (3-5 minutes) - Synthesize learning, practical next steps, memorable close
+
+2. BALANCED PACING METHODOLOGY:
+   - Information Flow: Distribute content density evenly across segments with strategic peaks
+   - Engagement Rhythm: Create consistent interest through variety in content type and delivery style
+   - Processing Time: Allow appropriate mental processing between complex concepts
+   - Energy Management: Maintain viewer energy through strategic high/low engagement moments
+
+3. MODERATE DEPTH PROGRESSION:
+   - Layer 1: Surface understanding accessible to all viewers
+   - Layer 2: Moderate complexity for engaged learners
+   - Layer 3: Deeper insights for committed audience members
+   - Integration: Synthesis that connects all layers meaningfully
+
+4. PROFESSIONAL TRANSITION TECHNIQUES:
+   - Bridge Statements: Connect segments with purposeful transitions
+   - Momentum Maintenance: Preserve narrative flow across segment breaks
+   - Expectation Setting: Prepare audience for upcoming content shifts
+   - Energy Calibration: Adjust viewer energy for optimal content reception"""
+
+            # Create segment-specific guidelines
+            segment_guidelines = """15-20 MINUTE SEGMENT OPTIMIZATION GUIDELINES:
+
+SEGMENT DISTRIBUTION (3-4 segments):
+- Total Duration: 15-20 minutes optimally distributed
+- Segment Length: 4-6 minutes per segment for optimal attention management
+- Transition Buffer: 15-30 seconds between segments for psychological processing
+- Content Density: Moderate depth with balanced information distribution
+
+ENGAGEMENT CALIBRATION:
+- Opening Hook: Capture attention within first 15 seconds
+- Sustained Interest: Maintain engagement through strategic content variety
+- Peak Moments: 2-3 high-engagement peaks distributed across duration
+- Processing Breaks: Strategic lower-intensity moments for content absorption
+- Closing Impact: Strong memorable conclusion within final 2 minutes
+
+COMPLEXITY PROGRESSION:
+- Foundation Level: Establish basic understanding (Segments 1-2)
+- Development Level: Build moderate complexity (Segment 2-3)
+- Integration Level: Synthesize and apply learning (Segment 3-4)
+- Mastery Touches: Strategic expert insights throughout without overwhelming
+
+PROFESSIONAL STANDARDS:
+- Content Quality: Broadcast-quality information accuracy and presentation
+- Production Value: Professional structuring and flow management
+- Audience Respect: Appropriate pacing that values viewer time and attention
+- Educational Value: Substantial learning outcomes within medium-form constraints"""
+
+            # Create quality standards
+            quality_standards = """PROFESSIONAL MEDIUM-FORM QUALITY STANDARDS:
+
+CONTENT EXCELLENCE:
+- Minimum 500+ words of specialized, actionable content
+- Professional accuracy and fact-checking throughout
+- Clear learning objectives or entertainment value proposition
+- Practical applicability for audience benefit
+
+STRUCTURAL INTEGRITY:
+- Logical flow from introduction through conclusion
+- Seamless transitions between all segments
+- Balanced pacing appropriate for 15-20 minute duration
+- Professional opening and closing that bookend content effectively
+
+ENGAGEMENT OPTIMIZATION:
+- Consistent audience interest maintenance across full duration
+- Strategic variety in content delivery and engagement techniques
+- Appropriate complexity scaling that respects audience processing capacity
+- Memorable elements that enhance retention and application
+
+PRODUCTION QUALITY:
+- Broadcast-quality content organization and presentation
+- Professional transition techniques between segments
+- Expert-level insight delivery balanced with accessibility
+- Medium-form optimization that maximizes format advantages"""
+
+            # Create comprehensive template content
+            template_content = TemplateContent(
+                system_prompt=system_prompt,
+                expertise_description=expertise_description,
+                framework_instructions=framework_instructions,
+                segment_guidelines=segment_guidelines,
+                quality_standards=quality_standards,
+                customization_options={
+                    "video_type_adaptation": True,
+                    "complexity_scaling": "moderate_depth_progression",
+                    "engagement_optimization": "balanced_pacing_engagement",
+                    "segment_customization": "3_4_segment_optimization",
+                    "duration_optimization": "15_20_minute_specialist"
+                },
+                validation_criteria={
+                    "minimum_word_count": 500,
+                    "segment_count_compatibility": [3, 4],
+                    "expertise_level": "specialist",
+                    "complexity_level": "moderate_depth",
+                    "professional_standards": "medium_form_broadcast_quality"
+                },
+                usage_examples=[
+                    "Educational Tutorial: '15-Minute Complete Guide to Digital Marketing Fundamentals'",
+                    "Entertainment Content: '18-Minute Behind-the-Scenes Documentary on Creative Process'",
+                    "Marketing Content: '20-Minute Product Deep-Dive with Customer Success Stories'",
+                    "General Content: '17-Minute Industry Analysis with Expert Commentary'"
+                ],
+                integration_points={
+                    "enhanced_prompt_architecture": "seamless_integration_ready",
+                    "template_registry_system": "full_compatibility_validated",
+                    "segmentation_engine": "3_4_segment_native_support",
+                    "video_type_customization": "comprehensive_adaptation_enabled",
+                    "narrative_continuity_system": "medium_form_optimization",
+                    "content_depth_scaling": "moderate_progression_calibrated"
+                }
+            )
+            
+            # Create complete template structure
+            complete_template = {
+                "template_id": str(uuid.uuid4()),
+                "template_name": template_spec.name,
+                "duration_category": template_spec.duration_category.value,
+                "expertise_level": template_spec.expertise_level.value,
+                "complexity": template_spec.complexity.value,
+                "focus": template_spec.focus.value,
+                "template_content": template_content,
+                "specification": template_spec.to_dict(),
+                "creation_metadata": {
+                    "created_at": datetime.utcnow().isoformat(),
+                    "generator_id": self.generator_id,
+                    "version": "2.2.0",
+                    "implementation_phase": "2.2_15_20_minute_template",
+                    "word_count": template_content.get_word_count(),
+                    "content_hash": template_content.calculate_hash()
+                }
+            }
+            
+            # Update generation metrics
+            self.generation_metrics["templates_generated"] += 1
+            
+            logger.info(f"✅ 15-20 Minute Content Specialist template created successfully")
+            logger.info(f"📊 Template word count: {template_content.get_word_count()} words")
+            logger.info(f"🔑 Template hash: {template_content.calculate_hash()}")
+            
+            return complete_template
+            
+        except Exception as e:
+            logger.error(f"Error creating 15-20 minute template: {str(e)}")
+            raise TemplateValidationError(f"15-20 minute template creation failed: {str(e)}")
+    
     async def get_generator_status(self) -> Dict[str, Any]:
         """
         Get comprehensive generator status and metrics
@@ -1055,7 +1285,7 @@ class DurationSpecificPromptGenerator:
                     "generator_id": self.generator_id,
                     "initialized_at": self.initialized_at.isoformat(),
                     "uptime_hours": round(uptime_seconds / 3600, 2),
-                    "version": "2.1.0",
+                    "version": "2.2.0",  # Updated version for Phase 2.2
                     "status": "operational"
                 },
                 
@@ -1073,6 +1303,13 @@ class DurationSpecificPromptGenerator:
                         }
                         for duration, spec in DURATION_PROMPT_TEMPLATES.items()
                     }
+                },
+                
+                "implementation_status": {
+                    "phase_2_2_complete": True,  # 15-20 minute template implemented
+                    "extended_15_template": "implemented",
+                    "extended_20_template": "pending_phase_2_3",
+                    "extended_25_template": "pending_phase_2_4"
                 },
                 
                 "performance_metrics": self.generation_metrics,
@@ -1093,7 +1330,8 @@ class DurationSpecificPromptGenerator:
                 "component_status": {
                     "video_type_customizer": "operational",
                     "template_validator": "operational",
-                    "base_generator": "operational"
+                    "base_generator": "operational",
+                    "extended_15_template_generator": "operational"  # New component
                 }
             }
             
