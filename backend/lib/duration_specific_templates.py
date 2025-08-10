@@ -315,18 +315,265 @@ class VideoTypeCustomization:
             logger.error(f"Error applying video type customization: {str(e)}")
             return base_template
     
-    def _generate_template_adaptations(self, 
-                                     framework: Dict[str, Any],
-                                     template_spec: TemplateSpecification) -> Dict[str, Any]:
-        """Generate specific adaptations based on framework and template spec"""
+    def _generate_enhanced_template_adaptations(self, 
+                                           framework: Dict[str, Any],
+                                           template_spec: TemplateSpecification,
+                                           video_type: str) -> Dict[str, Any]:
+        """Generate Phase 3.1 enhanced adaptations based on framework and template spec"""
         return {
             "focus_integration": framework["focus_areas"],
             "tone_calibration": framework["tone_adaptations"],
             "structural_emphasis": framework["structure_emphasis"],
             "engagement_optimization": framework["engagement_strategy"],
+            "success_metrics": framework["success_metrics"],
             "expertise_alignment": template_spec.expertise_level.value,
-            "complexity_matching": template_spec.complexity.value
+            "complexity_matching": template_spec.complexity.value,
+            
+            # Phase 3.1: Enhanced video type specific adaptations
+            "video_type_enhancements": {
+                "specialized_techniques": self._get_specialized_techniques(video_type),
+                "optimization_strategies": self._get_optimization_strategies(video_type),
+                "engagement_patterns": self._get_engagement_patterns(video_type),
+                "content_structure_adaptations": self._get_content_structure_adaptations(video_type)
+            }
         }
+    
+    def _get_specialized_elements(self, 
+                                framework: Dict[str, Any],
+                                video_type: str) -> Dict[str, Any]:
+        """Get specialized elements for specific video type - Phase 3.1"""
+        specialized_keys = [key for key in framework.keys() 
+                          if key not in ["focus_areas", "tone_adaptations", "structure_emphasis", 
+                                       "engagement_strategy", "success_metrics"]]
+        
+        specialized_elements = {}
+        for key in specialized_keys:
+            specialized_elements[key] = framework[key]
+        
+        return {
+            "video_type": video_type,
+            "specialized_frameworks": specialized_elements,
+            "implementation_level": "phase_3_1_comprehensive"
+        }
+    
+    def _get_optimization_techniques(self, 
+                                   framework: Dict[str, Any],
+                                   video_type: str) -> Dict[str, Any]:
+        """Get optimization techniques for specific video type - Phase 3.1"""
+        optimization_mapping = {
+            "educational": {
+                "primary_techniques": ["progressive_disclosure", "active_learning", "spaced_repetition"],
+                "engagement_optimization": "learning_retention_focused",
+                "interaction_patterns": "question_driven_engagement",
+                "assessment_integration": "formative_continuous_feedback"
+            },
+            "marketing": {
+                "primary_techniques": ["emotional_persuasion", "social_proof_layering", "urgency_creation"],
+                "engagement_optimization": "conversion_pathway_optimization",
+                "interaction_patterns": "action_oriented_prompts",
+                "assessment_integration": "behavioral_response_tracking"
+            },
+            "entertainment": {
+                "primary_techniques": ["surprise_pacing", "emotional_escalation", "participation_hooks"],
+                "engagement_optimization": "entertainment_value_maximization",
+                "interaction_patterns": "audience_participation_driven",
+                "assessment_integration": "engagement_response_measurement"
+            },
+            "general": {
+                "primary_techniques": ["balanced_approach", "universal_accessibility", "adaptive_complexity"],
+                "engagement_optimization": "broad_appeal_maintenance",
+                "interaction_patterns": "versatile_engagement_styles",
+                "assessment_integration": "comprehensive_satisfaction_tracking"
+            }
+        }
+        
+        return optimization_mapping.get(video_type, optimization_mapping["general"])
+    
+    def _get_specialized_techniques(self, video_type: str) -> List[str]:
+        """Get specialized techniques for video type"""
+        techniques_map = {
+            "educational": [
+                "learning_objective_scaffolding", "knowledge_checkpoint_integration",
+                "progressive_complexity_building", "interactive_questioning",
+                "summarization_reinforcement", "assessment_integration"
+            ],
+            "marketing": [
+                "conversion_funnel_optimization", "persuasive_storytelling_frameworks",
+                "emotional_trigger_placement", "social_proof_integration",
+                "urgency_scarcity_tactics", "trust_building_elements"
+            ],
+            "entertainment": [
+                "hook_heavy_opening", "emotional_roller_coaster_design",
+                "surprise_element_integration", "character_development_arcs",
+                "humor_optimization", "audience_participation_encouragement"
+            ],
+            "general": [
+                "universal_appeal_optimization", "broad_audience_consideration",
+                "versatile_content_structuring", "adaptive_engagement_styles",
+                "inclusive_design_principles", "balanced_tone_management"
+            ]
+        }
+        return techniques_map.get(video_type, techniques_map["general"])
+    
+    def _get_optimization_strategies(self, video_type: str) -> List[str]:
+        """Get optimization strategies for video type"""
+        strategies_map = {
+            "educational": [
+                "knowledge_retention_optimization", "comprehension_enhancement",
+                "learning_engagement_maximization", "skill_transfer_facilitation"
+            ],
+            "marketing": [
+                "conversion_rate_optimization", "brand_message_amplification",
+                "emotional_connection_building", "action_motivation_enhancement"
+            ],
+            "entertainment": [
+                "entertainment_value_maximization", "audience_retention_optimization",
+                "viral_potential_enhancement", "emotional_impact_amplification"
+            ],
+            "general": [
+                "universal_satisfaction_optimization", "broad_appeal_enhancement",
+                "accessibility_improvement", "engagement_balance_maintenance"
+            ]
+        }
+        return strategies_map.get(video_type, strategies_map["general"])
+    
+    def _get_engagement_patterns(self, video_type: str) -> Dict[str, Any]:
+        """Get engagement patterns for video type"""
+        patterns_map = {
+            "educational": {
+                "pattern_type": "learning_focused",
+                "interaction_frequency": "high_interactive_questioning",
+                "feedback_loops": "immediate_comprehension_checks",
+                "motivation_triggers": "achievement_progress_indicators"
+            },
+            "marketing": {
+                "pattern_type": "conversion_focused",
+                "interaction_frequency": "strategic_cta_placement",
+                "feedback_loops": "emotional_response_validation",
+                "motivation_triggers": "urgency_scarcity_drivers"
+            },
+            "entertainment": {
+                "pattern_type": "entertainment_maximized",
+                "interaction_frequency": "continuous_engagement_hooks",
+                "feedback_loops": "emotional_satisfaction_cycles",
+                "motivation_triggers": "surprise_delight_elements"
+            },
+            "general": {
+                "pattern_type": "balanced_universal",
+                "interaction_frequency": "moderate_varied_engagement",
+                "feedback_loops": "satisfaction_confirmation_points",
+                "motivation_triggers": "broad_appeal_motivators"
+            }
+        }
+        return patterns_map.get(video_type, patterns_map["general"])
+    
+    def _get_content_structure_adaptations(self, video_type: str) -> Dict[str, Any]:
+        """Get content structure adaptations for video type"""
+        structure_map = {
+            "educational": {
+                "opening_focus": "learning_objective_clarity",
+                "middle_organization": "progressive_skill_building",
+                "closing_emphasis": "knowledge_consolidation_assessment",
+                "transition_style": "logical_concept_bridging"
+            },
+            "marketing": {
+                "opening_focus": "attention_problem_identification",
+                "middle_organization": "solution_benefit_demonstration",
+                "closing_emphasis": "clear_action_call_to_action",
+                "transition_style": "persuasive_logical_flow"
+            },
+            "entertainment": {
+                "opening_focus": "immediate_hook_engagement",
+                "middle_organization": "emotional_arc_progression",
+                "closing_emphasis": "satisfying_resolution_payoff",
+                "transition_style": "dynamic_surprise_transitions"
+            },
+            "general": {
+                "opening_focus": "broad_interest_establishment",
+                "middle_organization": "balanced_information_delivery",
+                "closing_emphasis": "comprehensive_value_summary",
+                "transition_style": "smooth_logical_connections"
+            }
+        }
+        return structure_map.get(video_type, structure_map["general"])
+    
+    def _apply_content_modifications(self, 
+                                   customized_template: Dict[str, Any],
+                                   framework: Dict[str, Any],
+                                   video_type: str) -> Dict[str, Any]:
+        """Apply Phase 3.1 content modifications based on video type"""
+        try:
+            # Add content modification metadata
+            customized_template["content_modifications"] = {
+                "video_type": video_type,
+                "modification_level": "phase_3_1_comprehensive",
+                "applied_frameworks": list(framework.keys()),
+                "enhancement_timestamp": datetime.utcnow().isoformat()
+            }
+            
+            # Apply video type specific content enhancements
+            if video_type == "educational":
+                customized_template = self._apply_educational_modifications(customized_template, framework)
+            elif video_type == "marketing":
+                customized_template = self._apply_marketing_modifications(customized_template, framework)
+            elif video_type == "entertainment":
+                customized_template = self._apply_entertainment_modifications(customized_template, framework)
+            else:  # general
+                customized_template = self._apply_general_modifications(customized_template, framework)
+            
+            return customized_template
+            
+        except Exception as e:
+            logger.warning(f"Error applying content modifications: {str(e)}")
+            return customized_template
+    
+    def _apply_educational_modifications(self, 
+                                       template: Dict[str, Any], 
+                                       framework: Dict[str, Any]) -> Dict[str, Any]:
+        """Apply educational specific modifications - Phase 3.1"""
+        template["educational_enhancements"] = {
+            "learning_structure": "objective_driven_progression",
+            "interaction_style": "socratic_questioning_method",
+            "assessment_integration": "continuous_formative_feedback",
+            "knowledge_reinforcement": "spaced_repetition_principles"
+        }
+        return template
+    
+    def _apply_marketing_modifications(self, 
+                                     template: Dict[str, Any], 
+                                     framework: Dict[str, Any]) -> Dict[str, Any]:
+        """Apply marketing specific modifications - Phase 3.1"""
+        template["marketing_enhancements"] = {
+            "persuasion_structure": "AIDA_PAS_framework_integration",
+            "emotional_triggers": "strategic_psychological_activation",
+            "conversion_optimization": "clear_cta_pathway_design",
+            "trust_building": "authority_social_proof_integration"
+        }
+        return template
+    
+    def _apply_entertainment_modifications(self, 
+                                         template: Dict[str, Any], 
+                                         framework: Dict[str, Any]) -> Dict[str, Any]:
+        """Apply entertainment specific modifications - Phase 3.1"""
+        template["entertainment_enhancements"] = {
+            "engagement_structure": "emotional_roller_coaster_design",
+            "surprise_integration": "strategic_twist_placement",
+            "participation_elements": "audience_interaction_hooks",
+            "entertainment_value": "humor_surprise_delight_optimization"
+        }
+        return template
+    
+    def _apply_general_modifications(self, 
+                                   template: Dict[str, Any], 
+                                   framework: Dict[str, Any]) -> Dict[str, Any]:
+        """Apply general specific modifications - Phase 3.1"""
+        template["general_enhancements"] = {
+            "universal_structure": "balanced_appeal_optimization",
+            "accessibility_features": "inclusive_design_integration",
+            "versatile_engagement": "multiple_style_accommodation",
+            "broad_satisfaction": "universal_value_delivery"
+        }
+        return template
     
     def _get_integration_requirements(self, 
                                     video_type: str,
