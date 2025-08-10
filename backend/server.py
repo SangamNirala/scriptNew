@@ -4771,10 +4771,10 @@ app.add_middleware(
     allow_credentials=True,
     allow_origins=[
         "*",
-        "https://d50fe95b-80d0-414b-ac0f-276b750d17da.preview.emergentagent.com",
-        "https://d50fe95b-80d0-414b-ac0f-276b750d17da.preview.emergentagent.com",
-        "https://d50fe95b-80d0-414b-ac0f-276b750d17da.preview.emergentagent.com",
-        "https://d50fe95b-80d0-414b-ac0f-276b750d17da.preview.emergentagent.com",
+        "https://5f52b486-d0b4-46b2-8fa8-5d44d397cf85.preview.emergentagent.com",
+        "https://5f52b486-d0b4-46b2-8fa8-5d44d397cf85.preview.emergentagent.com",
+        "https://5f52b486-d0b4-46b2-8fa8-5d44d397cf85.preview.emergentagent.com",
+        "https://5f52b486-d0b4-46b2-8fa8-5d44d397cf85.preview.emergentagent.com",
         "http://localhost:3000",
         "http://127.0.0.1:3000"
     ],
