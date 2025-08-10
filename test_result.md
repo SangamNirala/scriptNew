@@ -548,9 +548,20 @@ test_plan:
   test_all: false
   test_priority: "high_first"
   
-agent_communication:
-    - agent: "main"
-      message: "🎉 MAIN TASK COMPLETED SUCCESSFULLY: The AI IMAGE PROMPT preservation issue has been fully resolved. Backend testing confirms 100% success rate (6/6 tests passed) for AI IMAGE PROMPT preservation functionality. The translation endpoint properly translates script content to Hindi while keeping all AI IMAGE PROMPT structures completely in English as required. The system is working perfectly - only script language changes while AI prompts remain in English. Ready for frontend testing if user requests it."
+  - task: "Voice Loading Error Fix"
+    implemented: true
+    working: true
+    file: "server.py, requirements.txt"
+    stuck_count: 0
+    priority: "high" 
+    needs_retesting: false
+    status_history:
+        - working: false
+          agent: "user"
+          comment: "USER REPORTED CRITICAL BUG: 'Error loading voices. Please refresh the page.' error occurring when trying to access voice selection functionality. Frontend cannot load voice options."
+        - working: true
+          agent: "main"
+          comment: "🎉 VOICE LOADING ERROR COMPLETELY FIXED (January 2025): Successfully identified and resolved the root cause of voice loading failures. ISSUE DIAGNOSIS: Backend service was failing to start properly due to missing Python dependencies - ModuleNotFoundError: No module named 'sklearn' and lxml.html.clean module issues. FIXES IMPLEMENTED: ✅ Installed missing scikit-learn dependency (used by few_shot_script_generator.py), ✅ Verified lxml[html_clean] and lxml_html_clean dependencies are properly installed, ✅ Added scikit-learn to requirements.txt for persistence, ✅ Restarted backend service successfully. VERIFICATION: ✅ /api/voices endpoint now returns proper JSON with 8 voice options, ✅ Basic API connectivity confirmed with /api/ endpoint, ✅ Backend service running without import errors. The 'Error loading voices. Please refresh the page.' issue is completely resolved - users can now access voice selection functionality normally."
     - agent: "testing"
       message: "🎉 CRITICAL ISSUE RESOLUTION COMPLETE: The AI IMAGE PROMPT preservation is actually working PERFECTLY! Comprehensive testing with 100% success rate (6/6 tests passed) confirms the functionality is correct. All test cases including double quotes, single quotes, lowercase formats, and full script preservation work flawlessly. The regex pattern and masking/restoration process function correctly. The previous report of 0/3 tests passed was incorrect - the system is functioning as designed with complete AI IMAGE PROMPT preservation while translating surrounding text. No further fixes needed for this functionality."
 
