@@ -261,31 +261,54 @@ class VideoTypeCustomization:
                                      base_template: Dict[str, Any],
                                      video_type: str,
                                      template_spec: TemplateSpecification) -> Dict[str, Any]:
-        """Apply video type customization to base template"""
+        """
+        Apply comprehensive video type customization to base template - Phase 3.1 Implementation
+        
+        Args:
+            base_template: Base template to customize
+            video_type: Video type (educational, marketing, entertainment, general)
+            template_spec: Template specification for duration and complexity
+            
+        Returns:
+            Customized template with Phase 3.1 video type adaptations
+        """
         try:
+            logger.info(f"🎨 Applying Phase 3.1 video type customization: {video_type}")
             framework = self.get_customization_framework(video_type)
             
             customized_template = base_template.copy()
             
-            # Add video type specific enhancements
+            # Phase 3.1: Enhanced video type specific customizations
             customized_template["video_type_customization"] = {
                 "video_type": video_type,
                 "customization_framework": framework,
-                "template_adaptations": self._generate_template_adaptations(
-                    framework, template_spec
+                "template_adaptations": self._generate_enhanced_template_adaptations(
+                    framework, template_spec, video_type
+                ),
+                "specialized_elements": self._get_specialized_elements(
+                    framework, video_type
                 ),
                 "integration_requirements": self._get_integration_requirements(
                     video_type, template_spec
-                )
+                ),
+                "optimization_techniques": self._get_optimization_techniques(
+                    framework, video_type
+                ),
+                "phase_implementation": "3.1_comprehensive_customization"
             }
             
-            # Modify system prompt with video type elements
+            # Phase 3.1: Enhanced system prompt with detailed adaptations
             if "system_prompt" in customized_template:
-                customized_template["system_prompt"] = self._enhance_system_prompt_for_video_type(
-                    customized_template["system_prompt"], framework, template_spec
+                customized_template["system_prompt"] = self._enhance_system_prompt_for_video_type_v31(
+                    customized_template["system_prompt"], framework, template_spec, video_type
                 )
             
-            logger.info(f"Video type customization applied: {video_type} for {template_spec.duration_category.value}")
+            # Apply video type specific content modifications
+            customized_template = self._apply_content_modifications(
+                customized_template, framework, video_type
+            )
+            
+            logger.info(f"✅ Phase 3.1 video type customization completed: {video_type} for {template_spec.duration_category.value}")
             return customized_template
             
         except Exception as e:
