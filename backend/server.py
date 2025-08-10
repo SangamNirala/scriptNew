@@ -112,6 +112,14 @@ template_integration_manager = TemplateIntegrationManager(
     db_connection=db
 )
 
+# Phase 3.3: Initialize Enhanced Workflow System
+from lib.enhanced_workflow_manager import EnhancedWorkflowManager, WorkflowConfig, WorkflowResult, WorkflowStatus
+from lib.workflow_quality_validator import WorkflowQualityValidator, QualityMetrics
+from lib.workflow_metrics import WorkflowMetrics, WorkflowPerformanceMetrics, SystemPerformanceMetrics
+
+# Initialize Enhanced Workflow Manager
+enhanced_workflow_manager = EnhancedWorkflowManager()
+
 # Duration validation and mapping
 VALID_DURATIONS = {
     "short": "Short (30s-1min)",
