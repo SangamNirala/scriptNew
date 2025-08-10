@@ -2805,9 +2805,56 @@ async def get_available_voices():
         logger.error(f"Error fetching voices: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error fetching voices: {str(e)}")
 
+def detect_content_language(text):
+    """
+    Detect if the text contains Hindi content using Unicode character analysis.
+    This is a simple but effective approach for Hindi detection.
+    
+    Returns: 'hindi' if Hindi content detected, 'english' otherwise
+    """
+    if not text:
+        return 'english'
+    
+    # Count Hindi characters (Devanagari Unicode range: U+0900-U+097F)
+    hindi_char_count = 0
+    total_chars = 0
+    
+    for char in text:
+        if ord(char) >= 0x0900 and ord(char) <= 0x097F:
+            hindi_char_count += 1
+        total_chars += 1
+    
+    # If more than 30% of characters are Hindi, consider it Hindi content
+    if total_chars > 0 and (hindi_char_count / total_chars) > 0.3:
+        return 'hindi'
+    
+    return 'english'
+
+def get_appropriate_voice_for_content(text, requested_voice):
+    """
+    Auto-select appropriate voice based on content language.
+    Critical fix for Hindi audio generation bug.
+    
+    Args:
+        text: The text content to analyze
+        requested_voice: The voice originally requested by user
+    
+    Returns:
+        Appropriate voice name for the content
+    """
+    detected_language = detect_content_language(text)
+    
+    # If Hindi content is detected, use Hindi voice regardless of user selection
+    if detected_language == 'hindi':
+        # Default to female Hindi voice, but could be made configurable
+        return "hi-IN-SwaraNeural"  # Hindi Female voice
+    
+    # For English content, use the requested voice
+    return requested_voice
+
 @api_router.post("/generate-audio", response_model=AudioResponse)
 async def generate_audio(request: TextToSpeechRequest):
-    """Generate audio from text using selected voice"""
+    """Generate audio from text using selected voice with automatic language detection"""
     try:
         # Clean the text for better TTS (remove formatting)
         original_text = request.text.strip()
@@ -2827,8 +2874,16 @@ async def generate_audio(request: TextToSpeechRequest):
         logger.info(f"Cleaned text (first 200 chars): {clean_text[:200]}...")
         logger.info(f"Text reduction: {len(original_text)} → {len(clean_text)} chars")
         
-        # Create TTS communication
-        communicate = edge_tts.Communicate(clean_text, request.voice_name)
+        # CRITICAL FIX: Auto-select appropriate voice based on content language
+        detected_language = detect_content_language(clean_text)
+        appropriate_voice = get_appropriate_voice_for_content(clean_text, request.voice_name)
+        
+        logger.info(f"Detected language: {detected_language}")
+        logger.info(f"Original voice requested: {request.voice_name}")
+        logger.info(f"Voice selected for content: {appropriate_voice}")
+        
+        # Create TTS communication with appropriate voice
+        communicate = edge_tts.Communicate(clean_text, appropriate_voice)
         
         # Generate audio in memory
         audio_data = b""
@@ -2844,7 +2899,7 @@ async def generate_audio(request: TextToSpeechRequest):
         
         return AudioResponse(
             audio_base64=audio_base64,
-            voice_used=request.voice_name,
+            voice_used=appropriate_voice,  # Return the actually used voice
             duration_seconds=len(audio_data) / 16000  # Rough estimation
         )
         
