@@ -857,6 +857,7 @@ const ScriptGenerator = () => {
       if (response.data.success) {
         const translatedText = response.data.translated_text;
         setGeneratedScript(translatedText);
+        setDialogueOnlyScript(extractDialogueOnly(translatedText));
         setTranslatedScript(translatedText);
         setCurrentLanguage(targetLanguage);
       } else {
