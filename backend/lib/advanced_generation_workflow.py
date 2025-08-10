@@ -349,147 +349,209 @@ Your generated scripts feel natural and conversational while incorporating sophi
         
         return min(score, 1.0)
     
-    async def _build_generation_prompt(self,
-                                     segment_number: int,
-                                     original_prompt: str,
-                                     segmentation_context: Dict[str, Any],
-                                     narrative_context: Dict[str, Any],
-                                     depth_context: Dict[str, Any],
-                                     quality_context: Dict[str, Any]) -> str:
-        """Build comprehensive generation prompt with all context"""
+    async def _build_enhanced_generation_prompt(self,
+                                              segment_number: int,
+                                              original_prompt: str,
+                                              segmentation_context: Dict[str, Any],
+                                              narrative_context: Dict[str, Any],
+                                              depth_context: Dict[str, Any],
+                                              quality_context: Dict[str, Any]) -> str:
+        """Build enhanced generation prompt with all context and optimization hints"""
         
-        # Extract key information from contexts
+        # Extract key information from contexts with enhanced processing
         total_segments = segmentation_context.get('total_segments', 1)
         segment_position = segmentation_context.get('segment_context', {}).get('segment_position', {})
         segment_outline = segmentation_context.get('segment_outline', {})
         
-        # Narrative context
+        # Enhanced narrative context extraction
         story_arc_context = narrative_context.get('story_arc_context', {})
         character_context = narrative_context.get('character_context', {})
         theme_context = narrative_context.get('theme_context', {})
         transitions = narrative_context.get('transitions', {})
         
-        # Depth context
+        # Enhanced depth context extraction
         content_strategy = depth_context.get('content_strategy', {})
         depth_calibration = depth_context.get('depth_calibration', {})
         information_requirements = depth_context.get('information_requirements', {})
         
-        # Quality context
+        # Enhanced quality context extraction
         quality_standards = quality_context.get('quality_standards', {})
         tone_requirements = quality_context.get('tone_requirements', {})
         engagement_requirements = quality_context.get('engagement_requirements', {})
         
-        prompt = f"""Generate a complete, professional script for this video segment:
+        # Calculate position-based optimizations
+        position_hints = self._get_position_optimization_hints(segment_number, total_segments, segment_position)
+        
+        prompt = f"""🎬 GENERATE PREMIUM SEGMENT CONTENT - ENHANCED SYSTEM 🎬
 
 ═══════════════════════════════════════════════════════════════════════════════════
-📋 SEGMENT PARAMETERS
+📋 SEGMENT PARAMETERS & OPTIMIZATION
 ═══════════════════════════════════════════════════════════════════════════════════
 - Original User Request: "{original_prompt}"
 - Current Segment: {segment_number} of {total_segments}
-- Position Status: {"First Segment" if segment_position.get('is_first') else "Last Segment" if segment_position.get('is_last') else f"Middle Segment ({segment_position.get('progress_percentage', 0)}% through)"}
+- Position Status: {"🚀 First Segment (Hook Critical)" if segment_position.get('is_first') else "🎯 Final Segment (CTA Focus)" if segment_position.get('is_last') else f"⚡ Middle Segment ({segment_position.get('progress_percentage', 0)}% through - Maintain Momentum)"}
 - Segment Duration: {depth_calibration.get('segment_duration', 'N/A')} minutes
+- Quality Threshold: {GenerationConfig.QUALITY_THRESHOLD} (Must exceed this)
+
+🎯 POSITION OPTIMIZATION HINTS:
+{position_hints}
 
 ═══════════════════════════════════════════════════════════════════════════════════
-🎭 NARRATIVE REQUIREMENTS
+🎭 NARRATIVE ARCHITECTURE - ENHANCED
 ═══════════════════════════════════════════════════════════════════════════════════
 STORY ARC POSITION: {story_arc_context.get('details', {}).get('arc_position', 'Content development')}
 NARRATIVE PURPOSE: {story_arc_context.get('details', {}).get('narrative_purpose', 'Deliver core content')}
 EMOTIONAL TARGET: {story_arc_context.get('details', {}).get('emotional_target', 'Engaged interest')}
 TENSION LEVEL: {story_arc_context.get('details', {}).get('tension_level', 'Medium')}
 
-CHARACTER VOICE:
+CHARACTER VOICE EXCELLENCE:
 - Character Type: {character_context.get('details', {}).get('character_introduction', 'Professional presenter')}
 - Personality Focus: {character_context.get('details', {}).get('personality_focus', 'Engaging and knowledgeable')}
 - Speaking Style: {narrative_context.get('global_context', {}).get('character_profile', {}).get('speaking_style', 'Professional and engaging')}
+- Voice Consistency Markers: Maintain exact tone, energy, and personality
 
-THEME INTEGRATION:
+THEME INTEGRATION MASTERY:
 - Theme Focus: {theme_context.get('details', {}).get('theme_focus', 'Core content delivery')}
 - Message Angle: {theme_context.get('details', {}).get('message_angle', 'Informative approach')}
 
 ═══════════════════════════════════════════════════════════════════════════════════
-📊 CONTENT DEPTH REQUIREMENTS  
+📊 CONTENT DEPTH OPTIMIZATION - ENHANCED
 ═══════════════════════════════════════════════════════════════════════════════════
-CONTENT STRATEGY:
-- Optimal Concept Count: {content_strategy.get('content_density_analysis', {}).get('optimal_concept_count', 3)}
+STRATEGIC CONTENT DENSITY:
+- Optimal Concept Count: {content_strategy.get('content_density_analysis', {}).get('optimal_concept_count', 3)} concepts maximum
 - Detail Depth Level: {content_strategy.get('content_density_analysis', {}).get('detail_depth_level', 'moderate')}
 - Information Pacing: {content_strategy.get('content_density_analysis', {}).get('information_pacing', 'balanced')}
+- Cognitive Load Target: Optimize for {content_strategy.get('content_density_analysis', {}).get('cognitive_load_assessment', 'moderate processing')}
 
-DEPTH CALIBRATION:
-- Time Per Concept: {depth_calibration.get('time_per_concept', 'N/A')} minutes
-- Examples Per Concept: {depth_calibration.get('examples_per_concept', 2)}
+PRECISION TIME MANAGEMENT:
+- Time Per Concept: {depth_calibration.get('time_per_concept', 'N/A')} minutes (strict allocation)
+- Examples Per Concept: {depth_calibration.get('examples_per_concept', 2)} (exactly this number)
 - Explanation Depth: {depth_calibration.get('explanation_depth', 'comprehensive')}
+- Buffer Time: Reserve 15% for transitions and emphasis
 
-INFORMATION REQUIREMENTS:
+INFORMATION ARCHITECTURE:
 - Foundational Concepts: {information_requirements.get('foundational_concepts', 'Core concepts')}
 - Information Density: {information_requirements.get('information_density', 'Medium')}
+- Progressive Revelation: Build complexity systematically
 
 ═══════════════════════════════════════════════════════════════════════════════════
-🎯 QUALITY & ENGAGEMENT STANDARDS
+🎯 QUALITY & ENGAGEMENT EXCELLENCE - ENHANCED
 ═══════════════════════════════════════════════════════════════════════════════════
-QUALITY STANDARDS:
-- Content Quality: {quality_standards.get('content_quality', {}).get('clarity_benchmarks', 'Clear and understandable')}
+QUALITY BENCHMARKS (MUST MEET ALL):
+- Content Clarity: {quality_standards.get('content_quality', {}).get('clarity_benchmarks', 'Crystal clear and understandable')}
 - Production Value: {quality_standards.get('production_value', {}).get('visual_description_quality', 'Professional visual storytelling')}
+- Engagement Quality: Must score above {GenerationConfig.QUALITY_THRESHOLD} on all metrics
 
-TONE REQUIREMENTS:
+TONE & ENERGY REQUIREMENTS:
 - Tone Focus: {tone_requirements.get('tone_focus', 'Professional and engaging')}
-- Energy Level: {tone_requirements.get('energy_level', 'Medium')}
+- Energy Level: {tone_requirements.get('energy_level', 'Medium')} (maintain consistency)
+- Emotional Resonance: Create authentic connection
 
-ENGAGEMENT REQUIREMENTS:
+ENGAGEMENT ENGINEERING:
 - Engagement Level: {engagement_requirements.get('engagement_level', 'High')}
 - Engagement Techniques: {engagement_requirements.get('engagement_techniques', 'Questions, examples, visual elements')}
+- Retention Strategy: Hook + sustain + transition smoothly
 
 ═══════════════════════════════════════════════════════════════════════════════════
-🔗 TRANSITION REQUIREMENTS
+🔗 TRANSITION MASTERY - ENHANCED
 ═══════════════════════════════════════════════════════════════════════════════════
-INCOMING TRANSITION: {transitions.get('incoming', {}).get('details', {}).get('transition_content', 'Natural opening') if transitions.get('incoming') else 'Segment opening'}
-OUTGOING TRANSITION: {transitions.get('outgoing', {}).get('details', {}).get('ending_bridge', 'Natural conclusion') if transitions.get('outgoing') else 'Segment conclusion'}
+INCOMING TRANSITION: {transitions.get('incoming', {}).get('details', {}).get('transition_content', 'Natural opening') if transitions.get('incoming') else 'Smooth segment opening'}
+OUTGOING TRANSITION: {transitions.get('outgoing', {}).get('details', {}).get('ending_bridge', 'Natural conclusion') if transitions.get('outgoing') else 'Compelling segment conclusion'}
 
 ═══════════════════════════════════════════════════════════════════════════════════
-📝 SCRIPT GENERATION REQUIREMENTS
+📝 ENHANCED SCRIPT GENERATION REQUIREMENTS
 ═══════════════════════════════════════════════════════════════════════════════════
-Generate a complete script following this EXACT format:
+Generate a PREMIUM script following this EXACT format:
 
 SEGMENT_SCRIPT:
-[Your complete script content here - include narration, dialogue, scene descriptions, and all content]
+[Your complete, production-ready script content here - include narration, dialogue, scene descriptions, and all content. Make this the best script segment ever created.]
 
 AI_IMAGE_PROMPTS:
-[List of AI image prompts in this format:]
-[A professional shot of... for visual element 1]
-[A dynamic scene showing... for visual element 2]
-[Continue with all visual elements needed]
+[List EXACTLY 3-5 AI image prompts in this format:]
+[A professional, cinematic shot of... for visual storytelling element 1]
+[A dynamic, engaging scene showing... for visual storytelling element 2]
+[A compelling visual that... for visual storytelling element 3]
+[Continue with all visual elements needed - be specific and cinematic]
 
 ENGAGEMENT_ELEMENTS:
-- HOOKS_USED: [List the specific hooks/attention-grabbers used]
-- RETENTION_TECHNIQUES: [List techniques used to maintain attention]
+- HOOKS_USED: [List the specific hooks/attention-grabbers used - be specific]
+- RETENTION_TECHNIQUES: [List techniques used to maintain attention throughout]
 - CURIOSITY_GAPS: [List any questions or gaps created for audience interest]
+- EMOTIONAL_TRIGGERS: [List emotional elements that create connection]
 
 CONTENT_SUMMARY:
-- MAIN_CONCEPTS_COVERED: [List the key concepts addressed]
+- MAIN_CONCEPTS_COVERED: [List the key concepts addressed with detail]
 - SEGMENT_PURPOSE_FULFILLMENT: [How this segment serves its narrative purpose]
 - TRANSITION_EFFECTIVENESS: [How well transitions connect to other segments]
+- VALUE_DELIVERY: [What specific value does this segment provide]
 
 PRODUCTION_NOTES:
 - VISUAL_STORYTELLING_ELEMENTS: [Key visual elements that enhance the story]
-- PACING_GUIDANCE: [Notes about pacing and timing]
+- PACING_GUIDANCE: [Specific notes about pacing and timing]
 - QUALITY_HIGHLIGHTS: [Elements that demonstrate production quality]
+- PERFORMANCE_NOTES: [Delivery style and energy guidance]
 
 ═══════════════════════════════════════════════════════════════════════════════════
-🎬 SPECIAL INSTRUCTIONS
+🎬 ENHANCED GENERATION INSTRUCTIONS
 ═══════════════════════════════════════════════════════════════════════════════════
-1. Ensure the script feels like a natural part of the larger {total_segments}-segment narrative
-2. Incorporate rich visual descriptions that work perfectly with AI image generation
-3. Include strategic engagement elements that maintain attention without overwhelming
-4. Maintain the established character voice and tone consistently
-5. Build on previous segments while setting up future ones (if applicable)
-6. Include specific, actionable AI image prompts that align with content
-7. Balance information delivery with entertainment value
-8. Ensure professional production quality throughout
+1. Create content that feels like a natural part of the larger {total_segments}-segment narrative
+2. Include rich, cinematic visual descriptions optimized for AI image generation
+3. Engineer strategic engagement elements that maintain attention without overwhelming
+4. Maintain the established character voice and tone with surgical precision
+5. Build intelligently on previous segments while setting up future ones
+6. Include specific, actionable AI image prompts that align perfectly with content
+7. Balance information delivery with entertainment value for maximum retention
+8. Ensure professional production quality that exceeds industry standards
 9. Make every word count toward the segment's narrative purpose
-10. Create content that stands alone while contributing to the whole
+10. Create content that delivers both standalone value and contributes to the whole
 
-Generate sophisticated, engaging content that demonstrates mastery of video script creation!"""
+⚡ QUALITY ASSURANCE CHECKLIST:
+- Script length: 200+ words minimum for substance
+- Engagement hooks: At least 2 strong hooks per segment
+- Visual elements: 3-5 AI image prompts that enhance storytelling
+- Information density: Balanced for optimal comprehension
+- Transition quality: Smooth connections to adjacent segments
+- Voice consistency: Perfectly matches established character
+- Production value: Professional-grade throughout
+
+Generate sophisticated, engaging content that demonstrates absolute mastery of video script creation!"""
 
         return prompt
+    
+    def _get_position_optimization_hints(self, segment_number: int, total_segments: int, segment_position: Dict[str, Any]) -> str:
+        """Generate position-specific optimization hints"""
+        if segment_position.get('is_first'):
+            return """🚀 FIRST SEGMENT OPTIMIZATION:
+- HOOK CRITICAL: First 15 seconds determine retention for entire video
+- Establish clear value proposition immediately
+- Introduce character/narrator with strong presence
+- Create curiosity gap for upcoming content
+- Set expectations for the journey ahead"""
+        
+        elif segment_position.get('is_last'):
+            return """🎯 FINAL SEGMENT OPTIMIZATION:
+- CLOSURE + ACTION: Provide satisfying conclusion while driving action
+- Summarize key value delivered throughout video
+- Include strong call-to-action (subscribe, comment, share)
+- Leave audience feeling accomplished and valued
+- Create anticipation for future content"""
+        
+        else:
+            progress = segment_position.get('progress_percentage', 50)
+            if progress < 40:
+                return """⚡ EARLY-MIDDLE SEGMENT OPTIMIZATION:
+- MOMENTUM BUILDING: Build on opening hook momentum
+- Deliver first major value payoff
+- Maintain curiosity while providing satisfaction
+- Strengthen character connection
+- Preview exciting content still coming"""
+            else:
+                return """🔥 LATE-MIDDLE SEGMENT OPTIMIZATION:
+- CLIMAX PREPARATION: Build toward content climax
+- Deliver major value while maintaining engagement
+- Address potential viewer fatigue with variety
+- Create anticipation for conclusion
+- Reinforce key themes and messages"""
     
     def _parse_segment_content(self, content_text: str, segment_number: int) -> Dict[str, Any]:
         """Parse the AI-generated segment content"""
