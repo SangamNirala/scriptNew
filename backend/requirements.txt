@@ -1,16 +1,17 @@
 # Core FastAPI and Server Dependencies
 emergentintegrations --extra-index-url https://d33sy5i8bnduwe.cloudfront.net/simple/
- soupsieve-2.7
-edge-tts-7.2.0
-deep-translator-1.11.4
+ soupsieve=2.7
+edge-tts=7.2.0
+deep-translator=1.11.4
 google-search-results 
 textstat 
 newspaper3k 
-lxml[html_clean] 
+lxml[html_clean]=0.4.2 
 opencv-python 
 pydub
-scikit-learn-1.7.1
-scipy-1.16.1
+scikit-learn=1.7.1
+scipy=1.16.1
+tabulate=0.9.0
 
 
 fastapi==0.110.1
