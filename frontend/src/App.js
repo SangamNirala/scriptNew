@@ -1023,6 +1023,58 @@ const ScriptGenerator = () => {
     }
   };
 
+  // Dialogue translation handler
+  const handleTranslateDialogue = async (targetLanguage) => {
+    if (!dialogueOnlyScript) {
+      setError("Please generate a script first before translating dialogue.");
+      return;
+    }
+
+    // If switching back to English, show original dialogue
+    if (targetLanguage === "en") {
+      if (originalDialogue) {
+        setDialogueOnlyScript(originalDialogue);
+        setDialogueLanguage("en");
+        return;
+      }
+      // If no original cached, current dialogue is already in English
+      setDialogueLanguage("en");
+      return;
+    }
+
+    // Save original dialogue if not already saved
+    if (!originalDialogue) {
+      setOriginalDialogue(dialogueOnlyScript);
+    }
+
+    setIsTranslatingDialogue(true);
+    setError("");
+
+    try {
+      // Call the same translation endpoint but with dialogue content
+      const response = await axios.post(`${API}/translate-script`, {
+        text: dialogueOnlyScript,
+        source_language: "en",
+        target_language: targetLanguage
+      });
+
+      if (response.data.success) {
+        const translatedText = response.data.translated_text;
+        setDialogueOnlyScript(translatedText);
+        setTranslatedDialogue(translatedText);
+        setDialogueLanguage(targetLanguage);
+      } else {
+        setError("Translation failed. Please try again.");
+      }
+    } catch (err) {
+      console.error("Dialogue translation error:", err);
+      setError("Translation service is temporarily unavailable. Please try again later.");
+    } finally {
+      setIsTranslatingDialogue(false);
+      setShowDialogueLanguageDropdown(false);
+    }
+  };
+
   const formatEnhancedPrompt = (text) => {
     return text
       .replace(/\n\n/g, '<br/><br/>') // Double line breaks for paragraphs
