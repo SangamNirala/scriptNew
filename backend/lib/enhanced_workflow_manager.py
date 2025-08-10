@@ -89,9 +89,13 @@ class EnhancedWorkflowManager:
     def __init__(self):
         # Initialize component managers
         self.duration_generator = DurationSpecificPromptGenerator()
-        self.integration_manager = TemplateIntegrationManager()
-        self.segmentation_generator = AdvancedScriptGenerator()
         self.prompt_architecture = EnhancedPromptArchitecture()
+        self.segmentation_generator = AdvancedScriptGenerator()
+        self.integration_manager = TemplateIntegrationManager(
+            enhanced_prompt_architecture=self.prompt_architecture,
+            template_generator=self.duration_generator,
+            advanced_script_generator=self.segmentation_generator
+        )
         self.quality_validator = WorkflowQualityValidator()
         self.metrics = WorkflowMetrics()
         
