@@ -515,7 +515,7 @@ class Phase31VideoTypeCustomizationTester:
         # Test 1: Basic connectivity
         if not self.test_backend_connectivity():
             print("❌ Backend connectivity failed. Stopping tests.")
-            return
+            return 0
         
         # Test 2: Core functionality
         print("📋 Testing Core Functionality...")
