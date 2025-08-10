@@ -2434,6 +2434,87 @@ async def generate_script_with_chain_of_thought(request: CoTScriptRequest):
         logger.error(f"Error in Chain-of-Thought script generation: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error generating CoT script: {str(e)}")
 
+@api_router.post("/generate-script-advanced", response_model=AdvancedScriptResponse)
+async def generate_script_advanced_segmented(request: AdvancedScriptRequest):
+    """
+    Phase 1: Advanced Script Generation with Intelligent Segmentation
+    
+    This endpoint implements the Core Segmentation System for long-form video content (15-30 minutes).
+    It intelligently breaks complex scripts into manageable segments while planning for narrative coherence.
+    
+    Features:
+    - Dynamic duration-based segment calculation
+    - Intelligent segment planning and coordination  
+    - Content density optimization per segment
+    - Cross-segment narrative structure management
+    
+    Phase 1 Implementation:
+    - ✅ Segmentation Logic: Automatically determines optimal segment structure
+    - ✅ Duration Analysis: Calculates segments based on target duration
+    - ✅ Narrative Planning: Plans story arc across multiple segments
+    - ✅ Coordination Setup: Prepares context for consistent generation
+    
+    Future Phases:
+    - Phase 2: Actual segment content generation with narrative continuity
+    - Phase 3: Quality consistency engine and engagement optimization
+    """
+    try:
+        logger.info(f"🎬 Starting Phase 1 Advanced Script Generation - Segmentation Analysis")
+        logger.info(f"Request: {request.prompt[:100]}..., Duration: {request.duration}, Type: {request.video_type}")
+        
+        # Validate duration parameter
+        validated_duration = validate_duration(request.duration or "medium")
+        request.duration = validated_duration
+        
+        # Call the advanced script generator
+        generation_result = await advanced_script_generator.generate_advanced_script(
+            prompt=request.prompt,
+            video_type=request.video_type,
+            duration=request.duration
+        )
+        
+        if generation_result.get("status") != "success":
+            raise HTTPException(
+                status_code=500, 
+                detail=f"Segmentation failed: {generation_result.get('error', 'Unknown error')}"
+            )
+        
+        # Extract the generation context
+        generation_context = generation_result.get("generation_context", {})
+        
+        # Create the response
+        response = AdvancedScriptResponse(
+            original_prompt=request.prompt,
+            video_type=request.video_type,
+            duration=request.duration,
+            segmentation_analysis=generation_context.get("segmentation_analysis", {}),
+            segment_plan=generation_context.get("segment_plan", {}),
+            coordination_context=generation_context.get("coordination_context", {}),
+            generation_strategy=generation_context.get("generation_strategy", "single_pass"),
+            ready_for_generation=generation_context.get("ready_for_generation", False),
+            phase_completed="Phase 1: Core Segmentation System",
+            next_steps="Ready for Phase 2: Segment Content Generation"
+        )
+        
+        # Store in database
+        await db.advanced_scripts.insert_one(response.dict())
+        
+        # Log results
+        segmentation = generation_context.get("segmentation_analysis", {})
+        if segmentation.get("requires_segmentation"):
+            logger.info(f"✅ Advanced Segmentation Complete: {segmentation.get('total_segments', 1)} segments planned")
+            logger.info(f"📊 Segment Details: {segmentation.get('segment_duration_minutes', 'N/A')} min/segment, {segmentation.get('content_density', 'standard')} density")
+        else:
+            logger.info(f"✅ Single-pass generation planned for {request.duration} duration")
+        
+        return response
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in Phase 1 Advanced Script Generation: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Advanced script generation failed: {str(e)}")
+
 # Voice and TTS Endpoints
 
 def extract_clean_script(raw_script):
