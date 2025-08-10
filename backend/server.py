@@ -2515,6 +2515,59 @@ async def generate_script_advanced_segmented(request: AdvancedScriptRequest):
         logger.error(f"Error in Phase 1 Advanced Script Generation: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Advanced script generation failed: {str(e)}")
 
+@api_router.get("/advanced-script-context/{script_id}/segment/{segment_number}")
+async def get_segment_generation_context(script_id: str, segment_number: int):
+    """
+    Get context for generating a specific segment (Phase 2 preparation)
+    
+    This endpoint provides the necessary context for generating individual segments
+    based on the segmentation plan created in Phase 1.
+    
+    Args:
+        script_id: ID of the advanced script from Phase 1
+        segment_number: Segment number to get context for (1-indexed)
+        
+    Returns:
+        Context needed for generating this specific segment
+    """
+    try:
+        # Find the advanced script
+        script = await db.advanced_scripts.find_one({"id": script_id})
+        if not script:
+            raise HTTPException(status_code=404, detail="Advanced script not found")
+        
+        # Get the generation context
+        generation_context = {
+            "segmentation_analysis": script.get("segmentation_analysis", {}),
+            "segment_plan": script.get("segment_plan", {}),
+            "coordination_context": script.get("coordination_context", {})
+        }
+        
+        # Get segment-specific context using the advanced generator
+        segment_context = advanced_script_generator.get_segment_generation_context(
+            generation_context, 
+            segment_number
+        )
+        
+        return {
+            "status": "success",
+            "script_id": script_id,
+            "segment_context": segment_context,
+            "original_script_data": {
+                "prompt": script.get("original_prompt"),
+                "video_type": script.get("video_type"),
+                "duration": script.get("duration")
+            },
+            "ready_for_segment_generation": segment_context.get("ready_for_content_generation", False),
+            "note": "This context is ready for Phase 2: Segment Content Generation"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting segment context: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get segment context: {str(e)}")
+
 # Voice and TTS Endpoints
 
 def extract_clean_script(raw_script):
