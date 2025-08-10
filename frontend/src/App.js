@@ -222,6 +222,11 @@ const ScriptGenerator = () => {
       setOriginalScript("");
       setTranslatedScript("");
       
+      // Reset dialogue translation state for new script
+      setDialogueLanguage("en");
+      setOriginalDialogue("");
+      setTranslatedDialogue("");
+      
       fetchScripts(); // Refresh the list
     } catch (err) {
       setError("Error generating script. Please try again.");
