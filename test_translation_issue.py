@@ -24,8 +24,8 @@ def test_translation_api():
     # Test the translation endpoint
     test_payload = {
         "text": test_script,
-        "source_language": "hi", 
-        "target_language": "en"
+        "source_language": "en", 
+        "target_language": "hi"
     }
     
     print("Testing Translation API...")
