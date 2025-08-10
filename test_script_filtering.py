@@ -10,7 +10,7 @@ from datetime import datetime
 import sys
 
 # Get backend URL from frontend .env
-BACKEND_URL = "https://7891ab6c-10bd-4b84-aa87-aa5afaef49fd.preview.emergentagent.com/api"
+BACKEND_URL = "https://7e1a0c85-0a06-49a1-86bc-15e9c588a17b.preview.emergentagent.com/api"
 
 def test_enhanced_script_filtering():
     """Test the enhanced script filtering functionality using the exact script content from the review request"""

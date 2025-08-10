@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 class Phase1AdvancedScriptTester:
     def __init__(self):
         # Use production backend URL from frontend/.env
-        self.base_url = "https://7891ab6c-10bd-4b84-aa87-aa5afaef49fd.preview.emergentagent.com/api"
+        self.base_url = "https://7e1a0c85-0a06-49a1-86bc-15e9c588a17b.preview.emergentagent.com/api"
         self.session = requests.Session()
         self.session.headers.update({
             'Content-Type': 'application/json',
