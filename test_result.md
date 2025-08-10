@@ -541,22 +541,14 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Backend: Translation Endpoint - /api/translate-script"
+    - "AI IMAGE PROMPT Preservation Fix"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
   
-  - task: "Backend: Translation Endpoint - /api/translate-script"
-    implemented: true
-    working: "NA"
-    file: "server.py"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: true
-    status_history:
-        - working: "NA"
-          agent: "main"
-          comment: "Please test /api/translate-script for: 1) Basic en→hi translation, 2) Bracket preservation ([...]) remains English, 3) Chunking works for >5000 chars, 4) Error handling: invalid lang code returns 503, 5) Performance: translation within 30s for ~10k chars."
+agent_communication:
+    - agent: "main"
+      message: "CRITICAL FIX NEEDED: Testing agent identified AI IMAGE PROMPT preservation failure (0/3 tests passed). The current implementation preserves the entire structure (prefix + quotes + content) but testing shows it's failing. Need to investigate and fix the regex pattern or restoration logic. The issue is preventing proper translation where AI IMAGE PROMPT should remain completely in English while only script content is translated to Hindi."
 
   - task: "Complete Frontend Testing - Enhanced Prompt Generation"
     implemented: true
