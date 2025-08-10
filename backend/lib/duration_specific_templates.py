@@ -1005,6 +1005,47 @@ class DurationSpecificPromptGenerator:
             logger.error(f"Error generating 15-20 minute template: {str(e)}")
             raise TemplateValidationError(f"15-20 minute template generation failed: {str(e)}")
     
+    async def generate_20_25_minute_template(self, 
+                                           video_type: str = "general",
+                                           customization_options: Dict[str, Any] = None) -> Dict[str, Any]:
+        """
+        Generate complete 20-25 minute deep dive template with optional customization
+        Phase 2.3 Implementation - Deep Dive Content Expert Template Generation
+        
+        Args:
+            video_type: Video type for customization (educational, marketing, entertainment, general)
+            customization_options: Additional customization options
+            
+        Returns:
+            Complete 20-25 minute deep dive template ready for use
+        """
+        try:
+            logger.info(f"🎯 Generating complete 20-25 minute deep dive template for {video_type}")
+            
+            # Create base template
+            base_template = self.create_20_25_minute_template()
+            
+            # Apply video type customization
+            customized_template = await self.customize_template(
+                base_template, video_type, customization_options
+            )
+            
+            # Add generation metadata
+            customized_template["generation_metadata"] = {
+                "generated_at": datetime.utcnow().isoformat(),
+                "video_type": video_type,
+                "customization_applied": bool(customization_options),
+                "template_version": "2.3.0",
+                "implementation_phase": "2.3_20_25_minute_deep_dive"
+            }
+            
+            logger.info(f"✅ Complete 20-25 minute deep dive template generated successfully")
+            return customized_template
+            
+        except Exception as e:
+            logger.error(f"Error generating 20-25 minute template: {str(e)}")
+            raise TemplateValidationError(f"20-25 minute template generation failed: {str(e)}")
+    
     async def customize_template(self, 
                                base_template: Dict[str, Any], 
                                video_type: str = "general",
