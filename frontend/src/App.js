@@ -297,6 +297,7 @@ const ScriptGenerator = () => {
       });
 
       setGeneratedScript(editedScript);
+      setDialogueOnlyScript(extractDialogueOnly(editedScript));
       setIsEditingScript(false);
       setHasUnsavedChanges(false);
       setEditedScript("");
