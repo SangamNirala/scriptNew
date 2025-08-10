@@ -100,7 +100,7 @@ class ScriptRequest(BaseModel):
 class AIVideoScriptRequest(BaseModel):
     prompt: str
     video_type: Optional[str] = "general"  # general, educational, entertainment, marketing, explainer, storytelling
-    duration: Optional[str] = "short"  # short (30s-1min), medium (1-3min), long (3-5min)
+    duration: Optional[str] = "short"  # short (30s-1min), medium (1-3min), long (3-5min), extended_5 (5-10min), extended_10 (10-15min), extended_15 (15-20min), extended_20 (20-25min), extended_25 (25-30min)
     visual_style: Optional[str] = "cinematic"  # cinematic, documentary, commercial, animated, realistic
     target_platform: Optional[str] = "general"  # youtube, tiktok, instagram, linkedin, general
     mood: Optional[str] = "professional"  # professional, casual, energetic, calm, dramatic, inspiring
