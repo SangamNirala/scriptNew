@@ -532,6 +532,20 @@ class AdvancedScriptResponse(BaseModel):
     next_steps: str
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
+# Phase 2: Advanced Script Generation with Narrative Continuity Models
+class AdvancedScriptWithContinuityResponse(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    original_prompt: str
+    video_type: str
+    duration: str
+    phase1_results: Dict[str, Any]
+    phase2_results: Dict[str, Any]
+    generation_context: Dict[str, Any]
+    ready_for_content_generation: bool
+    phase_completed: str = "Phase 2: Narrative Continuity Complete"
+    next_steps: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
 # Add your routes to the router instead of directly to app
 @api_router.get("/")
 async def root():
