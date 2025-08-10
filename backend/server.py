@@ -2823,7 +2823,7 @@ async def translate_script(request: ScriptTranslationRequest):
 
         original_text = request.text or ""
         
-        # Use simple, unique placeholders that translators won't modify
+        # Use simple, unique placeholders that translators won't modify  
         preserved_segments = {}
         masked_text = original_text
         placeholder_counter = 0
@@ -2834,7 +2834,7 @@ async def translate_script(request: ScriptTranslationRequest):
         def ai_replacer(match):
             nonlocal placeholder_counter
             full_match = match.group(0)  # Complete AI IMAGE PROMPT: "content"
-            placeholder = f"XAIIPX{placeholder_counter}XAIIPX"
+            placeholder = f"KEEPAIIMGPROMPT{placeholder_counter}KEEPAIIMGPROMPT"
             preserved_segments[placeholder] = full_match
             placeholder_counter += 1
             return placeholder
@@ -2846,7 +2846,7 @@ async def translate_script(request: ScriptTranslationRequest):
         def bracket_replacer(match):
             nonlocal placeholder_counter
             full_match = match.group(0)  # Complete [content]
-            placeholder = f"XBRX{placeholder_counter}XBRX"
+            placeholder = f"KEEPBRACKET{placeholder_counter}KEEPBRACKET"
             preserved_segments[placeholder] = full_match
             placeholder_counter += 1
             return placeholder
