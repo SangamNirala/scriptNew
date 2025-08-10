@@ -2828,10 +2828,10 @@ async def translate_script(request: ScriptTranslationRequest):
         masked_text = original_text
         placeholder_counter = 1000  # Start with a high number to avoid conflicts
 
-        # 1) First preserve AI IMAGE PROMPT content (including the prefix and quotes)
+        # 1) First preserve AI IMAGE PROMPT content (including the prefix and quotes)  
         # This matches: AI IMAGE PROMPT: "content" (with optional spacing and case variations)
-        # Use a more robust pattern that handles multiline content and various quote types
-        ai_image_pattern = re.compile(r'(AI\s+IMAGE\s+PROMPT\s*:?\s*)(["\'])([^"\']*?)(\2)', re.IGNORECASE | re.DOTALL)
+        # Use pattern that can handle various quote combinations
+        ai_image_pattern = re.compile(r'(AI\s+IMAGE\s+PROMPT\s*:?\s*["\'])(.*?)(["\'])', re.IGNORECASE | re.DOTALL)
         def ai_replacer(match):
             nonlocal placeholder_counter
             full_match = match.group(0)  # Complete AI IMAGE PROMPT: "content"
