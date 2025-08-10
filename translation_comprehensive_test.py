@@ -18,7 +18,7 @@ import sys
 import re
 
 # Get backend URL from frontend .env
-BACKEND_URL = "https://4fd0301a-f28a-4dfc-a951-4bab330a4285.preview.emergentagent.com/api"
+BACKEND_URL = "https://b8e2486f-e732-4963-9b4f-83fd3e213aed.preview.emergentagent.com/api"
 
 class ComprehensiveTranslationTester:
     def __init__(self):
