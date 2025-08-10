@@ -108,6 +108,35 @@ app = FastAPI()
 api_router = APIRouter(prefix="/api")
 
 
+@api_router.get("/durations")
+async def get_available_durations():
+    """Get all available duration options with their display names"""
+    return {
+        "available_durations": VALID_DURATIONS,
+        "default_duration": "short"
+    }
+
+@api_router.post("/validate-duration")
+async def validate_duration_endpoint(request: dict):
+    """Validate a duration parameter"""
+    duration = request.get("duration")
+    if not duration:
+        raise HTTPException(status_code=400, detail="Duration parameter is required")
+    
+    try:
+        validated_duration = validate_duration(duration)
+        return {
+            "valid": True,
+            "duration": validated_duration,
+            "display_name": get_duration_display_name(validated_duration)
+        }
+    except HTTPException as e:
+        return {
+            "valid": False,
+            "error": str(e.detail),
+            "available_durations": list(VALID_DURATIONS.keys())
+        }
+
 # Define Models
 class StatusCheck(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
