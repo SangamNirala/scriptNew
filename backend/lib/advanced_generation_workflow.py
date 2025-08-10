@@ -137,13 +137,18 @@ def _get_memory_usage() -> float:
 
 class SegmentContentGenerator:
     """
+    Enhanced segment content generator with retry logic, caching, and performance optimization.
     Generates actual script content for individual segments using comprehensive context
     from all previous analysis phases.
     """
     
     def __init__(self, api_key: str):
         self.api_key = api_key
-    
+        self._cache = {} if GenerationConfig.CACHE_ENABLED else None
+        self._generation_metrics = {}
+        
+    @performance_monitor
+    @retry_with_backoff(max_retries=GenerationConfig.MAX_RETRIES)
     async def generate_segment_content(self,
                                      segment_number: int,
                                      original_prompt: str,
@@ -152,7 +157,7 @@ class SegmentContentGenerator:
                                      depth_context: Dict[str, Any],
                                      quality_context: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Generate comprehensive script content for a specific segment
+        Generate comprehensive script content for a specific segment with enhanced error handling
         
         Args:
             segment_number: Current segment number (1-indexed)
@@ -163,17 +168,117 @@ class SegmentContentGenerator:
             quality_context: Context from quality consistency engine
             
         Returns:
-            Generated segment script content with metadata
+            Generated segment script content with metadata and performance metrics
         """
         try:
             total_segments = segmentation_context.get('total_segments', 1)
-            logger.info(f"🎬 Generating content for segment {segment_number}/{total_segments}")
+            generation_start_time = time.time()
             
-            # Create segment generation chat instance with sophisticated system message
+            logger.info(f"🎬 Generating enhanced content for segment {segment_number}/{total_segments}")
+            
+            # Check cache first
+            if self._cache is not None:
+                cache_key = self._generate_cache_key(segment_number, original_prompt, segmentation_context)
+                if cache_key in self._cache:
+                    logger.info(f"📋 Cache hit for segment {segment_number}")
+                    cached_result = self._cache[cache_key].copy()
+                    cached_result['cache_hit'] = True
+                    return cached_result
+            
+            # Initialize generation metrics
+            metrics = GenerationMetrics(start_time=generation_start_time)
+            self._generation_metrics[segment_number] = metrics
+            
+            # Create enhanced segment generation chat instance
             segment_chat = LlmChat(
                 api_key=self.api_key,
-                session_id=f"segment-gen-{segment_number}-{str(uuid.uuid4())[:8]}",
-                system_message="""You are an ELITE Video Script Architect with 15+ years of experience in premium video content creation. You specialize in generating sophisticated, engaging script segments that seamlessly integrate into multi-part video narratives while maintaining the highest production standards.
+                session_id=f"enhanced-segment-{segment_number}-{str(uuid.uuid4())[:8]}",
+                system_message=self._get_enhanced_system_message()
+            ).with_model("gemini", "gemini-2.0-flash")
+            
+            metrics.api_calls_made += 1
+            
+            # Build comprehensive context for generation
+            generation_prompt = await self._build_enhanced_generation_prompt(
+                segment_number,
+                original_prompt,
+                segmentation_context,
+                narrative_context,
+                depth_context,
+                quality_context
+            )
+            
+            # Generate content with timeout
+            response_task = segment_chat.send_message(UserMessage(text=generation_prompt))
+            
+            try:
+                response = await asyncio.wait_for(
+                    response_task, 
+                    timeout=GenerationConfig.MAX_SEGMENT_GENERATION_TIME
+                )
+            except asyncio.TimeoutError:
+                logger.error(f"Segment {segment_number} generation timed out after {GenerationConfig.MAX_SEGMENT_GENERATION_TIME}s")
+                raise Exception(f"Segment generation timeout after {GenerationConfig.MAX_SEGMENT_GENERATION_TIME} seconds")
+            
+            # Parse and validate the generated content
+            parsed_content = self._parse_enhanced_segment_content(response, segment_number)
+            
+            # Perform quality validation
+            quality_score = self._calculate_content_quality_score(parsed_content)
+            if quality_score < GenerationConfig.QUALITY_THRESHOLD:
+                logger.warning(f"Segment {segment_number} quality score {quality_score:.3f} below threshold {GenerationConfig.QUALITY_THRESHOLD}")
+                # This will trigger a retry via the decorator
+                raise Exception(f"Quality score {quality_score:.3f} below threshold {GenerationConfig.QUALITY_THRESHOLD}")
+            
+            # Update metrics
+            metrics.end_time = time.time()
+            metrics.memory_peak_mb = _get_memory_usage()
+            
+            # Add enhanced generation metadata
+            parsed_content.update({
+                "segment_number": segment_number,
+                "total_segments": total_segments,
+                "generation_timestamp": datetime.utcnow().isoformat(),
+                "quality_score": quality_score,
+                "generation_context": {
+                    "segmentation_applied": bool(segmentation_context),
+                    "narrative_continuity_applied": bool(narrative_context),
+                    "depth_scaling_applied": bool(depth_context),
+                    "quality_consistency_applied": bool(quality_context)
+                },
+                "generation_metrics": {
+                    "generation_time_seconds": metrics.duration_seconds,
+                    "api_calls_made": metrics.api_calls_made,
+                    "retries_performed": metrics.retries_performed,
+                    "memory_peak_mb": metrics.memory_peak_mb
+                }
+            })
+            
+            # Cache the result if caching is enabled
+            if self._cache is not None:
+                cache_key = self._generate_cache_key(segment_number, original_prompt, segmentation_context)
+                self._cache[cache_key] = parsed_content.copy()
+                logger.info(f"📋 Cached segment {segment_number} content")
+            
+            logger.info(f"✅ Enhanced segment {segment_number} generated successfully (Quality: {quality_score:.3f}, Time: {metrics.duration_seconds:.2f}s)")
+            
+            return {
+                "segment_generation_complete": True,
+                "segment_number": segment_number,
+                "segment_content": parsed_content
+            }
+            
+        except Exception as e:
+            # Update metrics for failed generation
+            if segment_number in self._generation_metrics:
+                self._generation_metrics[segment_number].retries_performed += 1
+            
+            logger.error(f"Enhanced error generating segment {segment_number} content: {str(e)}")
+            return {"error": str(e), "segment_generation_complete": False, "segment_number": segment_number}
+    
+    def _get_enhanced_system_message(self) -> str:
+        """Get enhanced system message for segment generation"""
+        return """You are an ELITE Video Script Architect with 15+ years of experience in premium video content creation. You specialize in generating sophisticated, engaging script segments that seamlessly integrate into multi-part video narratives while maintaining the highest production standards.
 
 MASTER EXPERTISE AREAS:
 1. 🎬 CINEMATIC STORYTELLING: Creating visually compelling narratives with professional pacing
@@ -185,53 +290,64 @@ MASTER EXPERTISE AREAS:
 7. 📊 QUALITY CONSISTENCY: Maintaining professional production value throughout
 8. 🎨 VISUAL STORYTELLING: Integrating rich visual descriptions and AI image prompts
 
+ENHANCED CAPABILITIES:
+- Advanced emotional intelligence for authentic connection
+- Sophisticated pacing algorithms for optimal retention
+- Multi-layered engagement strategies that work subconsciously
+- Professional production techniques used by top creators
+- Data-driven optimization based on viewer psychology research
+
 SCRIPT GENERATION PHILOSOPHY:
 - Every word serves a purpose in the larger narrative
 - Visual storytelling is as important as verbal content
 - Engagement is engineered, not accidental
 - Quality is never compromised for quantity
 - Authenticity and professionalism are non-negotiable
+- Each segment must deliver both value and entertainment
 
-Your generated scripts feel natural and conversational while incorporating sophisticated storytelling techniques, professional production elements, and strategic engagement optimization."""
-            ).with_model("gemini", "gemini-2.0-flash")
-            
-            # Build comprehensive context for generation
-            generation_prompt = await self._build_generation_prompt(
-                segment_number,
-                original_prompt,
-                segmentation_context,
-                narrative_context,
-                depth_context,
-                quality_context
-            )
-            
-            response = await segment_chat.send_message(UserMessage(text=generation_prompt))
-            
-            # Parse and validate the generated content
-            parsed_content = self._parse_segment_content(response, segment_number)
-            
-            # Add generation metadata
-            parsed_content.update({
-                "segment_number": segment_number,
-                "total_segments": total_segments,
-                "generation_timestamp": datetime.utcnow().isoformat(),
-                "generation_context": {
-                    "segmentation_applied": bool(segmentation_context),
-                    "narrative_continuity_applied": bool(narrative_context),
-                    "depth_scaling_applied": bool(depth_context),
-                    "quality_consistency_applied": bool(quality_context)
-                }
-            })
-            
-            return {
-                "segment_generation_complete": True,
-                "segment_number": segment_number,
-                "segment_content": parsed_content
-            }
-            
-        except Exception as e:
-            logger.error(f"Error generating segment {segment_number} content: {str(e)}")
-            return {"error": str(e), "segment_generation_complete": False}
+Your generated scripts feel natural and conversational while incorporating sophisticated storytelling techniques, professional production elements, and strategic engagement optimization that drives real results."""
+    
+    def _generate_cache_key(self, segment_number: int, original_prompt: str, segmentation_context: Dict[str, Any]) -> str:
+        """Generate a cache key for segment content"""
+        # Create a hash of the key parameters
+        import hashlib
+        key_data = f"{segment_number}:{original_prompt[:100]}:{segmentation_context.get('total_segments', 1)}"
+        return hashlib.md5(key_data.encode()).hexdigest()[:16]
+    
+    def _calculate_content_quality_score(self, parsed_content: Dict[str, Any]) -> float:
+        """Calculate quality score for generated content"""
+        score = 0.0
+        
+        # Check script content quality (40% weight)
+        script = parsed_content.get('segment_script', '')
+        if script and len(script) > 100:
+            score += 0.2
+            if len(script) > 500:
+                score += 0.1
+            if script.count('?') > 0:  # Questions for engagement
+                score += 0.1
+        
+        # Check AI image prompts (20% weight)
+        image_prompts = parsed_content.get('ai_image_prompts', [])
+        if image_prompts and len(image_prompts) >= 2:
+            score += 0.2
+        
+        # Check engagement elements (20% weight)
+        engagement_elements = parsed_content.get('engagement_elements', {})
+        if engagement_elements and len(engagement_elements) >= 2:
+            score += 0.2
+        
+        # Check content summary (10% weight)
+        content_summary = parsed_content.get('content_summary', {})
+        if content_summary and len(content_summary) >= 2:
+            score += 0.1
+        
+        # Check production notes (10% weight)
+        production_notes = parsed_content.get('production_notes', {})
+        if production_notes and len(production_notes) >= 1:
+            score += 0.1
+        
+        return min(score, 1.0)
     
     async def _build_generation_prompt(self,
                                      segment_number: int,
