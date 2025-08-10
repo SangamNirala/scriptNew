@@ -307,7 +307,7 @@ DURATION_PROMPT_TEMPLATES = {
     
     "extended_25": TemplateSpecification(
         duration_category=DurationCategory.EXTENDED_25,
-        name="25-30 Minute Comprehensive Architect",
+        name="25-30 Minute Comprehensive Content Architect",
         expertise_level=ExpertiseLevel.ARCHITECT,
         segments="5-6 segments",
         segment_count_range=(5, 6),
