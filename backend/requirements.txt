@@ -205,5 +205,6 @@ deep-translator>=1.11.4
 
 edge-tts
 deep-translator
-google-search-results
+google-search-results>=2.4.2
 lxml
+edge-tts-7.2.0
