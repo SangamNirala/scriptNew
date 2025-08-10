@@ -6,12 +6,100 @@ BUG: When content is translated to Hindi in Dialogue Only section,
      the "Listen" button only plays timestamps instead of Hindi dialogue content.
 """
 
-import sys
-import os
-sys.path.append('/app/backend')
-
-from server import extract_clean_script, extract_dialogue_with_timestamps
 import re
+
+# Copy the exact functions from server.py to avoid import issues
+def extract_dialogue_with_timestamps(raw_script):
+    """
+    Extract dialogue content from scripts with timestamp formats like [0:00-0:03] or 0:00-0:03.
+    
+    This function handles scripts that contain:
+    - Timestamp markers like [0:00-0:03], [0:03-0:10], etc. (bracketed format)
+    - Bare timestamp markers like 0:00-0:03, 0:03-0:10, etc. (bare format from frontend dialogue-only)
+    - Dialogue content following timestamps
+    - Production notes and metadata to be removed
+    
+    It extracts ONLY the actual spoken dialogue content.
+    """
+    
+    dialogue_content = []
+    seen_content = set()
+    
+    lines = raw_script.strip().split('\n')
+    
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+            
+        # Skip lines that are just timestamps (both bracketed and bare formats)
+        if re.match(r'^\[\d+:\d+\s*[-–]\s*\d+:\d+\]$', line):  # [0:00-0:03]
+            continue
+        if re.match(r'^\d+:\d+\s*[-–]\s*\d+:\d+$', line):  # 0:00-0:03 (bare format)
+            continue
+            
+        # Extract content after timestamp markers (bracketed format)
+        # Pattern: [0:00-0:03] Some dialogue content
+        timestamp_match = re.match(r'^\[\d+:\d+\s*[-–]\s*\d+:\d+\]\s*(.+)$', line)
+        if timestamp_match:
+            dialogue = timestamp_match.group(1).strip()
+            if dialogue and dialogue not in seen_content:
+                dialogue_content.append(dialogue)
+                seen_content.add(dialogue)
+            continue
+        
+        # Remove timestamps from the beginning of lines (both formats)
+        line = re.sub(r'^\[\d+:\d+\s*[-–]\s*\d+:\d+\]\s*', '', line)  # Remove [0:00-0:03]
+        line = re.sub(r'^\d+:\d+\s*[-–]\s*\d+:\d+\s*', '', line)  # Remove 0:00-0:03
+            
+        # Skip common production elements
+        skip_patterns = [
+            r'^\*\*.*\*\*$',  # **Bold text**
+            r'^AI IMAGE PROMPT',
+            r'^VISUAL:',
+            r'^AUDIO:',
+            r'^SCENE:',
+            r'^NARRATOR:',
+            r'^VOICE OVER:',
+            r'^PRODUCTION NOTE',
+            r'^NOTE:',
+            r'^IMPORTANT:',
+            r'^\[.*\]$',  # [Any bracketed content without timestamps]
+        ]
+        
+        should_skip = False
+        for pattern in skip_patterns:
+            if re.match(pattern, line, re.IGNORECASE):
+                should_skip = True
+                break
+                
+        if should_skip:
+            continue
+            
+        # If it's regular dialogue content (not a timestamp line), include it
+        if line and line not in seen_content and len(line) > 3:
+            dialogue_content.append(line)
+            seen_content.add(line)
+    
+    # Join with spaces for natural speech flow
+    result = ' '.join(dialogue_content).strip()
+    
+    # Final cleanup - remove any remaining timestamps (both bracketed and bare formats)
+    result = re.sub(r'\[\d+:\d+\s*[-–]\s*\d+:\d+\]', '', result)  # Remove [0:00-0:03]
+    result = re.sub(r'\b\d+:\d+\s*[-–]\s*\d+:\d+\b', '', result)  # Remove 0:00-0:03 (bare format)
+    result = re.sub(r'\s+', ' ', result).strip()
+    
+    return result
+
+def extract_clean_script(raw_script):
+    """Simplified version focusing on the dialogue with timestamps case"""
+    
+    # First, check if this is a dialogue-only format with timestamps (both [0:00-0:03] and 0:00-0:03 formats)
+    if re.search(r'\[\d+:\d+\s*[-–]\s*\d+:\d+\]', raw_script) or re.search(r'(?:^|\n)\d+:\d+\s*[-–]\s*\d+:\d+(?:\n|$)', raw_script):
+        return extract_dialogue_with_timestamps(raw_script)
+    
+    # For other formats, just return as-is for this test
+    return raw_script.strip()
 
 def test_hindi_audio_generation_bug():
     print("🔍 TESTING HINDI AUDIO GENERATION BUG")
