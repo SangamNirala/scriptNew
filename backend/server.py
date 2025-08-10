@@ -4299,10 +4299,10 @@ app.add_middleware(
     allow_credentials=True,
     allow_origins=[
         "*",
-        "https://a1f5fd57-2ca0-4a00-8547-bbab28ecbeb6.preview.emergentagent.com",
-        "https://a1f5fd57-2ca0-4a00-8547-bbab28ecbeb6.preview.emergentagent.com",
-        "https://a1f5fd57-2ca0-4a00-8547-bbab28ecbeb6.preview.emergentagent.com",
-        "https://a1f5fd57-2ca0-4a00-8547-bbab28ecbeb6.preview.emergentagent.com",
+        "https://b4abb128-ae9e-410b-9f7c-b6082bfb2486.preview.emergentagent.com",
+        "https://b4abb128-ae9e-410b-9f7c-b6082bfb2486.preview.emergentagent.com",
+        "https://b4abb128-ae9e-410b-9f7c-b6082bfb2486.preview.emergentagent.com",
+        "https://b4abb128-ae9e-410b-9f7c-b6082bfb2486.preview.emergentagent.com",
         "http://localhost:3000",
         "http://127.0.0.1:3000"
     ],

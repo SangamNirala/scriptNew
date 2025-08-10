@@ -12,7 +12,7 @@ import sys
 import re
 
 # Get backend URL from frontend .env
-BACKEND_URL = "https://a1f5fd57-2ca0-4a00-8547-bbab28ecbeb6.preview.emergentagent.com/api"
+BACKEND_URL = "https://b4abb128-ae9e-410b-9f7c-b6082bfb2486.preview.emergentagent.com/api"
 
 class AIImagePromptTester:
     def __init__(self):
