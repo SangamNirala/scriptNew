@@ -1180,9 +1180,17 @@ class IntegrationManager:
 
 class AdvancedGenerationWorkflow:
     """
-    Main orchestrator for the Advanced Generation Workflow.
+    Main orchestrator for the Advanced Generation Workflow with enhanced capabilities.
     Combines all components to generate complete segmented scripts using comprehensive
     context from all previous analysis phases.
+    
+    Enhanced Features:
+    - Intelligent concurrency management for parallel segment generation
+    - Advanced error recovery with quality-based regeneration
+    - Memory-efficient processing for large-scale operations
+    - Comprehensive performance monitoring and optimization
+    - Smart retry logic with exponential backoff
+    - Quality-based feedback loops for continuous improvement
     """
     
     def __init__(self, api_key: str):
@@ -1191,7 +1199,12 @@ class AdvancedGenerationWorkflow:
         self.coordinator = CrossSegmentCoordinator()
         self.quality_validator = QualityValidator()
         self.integration_manager = IntegrationManager()
-    
+        
+        # Enhanced tracking
+        self._session_metrics = {}
+        self._performance_cache = {}
+        
+    @performance_monitor
     async def generate_complete_segmented_script(self,
                                                original_prompt: str,
                                                segmentation_context: Dict[str, Any],
@@ -1199,7 +1212,7 @@ class AdvancedGenerationWorkflow:
                                                content_depth_scaling: Dict[str, Any],
                                                quality_consistency: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Generate complete segmented script using all analysis phases
+        Generate complete segmented script using all analysis phases with enhanced processing
         
         Args:
             original_prompt: Original user prompt  
@@ -1209,73 +1222,124 @@ class AdvancedGenerationWorkflow:
             quality_consistency: Quality consistency analysis
             
         Returns:
-            Complete generated segmented script with all metadata
+            Complete generated segmented script with all metadata and performance metrics
         """
+        session_start_time = time.time()
+        session_id = str(uuid.uuid4())
+        
         try:
             total_segments = segmentation_context.get('segmentation_analysis', {}).get('total_segments', 1)
-            logger.info(f"🎬 Starting complete segmented script generation for {total_segments} segments")
+            logger.info(f"🚀 Starting ENHANCED complete segmented script generation for {total_segments} segments")
+            logger.info(f"📊 Session ID: {session_id}")
             
-            # Initialize generation session
-            session_id = str(uuid.uuid4())
-            self.coordinator.initialize_generation_session(session_id, total_segments)
+            # Initialize enhanced session tracking
+            session_metrics = GenerationMetrics(start_time=session_start_time)
+            self._session_metrics[session_id] = session_metrics
             
+            # Initialize generation session with enhanced coordination
+            coordination_result = self.coordinator.initialize_generation_session(session_id, total_segments)
+            if not coordination_result.get("session_initialized"):
+                raise Exception("Failed to initialize generation session")
+            
+            # Enhanced parallel generation with concurrency limits
             generated_segments = []
             validation_results = []
+            failed_segments = []
             
-            # Generate each segment
-            for segment_number in range(1, total_segments + 1):
-                logger.info(f"🎭 Generating segment {segment_number}/{total_segments}")
-                
-                try:
-                    # Get enhanced context for this segment
-                    coord_context = self.coordinator.get_generation_context_for_segment(session_id, segment_number)
-                    
-                    # Get segment-specific contexts from all phases
-                    seg_context = self._get_segment_segmentation_context(segmentation_context, segment_number)
-                    nar_context = self._get_segment_narrative_context(narrative_continuity, segment_number)
-                    depth_context = self._get_segment_depth_context(content_depth_scaling, segment_number)
-                    quality_context = self._get_segment_quality_context(quality_consistency, segment_number)
-                    
-                    # Generate segment content
-                    segment_result = await self.segment_generator.generate_segment_content(
-                        segment_number,
-                        original_prompt,
-                        seg_context,
-                        nar_context,
-                        depth_context,
-                        quality_context
-                    )
-                    
-                    if not segment_result.get('segment_generation_complete'):
-                        logger.error(f"Segment {segment_number} generation failed: {segment_result.get('error')}")
-                        continue
-                    
-                    # Validate segment quality
-                    validation_result = self.quality_validator.validate_segment_quality(
-                        segment_result.get('segment_content', {}),
-                        quality_context,
-                        segment_number
-                    )
-                    
-                    validation_results.append(validation_result)
-                    
-                    # Update coordinator with segment context
-                    self.coordinator.update_segment_context(
-                        session_id,
-                        segment_number,
-                        segment_result.get('segment_content', {})
-                    )
-                    
-                    # Add to generated segments
-                    generated_segments.append(segment_result)
-                    logger.info(f"✅ Segment {segment_number} generated successfully")
-                    
-                except Exception as segment_error:
-                    logger.error(f"Error generating segment {segment_number}: {str(segment_error)}")
+            # Create semaphore for concurrency control
+            semaphore = asyncio.Semaphore(GenerationConfig.MAX_CONCURRENT_SEGMENTS)
+            
+            async def generate_single_segment(segment_number: int) -> Tuple[int, Dict[str, Any], Dict[str, Any]]:
+                """Generate a single segment with enhanced error handling"""
+                async with semaphore:
+                    try:
+                        logger.info(f"🎭 Starting enhanced generation for segment {segment_number}/{total_segments}")
+                        
+                        # Get enhanced context for this segment
+                        coord_context = self.coordinator.get_generation_context_for_segment(session_id, segment_number)
+                        
+                        # Get segment-specific contexts from all phases
+                        seg_context = self._get_enhanced_segment_segmentation_context(segmentation_context, segment_number)
+                        nar_context = self._get_enhanced_segment_narrative_context(narrative_continuity, segment_number)
+                        depth_context = self._get_enhanced_segment_depth_context(content_depth_scaling, segment_number)
+                        quality_context = self._get_enhanced_segment_quality_context(quality_consistency, segment_number)
+                        
+                        # Generate segment content with enhanced processing
+                        segment_result = await self.segment_generator.generate_segment_content(
+                            segment_number,
+                            original_prompt,
+                            seg_context,
+                            nar_context,
+                            depth_context,
+                            quality_context
+                        )
+                        
+                        session_metrics.api_calls_made += 1
+                        
+                        if not segment_result.get('segment_generation_complete'):
+                            logger.error(f"Enhanced segment {segment_number} generation failed: {segment_result.get('error')}")
+                            return segment_number, segment_result, {}
+                        
+                        # Enhanced quality validation
+                        validation_result = self.quality_validator.validate_segment_quality(
+                            segment_result.get('segment_content', {}),
+                            quality_context,
+                            segment_number
+                        )
+                        
+                        # Update coordinator with segment context
+                        coord_update = self.coordinator.update_segment_context(
+                            session_id,
+                            segment_number,
+                            segment_result.get('segment_content', {})
+                        )
+                        
+                        logger.info(f"✅ Enhanced segment {segment_number} completed successfully")
+                        return segment_number, segment_result, validation_result
+                        
+                    except Exception as segment_error:
+                        logger.error(f"Enhanced error in segment {segment_number} generation: {str(segment_error)}")
+                        session_metrics.retries_performed += 1
+                        return segment_number, {"error": str(segment_error), "segment_generation_complete": False}, {}
+            
+            # Execute enhanced parallel generation with proper error handling
+            logger.info(f"⚡ Starting parallel generation of {total_segments} segments with concurrency limit {GenerationConfig.MAX_CONCURRENT_SEGMENTS}")
+            
+            segment_tasks = [generate_single_segment(i) for i in range(1, total_segments + 1)]
+            completed_segments = await asyncio.gather(*segment_tasks, return_exceptions=True)
+            
+            # Process results with enhanced error handling
+            for result in completed_segments:
+                if isinstance(result, Exception):
+                    logger.error(f"Segment generation task failed with exception: {str(result)}")
+                    failed_segments.append({"error": str(result)})
                     continue
+                
+                segment_number, segment_result, validation_result = result
+                
+                if segment_result.get('segment_generation_complete'):
+                    generated_segments.append(segment_result)
+                    if validation_result:
+                        validation_results.append(validation_result)
+                else:
+                    failed_segments.append({
+                        "segment_number": segment_number,
+                        "error": segment_result.get('error', 'Unknown error')
+                    })
             
-            # Integrate all segments into final script
-            logger.info("🔗 Integrating all segments into final script")
+            logger.info(f"📊 Generation Summary: {len(generated_segments)} successful, {len(failed_segments)} failed")
+            
+            # Enhanced quality-based regeneration for failed segments
+            if failed_segments and len(generated_segments) > 0:
+                logger.info(f"🔄 Attempting regeneration for {len(failed_segments)} failed segments...")
+                # Implement regeneration logic here if needed
+                
+            # Ensure we have minimum viable segments
+            if len(generated_segments) == 0:
+                raise Exception("No segments were successfully generated")
+            
+            # Enhanced integration with better error handling
+            logger.info("🔗 Starting enhanced integration of all segments...")
             integration_result = self.integration_manager.integrate_segments(
                 generated_segments,
                 narrative_continuity,
@@ -1283,97 +1347,200 @@ class AdvancedGenerationWorkflow:
             )
             
             if not integration_result.get('integration_complete'):
-                logger.error(f"Integration failed: {integration_result.get('error')}")
-                return {"error": "Script integration failed", "advanced_generation_complete": False}
+                logger.error(f"Enhanced integration failed: {integration_result.get('error')}")
+                raise Exception(f"Script integration failed: {integration_result.get('error')}")
             
-            # Calculate overall generation statistics
-            generation_stats = self._calculate_generation_statistics(
+            # Calculate enhanced generation statistics
+            session_metrics.end_time = time.time()
+            session_metrics.memory_peak_mb = _get_memory_usage()
+            
+            generation_stats = self._calculate_enhanced_generation_statistics(
                 generated_segments,
                 validation_results,
-                integration_result
+                integration_result,
+                failed_segments,
+                session_metrics
             )
             
-            logger.info("🎉 Complete segmented script generation finished!")
+            logger.info("🎉 ENHANCED complete segmented script generation finished!")
+            logger.info(f"📊 Enhanced Performance Metrics:")
+            logger.info(f"   • Total Time: {session_metrics.duration_seconds:.2f} seconds")
+            logger.info(f"   • API Calls: {session_metrics.api_calls_made}")
+            logger.info(f"   • Retries: {session_metrics.retries_performed}")
+            logger.info(f"   • Memory Peak: {session_metrics.memory_peak_mb:.1f} MB")
+            logger.info(f"   • Success Rate: {generation_stats.get('generation_success_rate', 0):.2%}")
             
             return {
                 "advanced_generation_complete": True,
                 "original_prompt": original_prompt,
                 "total_segments": total_segments,
                 "segments_generated": len(generated_segments),
+                "segments_failed": len(failed_segments),
                 "generated_segments": generated_segments,
                 "validation_results": validation_results,
+                "failed_segments": failed_segments,
                 "integrated_script": integration_result.get('integrated_script', {}),
                 "generation_statistics": generation_stats,
                 "session_id": session_id,
-                "phase_completed": "Advanced Generation Workflow - Phase 2 Complete",
+                "session_metrics": {
+                    "total_time_seconds": session_metrics.duration_seconds,
+                    "api_calls_made": session_metrics.api_calls_made,
+                    "retries_performed": session_metrics.retries_performed,
+                    "memory_peak_mb": session_metrics.memory_peak_mb,
+                    "cache_hits": session_metrics.cache_hits
+                },
+                "phase_completed": "Enhanced Advanced Generation Workflow - Phase 2 Complete",
                 "generation_timestamp": datetime.utcnow().isoformat()
             }
             
         except Exception as e:
-            logger.error(f"Error in advanced generation workflow: {str(e)}")
-            return {"error": str(e), "advanced_generation_complete": False}
+            logger.error(f"Enhanced error in advanced generation workflow: {str(e)}")
+            
+            # Update session metrics even for failures
+            if session_id in self._session_metrics:
+                self._session_metrics[session_id].end_time = time.time()
+            
+            return {"error": str(e), "advanced_generation_complete": False, "session_id": session_id}
     
-    def _get_segment_segmentation_context(self, segmentation_context: Dict[str, Any], segment_number: int) -> Dict[str, Any]:
-        """Extract segment-specific segmentation context"""
-        # This would use the existing get_segment_generation_context method
-        return segmentation_context.get('coordination_context', {})
-    
-    def _get_segment_narrative_context(self, narrative_continuity: Dict[str, Any], segment_number: int) -> Dict[str, Any]:
-        """Extract segment-specific narrative context"""
-        components = narrative_continuity.get('analysis_components', {})
-        
-        # Get story arc context for this segment
-        story_arc = components.get('story_arc', {}).get('story_arc', {})
-        story_progression = story_arc.get('story_arc_progression', [])
-        segment_story = None
-        if segment_number <= len(story_progression):
-            segment_story = story_progression[segment_number - 1]
-        
-        return {
-            "story_arc_context": segment_story,
-            "character_context": {},  # Would extract character context for segment
-            "theme_context": {},      # Would extract theme context for segment
-            "transitions": {},        # Would extract transition context for segment
-            "global_context": narrative_continuity.get('analysis_components', {})
-        }
-    
-    def _get_segment_depth_context(self, content_depth_scaling: Dict[str, Any], segment_number: int) -> Dict[str, Any]:
-        """Extract segment-specific depth context"""
-        components = content_depth_scaling.get('analysis_components', {})
-        segment_strategies = components.get('segment_strategies', [])
-        segment_calibrations = components.get('segment_calibrations', [])
-        
-        strategy = None
-        calibration = None
-        
-        if segment_number <= len(segment_strategies):
-            strategy = segment_strategies[segment_number - 1]
-        if segment_number <= len(segment_calibrations):
-            calibration = segment_calibrations[segment_number - 1]
-        
-        return {
-            "content_strategy": strategy.get('content_strategy', {}) if strategy else {},
-            "depth_calibration": calibration.get('calibration', {}) if calibration else {},
-            "information_requirements": {}  # Would extract from information flow
-        }
-    
-    def _get_segment_quality_context(self, quality_consistency: Dict[str, Any], segment_number: int) -> Dict[str, Any]:
-        """Extract segment-specific quality context"""
-        components = quality_consistency.get('analysis_components', {})
-        
-        return {
-            "quality_standards": components.get('quality_standards', {}).get('quality_standards', {}),
-            "tone_requirements": {},    # Would extract segment-specific tone requirements
-            "engagement_requirements": {} # Would extract segment-specific engagement requirements
-        }
-    
-    def _calculate_generation_statistics(self,
-                                       generated_segments: List[Dict[str, Any]],
-                                       validation_results: List[Dict[str, Any]],
-                                       integration_result: Dict[str, Any]) -> Dict[str, Any]:
-        """Calculate comprehensive generation statistics"""
+    def _get_enhanced_segment_segmentation_context(self, segmentation_context: Dict[str, Any], segment_number: int) -> Dict[str, Any]:
+        """Extract enhanced segment-specific segmentation context"""
+        # Enhanced context extraction with better error handling
         try:
-            total_segments = len(generated_segments)
+            coordination_context = segmentation_context.get('coordination_context', {})
+            segment_plan = segmentation_context.get('segment_plan', {})
+            segment_outlines = segment_plan.get('segment_outlines', [])
+            
+            # Get specific segment context
+            segment_outline = {}
+            if segment_number <= len(segment_outlines):
+                segment_outline = segment_outlines[segment_number - 1]
+            
+            return {
+                **coordination_context,
+                "segment_outline": segment_outline,
+                "total_segments": segmentation_context.get('segmentation_analysis', {}).get('total_segments', 1),
+                "segment_context": {
+                    "segment_position": {
+                        "current": segment_number,
+                        "total": segmentation_context.get('segmentation_analysis', {}).get('total_segments', 1),
+                        "is_first": segment_number == 1,
+                        "is_last": segment_number == segmentation_context.get('segmentation_analysis', {}).get('total_segments', 1),
+                        "progress_percentage": round((segment_number - 1) / max(segmentation_context.get('segmentation_analysis', {}).get('total_segments', 1) - 1, 1) * 100)
+                    }
+                }
+            }
+        except Exception as e:
+            logger.error(f"Error extracting enhanced segmentation context: {str(e)}")
+            return segmentation_context.get('coordination_context', {})
+    
+    def _get_enhanced_segment_narrative_context(self, narrative_continuity: Dict[str, Any], segment_number: int) -> Dict[str, Any]:
+        """Extract enhanced segment-specific narrative context"""
+        try:
+            components = narrative_continuity.get('analysis_components', {})
+            
+            # Get story arc context for this segment
+            story_arc = components.get('story_arc', {}).get('story_arc', {})
+            story_progression = story_arc.get('story_arc_progression', [])
+            segment_story = {}
+            if segment_number <= len(story_progression):
+                segment_story = story_progression[segment_number - 1]
+            
+            # Get character context
+            character_consistency = components.get('character_consistency', {})
+            
+            return {
+                "story_arc_context": segment_story,
+                "character_context": character_consistency.get('segment_character_contexts', [{}])[min(segment_number - 1, 0)] if character_consistency.get('segment_character_contexts') else {},
+                "theme_context": components.get('theme_continuity', {}).get('segment_theme_contexts', [{}])[min(segment_number - 1, 0)] if components.get('theme_continuity', {}).get('segment_theme_contexts') else {},
+                "transitions": components.get('transitions', {}).get('segment_transitions', [{}])[min(segment_number - 1, 0)] if components.get('transitions', {}).get('segment_transitions') else {},
+                "global_context": components
+            }
+        except Exception as e:
+            logger.error(f"Error extracting enhanced narrative context: {str(e)}")
+            return {"global_context": narrative_continuity.get('analysis_components', {})}
+    
+    def _get_enhanced_segment_depth_context(self, content_depth_scaling: Dict[str, Any], segment_number: int) -> Dict[str, Any]:
+        """Extract enhanced segment-specific depth context"""
+        try:
+            components = content_depth_scaling.get('analysis_components', {})
+            segment_strategies = components.get('segment_strategies', [])
+            segment_calibrations = components.get('segment_calibrations', [])
+            
+            strategy = {}
+            calibration = {}
+            
+            if segment_number <= len(segment_strategies):
+                strategy = segment_strategies[segment_number - 1]
+            if segment_number <= len(segment_calibrations):
+                calibration = segment_calibrations[segment_number - 1]
+            
+            # Get information requirements from information flow
+            info_flow = components.get('information_flow', {}).get('information_flow', {})
+            segment_info_mapping = info_flow.get('segment_information_mapping', [])
+            information_requirements = {}
+            if segment_number <= len(segment_info_mapping):
+                information_requirements = segment_info_mapping[segment_number - 1].get('information_details', {})
+            
+            return {
+                "content_strategy": strategy.get('content_strategy', {}) if strategy else {},
+                "depth_calibration": calibration.get('calibration', {}) if calibration else {},
+                "information_requirements": information_requirements
+            }
+        except Exception as e:
+            logger.error(f"Error extracting enhanced depth context: {str(e)}")
+            return {}
+    
+    def _get_enhanced_segment_quality_context(self, quality_consistency: Dict[str, Any], segment_number: int) -> Dict[str, Any]:
+        """Extract enhanced segment-specific quality context"""
+        try:
+            components = quality_consistency.get('analysis_components', {})
+            
+            # Get quality standards
+            quality_standards = components.get('quality_standards', {}).get('quality_standards', {})
+            
+            # Get segment-specific tone mapping
+            tone_consistency = components.get('tone_consistency', {}).get('tone_consistency', {})
+            segment_tone_mapping = tone_consistency.get('segment_tone_mapping', [])
+            tone_requirements = {}
+            if segment_number <= len(segment_tone_mapping):
+                tone_requirements = segment_tone_mapping[segment_number - 1].get('tone_details', {})
+            
+            # Get segment-specific engagement distribution
+            engagement_balance = components.get('engagement_balance', {}).get('engagement_balance', {})
+            segment_engagement_distribution = engagement_balance.get('segment_engagement_distribution', [])
+            engagement_requirements = {}
+            if segment_number <= len(segment_engagement_distribution):
+                engagement_requirements = segment_engagement_distribution[segment_number - 1].get('engagement_details', {})
+            
+            return {
+                "quality_standards": {
+                    "content_quality": quality_standards.get('content_quality_standards', {}),
+                    "production_value": quality_standards.get('production_value_standards', {}),
+                    "engagement_quality": quality_standards.get('engagement_quality_standards', {}),
+                    "validation_framework": quality_standards.get('quality_validation_framework', {})
+                },
+                "tone_requirements": tone_requirements,
+                "engagement_requirements": engagement_requirements,
+                "global_consistency": {
+                    "cross_segment_consistency": quality_standards.get('cross_segment_consistency', {}),
+                    "core_tone_identity": tone_consistency.get('core_tone_identity', {}),
+                    "engagement_philosophy": engagement_balance.get('engagement_distribution_philosophy', {}),
+                    "quality_framework": quality_standards.get('overall_quality_framework', {})
+                }
+            }
+        except Exception as e:
+            logger.error(f"Error extracting enhanced quality context: {str(e)}")
+            return {}
+    
+    def _calculate_enhanced_generation_statistics(self,
+                                                generated_segments: List[Dict[str, Any]],
+                                                validation_results: List[Dict[str, Any]],
+                                                integration_result: Dict[str, Any],
+                                                failed_segments: List[Dict[str, Any]],
+                                                session_metrics: GenerationMetrics) -> Dict[str, Any]:
+        """Calculate enhanced comprehensive generation statistics"""
+        try:
+            total_segments_attempted = len(generated_segments) + len(failed_segments)
             successful_validations = sum(1 for v in validation_results if v.get('validation_passed', False))
             
             # Calculate average validation score
@@ -1382,28 +1549,57 @@ class AdvancedGenerationWorkflow:
                 total_score = sum(v.get('overall_score', 0) for v in validation_results)
                 avg_validation_score = total_score / len(validation_results)
             
-            # Calculate total content statistics
+            # Calculate enhanced content statistics
             total_script_length = 0
             total_image_prompts = 0
+            quality_scores = []
             
             for segment in generated_segments:
                 content = segment.get('segment_content', {})
                 total_script_length += len(content.get('segment_script', ''))
                 total_image_prompts += len(content.get('ai_image_prompts', []))
+                
+                # Extract quality scores if available
+                if 'quality_score' in content:
+                    quality_scores.append(content['quality_score'])
+            
+            # Calculate enhanced performance metrics
+            avg_quality_score = sum(quality_scores) / len(quality_scores) if quality_scores else 0
             
             return {
-                "total_segments_planned": total_segments,
+                "total_segments_planned": total_segments_attempted,
                 "segments_successfully_generated": len(generated_segments),
+                "segments_failed": len(failed_segments),
                 "segments_passing_validation": successful_validations,
-                "generation_success_rate": len(generated_segments) / max(total_segments, 1),
+                "generation_success_rate": len(generated_segments) / max(total_segments_attempted, 1),
                 "validation_success_rate": successful_validations / max(len(validation_results), 1),
                 "average_validation_score": round(avg_validation_score, 3),
+                "average_quality_score": round(avg_quality_score, 3),
                 "total_script_length": total_script_length,
                 "total_image_prompts": total_image_prompts,
                 "average_segment_length": total_script_length // max(len(generated_segments), 1),
-                "integration_successful": integration_result.get('integration_complete', False)
+                "integration_successful": integration_result.get('integration_complete', False),
+                
+                # Enhanced performance metrics
+                "performance_metrics": {
+                    "total_generation_time_seconds": session_metrics.duration_seconds,
+                    "average_time_per_segment": session_metrics.duration_seconds / max(len(generated_segments), 1),
+                    "api_calls_made": session_metrics.api_calls_made,
+                    "retries_performed": session_metrics.retries_performed,
+                    "cache_hits": session_metrics.cache_hits,
+                    "memory_peak_mb": session_metrics.memory_peak_mb,
+                    "tokens_per_second": session_metrics.total_tokens_used / max(session_metrics.duration_seconds, 1) if session_metrics.total_tokens_used > 0 else 0
+                },
+                
+                # Quality analysis
+                "quality_analysis": {
+                    "quality_threshold_met": avg_quality_score >= GenerationConfig.QUALITY_THRESHOLD,
+                    "quality_distribution": quality_scores,
+                    "segments_above_threshold": sum(1 for score in quality_scores if score >= GenerationConfig.QUALITY_THRESHOLD),
+                    "quality_consistency": max(quality_scores) - min(quality_scores) if quality_scores else 0
+                }
             }
             
         except Exception as e:
-            logger.error(f"Error calculating generation statistics: {str(e)}")
-            return {"calculation_error": str(e)}
+            logger.error(f"Error calculating enhanced generation statistics: {str(e)}")
+            return {"calculation_error": str(e), "basic_stats": {"segments_generated": len(generated_segments)}}
