@@ -890,6 +890,108 @@ class DurationSpecificPromptGenerator:
                 logger.info(f"✅ Complete Phase 2.2 template structure created: {base_template['template_id']}")
                 return base_template
             
+            elif template_spec.duration_category == DurationCategory.EXTENDED_20:
+                # Use the complete 20-25 minute template implementation
+                logger.info("📋 Using complete Phase 2.3 implementation for extended_20")
+                complete_template = self.create_20_25_minute_template()
+                
+                # Convert to base template structure format
+                template_content = complete_template["template_content"]
+                
+                base_template = {
+                    "template_id": complete_template["template_id"],
+                    "template_name": complete_template["template_name"],
+                    "duration_category": complete_template["duration_category"],
+                    "expertise_level": complete_template["expertise_level"],
+                    "complexity": complete_template["complexity"],
+                    "focus": complete_template["focus"],
+                    
+                    # Core template components with actual implementation
+                    "system_prompt": template_content.system_prompt,
+                    "expertise_description": template_content.expertise_description,
+                    "framework_instructions": template_content.framework_instructions,
+                    "segment_guidelines": template_content.segment_guidelines,
+                    "quality_standards": template_content.quality_standards,
+                    
+                    # Template architecture metadata
+                    "template_metadata": {
+                        "specification": template_spec.to_dict(),
+                        "creation_timestamp": datetime.utcnow().isoformat(),
+                        "generator_id": self.generator_id,
+                        "version": "2.3.0",
+                        "status": "phase_2_3_complete",
+                        "implementation_complete": True,
+                        "word_count": template_content.get_word_count(),
+                        "content_hash": template_content.calculate_hash()
+                    },
+                    
+                    # Customization framework
+                    "customization_options": template_content.customization_options,
+                    
+                    # Validation framework
+                    "validation_criteria": template_content.validation_criteria,
+                    
+                    # Integration points
+                    "integration_points": template_content.integration_points,
+                    
+                    # Usage examples
+                    "usage_examples": template_content.usage_examples
+                }
+                
+                logger.info(f"✅ Complete Phase 2.3 template structure created: {base_template['template_id']}")
+                return base_template
+            
+            elif template_spec.duration_category == DurationCategory.EXTENDED_25:
+                # Use the complete 25-30 minute template implementation
+                logger.info("📋 Using complete Phase 2.4 implementation for extended_25")
+                complete_template = self.create_25_30_minute_template()
+                
+                # Convert to base template structure format
+                template_content = complete_template["template_content"]
+                
+                base_template = {
+                    "template_id": complete_template["template_id"],
+                    "template_name": complete_template["template_name"],
+                    "duration_category": complete_template["duration_category"],
+                    "expertise_level": complete_template["expertise_level"],
+                    "complexity": complete_template["complexity"],
+                    "focus": complete_template["focus"],
+                    
+                    # Core template components with actual implementation
+                    "system_prompt": template_content.system_prompt,
+                    "expertise_description": template_content.expertise_description,
+                    "framework_instructions": template_content.framework_instructions,
+                    "segment_guidelines": template_content.segment_guidelines,
+                    "quality_standards": template_content.quality_standards,
+                    
+                    # Template architecture metadata
+                    "template_metadata": {
+                        "specification": template_spec.to_dict(),
+                        "creation_timestamp": datetime.utcnow().isoformat(),
+                        "generator_id": self.generator_id,
+                        "version": "2.4.0",
+                        "status": "phase_2_4_complete",
+                        "implementation_complete": True,
+                        "word_count": template_content.get_word_count(),
+                        "content_hash": template_content.calculate_hash()
+                    },
+                    
+                    # Customization framework
+                    "customization_options": template_content.customization_options,
+                    
+                    # Validation framework
+                    "validation_criteria": template_content.validation_criteria,
+                    
+                    # Integration points
+                    "integration_points": template_content.integration_points,
+                    
+                    # Usage examples
+                    "usage_examples": template_content.usage_examples
+                }
+                
+                logger.info(f"✅ Complete Phase 2.4 template structure created: {base_template['template_id']}")
+                return base_template
+            
             else:
                 # Use placeholder structure for templates not yet implemented
                 logger.info(f"📋 Using placeholder structure for {template_spec.duration_category.value}")
