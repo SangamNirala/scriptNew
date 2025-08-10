@@ -76,6 +76,31 @@ intelligent_qa_system = IntelligentQASystem(db, GEMINI_API_KEY)
 # STEP 2: Initialize Few-Shot Learning & Pattern Recognition System
 few_shot_generator = FewShotScriptGenerator(db, GEMINI_API_KEY)
 
+# Duration validation and mapping
+VALID_DURATIONS = {
+    "short": "Short (30s-1min)",
+    "medium": "Medium (1-3min)", 
+    "long": "Long (3-5min)",
+    "extended_5": "Extended (5-10min)",
+    "extended_10": "Extended (10-15min)",
+    "extended_15": "Extended (15-20min)",
+    "extended_20": "Extended (20-25min)",
+    "extended_25": "Extended (25-30min)"
+}
+
+def validate_duration(duration: str) -> str:
+    """Validate and normalize duration parameter"""
+    if duration not in VALID_DURATIONS:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Invalid duration '{duration}'. Valid options: {list(VALID_DURATIONS.keys())}"
+        )
+    return duration
+
+def get_duration_display_name(duration: str) -> str:
+    """Get human-readable duration name"""
+    return VALID_DURATIONS.get(duration, duration)
+
 # Create the main app without a prefix
 app = FastAPI()
 
