@@ -1,0 +1,76 @@
+{
+  "total_tests": 8,
+  "passed_tests": 3,
+  "failed_tests": 5,
+  "success_rate": 37.5,
+  "duration": 0.06062650680541992,
+  "critical_tests_passed": 2,
+  "critical_tests_total": 5,
+  "overall_status": "failure",
+  "test_results": [
+    {
+      "test_name": "create_20_25_minute_template() - Method Execution",
+      "status": "\u2705 PASS",
+      "passed": true,
+      "details": "Template created successfully with ID: 72c1cdbe...",
+      "error": "",
+      "timestamp": "2025-08-10T14:14:05.306078"
+    },
+    {
+      "test_name": "Phase 2.3 Requirements - Template Name",
+      "status": "\u274c FAIL",
+      "passed": false,
+      "details": "",
+      "error": "Expected '20-25 Minute Deep Dive Content Expert', got '20-25 Minute Deep Dive Expert'",
+      "timestamp": "2025-08-10T14:14:05.306624"
+    },
+    {
+      "test_name": "Word Count Validation - 500+ Words Requirement",
+      "status": "\u2705 PASS",
+      "passed": true,
+      "details": "Total word count: 1480 words (exceeds 500+ requirement). System prompt: 680 words",
+      "error": "",
+      "timestamp": "2025-08-10T14:14:05.307273"
+    },
+    {
+      "test_name": "Async Generate Template - Method Execution",
+      "status": "\u274c FAIL",
+      "passed": false,
+      "details": "",
+      "error": "20-25 minute template generation failed: Template customization failed: 'template_metadata'",
+      "timestamp": "2025-08-10T14:14:05.308001"
+    },
+    {
+      "test_name": "Enhanced Prompt Architecture Integration - Spec Name",
+      "status": "\u274c FAIL",
+      "passed": false,
+      "details": "",
+      "error": "Spec name mismatch: 20-25 Minute Deep Dive Expert",
+      "timestamp": "2025-08-10T14:14:05.308024"
+    },
+    {
+      "test_name": "Implementation Status - Phase 2.3 Complete Flag",
+      "status": "\u274c FAIL",
+      "passed": false,
+      "details": "",
+      "error": "phase_2_3_complete not set to True",
+      "timestamp": "2025-08-10T14:14:05.308039"
+    },
+    {
+      "test_name": "Template System Status Endpoint - HTTP Response",
+      "status": "\u274c FAIL",
+      "passed": false,
+      "details": "",
+      "error": "HTTP 502: ",
+      "timestamp": "2025-08-10T14:14:05.364952"
+    },
+    {
+      "test_name": "Template Content Structure - All Required Sections",
+      "status": "\u2705 PASS",
+      "passed": true,
+      "details": "All 5 required sections present with proper content and expertise indicators",
+      "error": "",
+      "timestamp": "2025-08-10T14:14:05.365926"
+    }
+  ]
+}
