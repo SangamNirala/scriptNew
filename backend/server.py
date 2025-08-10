@@ -1954,6 +1954,10 @@ async def generate_script_v2(request: ScriptRequest):
     Advanced script generation with dynamic context integration and viral optimization
     """
     try:
+        # Validate duration parameter
+        validated_duration = validate_duration(request.duration or "short")
+        request.duration = validated_duration
+        
         # Phase 2: Get enhanced context using Context Integration System
         enhanced_context = await context_system.get_enhanced_context(
             prompt=request.prompt,
