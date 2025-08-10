@@ -262,6 +262,93 @@ const ScriptGenerator = () => {
         audioData.pause();
         audioData.currentTime = 0;
       }
+
+  // Dialogue-only actions
+  const handleEditDialogue = () => {
+    setIsEditingDialogue(true);
+    setEditedDialogue(dialogueOnlyScript);
+    setHasUnsavedDialogueChanges(false);
+  };
+
+  const handleCancelEditDialogue = () => {
+    setIsEditingDialogue(false);
+    setEditedDialogue("");
+    setHasUnsavedDialogueChanges(false);
+  };
+
+  const handleDialogueChange = (newText) => {
+    setEditedDialogue(newText);
+    setHasUnsavedDialogueChanges(newText !== dialogueOnlyScript);
+  };
+
+  const handleSaveDialogue = async () => {
+    // Saving dialogue means we need to merge it back into generatedScript's dialogue portions.
+    // For MVP: replace the dialogue-only block in generatedScript by reconstructing lines based on timestamps.
+    // If backend has specific endpoint to save dialogue, we would call it. For now, we inline-update generatedScript by mapping.
+    try {
+      setIsSavingDialogue(true);
+      setError("");
+
+      // Build a map from timestamp -> dialogue from editedDialogue
+      const pairs = [];
+      const parts = editedDialogue.split(/\n\n+/).map(s => s.trim()).filter(Boolean);
+      for (const chunk of parts) {
+        const lines = chunk.split("\n").map(s => s.trim()).filter(Boolean);
+        if (lines.length >= 2) {
+          const ts = lines[0];
+          const text = lines.slice(1).join(" ");
+          pairs.push({ ts, text });
+        }
+      }
+
+      // Replace in generatedScript: find blocks that look like [mm:ss-mm:ss] ... [DIALOGUE:] line
+      let newScript = generatedScript;
+      for (const { ts, text } of pairs) {
+        const tsEsc = ts.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const regex = new RegExp(`(\\*?\\*?\\[${tsEsc}\\][\\s\\S]*?\\[DIALOGUE:\\\]\\*?\\*?\\s*)(.+)`, "i");
+        newScript = newScript.replace(regex, (m, p1) => `${p1}${text}`);
+      }
+
+      // Update states
+      setGeneratedScript(newScript);
+      setDialogueOnlyScript(editedDialogue);
+
+      // If we have a currentScriptId, persist the full script using existing endpoint
+      if (currentScriptId) {
+        await axios.put(`${API}/scripts/${currentScriptId}`, {
+          script_id: currentScriptId,
+          generated_script: newScript
+        });
+      }
+
+      setIsEditingDialogue(false);
+      setHasUnsavedDialogueChanges(false);
+      setEditedDialogue("");
+
+      // refresh recent list
+      fetchScripts();
+    } catch (err) {
+      console.error("Error saving dialogue:", err);
+      setError("Error saving dialogue changes. Please try again.");
+    } finally {
+      setIsSavingDialogue(false);
+    }
+  };
+
+  const handlePlayDialogue = () => {
+    if (isPlaying) {
+      if (audioData) {
+        audioData.pause();
+        audioData.currentTime = 0;
+      }
+      setIsPlaying(false);
+      setAudioData(null);
+      return;
+    }
+    setAudioTarget("dialogue");
+    setShowVoiceSelection(true);
+  };
+
       setIsPlaying(false);
       setAudioData(null);
       return;
