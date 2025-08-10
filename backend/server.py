@@ -2912,7 +2912,6 @@ async def translate_script(request: ScriptTranslationRequest):
     except Exception as e:
         logger.error(f"Translation error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Translation error: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Translation error: {str(e)}")
 
 # =============================================================================
 # PHASE 3: ADVANCED ANALYTICS AND VALIDATION ENDPOINTS
