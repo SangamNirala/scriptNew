@@ -1750,6 +1750,10 @@ Improvement Ratio: {full_response.quality_metrics.improvement_ratio:.1f}x"""
 async def generate_script(request: ScriptRequest):
     """Generate an engaging video script based on the prompt"""
     try:
+        # Validate duration parameter
+        validated_duration = validate_duration(request.duration or "short")
+        request.duration = validated_duration
+        
         # Create a new chat instance for script generation
         chat = LlmChat(
             api_key=GEMINI_API_KEY,
