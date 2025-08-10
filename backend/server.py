@@ -4828,6 +4828,157 @@ app.add_middleware(
     expose_headers=["*"]
 )
 
+# =============================================================================
+# PHASE 2: COMPLETE ADVANCED SCRIPT GENERATION WITH ALL SYSTEMS
+# =============================================================================
+
+@api_router.post("/generate-script-complete-advanced", response_model=AdvancedScriptCompleteResponse)
+async def generate_complete_advanced_script(request: AdvancedScriptCompleteRequest):
+    """
+    Phase 2: Complete Advanced Script Generation System
+    
+    This is the ultimate endpoint that combines ALL Phase 2 systems:
+    - Phase 1: Core Segmentation System 
+    - Phase 2: Narrative Continuity System
+    - Content Depth Scaling Engine
+    - Quality Consistency Engine  
+    - Advanced Generation Workflow
+    
+    This generates complete, high-quality segmented scripts with:
+    - Intelligent segmentation based on duration
+    - Full narrative continuity across segments
+    - Optimized content depth and information flow
+    - Consistent quality and engagement throughout
+    - Actual script content generation (not just planning)
+    
+    The result is a production-ready, segmented video script with all 
+    segments generated and integrated into a cohesive final script.
+    """
+    try:
+        logger.info(f"🚀 Starting Complete Advanced Script Generation")
+        logger.info(f"Request: {request.prompt[:100]}..., Duration: {request.duration}, Type: {request.video_type}, Audience: {request.target_audience}")
+        
+        # Validate duration parameter
+        validated_duration = validate_duration(request.duration or "medium")
+        request.duration = validated_duration
+        
+        # Step 1: Phase 1 - Core Segmentation System
+        logger.info("📊 Step 1: Phase 1 - Core Segmentation Analysis...")
+        
+        phase1_result = await advanced_script_generator.generate_advanced_script_with_continuity(
+            prompt=request.prompt,
+            video_type=request.video_type,
+            duration=request.duration
+        )
+        
+        if phase1_result.get("status") != "success":
+            logger.error(f"Phase 1 failed: {phase1_result.get('error')}")
+            raise HTTPException(status_code=500, detail=f"Phase 1 segmentation failed: {phase1_result.get('error')}")
+        
+        # Extract Phase 1 results
+        segmentation_context = phase1_result.get("generation_context", {})
+        narrative_continuity = phase1_result.get("phase2_results", {})
+        
+        logger.info(f"✅ Phase 1 Complete: {segmentation_context.get('segmentation_analysis', {}).get('total_segments', 1)} segments planned")
+        
+        # Step 2: Content Depth Scaling Engine
+        logger.info("📚 Step 2: Content Depth Scaling Analysis...")
+        
+        content_depth_scaling = await content_depth_scaling_engine.analyze_content_depth_scaling(
+            segmentation_plan=segmentation_context.get('segmentation_analysis', {}),
+            narrative_continuity=narrative_continuity,
+            segment_plan=segmentation_context.get('segment_plan', {})
+        )
+        
+        if not content_depth_scaling.get('content_depth_scaling_complete'):
+            logger.error(f"Content depth scaling failed: {content_depth_scaling.get('error')}")
+            raise HTTPException(status_code=500, detail=f"Content depth scaling failed: {content_depth_scaling.get('error')}")
+        
+        logger.info(f"✅ Content Depth Scaling Complete: {len(content_depth_scaling.get('analysis_components', {}).get('segment_strategies', []))} segment strategies created")
+        
+        # Step 3: Quality Consistency Engine  
+        logger.info("🎯 Step 3: Quality Consistency Analysis...")
+        
+        quality_consistency = await quality_consistency_engine.analyze_quality_consistency(
+            narrative_continuity=narrative_continuity,
+            content_depth_scaling=content_depth_scaling,
+            video_type=request.video_type,
+            target_audience=request.target_audience
+        )
+        
+        if not quality_consistency.get('quality_consistency_complete'):
+            logger.error(f"Quality consistency failed: {quality_consistency.get('error')}")
+            raise HTTPException(status_code=500, detail=f"Quality consistency failed: {quality_consistency.get('error')}")
+        
+        logger.info(f"✅ Quality Consistency Complete: Quality standards established for all segments")
+        
+        # Step 4: Advanced Generation Workflow - Generate Actual Script Content
+        logger.info("🎬 Step 4: Advanced Generation Workflow - Generating Actual Script Content...")
+        
+        generation_result = await advanced_generation_workflow.generate_complete_segmented_script(
+            original_prompt=request.prompt,
+            segmentation_context=segmentation_context,
+            narrative_continuity=narrative_continuity,
+            content_depth_scaling=content_depth_scaling,
+            quality_consistency=quality_consistency
+        )
+        
+        if not generation_result.get('advanced_generation_complete'):
+            logger.error(f"Advanced generation failed: {generation_result.get('error')}")
+            raise HTTPException(status_code=500, detail=f"Advanced generation workflow failed: {generation_result.get('error')}")
+        
+        logger.info(f"✅ Advanced Generation Complete: {generation_result.get('segments_generated', 0)} segments generated successfully")
+        
+        # Step 5: Create comprehensive response
+        generation_stats = generation_result.get('generation_statistics', {})
+        
+        response = AdvancedScriptCompleteResponse(
+            original_prompt=request.prompt,
+            video_type=request.video_type,
+            duration=request.duration,
+            target_audience=request.target_audience,
+            total_segments=generation_result.get('total_segments', 1),
+            segments_generated=generation_result.get('segments_generated', 0),
+            
+            # Phase Analysis Results
+            phase1_segmentation=phase1_result.get('phase1_results', {}),
+            phase2_narrative_continuity=narrative_continuity,
+            content_depth_scaling=content_depth_scaling,
+            quality_consistency=quality_consistency,
+            
+            # Generated Content
+            generated_segments=generation_result.get('generated_segments', []),
+            integrated_script=generation_result.get('integrated_script', {}),
+            validation_results=generation_result.get('validation_results', []),
+            generation_statistics=generation_stats,
+            
+            # Metadata
+            session_id=generation_result.get('session_id', ''),
+            generation_success_rate=generation_stats.get('generation_success_rate', 0.0),
+            average_validation_score=generation_stats.get('average_validation_score', 0.0)
+        )
+        
+        # Step 6: Store in database
+        await db.advanced_scripts_complete.insert_one(response.dict())
+        
+        # Step 7: Log final results
+        logger.info("🎉 COMPLETE ADVANCED SCRIPT GENERATION FINISHED!")
+        logger.info(f"📊 Final Statistics:")
+        logger.info(f"   • Total Segments: {response.total_segments}")
+        logger.info(f"   • Segments Generated: {response.segments_generated}")
+        logger.info(f"   • Generation Success Rate: {response.generation_success_rate:.2%}")
+        logger.info(f"   • Average Validation Score: {response.average_validation_score:.3f}")
+        logger.info(f"   • Total Script Length: {generation_stats.get('total_script_length', 0)} characters")
+        logger.info(f"   • Total Image Prompts: {generation_stats.get('total_image_prompts', 0)}")
+        
+        return response
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in Complete Advanced Script Generation: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Complete advanced script generation failed: {str(e)}")
+
 # Include the router in the main app
 app.include_router(api_router)
 
