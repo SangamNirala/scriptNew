@@ -94,6 +94,11 @@ content_depth_scaling_engine = ContentDepthScalingEngine(GEMINI_API_KEY)
 quality_consistency_engine = QualityConsistencyEngine(GEMINI_API_KEY)
 advanced_generation_workflow = AdvancedGenerationWorkflow(GEMINI_API_KEY)
 
+# Phase 1.1-2.2: Initialize Enhanced Prompt Template System
+prompt_template_registry = PromptTemplateRegistry(db)
+enhanced_prompt_architecture = EnhancedPromptArchitecture(prompt_template_registry, GEMINI_API_KEY, db)
+duration_specific_prompt_generator = DurationSpecificPromptGenerator()
+
 # Duration validation and mapping
 VALID_DURATIONS = {
     "short": "Short (30s-1min)",
