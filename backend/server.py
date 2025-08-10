@@ -555,6 +555,42 @@ class AdvancedScriptWithContinuityResponse(BaseModel):
     next_steps: str
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
+# Phase 2: Complete Advanced Script Generation Models
+class AdvancedScriptCompleteRequest(BaseModel):
+    prompt: str
+    video_type: Optional[str] = "general"  # general, educational, entertainment, marketing
+    duration: Optional[str] = "medium"  # short, medium, long, extended_5, extended_10, extended_15, extended_20, extended_25
+    target_audience: Optional[str] = "general"  # Target audience description
+    enable_segmentation: Optional[bool] = True  # Enable advanced segmentation for longer content
+
+class AdvancedScriptCompleteResponse(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    original_prompt: str
+    video_type: str
+    duration: str
+    target_audience: str
+    total_segments: int
+    segments_generated: int
+    
+    # Phase Analysis Results
+    phase1_segmentation: Dict[str, Any]
+    phase2_narrative_continuity: Dict[str, Any]
+    content_depth_scaling: Dict[str, Any]
+    quality_consistency: Dict[str, Any]
+    
+    # Generated Content
+    generated_segments: List[Dict[str, Any]]
+    integrated_script: Dict[str, Any]
+    validation_results: List[Dict[str, Any]]
+    generation_statistics: Dict[str, Any]
+    
+    # Metadata
+    phase_completed: str = "Phase 2: Advanced Generation Workflow Complete"
+    session_id: str
+    generation_success_rate: float
+    average_validation_score: float
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
 # Add your routes to the router instead of directly to app
 @api_router.get("/")
 async def root():
