@@ -2351,9 +2351,10 @@ def extract_clean_script(raw_script):
     """
     
     # First, check if this is a dialogue-only format with timestamps (multiple formats supported)
-    # Formats: [0:00-0:03], 0:00-0:03, (0: 00-0: 03, (0:00-0:03
+    # Formats: [0:00-0:03], 0:00-0:03, 0: 03-0: 06, (0: 00-0: 03, (0:00-0:03
     if (re.search(r'\[\d+:\d+\s*[-–]\s*\d+:\d+\]', raw_script) or 
         re.search(r'(?:^|\n)\d+:\d+\s*[-–]\s*\d+:\d+(?:\n|$)', raw_script) or 
+        re.search(r'(?:^|\n)\d+:\s*\d+\s*[-–]\s*\d+:\s*\d+(?:\n|$)', raw_script) or
         re.search(r'(?:^|\n)\(\d+:\s*\d+\s*[-–]\s*\d+:\s*\d+', raw_script)):
         return extract_dialogue_with_timestamps(raw_script)
     
