@@ -5021,6 +5021,16 @@ async def get_template_system_status():
             template_20_25_word_count = 0
             logger.warning(f"20-25 minute template creation test failed: {str(e)}")
         
+        # Test template creation for extended_25 (Phase 2.4 complete implementation)
+        try:
+            template_25_30 = duration_specific_prompt_generator.create_25_30_minute_template()
+            template_25_30_success = True
+            template_25_30_word_count = template_25_30.get("template_content").get_word_count() if template_25_30.get("template_content") else 0
+        except Exception as e:
+            template_25_30_success = False
+            template_25_30_word_count = 0
+            logger.warning(f"25-30 minute template creation test failed: {str(e)}")
+        
         # Get template specifications
         all_specs = duration_specific_prompt_generator.get_all_template_specifications()
         spec_names = {k: v.name for k, v in all_specs.items()}
