@@ -1996,6 +1996,14 @@ const ScriptGenerator = () => {
                            setIsEditingScript(false);
                            setEditedScript("");
                            setHasUnsavedChanges(false);
+                           // Reset translation state when loading existing script
+                           setCurrentLanguage("en");
+                           setOriginalScript("");
+                           setTranslatedScript("");
+                           // Reset dialogue translation state when loading existing script  
+                           setDialogueLanguage("en");
+                           setOriginalDialogue("");
+                           setTranslatedDialogue("");
                          }}>
                       <p className="text-gray-300 text-sm mb-2 line-clamp-2">{script.original_prompt}</p>
                       <div className="flex justify-between items-center text-xs text-gray-400">
