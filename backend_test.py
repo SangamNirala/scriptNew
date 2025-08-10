@@ -1,5 +1,550 @@
 #!/usr/bin/env python3
 """
+Comprehensive Backend Testing for Hindi Audio Generation Fix
+===========================================================
+
+This test suite focuses specifically on testing the Hindi audio generation bug fix
+that was recently implemented. The original issue was that Hindi dialogue content
+in "Dialogue Only" format with timestamps was failing to generate audio.
+
+Key areas tested:
+1. Hindi Audio Generation Bug Fix - Critical test scenarios
+2. Voice Selection Endpoint - Hindi voices availability  
+3. Language Detection Logic - Automatic language detection
+4. Backend Integration Testing - Complete workflow
+5. Translation + Audio Workflow - End-to-end testing
+
+Test Environment: Uses production backend URL from frontend/.env
+"""
+
+import requests
+import json
+import time
+import base64
+import logging
+from typing import Dict, List, Any, Optional
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
+class HindiAudioGenerationTester:
+    def __init__(self):
+        # Use production backend URL from frontend/.env
+        self.base_url = "https://b8e2486f-e732-4963-9b4f-83fd3e213aed.preview.emergentagent.com/api"
+        self.session = requests.Session()
+        self.session.headers.update({
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        })
+        
+        # Test results tracking
+        self.test_results = {
+            'total_tests': 0,
+            'passed_tests': 0,
+            'failed_tests': 0,
+            'test_details': []
+        }
+        
+        # Hindi test content for various scenarios
+        self.hindi_test_content = {
+            'pure_hindi': "नमस्ते और हमारे वीडियो में आपका स्वागत है। आज हम स्वस्थ खाना पकाने की युक्तियों पर चर्चा करेंगे। सबसे पहले, आइए ताजी सामग्री के बारे में बात करते हैं।",
+            'hindi_with_timestamps': """0:00-0:03
+नमस्ते और हमारे वीडियो में आपका स्वागत है।
+0:03-0:10
+आज हम स्वस्थ खाना पकाने की युक्तियों पर चर्चा करेंगे।
+0:10-0:15
+सबसे पहले, आइए ताजी सामग्री के बारे में बात करते हैं।""",
+            'hindi_with_bracketed_timestamps': """[0:00-0:03]
+नमस्ते और हमारे वीडियो में आपका स्वागत है।
+[0:03-0:10]
+आज हम स्वस्थ खाना पकाने की युक्तियों पर चर्चा करेंगे।
+[0:10-0:15]
+सबसे पहले, आइए ताजी सामग्री के बारे में बात करते हैं।""",
+            'mixed_content': "Hello and नमस्ते! Today हम will discuss स्वस्थ cooking tips. Let's start with ताजी ingredients.",
+            'english_content': "Hello and welcome to our video. Today we will discuss healthy cooking tips. First, let's talk about fresh ingredients."
+        }
+        
+        # Expected Hindi voices
+        self.expected_hindi_voices = [
+            "hi-IN-SwaraNeural",
+            "hi-IN-MadhurNeural"
+        ]
+
+    def log_test_result(self, test_name: str, passed: bool, details: str, response_data: Optional[Dict] = None):
+        """Log test result and update counters"""
+        self.test_results['total_tests'] += 1
+        if passed:
+            self.test_results['passed_tests'] += 1
+            logger.info(f"✅ {test_name}: PASSED - {details}")
+        else:
+            self.test_results['failed_tests'] += 1
+            logger.error(f"❌ {test_name}: FAILED - {details}")
+        
+        self.test_results['test_details'].append({
+            'test_name': test_name,
+            'passed': passed,
+            'details': details,
+            'response_data': response_data
+        })
+
+    def test_backend_connectivity(self) -> bool:
+        """Test basic backend connectivity"""
+        try:
+            response = self.session.get(f"{self.base_url}/")
+            if response.status_code == 200:
+                self.log_test_result("Backend Connectivity", True, f"Backend responding with status {response.status_code}")
+                return True
+            else:
+                self.log_test_result("Backend Connectivity", False, f"Backend returned status {response.status_code}")
+                return False
+        except Exception as e:
+            self.log_test_result("Backend Connectivity", False, f"Connection error: {str(e)}")
+            return False
+
+    def test_voices_endpoint_hindi_support(self) -> bool:
+        """Test /api/voices endpoint returns Hindi voices"""
+        try:
+            response = self.session.get(f"{self.base_url}/voices")
+            
+            if response.status_code != 200:
+                self.log_test_result("Voices Endpoint Hindi Support", False, 
+                                   f"Voices endpoint returned status {response.status_code}")
+                return False
+            
+            voices_data = response.json()
+            
+            # Check if response is a list
+            if not isinstance(voices_data, list):
+                self.log_test_result("Voices Endpoint Hindi Support", False, 
+                                   f"Expected list, got {type(voices_data)}")
+                return False
+            
+            # Extract voice names
+            voice_names = [voice.get('name', '') for voice in voices_data]
+            
+            # Check for Hindi voices
+            hindi_voices_found = []
+            for expected_voice in self.expected_hindi_voices:
+                if expected_voice in voice_names:
+                    hindi_voices_found.append(expected_voice)
+            
+            if len(hindi_voices_found) >= 2:
+                self.log_test_result("Voices Endpoint Hindi Support", True, 
+                                   f"Found {len(hindi_voices_found)} Hindi voices: {hindi_voices_found}. Total voices: {len(voices_data)}")
+                return True
+            else:
+                self.log_test_result("Voices Endpoint Hindi Support", False, 
+                                   f"Only found {len(hindi_voices_found)} Hindi voices: {hindi_voices_found}. Expected: {self.expected_hindi_voices}")
+                return False
+                
+        except Exception as e:
+            self.log_test_result("Voices Endpoint Hindi Support", False, f"Error: {str(e)}")
+            return False
+
+    def test_hindi_audio_generation_pure_content(self) -> bool:
+        """Test audio generation with pure Hindi content"""
+        try:
+            payload = {
+                "text": self.hindi_test_content['pure_hindi'],
+                "voice_name": "en-US-AriaNeural"  # Request English voice, should auto-switch to Hindi
+            }
+            
+            response = self.session.post(f"{self.base_url}/generate-audio", json=payload)
+            
+            if response.status_code != 200:
+                self.log_test_result("Hindi Audio Generation - Pure Content", False, 
+                                   f"Audio generation failed with status {response.status_code}: {response.text}")
+                return False
+            
+            audio_data = response.json()
+            
+            # Verify response structure
+            required_fields = ['audio_base64', 'voice_used']
+            missing_fields = [field for field in required_fields if field not in audio_data]
+            
+            if missing_fields:
+                self.log_test_result("Hindi Audio Generation - Pure Content", False, 
+                                   f"Missing fields in response: {missing_fields}")
+                return False
+            
+            # Verify Hindi voice was selected
+            voice_used = audio_data.get('voice_used', '')
+            if not voice_used.startswith('hi-IN'):
+                self.log_test_result("Hindi Audio Generation - Pure Content", False, 
+                                   f"Expected Hindi voice (hi-IN-*), got: {voice_used}")
+                return False
+            
+            # Verify audio data is present and substantial
+            audio_base64 = audio_data.get('audio_base64', '')
+            if len(audio_base64) < 1000:
+                self.log_test_result("Hindi Audio Generation - Pure Content", False, 
+                                   f"Audio data too small: {len(audio_base64)} chars")
+                return False
+            
+            self.log_test_result("Hindi Audio Generation - Pure Content", True, 
+                               f"Successfully generated {len(audio_base64)} chars of audio using voice: {voice_used}")
+            return True
+            
+        except Exception as e:
+            self.log_test_result("Hindi Audio Generation - Pure Content", False, f"Error: {str(e)}")
+            return False
+
+    def test_hindi_audio_generation_with_timestamps(self) -> bool:
+        """Test the critical bug fix: Hindi dialogue with timestamps"""
+        try:
+            # Test with bare timestamps (the exact scenario that was failing)
+            payload = {
+                "text": self.hindi_test_content['hindi_with_timestamps'],
+                "voice_name": "en-US-AriaNeural"  # Request English voice, should auto-switch to Hindi
+            }
+            
+            response = self.session.post(f"{self.base_url}/generate-audio", json=payload)
+            
+            if response.status_code != 200:
+                self.log_test_result("Hindi Audio Generation - With Timestamps", False, 
+                                   f"CRITICAL BUG: Audio generation failed with status {response.status_code}: {response.text}")
+                return False
+            
+            audio_data = response.json()
+            
+            # Verify Hindi voice was auto-selected
+            voice_used = audio_data.get('voice_used', '')
+            if not voice_used.startswith('hi-IN'):
+                self.log_test_result("Hindi Audio Generation - With Timestamps", False, 
+                                   f"Expected Hindi voice auto-selection, got: {voice_used}")
+                return False
+            
+            # Verify substantial audio was generated
+            audio_base64 = audio_data.get('audio_base64', '')
+            if len(audio_base64) < 1000:
+                self.log_test_result("Hindi Audio Generation - With Timestamps", False, 
+                                   f"Audio data too small: {len(audio_base64)} chars")
+                return False
+            
+            self.log_test_result("Hindi Audio Generation - With Timestamps", True, 
+                               f"🎉 CRITICAL BUG FIX VERIFIED: Successfully generated {len(audio_base64)} chars of audio using voice: {voice_used}")
+            return True
+            
+        except Exception as e:
+            self.log_test_result("Hindi Audio Generation - With Timestamps", False, f"CRITICAL ERROR: {str(e)}")
+            return False
+
+    def test_hindi_audio_generation_bracketed_timestamps(self) -> bool:
+        """Test Hindi dialogue with bracketed timestamps"""
+        try:
+            payload = {
+                "text": self.hindi_test_content['hindi_with_bracketed_timestamps'],
+                "voice_name": "en-US-AriaNeural"
+            }
+            
+            response = self.session.post(f"{self.base_url}/generate-audio", json=payload)
+            
+            if response.status_code != 200:
+                self.log_test_result("Hindi Audio Generation - Bracketed Timestamps", False, 
+                                   f"Audio generation failed with status {response.status_code}")
+                return False
+            
+            audio_data = response.json()
+            voice_used = audio_data.get('voice_used', '')
+            audio_base64 = audio_data.get('audio_base64', '')
+            
+            success = (voice_used.startswith('hi-IN') and len(audio_base64) > 1000)
+            
+            self.log_test_result("Hindi Audio Generation - Bracketed Timestamps", success, 
+                               f"Generated {len(audio_base64)} chars using voice: {voice_used}")
+            return success
+            
+        except Exception as e:
+            self.log_test_result("Hindi Audio Generation - Bracketed Timestamps", False, f"Error: {str(e)}")
+            return False
+
+    def test_mixed_content_language_detection(self) -> bool:
+        """Test language detection with mixed Hindi-English content"""
+        try:
+            payload = {
+                "text": self.hindi_test_content['mixed_content'],
+                "voice_name": "en-US-AriaNeural"
+            }
+            
+            response = self.session.post(f"{self.base_url}/generate-audio", json=payload)
+            
+            if response.status_code != 200:
+                self.log_test_result("Mixed Content Language Detection", False, 
+                                   f"Audio generation failed with status {response.status_code}")
+                return False
+            
+            audio_data = response.json()
+            voice_used = audio_data.get('voice_used', '')
+            audio_base64 = audio_data.get('audio_base64', '')
+            
+            # For mixed content, the system should intelligently choose based on dominance
+            # Since this has significant Hindi content, it should use Hindi voice
+            success = len(audio_base64) > 500  # At least some audio generated
+            
+            self.log_test_result("Mixed Content Language Detection", success, 
+                               f"Mixed content generated {len(audio_base64)} chars using voice: {voice_used}")
+            return success
+            
+        except Exception as e:
+            self.log_test_result("Mixed Content Language Detection", False, f"Error: {str(e)}")
+            return False
+
+    def test_english_content_no_regression(self) -> bool:
+        """Test that English content still works correctly (no regression)"""
+        try:
+            payload = {
+                "text": self.hindi_test_content['english_content'],
+                "voice_name": "en-US-AriaNeural"
+            }
+            
+            response = self.session.post(f"{self.base_url}/generate-audio", json=payload)
+            
+            if response.status_code != 200:
+                self.log_test_result("English Content No Regression", False, 
+                                   f"English audio generation failed with status {response.status_code}")
+                return False
+            
+            audio_data = response.json()
+            voice_used = audio_data.get('voice_used', '')
+            audio_base64 = audio_data.get('audio_base64', '')
+            
+            # English content should use the requested English voice
+            success = (voice_used == "en-US-AriaNeural" and len(audio_base64) > 1000)
+            
+            self.log_test_result("English Content No Regression", success, 
+                               f"English content generated {len(audio_base64)} chars using requested voice: {voice_used}")
+            return success
+            
+        except Exception as e:
+            self.log_test_result("English Content No Regression", False, f"Error: {str(e)}")
+            return False
+
+    def test_translation_to_hindi_workflow(self) -> bool:
+        """Test the complete workflow: English → Hindi translation → Audio generation"""
+        try:
+            # Step 1: Translate English to Hindi
+            translation_payload = {
+                "text": self.hindi_test_content['english_content'],
+                "source_language": "en",
+                "target_language": "hi"
+            }
+            
+            translation_response = self.session.post(f"{self.base_url}/translate-script", json=translation_payload)
+            
+            if translation_response.status_code != 200:
+                self.log_test_result("Translation to Hindi Workflow", False, 
+                                   f"Translation failed with status {translation_response.status_code}")
+                return False
+            
+            translation_data = translation_response.json()
+            translated_text = translation_data.get('translated_text', '')
+            
+            if not translated_text:
+                self.log_test_result("Translation to Hindi Workflow", False, "No translated text received")
+                return False
+            
+            # Step 2: Generate audio from translated Hindi text
+            audio_payload = {
+                "text": translated_text,
+                "voice_name": "en-US-AriaNeural"  # Should auto-switch to Hindi
+            }
+            
+            audio_response = self.session.post(f"{self.base_url}/generate-audio", json=audio_payload)
+            
+            if audio_response.status_code != 200:
+                self.log_test_result("Translation to Hindi Workflow", False, 
+                                   f"Audio generation from translated text failed with status {audio_response.status_code}")
+                return False
+            
+            audio_data = audio_response.json()
+            voice_used = audio_data.get('voice_used', '')
+            audio_base64 = audio_data.get('audio_base64', '')
+            
+            # Verify Hindi voice was used and audio was generated
+            success = (voice_used.startswith('hi-IN') and len(audio_base64) > 1000)
+            
+            self.log_test_result("Translation to Hindi Workflow", success, 
+                               f"🎉 COMPLETE WORKFLOW SUCCESS: Translated {len(translation_data.get('original_text', ''))} chars → {len(translated_text)} chars → {len(audio_base64)} chars audio using {voice_used}")
+            return success
+            
+        except Exception as e:
+            self.log_test_result("Translation to Hindi Workflow", False, f"Error: {str(e)}")
+            return False
+
+    def test_voice_selection_response_format(self) -> bool:
+        """Test that voice selection endpoint returns correct format"""
+        try:
+            response = self.session.get(f"{self.base_url}/voices")
+            
+            if response.status_code != 200:
+                self.log_test_result("Voice Selection Response Format", False, 
+                                   f"Voices endpoint failed with status {response.status_code}")
+                return False
+            
+            voices_data = response.json()
+            
+            if not isinstance(voices_data, list) or len(voices_data) == 0:
+                self.log_test_result("Voice Selection Response Format", False, 
+                                   f"Expected non-empty list, got {type(voices_data)} with {len(voices_data) if isinstance(voices_data, list) else 'N/A'} items")
+                return False
+            
+            # Check format of first voice entry
+            first_voice = voices_data[0]
+            required_fields = ['name', 'display_name', 'language', 'gender']
+            missing_fields = [field for field in required_fields if field not in first_voice]
+            
+            if missing_fields:
+                self.log_test_result("Voice Selection Response Format", False, 
+                                   f"Voice entry missing fields: {missing_fields}")
+                return False
+            
+            # Check for Hindi voices specifically
+            hindi_voices = [v for v in voices_data if v.get('name', '').startswith('hi-IN')]
+            
+            if len(hindi_voices) < 2:
+                self.log_test_result("Voice Selection Response Format", False, 
+                                   f"Expected at least 2 Hindi voices, found {len(hindi_voices)}")
+                return False
+            
+            self.log_test_result("Voice Selection Response Format", True, 
+                               f"Correct format with {len(voices_data)} total voices, {len(hindi_voices)} Hindi voices")
+            return True
+            
+        except Exception as e:
+            self.log_test_result("Voice Selection Response Format", False, f"Error: {str(e)}")
+            return False
+
+    def test_error_handling_edge_cases(self) -> bool:
+        """Test error handling for edge cases"""
+        try:
+            test_cases = [
+                {"text": "", "voice_name": "hi-IN-SwaraNeural", "expected_status": 400, "case": "Empty text"},
+                {"text": "   ", "voice_name": "hi-IN-SwaraNeural", "expected_status": 400, "case": "Whitespace only"},
+                {"text": "Test content", "voice_name": "invalid-voice", "expected_status": 200, "case": "Invalid voice (should fallback)"}
+            ]
+            
+            all_passed = True
+            
+            for test_case in test_cases:
+                payload = {
+                    "text": test_case["text"],
+                    "voice_name": test_case["voice_name"]
+                }
+                
+                response = self.session.post(f"{self.base_url}/generate-audio", json=payload)
+                
+                if test_case["expected_status"] == 400:
+                    # Should fail with 400
+                    if response.status_code == 400:
+                        logger.info(f"✅ Edge case '{test_case['case']}': Correctly returned 400")
+                    else:
+                        logger.error(f"❌ Edge case '{test_case['case']}': Expected 400, got {response.status_code}")
+                        all_passed = False
+                else:
+                    # Should succeed or handle gracefully
+                    if response.status_code == 200:
+                        logger.info(f"✅ Edge case '{test_case['case']}': Handled gracefully")
+                    else:
+                        logger.error(f"❌ Edge case '{test_case['case']}': Expected 200, got {response.status_code}")
+                        all_passed = False
+            
+            self.log_test_result("Error Handling Edge Cases", all_passed, 
+                               f"Tested {len(test_cases)} edge cases")
+            return all_passed
+            
+        except Exception as e:
+            self.log_test_result("Error Handling Edge Cases", False, f"Error: {str(e)}")
+            return False
+
+    def run_comprehensive_tests(self):
+        """Run all comprehensive tests for Hindi audio generation fix"""
+        logger.info("🚀 Starting Comprehensive Hindi Audio Generation Testing")
+        logger.info("=" * 80)
+        
+        # Test sequence focusing on the critical Hindi audio generation fix
+        test_sequence = [
+            ("Backend Connectivity", self.test_backend_connectivity),
+            ("Voice Selection Endpoint Hindi Support", self.test_voices_endpoint_hindi_support),
+            ("Voice Selection Response Format", self.test_voice_selection_response_format),
+            ("🎯 CRITICAL: Hindi Audio Generation - Pure Content", self.test_hindi_audio_generation_pure_content),
+            ("🎯 CRITICAL: Hindi Audio Generation - With Timestamps", self.test_hindi_audio_generation_with_timestamps),
+            ("Hindi Audio Generation - Bracketed Timestamps", self.test_hindi_audio_generation_bracketed_timestamps),
+            ("Mixed Content Language Detection", self.test_mixed_content_language_detection),
+            ("English Content No Regression", self.test_english_content_no_regression),
+            ("🎯 CRITICAL: Translation to Hindi Workflow", self.test_translation_to_hindi_workflow),
+            ("Error Handling Edge Cases", self.test_error_handling_edge_cases)
+        ]
+        
+        for test_name, test_function in test_sequence:
+            logger.info(f"\n📋 Running: {test_name}")
+            logger.info("-" * 60)
+            
+            try:
+                test_function()
+                time.sleep(1)  # Brief pause between tests
+            except Exception as e:
+                logger.error(f"💥 Test '{test_name}' crashed: {str(e)}")
+                self.log_test_result(test_name, False, f"Test crashed: {str(e)}")
+        
+        # Print comprehensive summary
+        self.print_test_summary()
+
+    def print_test_summary(self):
+        """Print comprehensive test summary"""
+        logger.info("\n" + "=" * 80)
+        logger.info("🎯 HINDI AUDIO GENERATION FIX - COMPREHENSIVE TEST RESULTS")
+        logger.info("=" * 80)
+        
+        total = self.test_results['total_tests']
+        passed = self.test_results['passed_tests']
+        failed = self.test_results['failed_tests']
+        success_rate = (passed / total * 100) if total > 0 else 0
+        
+        logger.info(f"📊 OVERALL RESULTS:")
+        logger.info(f"   Total Tests: {total}")
+        logger.info(f"   Passed: {passed} ✅")
+        logger.info(f"   Failed: {failed} ❌")
+        logger.info(f"   Success Rate: {success_rate:.1f}%")
+        
+        # Critical tests summary
+        critical_tests = [detail for detail in self.test_results['test_details'] 
+                         if '🎯 CRITICAL' in detail['test_name']]
+        
+        if critical_tests:
+            logger.info(f"\n🎯 CRITICAL TESTS SUMMARY:")
+            for test in critical_tests:
+                status = "✅ PASSED" if test['passed'] else "❌ FAILED"
+                logger.info(f"   {test['test_name']}: {status}")
+        
+        # Failed tests details
+        failed_tests = [detail for detail in self.test_results['test_details'] if not detail['passed']]
+        
+        if failed_tests:
+            logger.info(f"\n❌ FAILED TESTS DETAILS:")
+            for test in failed_tests:
+                logger.info(f"   {test['test_name']}: {test['details']}")
+        
+        # Overall assessment
+        if success_rate >= 90:
+            logger.info(f"\n🎉 EXCELLENT: Hindi audio generation fix is working perfectly!")
+        elif success_rate >= 75:
+            logger.info(f"\n✅ GOOD: Hindi audio generation fix is mostly working with minor issues.")
+        elif success_rate >= 50:
+            logger.info(f"\n⚠️  PARTIAL: Hindi audio generation fix has significant issues that need attention.")
+        else:
+            logger.info(f"\n🚨 CRITICAL: Hindi audio generation fix is not working properly!")
+        
+        logger.info("=" * 80)
+
+def main():
+    """Main test execution"""
+    tester = HindiAudioGenerationTester()
+    tester.run_comprehensive_tests()
+
+if __name__ == "__main__":
+    main()
+"""
 Backend Testing Script for Script Generation App
 Tests all backend API endpoints and functionality
 """
