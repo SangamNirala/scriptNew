@@ -2658,9 +2658,10 @@ def extract_dialogue_with_timestamps(raw_script):
     # Join with spaces for natural speech flow
     result = ' '.join(dialogue_content).strip()
     
-    # Final cleanup - remove any remaining timestamps (both bracketed and bare formats)
+    # Final cleanup - remove any remaining timestamps (all supported formats)
     result = re.sub(r'\[\d+:\d+\s*[-–]\s*\d+:\d+\]', '', result)  # Remove [0:00-0:03]
     result = re.sub(r'\b\d+:\d+\s*[-–]\s*\d+:\d+\b', '', result)  # Remove 0:00-0:03 (bare format)
+    result = re.sub(r'\(\d+:\s*\d+\s*[-–]\s*\d+:\s*\d+[^\)]*\)?', '', result)  # Remove (0: 00-0: 03
     result = re.sub(r'\s+', ' ', result).strip()
     
     return result
