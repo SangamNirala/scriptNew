@@ -81,6 +81,14 @@ const ScriptGenerator = () => {
 
   // Dialogue-only script state
   const [dialogueOnlyScript, setDialogueOnlyScript] = useState("");
+  // Dialogue edit state
+  const [isEditingDialogue, setIsEditingDialogue] = useState(false);
+  const [editedDialogue, setEditedDialogue] = useState("");
+  const [hasUnsavedDialogueChanges, setHasUnsavedDialogueChanges] = useState(false);
+  const [isSavingDialogue, setIsSavingDialogue] = useState(false);
+  
+  // Audio target: which content to generate/play audio for ('script' | 'dialogue')
+  const [audioTarget, setAudioTarget] = useState("script");
 
   const fetchScripts = async () => {
     try {
