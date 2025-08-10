@@ -11,7 +11,7 @@ from datetime import datetime
 import sys
 
 # Get backend URL from frontend .env
-BACKEND_URL = "https://465ecec1-f9fe-4136-bbe9-ca96b3d072cc.preview.emergentagent.com/api"
+BACKEND_URL = "https://14b722c7-16e7-42ab-b151-89e786c63a59.preview.emergentagent.com/api"
 
 class EnhancedPromptTester:
     def __init__(self):
