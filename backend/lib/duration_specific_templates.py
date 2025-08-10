@@ -1776,6 +1776,115 @@ class DurationSpecificPromptGenerator:
             logger.error(f"Template customization failed: {str(e)}")
             raise TemplateValidationError(f"Template customization failed: {str(e)}")
     
+    def customize_template(self, base_template: Dict, video_type: str) -> Dict:
+        """
+        Phase 3.1 Video Type Customization System - Main Entry Point
+        
+        Create comprehensive video type customization that adapts base templates 
+        for different video categories with specialized optimization techniques.
+        
+        Args:
+            base_template: Base template dictionary to customize
+            video_type: Video type - "educational", "marketing", "entertainment", "general"
+            
+        Returns:
+            Customized template dictionary with video type adaptations
+            
+        Raises:
+            TemplateValidationError: If customization fails or video type not supported
+        """
+        try:
+            logger.info(f"🎯 Phase 3.1 customize_template called: {video_type}")
+            
+            # Validate video type
+            supported_types = ["educational", "marketing", "entertainment", "general"]
+            if video_type not in supported_types:
+                raise TemplateValidationError(f"Video type '{video_type}' not supported. Supported types: {supported_types}")
+            
+            # Validate base template
+            if not isinstance(base_template, dict):
+                raise TemplateValidationError("base_template must be a dictionary")
+            
+            if not base_template:
+                raise TemplateValidationError("base_template cannot be empty")
+            
+            # Get duration category for template specification
+            duration_category = base_template.get("duration_category", "extended_15")
+            template_spec = self.get_template_specification(duration_category)
+            
+            # Apply Phase 3.1 comprehensive video type customization
+            customized_template = self.video_type_customizer.apply_video_type_customization(
+                base_template, video_type, template_spec
+            )
+            
+            # Add Phase 3.1 implementation metadata
+            customized_template["phase_3_1_metadata"] = {
+                "implementation_version": "3.1.0",
+                "customization_timestamp": datetime.utcnow().isoformat(),
+                "video_type": video_type,
+                "base_template_id": base_template.get("template_id", "unknown"),
+                "customization_level": "comprehensive_specialized",
+                "adaptations_applied": self._get_applied_adaptations(video_type),
+                "validation_status": "phase_3_1_compliant"
+            }
+            
+            # Update generation metrics
+            self.generation_metrics["customizations_applied"] += 1
+            
+            logger.info(f"✅ Phase 3.1 template customization completed successfully for {video_type}")
+            return customized_template
+            
+        except Exception as e:
+            logger.error(f"Phase 3.1 customize_template failed: {str(e)}")
+            raise TemplateValidationError(f"Phase 3.1 template customization failed: {str(e)}")
+    
+    def _get_applied_adaptations(self, video_type: str) -> Dict[str, List[str]]:
+        """Get list of adaptations applied for specific video type - Phase 3.1"""
+        adaptations_map = {
+            "educational": {
+                "learning_adaptations": [
+                    "learning_objective_focus", "knowledge_checkpoints", 
+                    "progressive_complexity", "interactive_elements"
+                ],
+                "retention_optimizations": [
+                    "knowledge_retention_techniques", "summarization_segments",
+                    "assessment_prompts", "reflection_integration"
+                ]
+            },
+            "marketing": {
+                "conversion_adaptations": [
+                    "conversion_focused_structure", "clear_ctas", 
+                    "persuasive_storytelling", "emotional_triggers"
+                ],
+                "persuasion_optimizations": [
+                    "AIDA_PAS_frameworks", "social_proof_integration",
+                    "urgency_scarcity_elements", "trust_building_components"
+                ]
+            },
+            "entertainment": {
+                "engagement_adaptations": [
+                    "engagement_maximization", "hook_heavy_content",
+                    "emotional_roller_coaster", "surprise_elements"
+                ],
+                "entertainment_optimizations": [
+                    "plot_twists", "character_development", 
+                    "humor_optimization", "audience_participation"
+                ]
+            },
+            "general": {
+                "universal_adaptations": [
+                    "balanced_approach", "universal_appeal",
+                    "broad_accessibility", "versatile_structure"
+                ],
+                "general_optimizations": [
+                    "multiple_engagement_styles", "adaptable_pacing",
+                    "inclusive_design", "broad_audience_consideration"
+                ]
+            }
+        }
+        
+        return adaptations_map.get(video_type, adaptations_map["general"])
+    
     async def validate_template(self, template: Dict[str, Any]) -> Dict[str, Any]:
         """
         Validate template architecture and content quality
