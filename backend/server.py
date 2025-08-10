@@ -2573,6 +2573,74 @@ def extract_clean_script(raw_script):
     return final_script.strip()
 
 
+def extract_dialogue_with_timestamps(raw_script):
+    """
+    Extract dialogue content from scripts with timestamp format like [0:00-0:03].
+    
+    This function handles scripts that contain:
+    - Timestamp markers like [0:00-0:03], [0:03-0:10], etc.
+    - Dialogue content following timestamps
+    - Production notes and metadata to be removed
+    
+    It extracts ONLY the actual spoken dialogue content.
+    """
+    
+    dialogue_content = []
+    seen_content = set()
+    
+    lines = raw_script.strip().split('\n')
+    
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+            
+        # Skip lines that are just timestamps
+        if re.match(r'^\[\d+:\d+\s*[-–]\s*\d+:\d+\]$', line):
+            continue
+            
+        # Extract content after timestamp markers
+        # Pattern: [0:00-0:03] Some dialogue content
+        timestamp_match = re.match(r'^\[\d+:\d+\s*[-–]\s*\d+:\d+\]\s*(.+)$', line)
+        if timestamp_match:
+            dialogue = timestamp_match.group(1).strip()
+            if dialogue and dialogue not in seen_content:
+                dialogue_content.append(dialogue)
+                seen_content.add(dialogue)
+            continue
+            
+        # Skip common production elements
+        skip_patterns = [
+            r'^\*\*.*\*\*$',  # **Bold text**
+            r'^AI IMAGE PROMPT',
+            r'^VISUAL:',
+            r'^AUDIO:',
+            r'^SCENE:',
+            r'^NARRATOR:',
+            r'^VOICE OVER:',
+            r'^PRODUCTION NOTE',
+            r'^NOTE:',
+            r'^IMPORTANT:',
+            r'^\[.*\]$',  # [Any bracketed content without timestamps]
+        ]
+        
+        should_skip = False
+        for pattern in skip_patterns:
+            if re.match(pattern, line, re.IGNORECASE):
+                should_skip = True
+                break
+                
+        if should_skip:
+            continue
+            
+        # If it's regular dialogue content (not a timestamp line), include it
+        if line and line not in seen_content:
+            dialogue_content.append(line)
+            seen_content.add(line)
+    
+    return '\n'.join(dialogue_content).strip()
+
+
 def extract_dialogue_only_script(raw_script):
     """
     Extract ONLY dialogue content from modern AI-generated scripts with [DIALOGUE:] markers.
