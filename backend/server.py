@@ -99,6 +99,19 @@ prompt_template_registry = PromptTemplateRegistry(db)
 enhanced_prompt_architecture = EnhancedPromptArchitecture(prompt_template_registry, GEMINI_API_KEY, db)
 duration_specific_prompt_generator = DurationSpecificPromptGenerator()
 
+# Phase 3.2: Initialize Template Integration Manager
+from lib.template_integration_manager import TemplateIntegrationManager, IntegrationRequest, IntegrationResult
+
+# Initialize Template Integration Manager with all system components
+template_integration_manager = TemplateIntegrationManager(
+    enhanced_prompt_architecture=enhanced_prompt_architecture,
+    template_generator=duration_specific_prompt_generator,
+    advanced_script_generator=advanced_script_generator,
+    chain_of_thought_generator=ChainOfThoughtScriptGenerator(GEMINI_API_KEY),
+    api_key=GEMINI_API_KEY,
+    db_connection=db
+)
+
 # Duration validation and mapping
 VALID_DURATIONS = {
     "short": "Short (30s-1min)",
