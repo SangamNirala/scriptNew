@@ -534,7 +534,10 @@ class SegmentCoordinator:
 class AdvancedScriptGenerator:
     """
     Main class for advanced segmented script generation
-    Combines SegmentationEngine, SegmentPlanner, and SegmentCoordinator
+    Combines SegmentationEngine, SegmentPlanner, SegmentCoordinator, and NarrativeContinuitySystem
+    
+    Phase 1: Core Segmentation System
+    Phase 2: Narrative Continuity System
     """
     
     def __init__(self, api_key: str):
@@ -542,6 +545,8 @@ class AdvancedScriptGenerator:
         self.segmentation_engine = SegmentationEngine()
         self.segment_planner = SegmentPlanner(api_key)
         self.segment_coordinator = SegmentCoordinator()
+        # Phase 2: Add Narrative Continuity System
+        self.narrative_continuity_system = NarrativeContinuitySystem(api_key)
     
     async def generate_advanced_script(self,
                                      prompt: str,
