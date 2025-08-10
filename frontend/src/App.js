@@ -66,6 +66,13 @@ const ScriptGenerator = () => {
   const [translatedScript, setTranslatedScript] = useState("");
   const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
 
+  // Dialogue translation state
+  const [dialogueLanguage, setDialogueLanguage] = useState("en");
+  const [isTranslatingDialogue, setIsTranslatingDialogue] = useState(false);
+  const [originalDialogue, setOriginalDialogue] = useState("");
+  const [translatedDialogue, setTranslatedDialogue] = useState("");
+  const [showDialogueLanguageDropdown, setShowDialogueLanguageDropdown] = useState(false);
+
   // Ultra-realistic avatar generation state
   const [showUltraRealisticOptions, setShowUltraRealisticOptions] = useState(false);
   const [ultraAvatarStyle, setUltraAvatarStyle] = useState("business_professional");
