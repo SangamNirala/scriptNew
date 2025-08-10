@@ -1367,10 +1367,27 @@ const ScriptGenerator = () => {
                 </div>
                 
                 {/* Dialogue Content */}
-                <div 
-                  className="text-gray-200 leading-relaxed bg-white/5 p-4 rounded-lg max-h-80 overflow-y-auto"
-                  dangerouslySetInnerHTML={{ __html: formatDialogueScript(dialogueOnlyScript) }}
-                />
+                {isEditingDialogue ? (
+                  <div className="space-y-3 w-full">
+                    <textarea
+                      value={editedDialogue}
+                      onChange={(e) => handleDialogueChange(e.target.value)}
+                      className="w-full h-64 p-4 bg-white/10 backdrop-blur-lg rounded-lg border border-white/20 text-gray-200 leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent"
+                      placeholder="Edit dialogue timestamps and lines here... Each block should be:\n[0:00-0:03]\nYour dialogue line"
+                    />
+                    {hasUnsavedDialogueChanges && (
+                      <div className="text-sm text-yellow-300 flex items-center space-x-2">
+                        <span>⚠️</span>
+                        <span>You have unsaved changes. Click "Save" to apply them.</span>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div 
+                    className="text-gray-200 leading-relaxed bg-white/5 p-4 rounded-lg max-h-80 overflow-y-auto"
+                    dangerouslySetInnerHTML={{ __html: formatDialogueScript(dialogueOnlyScript) }}
+                  />
+                )}
                 
                 <div className="mt-4 pt-4 border-t border-white/20">
                   <div className="text-xs text-gray-400">
