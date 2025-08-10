@@ -38,13 +38,13 @@ class ChainOfThoughtScriptGenerator:
         enhanced_context: Dict[str, Any] = None
     ) -> Dict[str, Any]:
         """
-        Generate script using Chain-of-Thought reasoning process
+        Generate script using Chain-of-Thought reasoning process with template integration
         
         Args:
             prompt: Original user prompt
             video_type: Type of video (educational, marketing, etc.)
             duration: Target duration (short, medium, long)
-            enhanced_context: Additional context data
+            enhanced_context: Additional context data including template integration
             
         Returns:
             Dictionary containing script and reasoning process
@@ -53,32 +53,39 @@ class ChainOfThoughtScriptGenerator:
             reasoning_chain = {}
             enhanced_context = enhanced_context or {}
             
-            # Step 1: Analysis and Understanding
+            # Extract template integration data if available
+            template_config = enhanced_context.get("template_config", {})
+            segmentation_plan = enhanced_context.get("segmentation_plan", {})
+            template_enhanced_prompt = enhanced_context.get("enhanced_prompt", "")
+            
+            logger.info(f"🧠 Starting CoT generation with template integration: {bool(template_config)}")
+            
+            # Step 1: Analysis and Understanding (enhanced with template context)
             reasoning_chain["step_1"] = await self._analyze_and_understand(
                 prompt, video_type, duration, enhanced_context
             )
             
-            # Step 2: Audience and Context Mapping
+            # Step 2: Audience and Context Mapping (template-aware)
             reasoning_chain["step_2"] = await self._map_audience_and_context(
                 prompt, reasoning_chain["step_1"], enhanced_context
             )
             
-            # Step 3: Narrative Architecture Design
+            # Step 3: Narrative Architecture Design (template-guided)
             reasoning_chain["step_3"] = await self._design_narrative_architecture(
                 prompt, reasoning_chain["step_1"], reasoning_chain["step_2"]
             )
             
-            # Step 4: Engagement Strategy Planning
+            # Step 4: Engagement Strategy Planning (template-optimized)
             reasoning_chain["step_4"] = await self._plan_engagement_strategy(
                 reasoning_chain["step_3"], video_type, enhanced_context
             )
             
-            # Step 5: Content Development
+            # Step 5: Content Development (template-enhanced)
             reasoning_chain["step_5"] = await self._develop_content(
                 prompt, reasoning_chain, enhanced_context
             )
             
-            # Step 6: Quality Validation and Refinement
+            # Step 6: Quality Validation and Refinement (template-compliance)
             reasoning_chain["step_6"] = await self._validate_and_refine(
                 reasoning_chain["step_5"], reasoning_chain, enhanced_context
             )
@@ -93,6 +100,9 @@ class ChainOfThoughtScriptGenerator:
                     "method": "chain_of_thought",
                     "steps_completed": len(reasoning_chain),
                     "context_integration": bool(enhanced_context),
+                    "template_integration": bool(template_config),
+                    "template_id": template_config.get("template_id", "none"),
+                    "segmentation_integrated": bool(segmentation_plan),
                     "generated_at": datetime.utcnow().isoformat()
                 }
             }
