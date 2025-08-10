@@ -7,7 +7,7 @@ import requests
 import json
 
 # Get backend URL from frontend .env
-BACKEND_URL = "https://0f6e6672-a0c6-4f00-8440-9ebd270bc41e.preview.emergentagent.com/api"
+BACKEND_URL = "https://c7615966-1b0e-43a9-b99f-f91ac8ce6123.preview.emergentagent.com/api"
 
 def test_bracket_preservation():
     """Test bracket preservation with simple case"""
