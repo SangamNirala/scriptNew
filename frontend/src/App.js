@@ -234,6 +234,7 @@ const ScriptGenerator = () => {
 
       setAiScriptData(response.data);
       setGeneratedScript(response.data.generated_script);
+      setDialogueOnlyScript(extractDialogueOnly(response.data.generated_script));
       setCurrentScriptId(response.data.id); // Store the script ID
       setGeneratedWithPrompt("ai-optimized");
       fetchScripts(); // Refresh the scripts list
