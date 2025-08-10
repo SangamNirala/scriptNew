@@ -592,15 +592,34 @@ class VideoTypeCustomization:
             }
         }
     
-    def _enhance_system_prompt_for_video_type(self, 
-                                            base_prompt: str,
-                                            framework: Dict[str, Any],
-                                            template_spec: TemplateSpecification) -> str:
-        """Enhance system prompt with video type specific elements"""
+    def _enhance_system_prompt_for_video_type_v31(self, 
+                                                 base_prompt: str,
+                                                 framework: Dict[str, Any],
+                                                 template_spec: TemplateSpecification,
+                                                 video_type: str) -> str:
+        """
+        Enhanced system prompt with Phase 3.1 comprehensive video type elements
+        
+        Args:
+            base_prompt: Original system prompt
+            framework: Video type customization framework
+            template_spec: Template specification
+            video_type: Type of video (educational, marketing, entertainment, general)
+            
+        Returns:
+            Enhanced system prompt with Phase 3.1 adaptations
+        """
         try:
+            # Get specialized elements for this video type
+            specialized_elements = self._get_specialized_elements(framework, video_type)
+            optimization_techniques = self._get_optimization_techniques(framework, video_type)
+            
             video_type_enhancement = f"""
 
-VIDEO TYPE SPECIALIZATION FRAMEWORK:
+PHASE 3.1 VIDEO TYPE SPECIALIZATION FRAMEWORK:
+=====================================
+
+VIDEO TYPE: {video_type.upper()} OPTIMIZATION
 - Primary Focus Areas: {', '.join(framework['focus_areas'])}
 - Tone Adaptations: {framework['tone_adaptations']}
 - Structural Emphasis: {framework['structure_emphasis']}
@@ -611,13 +630,158 @@ EXPERTISE INTEGRATION:
 - Expertise Level: {template_spec.expertise_level.value.title()}
 - Complexity Management: {template_spec.complexity.value}
 - Focus Strategy: {template_spec.focus.value}
-- Specialization Areas: {', '.join(template_spec.specialization_areas)}"""
+- Specialization Areas: {', '.join(template_spec.specialization_areas)}
+
+{self._generate_video_type_specific_instructions(video_type, framework)}
+
+OPTIMIZATION TECHNIQUES:
+- Primary Techniques: {', '.join(optimization_techniques['primary_techniques'])}
+- Engagement Optimization: {optimization_techniques['engagement_optimization']}
+- Interaction Patterns: {optimization_techniques['interaction_patterns']}
+- Assessment Integration: {optimization_techniques['assessment_integration']}
+
+PHASE 3.1 IMPLEMENTATION REQUIREMENTS:
+- All {video_type} specific adaptations must be fully integrated
+- Specialized elements must be seamlessly woven throughout content
+- Optimization techniques should guide content structure and flow
+- Success metrics should be measurable and video-type appropriate
+"""
             
             return base_prompt + video_type_enhancement
             
         except Exception as e:
             logger.warning(f"Error enhancing system prompt: {str(e)}")
             return base_prompt
+    
+    def _generate_video_type_specific_instructions(self, 
+                                                 video_type: str, 
+                                                 framework: Dict[str, Any]) -> str:
+        """Generate specific instructions for each video type - Phase 3.1"""
+        
+        if video_type == "educational":
+            return self._generate_educational_instructions(framework)
+        elif video_type == "marketing":
+            return self._generate_marketing_instructions(framework)
+        elif video_type == "entertainment":
+            return self._generate_entertainment_instructions(framework)
+        else:  # general
+            return self._generate_general_instructions(framework)
+    
+    def _generate_educational_instructions(self, framework: Dict[str, Any]) -> str:
+        """Generate Phase 3.1 educational video specific instructions"""
+        return """
+EDUCATIONAL VIDEO SPECIALIZATION:
+🎓 Learning Objectives Framework:
+- Establish clear, measurable learning objectives at the beginning
+- Integrate knowledge checkpoints every 3-5 minutes
+- Use progressive complexity building from basic to advanced concepts
+- Include assessment and reflection prompts throughout
+
+📚 Knowledge Retention Optimization:
+- Apply spaced repetition principles with key concept reinforcement
+- Use elaborative interrogation techniques with "why" and "how" questions
+- Implement memory anchoring through visual, auditory, and kinesthetic elements
+- Strategic recap segments at natural transition points
+
+🔄 Interactive Elements Integration:
+- Embed engagement questions using Socratic method approach
+- Include frequent low-stakes knowledge checks
+- Prompt collaborative learning and self-assessment opportunities
+- Use metacognitive reflection questions for deeper understanding
+
+📋 Content Organization Excellence:
+- Apply scaffolding approach within zone of proximal development
+- Create hierarchical concept mapping structures
+- Ensure prerequisite knowledge checking before advancing
+- Establish clear mastery criteria and success indicators
+"""
+    
+    def _generate_marketing_instructions(self, framework: Dict[str, Any]) -> str:
+        """Generate Phase 3.1 marketing video specific instructions"""
+        return """
+MARKETING VIDEO SPECIALIZATION:
+🎯 Conversion Structure Optimization:
+- Strategically place clear CTAs throughout the video journey
+- Implement proven persuasive frameworks (AIDA, PAS, Before-After-Bridge)
+- Focus on benefit-driven messaging and value proposition clarity
+- Include preemptive objection handling and response strategies
+
+💡 Emotional Triggers Integration:
+- Activate psychological drivers: FOMO, social proof, authority, reciprocity
+- Target emotional states: excitement, urgency, trust, desire
+- Time emotional triggers for maximum impact at strategic peaks
+- Use graduated escalation for intensity management
+
+👥 Social Proof Elements:
+- Integrate authentic customer testimonials and success stories
+- Establish authority positioning with expert credibility markers
+- Include popularity indicators and social validation cues
+- Display trust signals and credibility markers throughout
+
+⏰ Urgency and Scarcity Tactics:
+- Create time sensitivity with deadline-driven action prompts
+- Implement limited availability and scarcity psychology
+- Position exclusive access and VIP treatment opportunities
+- Clarify consequences and cost of inaction clearly
+"""
+    
+    def _generate_entertainment_instructions(self, framework: Dict[str, Any]) -> str:
+        """Generate Phase 3.1 entertainment video specific instructions"""
+        return """
+ENTERTAINMENT VIDEO SPECIALIZATION:
+🎬 Engagement Maximization:
+- Create hook-heavy content with attention-grabbing openings
+- Vary pacing with rhythm and tempo changes throughout
+- Build tension using dramatic arc construction principles
+- Design reward-expectation cycles with satisfying payoffs
+
+🎢 Emotional Design Patterns:
+- Craft emotional roller-coaster with strategic peaks and valleys
+- Integrate surprise elements and unexpected twists/reveals
+- Implement plot twists using narrative misdirection techniques
+- Ensure emotional catharsis with satisfying resolutions
+
+📖 Storytelling Excellence:
+- Develop relatable character arcs with clear progression
+- Follow three-act narrative structure principles
+- Create compelling conflict resolution scenarios
+- Integrate universal human themes for broader appeal
+
+🤝 Audience Participation:
+- Include call-and-response interactive moments
+- Build community through shared experience creation
+- Design meme-worthy moments for social sharing
+- Encourage user-generated content and participation
+"""
+    
+    def _generate_general_instructions(self, framework: Dict[str, Any]) -> str:
+        """Generate Phase 3.1 general video specific instructions"""
+        return """
+GENERAL VIDEO SPECIALIZATION:
+🌍 Universal Approach:
+- Consider broad demographic inclusivity in content design
+- Ensure cross-cultural appeal and cultural sensitivity
+- Implement universal design principles for accessibility
+- Use clear communication and language simplicity
+
+🔧 Versatile Structure:
+- Accommodate multiple engagement styles (visual, auditory, kinesthetic)
+- Provide scalable depth levels with adaptable complexity
+- Maintain flexible pacing with adjustable information density
+- Design modular content with standalone segment capability
+
+⚖️ Balanced Content:
+- Achieve information-entertainment balance (infotainment approach)
+- Mix formal and casual tones appropriately
+- Optimize depth and breadth for comprehensive yet accessible content
+- Integrate practical and theoretical knowledge with applied focus
+
+🤲 Inclusive Design:
+- Create barrier-free content with accessibility considerations
+- Include diverse representation in examples and scenarios
+- Support multiple learning preferences with varied delivery methods
+- Ensure universal relevance with broadly applicable insights
+"""
 
 # Core Template Specifications - Architecture Design
 DURATION_PROMPT_TEMPLATES = {
