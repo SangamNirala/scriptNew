@@ -1425,6 +1425,68 @@ const ScriptGenerator = () => {
                         <span>Download Audio</span>
                       </button>
                     )}
+
+                    {/* Change Language Button for Dialogue Only */}
+                    <div className="relative dialogue-language-dropdown">
+                      <button
+                        onClick={() => setShowDialogueLanguageDropdown(!showDialogueLanguageDropdown)}
+                        disabled={isTranslatingDialogue || isEditingDialogue || !dialogueOnlyScript}
+                        className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center space-x-2 ${
+                          isTranslatingDialogue 
+                            ? 'bg-yellow-500/20 text-yellow-300 cursor-not-allowed' 
+                            : !dialogueOnlyScript || isEditingDialogue
+                            ? 'bg-gray-500/20 text-gray-400 cursor-not-allowed opacity-75'
+                            : 'bg-blue-500/20 text-blue-300 hover:bg-blue-500/30'
+                        }`}
+                      >
+                        {isTranslatingDialogue ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-yellow-300"></div>
+                            <span>Translating...</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>🌐</span>
+                            <span>Change Language</span>
+                            <span className="text-xs">({dialogueLanguage === "en" ? "English" : "हिन्दी"})</span>
+                          </>
+                        )}
+                      </button>
+                      
+                      {/* Language Dropdown */}
+                      {showDialogueLanguageDropdown && !isTranslatingDialogue && (
+                        <div className="absolute top-full left-0 mt-2 w-48 bg-gray-800/95 backdrop-blur-lg rounded-lg border border-white/20 shadow-xl z-10">
+                          <button
+                            onClick={() => handleTranslateDialogue("en")}
+                            className={`w-full px-4 py-3 text-left transition-colors duration-200 rounded-t-lg ${
+                              dialogueLanguage === "en" 
+                                ? 'bg-blue-500/30 text-blue-300' 
+                                : 'text-gray-300 hover:bg-white/10'
+                            }`}
+                          >
+                            <span className="flex items-center space-x-3">
+                              <span>🇺🇸</span>
+                              <span>English</span>
+                              {dialogueLanguage === "en" && <span className="text-xs text-blue-400">✓ Current</span>}
+                            </span>
+                          </button>
+                          <button
+                            onClick={() => handleTranslateDialogue("hi")}
+                            className={`w-full px-4 py-3 text-left transition-colors duration-200 rounded-b-lg ${
+                              dialogueLanguage === "hi" 
+                                ? 'bg-blue-500/30 text-blue-300' 
+                                : 'text-gray-300 hover:bg-white/10'
+                            }`}
+                          >
+                            <span className="flex items-center space-x-3">
+                              <span>🇮🇳</span>
+                              <span>हिन्दी (Hindi)</span>
+                              {dialogueLanguage === "hi" && <span className="text-xs text-blue-400">✓ Current</span>}
+                            </span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
                 
