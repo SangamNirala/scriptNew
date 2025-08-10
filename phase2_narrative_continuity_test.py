@@ -17,7 +17,7 @@ import sys
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://467011d2-4cab-470e-9ba7-13bd14a7440b.preview.emergentagent.com/api"
+BACKEND_URL = "https://0f6e6672-a0c6-4f00-8440-9ebd270bc41e.preview.emergentagent.com/api"
 
 class Phase2NarrativeContinuityTester:
     def __init__(self):
