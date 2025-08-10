@@ -9,9 +9,13 @@ import time
 
 # Test script content with AI IMAGE PROMPTS in the format shown in the user's images
 test_script = '''
-ठीक है, यहाँ एक स्क्रिप्ट है, बस यह करने के लिए डिजाइन की गई है, प्रत्येक शॉट को एक स्टैंडअलोन के रूप में तैयार किया गया है, रेडी-टू-यूज एआई इमेज प्रॉम्प्ट स्वयं साइड पर ध्यान केंद्रित करना और प्लेटफॉर्म पर संगत गुणवत्ता पर ध्यान केंद्रित करना: वीडियो स्क्रिप्ट: अपने डर को जीतें
+VIDEO SCRIPT: CONQUER YOUR FEARS
 
-Image_placeholder_AI छवि ग्रुप के माध्यम से काटना, उच्च विपरीत, मूडी और ईथर, डार्क टील और ग्रे रंग पैलेट, सिनेमैटिक, अल्ट्रा-हाई रिज़ॉल्यूशन, फोटोरियलिस्टिक, ऑक्टेन रेंडर का उपयोग करें, आर्टस्टेशन पर ट्रेंडिंग।"_Image_placeholder_(डरावना संकेतगर्दन द्वारा "डर से मुक्त जीवन की कल्पना करें। आप क्या करेंगे?"_Image_placeholder_ai छवि प्रॉम्प्ट: "एक विशाल पर्वत श्रृंखला, गोल्डन आवर लाइटिंग, उसके बातों के माध्यम से हवा उड़ने, निर्भीक अभिव्यक्ति के साथ एक चट्टान के किनारे पर खड़ी प्रवा महिला, हाइकिंग गियर, वाइड एंगल लेंस एडवेंचर फोटोग्राफी स्टाइल।
+[SCENE 1] AI IMAGE PROMPT: "Abstract scene, swirling dark smoke morphing into a flock of birds taking flight, dramatic chiaroscuro lighting, volumetric light rays cutting through the smoke, high contrast, moody and ethereal, dark teal and grey color palette, cinematic, ultra-high resolution, photorealistic, use octane render, trending on artstation."
+
+[SCENE 2] (Emerging aspirational tone) "Imagine a life free from fear. What would you do?" AI IMAGE PROMPT: "A vast mountain range, golden hour lighting, wind blowing through her hair, standing on the edge of a cliff, fearless expression with bold looking, hiking gear, wide angle lens adventure photography style, cinematic, volumetric light rays cutting through the smoke, high contrast, moody and ethereal, dark teal and grey color palette, cinematic, ultra-high resolution, photorealistic, use octane render, trending on artstation." 
+
+[SCENE 3] The human mind naturally gravitates toward safety and comfort. But what if I told you that AI IMAGE PROMPT: "Close-up portrait of a person's face split in half, one side showing fear with dark shadows, other side showing confidence with bright golden lighting, dramatic contrast, professional photography lighting, cinematic portrait style, shallow depth of field, dark background."
 '''
 
 def test_translation_api():
