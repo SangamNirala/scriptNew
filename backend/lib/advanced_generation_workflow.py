@@ -29,8 +29,111 @@ from datetime import datetime
 from emergentintegrations.llm.chat import LlmChat, UserMessage
 import asyncio
 import re
+import time
+from functools import wraps
+import json
+from dataclasses import dataclass
+from enum import Enum
 
 logger = logging.getLogger(__name__)
+
+# Configuration constants
+class GenerationConfig:
+    MAX_RETRIES = 3
+    RETRY_DELAY_BASE = 1.0  # Base delay in seconds
+    RETRY_EXPONENTIAL_FACTOR = 2.0
+    MAX_CONCURRENT_SEGMENTS = 3  # Limit concurrent segment generation
+    QUALITY_THRESHOLD = 0.7  # Minimum quality score for acceptance
+    MAX_SEGMENT_GENERATION_TIME = 300  # 5 minutes timeout per segment
+    CACHE_ENABLED = True
+    MEMORY_OPTIMIZATION = True
+
+class GenerationStatus(Enum):
+    PENDING = "pending"
+    IN_PROGRESS = "in_progress"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    RETRYING = "retrying"
+
+@dataclass
+class GenerationMetrics:
+    start_time: float
+    end_time: Optional[float] = None
+    total_tokens_used: int = 0
+    api_calls_made: int = 0
+    retries_performed: int = 0
+    cache_hits: int = 0
+    memory_peak_mb: float = 0.0
+    
+    @property
+    def duration_seconds(self) -> float:
+        if self.end_time:
+            return self.end_time - self.start_time
+        return time.time() - self.start_time
+
+def retry_with_backoff(max_retries: int = GenerationConfig.MAX_RETRIES):
+    """Decorator for retry logic with exponential backoff"""
+    def decorator(func):
+        @wraps(func)
+        async def wrapper(*args, **kwargs):
+            last_exception = None
+            
+            for attempt in range(max_retries + 1):
+                try:
+                    return await func(*args, **kwargs)
+                except Exception as e:
+                    last_exception = e
+                    logger.warning(f"Attempt {attempt + 1} failed for {func.__name__}: {str(e)}")
+                    
+                    if attempt < max_retries:
+                        delay = GenerationConfig.RETRY_DELAY_BASE * (GenerationConfig.RETRY_EXPONENTIAL_FACTOR ** attempt)
+                        logger.info(f"Retrying in {delay:.1f} seconds...")
+                        await asyncio.sleep(delay)
+                    else:
+                        logger.error(f"All {max_retries + 1} attempts failed for {func.__name__}")
+            
+            raise last_exception
+        return wrapper
+    return decorator
+
+def performance_monitor(func):
+    """Decorator to monitor function performance"""
+    @wraps(func)
+    async def wrapper(*args, **kwargs):
+        start_time = time.time()
+        start_memory = _get_memory_usage()
+        
+        try:
+            result = await func(*args, **kwargs)
+            
+            # Add performance metrics to result if it's a dict
+            if isinstance(result, dict):
+                end_time = time.time()
+                end_memory = _get_memory_usage()
+                
+                result['performance_metrics'] = {
+                    'execution_time_seconds': end_time - start_time,
+                    'memory_used_mb': end_memory - start_memory,
+                    'function_name': func.__name__
+                }
+            
+            return result
+            
+        except Exception as e:
+            end_time = time.time()
+            logger.error(f"Performance monitor - {func.__name__} failed after {end_time - start_time:.2f}s: {str(e)}")
+            raise
+            
+    return wrapper
+
+def _get_memory_usage() -> float:
+    """Get current memory usage in MB"""
+    try:
+        import psutil
+        process = psutil.Process()
+        return process.memory_info().rss / 1024 / 1024
+    except ImportError:
+        return 0.0  # If psutil not available, return 0
 
 class SegmentContentGenerator:
     """
