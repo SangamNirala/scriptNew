@@ -553,19 +553,19 @@ SCRIPT DEVELOPMENT REQUIREMENTS:
    - Address identified concerns and motivations directly
    - Include relevant cultural references and context
 
-3. PRODUCTION-READY SPECIFICATIONS:
+4. PRODUCTION-READY SPECIFICATIONS:
    - Include detailed visual and audio direction
    - Specify timing, pacing, and transition elements
    - Provide clear guidance for video production
    - Integrate platform-specific optimization requirements
 
-4. ENGAGEMENT ELEMENT INTEGRATION:
+5. ENGAGEMENT ELEMENT INTEGRATION:
    - Seamlessly incorporate planned hooks and retention tactics
    - Include interactive elements and participation cues
    - Embed social proof and credibility indicators
    - Integrate call-to-action elements naturally
 
-5. QUALITY AND POLISH:
+6. QUALITY AND POLISH:
    - Ensure natural flow and readability
    - Optimize for both spoken delivery and visual impact
    - Maintain consistency with brand/style requirements
@@ -574,7 +574,7 @@ SCRIPT DEVELOPMENT REQUIREMENTS:
 ENHANCED CONTEXT INTEGRATION:
 {json.dumps(enhanced_context, indent=2) if enhanced_context else "No additional context available"}
 
-Generate a comprehensive, production-ready script that flawlessly executes the strategic vision while remaining engaging, natural, and highly effective.
+Generate a comprehensive, production-ready script that flawlessly executes the strategic vision while remaining engaging, natural, and highly effective with full template compliance.
 """
         
         content_response = await content_chat.send_message(UserMessage(text=content_prompt))
