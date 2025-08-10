@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 class HindiAudioFixTester:
     def __init__(self):
         # Use production backend URL from frontend/.env
-        self.base_url = "https://fdb88e2d-1c56-4983-889f-10699a9a2d8a.preview.emergentagent.com/api"
+        self.base_url = "https://7891ab6c-10bd-4b84-aa87-aa5afaef49fd.preview.emergentagent.com/api"
         self.session = requests.Session()
         self.session.headers.update({
             'Content-Type': 'application/json',

@@ -10,7 +10,7 @@ import time
 from datetime import datetime
 
 # Get backend URL from frontend .env
-BACKEND_URL = "https://fdb88e2d-1c56-4983-889f-10699a9a2d8a.preview.emergentagent.com/api"
+BACKEND_URL = "https://7891ab6c-10bd-4b84-aa87-aa5afaef49fd.preview.emergentagent.com/api"
 
 class ScriptEditingTester:
     def __init__(self):
