@@ -2579,10 +2579,11 @@ def extract_clean_script(raw_script):
 
 def extract_dialogue_with_timestamps(raw_script):
     """
-    Extract dialogue content from scripts with timestamp format like [0:00-0:03].
+    Extract dialogue content from scripts with timestamp formats like [0:00-0:03] or 0:00-0:03.
     
     This function handles scripts that contain:
-    - Timestamp markers like [0:00-0:03], [0:03-0:10], etc.
+    - Timestamp markers like [0:00-0:03], [0:03-0:10], etc. (bracketed format)
+    - Bare timestamp markers like 0:00-0:03, 0:03-0:10, etc. (bare format from frontend dialogue-only)
     - Dialogue content following timestamps
     - Production notes and metadata to be removed
     
@@ -2599,11 +2600,13 @@ def extract_dialogue_with_timestamps(raw_script):
         if not line:
             continue
             
-        # Skip lines that are just timestamps
-        if re.match(r'^\[\d+:\d+\s*[-–]\s*\d+:\d+\]$', line):
+        # Skip lines that are just timestamps (both bracketed and bare formats)
+        if re.match(r'^\[\d+:\d+\s*[-–]\s*\d+:\d+\]$', line):  # [0:00-0:03]
+            continue
+        if re.match(r'^\d+:\d+\s*[-–]\s*\d+:\d+$', line):  # 0:00-0:03 (bare format)
             continue
             
-        # Extract content after timestamp markers
+        # Extract content after timestamp markers (bracketed format)
         # Pattern: [0:00-0:03] Some dialogue content
         timestamp_match = re.match(r'^\[\d+:\d+\s*[-–]\s*\d+:\d+\]\s*(.+)$', line)
         if timestamp_match:
@@ -2613,8 +2616,9 @@ def extract_dialogue_with_timestamps(raw_script):
                 seen_content.add(dialogue)
             continue
         
-        # Remove timestamps from the beginning of lines
-        line = re.sub(r'^\[\d+:\d+\s*[-–]\s*\d+:\d+\]\s*', '', line)
+        # Remove timestamps from the beginning of lines (both formats)
+        line = re.sub(r'^\[\d+:\d+\s*[-–]\s*\d+:\d+\]\s*', '', line)  # Remove [0:00-0:03]
+        line = re.sub(r'^\d+:\d+\s*[-–]\s*\d+:\d+\s*', '', line)  # Remove 0:00-0:03
             
         # Skip common production elements
         skip_patterns = [
