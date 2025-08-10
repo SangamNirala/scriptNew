@@ -79,6 +79,9 @@ const ScriptGenerator = () => {
   const [isGeneratingAIScript, setIsGeneratingAIScript] = useState(false);
   const [aiScriptData, setAiScriptData] = useState(null);
 
+  // Dialogue-only script state
+  const [dialogueOnlyScript, setDialogueOnlyScript] = useState("");
+
   const fetchScripts = async () => {
     try {
       const response = await axios.get(`${API}/scripts`);
