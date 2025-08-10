@@ -5,6 +5,7 @@ video type customization, segmentation integration, and quality validation.
 """
 
 import asyncio
+import os
 import uuid
 import time
 import logging
