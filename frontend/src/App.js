@@ -133,11 +133,14 @@ const ScriptGenerator = () => {
       if (!event.target.closest('.language-dropdown') && showLanguageDropdown) {
         setShowLanguageDropdown(false);
       }
+      if (!event.target.closest('.dialogue-language-dropdown') && showDialogueLanguageDropdown) {
+        setShowDialogueLanguageDropdown(false);
+      }
     };
 
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
-  }, [showLanguageDropdown]);
+  }, [showLanguageDropdown, showDialogueLanguageDropdown]);
 
   const handleEnhancePrompt = async () => {
     if (!prompt.trim()) {
