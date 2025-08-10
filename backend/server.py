@@ -100,7 +100,7 @@ enhanced_prompt_architecture = EnhancedPromptArchitecture(prompt_template_regist
 duration_specific_prompt_generator = DurationSpecificPromptGenerator()
 
 # Phase 3.2: Initialize Template Integration Manager
-from lib.template_integration_manager import TemplateIntegrationManager, IntegrationRequest, IntegrationResult
+from lib.template_integration_manager import TemplateIntegrationManager, IntegrationRequest, IntegrationResult, IntegrationStatus
 
 # Initialize Template Integration Manager with all system components
 template_integration_manager = TemplateIntegrationManager(
