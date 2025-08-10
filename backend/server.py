@@ -85,6 +85,11 @@ few_shot_generator = FewShotScriptGenerator(db, GEMINI_API_KEY)
 # Phase 1: Initialize Advanced Segmented Script Generation System
 advanced_script_generator = AdvancedScriptGenerator(GEMINI_API_KEY)
 
+# Phase 2: Initialize Complete Advanced Script Generation Logic System
+content_depth_scaling_engine = ContentDepthScalingEngine(GEMINI_API_KEY)
+quality_consistency_engine = QualityConsistencyEngine(GEMINI_API_KEY)
+advanced_generation_workflow = AdvancedGenerationWorkflow(GEMINI_API_KEY)
+
 # Duration validation and mapping
 VALID_DURATIONS = {
     "short": "Short (30s-1min)",
