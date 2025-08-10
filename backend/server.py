@@ -2612,6 +2612,9 @@ def extract_dialogue_with_timestamps(raw_script):
                 dialogue_content.append(dialogue)
                 seen_content.add(dialogue)
             continue
+        
+        # Remove timestamps from the beginning of lines
+        line = re.sub(r'^\[\d+:\d+\s*[-–]\s*\d+:\d+\]\s*', '', line)
             
         # Skip common production elements
         skip_patterns = [
@@ -2638,11 +2641,18 @@ def extract_dialogue_with_timestamps(raw_script):
             continue
             
         # If it's regular dialogue content (not a timestamp line), include it
-        if line and line not in seen_content:
+        if line and line not in seen_content and len(line) > 3:
             dialogue_content.append(line)
             seen_content.add(line)
     
-    return '\n'.join(dialogue_content).strip()
+    # Join with spaces for natural speech flow
+    result = ' '.join(dialogue_content).strip()
+    
+    # Final cleanup - remove any remaining timestamps or brackets
+    result = re.sub(r'\[\d+:\d+\s*[-–]\s*\d+:\d+\]', '', result)
+    result = re.sub(r'\s+', ' ', result).strip()
+    
+    return result
 
 
 def extract_dialogue_only_script(raw_script):
