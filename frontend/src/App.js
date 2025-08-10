@@ -410,8 +410,13 @@ const ScriptGenerator = () => {
   };
 
   const handleGenerateAndPlayAudio = async () => {
-    if (!selectedVoice || !generatedScript) {
-      setError("Please select a voice and ensure you have a script to read.");
+    if (!selectedVoice) {
+      setError("Please select a voice.");
+      return;
+    }
+    const textToSpeak = audioTarget === "dialogue" ? (isEditingDialogue ? editedDialogue : dialogueOnlyScript) : generatedScript;
+    if (!textToSpeak) {
+      setError("No content available to generate audio.");
       return;
     }
 
@@ -421,7 +426,7 @@ const ScriptGenerator = () => {
 
     try {
       const response = await axios.post(`${API}/generate-audio`, {
-        text: generatedScript,
+        text: textToSpeak,
         voice_name: selectedVoice.name
       });
 
