@@ -258,11 +258,16 @@ const ScriptGenerator = () => {
   const handlePlayScript = () => {
     setAudioTarget("script");
     if (isPlaying) {
-      // Stop current playback
       if (audioData) {
         audioData.pause();
         audioData.currentTime = 0;
       }
+      setIsPlaying(false);
+      setAudioData(null);
+      return;
+    }
+    setShowVoiceSelection(true);
+  };
 
   // Dialogue-only actions
   const handleEditDialogue = () => {
@@ -283,9 +288,6 @@ const ScriptGenerator = () => {
   };
 
   const handleSaveDialogue = async () => {
-    // Saving dialogue means we need to merge it back into generatedScript's dialogue portions.
-    // For MVP: replace the dialogue-only block in generatedScript by reconstructing lines based on timestamps.
-    // If backend has specific endpoint to save dialogue, we would call it. For now, we inline-update generatedScript by mapping.
     try {
       setIsSavingDialogue(true);
       setError("");
@@ -350,14 +352,6 @@ const ScriptGenerator = () => {
     setShowVoiceSelection(true);
   };
 
-      setIsPlaying(false);
-      setAudioData(null);
-      return;
-    }
-
-    // Show voice selection modal
-    setShowVoiceSelection(true);
-  };
 
   const handleVoiceSelect = (voice) => {
     setSelectedVoice(voice);
