@@ -118,31 +118,55 @@ class ChainOfThoughtScriptGenerator:
         duration: str, 
         enhanced_context: Dict[str, Any]
     ) -> Dict[str, Any]:
-        """Step 1: Deep analysis and understanding of requirements"""
+        """Step 1: Deep analysis and understanding of requirements with template integration"""
+        
+        # Extract template integration context
+        template_config = enhanced_context.get("template_config", {})
+        template_enhanced_prompt = enhanced_context.get("enhanced_prompt", "")
+        segmentation_plan = enhanced_context.get("segmentation_plan", {})
+        
+        # Build system message with template awareness
+        system_message = """You are an expert content analyst specializing in video script requirements analysis with template integration capabilities. 
+        Your role is to deeply understand and break down the requirements for script generation while incorporating template-specific guidance.
+        
+        Analyze each request with systematic precision:
+        1. Extract core message and objectives
+        2. Identify implicit requirements and constraints  
+        3. Determine success criteria and key performance indicators
+        4. Assess complexity level and resource requirements
+        5. Identify potential challenges and solutions
+        6. Integrate template specifications and optimization opportunities
+        
+        Provide structured, actionable analysis that guides optimal template-enhanced script creation."""
+        
+        # Enhance system message with template context if available
+        if template_config:
+            template_name = template_config.get("template_name", "Unknown Template")
+            system_message += f"""
+            
+TEMPLATE INTEGRATION MODE ENABLED:
+- Active Template: {template_name}
+- Template-guided analysis required
+- Consider template specifications in all analysis aspects
+- Optimize recommendations for template compatibility"""
         
         analysis_chat = LlmChat(
             api_key=self.api_key,
             session_id=f"cot-analysis-{datetime.utcnow().timestamp()}",
-            system_message="""You are an expert content analyst specializing in video script requirements analysis. 
-            Your role is to deeply understand and break down the requirements for script generation.
-            
-            Analyze each request with systematic precision:
-            1. Extract core message and objectives
-            2. Identify implicit requirements and constraints  
-            3. Determine success criteria and key performance indicators
-            4. Assess complexity level and resource requirements
-            5. Identify potential challenges and solutions
-            
-            Provide structured, actionable analysis that guides optimal script creation."""
+            system_message=system_message
         ).with_model("gemini", "gemini-2.0-flash")
         
         analysis_prompt = f"""
-DEEP REQUIREMENT ANALYSIS:
+DEEP REQUIREMENT ANALYSIS WITH TEMPLATE INTEGRATION:
 
 USER PROMPT: "{prompt}"
 VIDEO TYPE: {video_type}
 DURATION: {duration}
 CONTEXT AVAILABLE: {bool(enhanced_context)}
+TEMPLATE INTEGRATION: {bool(template_config)}
+
+TEMPLATE CONTEXT:
+{json.dumps(template_config, indent=2) if template_config else "No template integration available"}
 
 SYSTEMATIC ANALYSIS REQUIRED:
 
