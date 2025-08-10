@@ -838,66 +838,122 @@ class DurationSpecificPromptGenerator:
         try:
             logger.info(f"🏗️ Creating base template structure: {template_spec.name}")
             
-            # Create base template structure
-            base_template = {
-                "template_id": str(uuid.uuid4()),
-                "template_name": template_spec.name,
-                "duration_category": template_spec.duration_category.value,
-                "expertise_level": template_spec.expertise_level.value,
-                "complexity": template_spec.complexity.value,
-                "focus": template_spec.focus.value,
+            # Check if we have a complete implementation for this duration
+            if template_spec.duration_category == DurationCategory.EXTENDED_15:
+                # Use the complete 15-20 minute template implementation
+                logger.info("📋 Using complete Phase 2.2 implementation for extended_15")
+                complete_template = self.create_15_20_minute_template()
                 
-                # Core template components (to be populated in Phase 2.2-2.4)
-                "system_prompt": f"# {template_spec.name}\n\n[To be implemented in Phase 2.2-2.4]",
-                "expertise_description": f"{template_spec.expertise_description}\n\n[Detailed implementation in Phase 2.2-2.4]",
-                "framework_instructions": "[Comprehensive framework instructions to be added in Phase 2.2-2.4]",
-                "segment_guidelines": f"Optimized for {template_spec.segments} with {template_spec.complexity.value}",
-                "quality_standards": "\n".join(template_spec.quality_standards),
+                # Convert to base template structure format
+                template_content = complete_template["template_content"]
                 
-                # Template architecture metadata
-                "template_metadata": {
-                    "specification": template_spec.to_dict(),
-                    "creation_timestamp": datetime.utcnow().isoformat(),
-                    "generator_id": self.generator_id,
-                    "version": "1.0.0",
-                    "status": "base_structure"
-                },
+                base_template = {
+                    "template_id": complete_template["template_id"],
+                    "template_name": complete_template["template_name"],
+                    "duration_category": complete_template["duration_category"],
+                    "expertise_level": complete_template["expertise_level"],
+                    "complexity": complete_template["complexity"],
+                    "focus": complete_template["focus"],
+                    
+                    # Core template components with actual implementation
+                    "system_prompt": template_content.system_prompt,
+                    "expertise_description": template_content.expertise_description,
+                    "framework_instructions": template_content.framework_instructions,
+                    "segment_guidelines": template_content.segment_guidelines,
+                    "quality_standards": template_content.quality_standards,
+                    
+                    # Template architecture metadata
+                    "template_metadata": {
+                        "specification": template_spec.to_dict(),
+                        "creation_timestamp": datetime.utcnow().isoformat(),
+                        "generator_id": self.generator_id,
+                        "version": "2.2.0",
+                        "status": "phase_2_2_complete",
+                        "implementation_complete": True,
+                        "word_count": template_content.get_word_count(),
+                        "content_hash": template_content.calculate_hash()
+                    },
+                    
+                    # Customization framework
+                    "customization_options": template_content.customization_options,
+                    
+                    # Validation framework
+                    "validation_criteria": template_content.validation_criteria,
+                    
+                    # Integration points
+                    "integration_points": template_content.integration_points,
+                    
+                    # Usage examples
+                    "usage_examples": template_content.usage_examples
+                }
                 
-                # Customization framework
-                "customization_options": {
-                    "video_type_customization": self.config.video_type_customization,
-                    "complexity_scaling": True,
-                    "engagement_optimization": True,
-                    "segmentation_integration": self.config.segmentation_compatibility,
-                    "framework_adaptation": self.config.framework_integration_required
-                },
-                
-                # Validation framework
-                "validation_criteria": {
-                    "minimum_word_count": self.config.minimum_word_count,
-                    "expertise_depth": self.config.expertise_depth_requirement,
-                    "quality_standards": template_spec.quality_standards,
-                    "framework_requirements": template_spec.framework_requirements
-                },
-                
-                # Integration points
-                "integration_points": {
-                    "enhanced_prompt_architecture": "seamless_integration",
-                    "template_registry": "full_compatibility",
-                    "segmentation_system": "native_support",
-                    "video_type_customization": "comprehensive_adaptation"
-                },
-                
-                # Usage examples (placeholder)
-                "usage_examples": [
-                    f"Example usage for {template_spec.expertise_level.value} level content",
-                    f"Integration with {template_spec.segments} segmentation",
-                    f"Customization for {template_spec.complexity.value} content"
-                ]
-            }
+                logger.info(f"✅ Complete Phase 2.2 template structure created: {base_template['template_id']}")
+                return base_template
             
-            logger.info(f"✅ Base template structure created: {base_template['template_id']}")
-            return base_template
+            else:
+                # Use placeholder structure for templates not yet implemented
+                logger.info(f"📋 Using placeholder structure for {template_spec.duration_category.value}")
+                
+                base_template = {
+                    "template_id": str(uuid.uuid4()),
+                    "template_name": template_spec.name,
+                    "duration_category": template_spec.duration_category.value,
+                    "expertise_level": template_spec.expertise_level.value,
+                    "complexity": template_spec.complexity.value,
+                    "focus": template_spec.focus.value,
+                    
+                    # Core template components (to be populated in Phase 2.3-2.4)
+                    "system_prompt": f"# {template_spec.name}\n\n[To be implemented in Phase 2.3-2.4]",
+                    "expertise_description": f"{template_spec.expertise_description}\n\n[Detailed implementation pending]",
+                    "framework_instructions": "[Comprehensive framework instructions to be added in Phase 2.3-2.4]",
+                    "segment_guidelines": f"Optimized for {template_spec.segments} with {template_spec.complexity.value}",
+                    "quality_standards": "\n".join(template_spec.quality_standards),
+                    
+                    # Template architecture metadata
+                    "template_metadata": {
+                        "specification": template_spec.to_dict(),
+                        "creation_timestamp": datetime.utcnow().isoformat(),
+                        "generator_id": self.generator_id,
+                        "version": "2.2.0",
+                        "status": "base_structure_pending_implementation",
+                        "implementation_complete": False
+                    },
+                    
+                    # Customization framework
+                    "customization_options": {
+                        "video_type_customization": self.config.video_type_customization,
+                        "complexity_scaling": True,
+                        "engagement_optimization": True,
+                        "segmentation_integration": self.config.segmentation_compatibility,
+                        "framework_adaptation": self.config.framework_integration_required
+                    },
+                    
+                    # Validation framework
+                    "validation_criteria": {
+                        "minimum_word_count": self.config.minimum_word_count,
+                        "expertise_depth": self.config.expertise_depth_requirement,
+                        "quality_standards": template_spec.quality_standards,
+                        "framework_requirements": template_spec.framework_requirements
+                    },
+                    
+                    # Integration points
+                    "integration_points": {
+                        "enhanced_prompt_architecture": "seamless_integration",
+                        "template_registry": "full_compatibility",
+                        "segmentation_system": "native_support",
+                        "video_type_customization": "comprehensive_adaptation"
+                    },
+                    
+                    # Usage examples (placeholder)
+                    "usage_examples": [
+                        f"Example usage for {template_spec.expertise_level.value} level content",
+                        f"Integration with {template_spec.segments} segmentation",
+                        f"Customization for {template_spec.complexity.value} content"
+                    ]
+                }
+                
+                logger.info(f"✅ Base template structure created: {base_template['template_id']}")
+                return base_template
             
         except Exception as e:
             logger.error(f"Error creating base template structure: {str(e)}")
