@@ -1116,6 +1116,42 @@ const ScriptGenerator = () => {
 
           {/* Right Column - Generated Script */}
           <div className="space-y-6">
+            {/* Dialogue Only Box - positioned above the generated script */}
+            {dialogueOnlyScript && (
+              <div className="bg-gradient-to-r from-purple-500/10 to-blue-500/10 backdrop-blur-lg rounded-xl p-6 border border-purple-300/20">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-2xl font-bold text-white">
+                    🎭 Dialogue Only 
+                    <span className="text-sm font-normal text-gray-300 ml-2">
+                      (Timestamps + Spoken Lines)
+                    </span>
+                  </h2>
+                  <div className="flex items-center space-x-2">
+                    {/* Copy Dialogue Button */}
+                    <button
+                      onClick={() => navigator.clipboard.writeText(dialogueOnlyScript)}
+                      className="px-4 py-2 bg-purple-500/20 text-purple-300 rounded-lg hover:bg-purple-500/30 transition-colors flex items-center space-x-2"
+                    >
+                      <span>📋</span>
+                      <span>Copy Dialogue</span>
+                    </button>
+                  </div>
+                </div>
+                
+                {/* Dialogue Content */}
+                <div 
+                  className="text-gray-200 leading-relaxed bg-white/5 p-4 rounded-lg max-h-80 overflow-y-auto"
+                  dangerouslySetInnerHTML={{ __html: formatDialogueScript(dialogueOnlyScript) }}
+                />
+                
+                <div className="mt-4 pt-4 border-t border-white/20">
+                  <div className="text-xs text-gray-400">
+                    <span className="text-purple-400">●</span> This box contains only the dialogue content - timestamps and spoken lines without AI image prompts or production notes.
+                  </div>
+                </div>
+              </div>
+            )}
+
             {generatedScript && (
               <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
                 <div className="flex justify-between items-center mb-6">
