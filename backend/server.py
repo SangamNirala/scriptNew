@@ -4846,10 +4846,10 @@ app.add_middleware(
     allow_credentials=True,
     allow_origins=[
         "*",
-        "https://2e8eb5fa-502b-46cf-a75e-9d0c7603ca91.preview.emergentagent.com",
-        "https://2e8eb5fa-502b-46cf-a75e-9d0c7603ca91.preview.emergentagent.com",
-        "https://2e8eb5fa-502b-46cf-a75e-9d0c7603ca91.preview.emergentagent.com",
-        "https://2e8eb5fa-502b-46cf-a75e-9d0c7603ca91.preview.emergentagent.com",
+        "https://c6e53b0c-c2e3-433d-a597-4d2c4ba5aa29.preview.emergentagent.com",
+        "https://c6e53b0c-c2e3-433d-a597-4d2c4ba5aa29.preview.emergentagent.com",
+        "https://c6e53b0c-c2e3-433d-a597-4d2c4ba5aa29.preview.emergentagent.com",
+        "https://c6e53b0c-c2e3-433d-a597-4d2c4ba5aa29.preview.emergentagent.com",
         "http://localhost:3000",
         "http://127.0.0.1:3000"
     ],
