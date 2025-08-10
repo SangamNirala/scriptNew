@@ -553,8 +553,8 @@ Generate sophisticated, engaging content that demonstrates absolute mastery of v
 - Create anticipation for conclusion
 - Reinforce key themes and messages"""
     
-    def _parse_segment_content(self, content_text: str, segment_number: int) -> Dict[str, Any]:
-        """Parse the AI-generated segment content"""
+    def _parse_enhanced_segment_content(self, content_text: str, segment_number: int) -> Dict[str, Any]:
+        """Parse the AI-generated segment content with enhanced validation and error recovery"""
         try:
             parsed = {
                 "segment_script": "",
@@ -562,106 +562,221 @@ Generate sophisticated, engaging content that demonstrates absolute mastery of v
                 "engagement_elements": {},
                 "content_summary": {},
                 "production_notes": {},
-                "raw_content": content_text
+                "raw_content": content_text,
+                "parsing_quality_score": 0.0
             }
             
             lines = content_text.split('\n')
             current_section = None
             script_content = []
+            parsing_score = 0.0
             
             for line in lines:
                 line = line.strip()
                 if not line:
                     continue
                 
-                # Identify main sections
-                if line.startswith('SEGMENT_SCRIPT:'):
+                # Identify main sections with enhanced detection
+                if line.upper().startswith('SEGMENT_SCRIPT:'):
                     current_section = 'segment_script'
+                    parsing_score += 0.2
                     continue
-                elif line.startswith('AI_IMAGE_PROMPTS:'):
+                elif line.upper().startswith('AI_IMAGE_PROMPTS:'):
                     current_section = 'ai_image_prompts'
+                    parsing_score += 0.2
                     continue
-                elif line.startswith('ENGAGEMENT_ELEMENTS:'):
+                elif line.upper().startswith('ENGAGEMENT_ELEMENTS:'):
                     current_section = 'engagement_elements'
+                    parsing_score += 0.2
                     continue
-                elif line.startswith('CONTENT_SUMMARY:'):
+                elif line.upper().startswith('CONTENT_SUMMARY:'):
                     current_section = 'content_summary'
+                    parsing_score += 0.2
                     continue
-                elif line.startswith('PRODUCTION_NOTES:'):
+                elif line.upper().startswith('PRODUCTION_NOTES:'):
                     current_section = 'production_notes'
+                    parsing_score += 0.2
                     continue
                 
                 # Process content based on current section
                 if current_section == 'segment_script':
-                    if not line.startswith(('AI_IMAGE_PROMPTS:', 'ENGAGEMENT_ELEMENTS:', 'CONTENT_SUMMARY:', 'PRODUCTION_NOTES:')):
+                    if not line.upper().startswith(('AI_IMAGE_PROMPTS:', 'ENGAGEMENT_ELEMENTS:', 'CONTENT_SUMMARY:', 'PRODUCTION_NOTES:')):
                         script_content.append(line)
                 elif current_section == 'ai_image_prompts':
                     if line.startswith('[') and line.endswith(']'):
                         # Extract AI image prompt
                         prompt = line[1:-1].strip()
-                        if prompt:
+                        if prompt and len(prompt) > 10:  # Enhanced validation
                             parsed['ai_image_prompts'].append(prompt)
                 elif current_section in ['engagement_elements', 'content_summary', 'production_notes']:
                     if line.startswith('-'):
-                        self._parse_section_detail(line, parsed[current_section])
+                        self._parse_enhanced_section_detail(line, parsed[current_section])
             
             # Join script content
             parsed['segment_script'] = '\n'.join(script_content).strip()
             
-            # Ensure we have some content even if parsing fails
-            if not parsed['segment_script']:
-                parsed['segment_script'] = content_text
+            # Enhanced quality validation
+            if parsed['segment_script'] and len(parsed['segment_script']) > 100:
+                parsing_score += 0.3
+            if len(parsed['ai_image_prompts']) >= 2:
+                parsing_score += 0.2
+            if len(parsed['engagement_elements']) >= 2:
+                parsing_score += 0.1
+            if len(parsed['content_summary']) >= 2:
+                parsing_score += 0.1
             
-            # Add fallback AI image prompts if none were extracted
+            parsed['parsing_quality_score'] = min(parsing_score, 1.0)
+            
+            # Enhanced error recovery
+            if not parsed['segment_script']:
+                logger.warning(f"No script content parsed for segment {segment_number}, attempting recovery...")
+                parsed['segment_script'] = self._recover_script_content(content_text)
+            
+            # Enhanced fallback AI image prompts
             if not parsed['ai_image_prompts']:
-                parsed['ai_image_prompts'] = self._extract_fallback_image_prompts(parsed['segment_script'])
+                parsed['ai_image_prompts'] = self._extract_enhanced_fallback_image_prompts(parsed['segment_script'])
+            
+            # Ensure minimum quality standards
+            if len(parsed['ai_image_prompts']) < 2:
+                parsed['ai_image_prompts'].extend(self._generate_minimum_image_prompts(segment_number))
+            
+            logger.info(f"📊 Segment {segment_number} parsing quality: {parsed['parsing_quality_score']:.3f}")
             
             return parsed
             
         except Exception as e:
-            logger.error(f"Error parsing segment content: {str(e)}")
+            logger.error(f"Enhanced error parsing segment content: {str(e)}")
             return {
-                "segment_script": content_text,
-                "ai_image_prompts": [],
-                "engagement_elements": {"error": "Parsing failed"},
-                "content_summary": {"error": "Parsing failed"}, 
-                "production_notes": {"error": "Parsing failed"},
+                "segment_script": self._recover_script_content(content_text),
+                "ai_image_prompts": self._generate_minimum_image_prompts(segment_number),
+                "engagement_elements": {"error": "Parsing failed", "recovery_attempted": True},
+                "content_summary": {"error": "Parsing failed", "recovery_attempted": True}, 
+                "production_notes": {"error": "Parsing failed", "recovery_attempted": True},
                 "raw_content": content_text,
+                "parsing_quality_score": 0.1,
                 "parse_error": str(e)
             }
     
-    def _extract_fallback_image_prompts(self, script_content: str) -> List[str]:
-        """Extract fallback image prompts from script content"""
+    def _recover_script_content(self, content_text: str) -> str:
+        """Enhanced script content recovery"""
         try:
-            # Look for existing image prompts in brackets
+            # Try to find script-like content in the raw text
+            lines = content_text.split('\n')
+            script_lines = []
+            
+            for line in lines:
+                line = line.strip()
+                # Skip section headers and metadata
+                if (line.upper().startswith(('SEGMENT_SCRIPT:', 'AI_IMAGE_PROMPTS:', 'ENGAGEMENT_', 'CONTENT_', 'PRODUCTION_')) or
+                    line.startswith('[') and line.endswith(']') or
+                    line.startswith('-') or
+                    len(line) < 10):
+                    continue
+                
+                # Look for narrative content
+                if len(line) > 20 and any(char in line for char in '.!?'):
+                    script_lines.append(line)
+            
+            recovered = ' '.join(script_lines).strip()
+            if len(recovered) > 50:
+                logger.info("✅ Successfully recovered script content")
+                return recovered
+            else:
+                logger.warning("⚠️ Script recovery yielded insufficient content")
+                return content_text  # Return original as last resort
+                
+        except Exception as e:
+            logger.error(f"Script recovery failed: {str(e)}")
+            return content_text
+    
+    def _extract_enhanced_fallback_image_prompts(self, script_content: str) -> List[str]:
+        """Extract enhanced fallback image prompts from script content"""
+        try:
+            # Look for existing image prompts in brackets with enhanced patterns
             prompts = re.findall(r'\[([^\]]+)\]', script_content)
             
-            # Filter for likely image prompts (longer descriptions)
-            image_prompts = [p for p in prompts if len(p) > 20 and any(word in p.lower() for word in ['shot', 'scene', 'image', 'visual', 'photo', 'picture'])]
-            
-            # If we found some, return them
-            if image_prompts:
-                return image_prompts[:5]  # Limit to 5 prompts
-            
-            # Otherwise, create generic prompts based on content
-            return [
-                "A professional, high-quality shot that complements the video content",
-                "An engaging visual element that supports the main message",
-                "A dynamic scene that enhances viewer understanding"
+            # Enhanced filtering for likely image prompts
+            image_prompts = []
+            image_keywords = [
+                'shot', 'scene', 'image', 'visual', 'photo', 'picture', 'showing', 'displaying',
+                'cinematic', 'professional', 'dynamic', 'compelling', 'engaging', 'dramatic'
             ]
             
+            for p in prompts:
+                if (len(p) > 15 and 
+                    any(word in p.lower() for word in image_keywords) and
+                    not p.lower().startswith(('segment', 'section', 'part'))):
+                    image_prompts.append(p)
+            
+            # If we found quality prompts, return them
+            if len(image_prompts) >= 2:
+                return image_prompts[:5]  # Limit to 5 prompts
+            
+            # Otherwise, generate context-aware prompts
+            return self._generate_context_aware_image_prompts(script_content)
+            
         except Exception as e:
-            logger.error(f"Error extracting fallback image prompts: {str(e)}")
-            return ["A professional visual element supporting the content"]
+            logger.error(f"Enhanced fallback image prompt extraction failed: {str(e)}")
+            return self._generate_minimum_image_prompts(1)
     
-    def _parse_section_detail(self, line: str, section_dict: Dict[str, Any]):
-        """Parse section detail line"""
+    def _generate_context_aware_image_prompts(self, script_content: str) -> List[str]:
+        """Generate context-aware image prompts based on script content"""
         try:
-            if ':' in line:
+            # Analyze script content for themes and context
+            script_lower = script_content.lower()
+            
+            prompts = []
+            
+            # Technology/Business context
+            if any(word in script_lower for word in ['technology', 'business', 'digital', 'innovation', 'startup']):
+                prompts.append("A professional, modern workspace with clean technology elements and soft lighting")
+                prompts.append("A dynamic shot of hands working on a sleek laptop with multiple screens displaying data")
+            
+            # Educational context
+            elif any(word in script_lower for word in ['learn', 'education', 'teach', 'study', 'knowledge']):
+                prompts.append("A warm, inviting study environment with books and natural lighting")
+                prompts.append("A close-up shot of someone taking notes with colorful pens and organized materials")
+            
+            # Health/Wellness context
+            elif any(word in script_lower for word in ['health', 'wellness', 'fitness', 'nutrition', 'exercise']):
+                prompts.append("A serene, natural environment with soft morning light and healthy elements")
+                prompts.append("A motivating shot of fresh, colorful vegetables and fitness equipment")
+            
+            # Generic professional fallback
+            else:
+                prompts.append("A professional, high-quality shot with excellent lighting that complements the content")
+                prompts.append("A dynamic, engaging visual that supports the main message with cinematic quality")
+            
+            # Always add a versatile closing prompt
+            prompts.append("A compelling final shot that reinforces the key message with professional composition")
+            
+            return prompts[:3]  # Return top 3
+            
+        except Exception as e:
+            logger.error(f"Context-aware prompt generation failed: {str(e)}")
+            return self._generate_minimum_image_prompts(1)
+    
+    def _generate_minimum_image_prompts(self, segment_number: int) -> List[str]:
+        """Generate minimum required image prompts as fallback"""
+        return [
+            f"A professional, cinematic shot that enhances segment {segment_number} content with excellent lighting",
+            f"A dynamic, engaging visual element that supports the main message of segment {segment_number}",
+            f"A compelling scene that reinforces the key themes with high production value"
+        ]
+    
+    def _parse_enhanced_section_detail(self, line: str, section_dict: Dict[str, Any]):
+        """Parse section detail line with enhanced validation"""
+        try:
+            if ':' in line and len(line) > 5:
                 key, value = line[1:].split(':', 1)
-                section_dict[key.strip().lower().replace(' ', '_')] = value.strip()
-        except:
-            pass
+                key_clean = key.strip().lower().replace(' ', '_')
+                value_clean = value.strip()
+                
+                # Enhanced validation
+                if len(value_clean) > 5 and key_clean:
+                    section_dict[key_clean] = value_clean
+        except Exception as e:
+            logger.debug(f"Section detail parsing failed for line: {line[:50]}... Error: {str(e)}")
 
 
 class CrossSegmentCoordinator:
