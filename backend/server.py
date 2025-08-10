@@ -5045,6 +5045,12 @@ async def get_template_system_status():
                     "creation_successful": template_creation_success,
                     "word_count": template_word_count,
                     "meets_500_word_requirement": template_word_count >= 500
+                },
+                "phase_2_3_template_test": {
+                    "creation_successful": template_20_25_success,
+                    "word_count": template_20_25_word_count,
+                    "meets_500_word_requirement": template_20_25_word_count >= 500,
+                    "template_name": "20-25 Minute Deep Dive Content Expert"
                 }
             },
             "enhanced_prompt_architecture": {
