@@ -44,6 +44,10 @@ from lib.advanced_segmented_generator import AdvancedScriptGenerator
 from lib.content_depth_scaling_engine import ContentDepthScalingEngine
 from lib.quality_consistency_engine import QualityConsistencyEngine
 from lib.advanced_generation_workflow import AdvancedGenerationWorkflow
+# Phase 1.1-2.2: Enhanced Prompt Template System
+from lib.prompt_template_registry import PromptTemplateRegistry, TemplateContent, TemplateMetadata, TemplateValidationError
+from lib.enhanced_prompt_architecture import EnhancedPromptArchitecture, PromptArchitectureConfig, PromptEnhancementLevel, IntegrationMode
+from lib.duration_specific_templates import DurationSpecificPromptGenerator, TemplateSpecification, DurationCategory, ExpertiseLevel
 
 
 ROOT_DIR = Path(__file__).parent
