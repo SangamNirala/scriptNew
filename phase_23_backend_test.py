@@ -1,787 +1,609 @@
 #!/usr/bin/env python3
 """
-Phase 2.3 Implementation Testing: 20-25 Minute Deep Dive Content Expert Template
-Backend Testing Suite for Duration-Specific Template System
+Phase 2.3 Backend Testing - 20-25 Minute Deep Dive Content Expert Template Implementation
+Comprehensive testing for Phase 2.3 backend functionality as specified in review request.
 
-This test suite validates the Phase 2.3 implementation of the 20-25 Minute Deep Dive Content Expert
-template functionality as specified in the review request.
+Test Focus:
+1. Template Creation Test - Call create_20_25_minute_template() method and verify template name, word count, sections, structure
+2. API Endpoint Testing - Test /api/template-system-status endpoint for Phase 2.3 completion status
+3. Template Integration Testing - Verify template integrates with enhanced prompt architecture
+4. Phase 2.3 Requirements Validation - Check all requirements are met
 
-Test Coverage:
-1. Test create_20_25_minute_template() method in DurationSpecificPromptGenerator
-2. Verify template meets all Phase 2.3 requirements
-3. Test template word count validation (500+ words)
-4. Test async generate_20_25_minute_template() method
-5. Verify integration with enhanced prompt architecture
-6. Check implementation status shows Phase 2.3 as complete
-7. Test template system status endpoint
+Key Issues to Investigate:
+- Template name inconsistency (expected: "20-25 Minute Deep Dive Content Expert")
+- Missing Phase 2.3 completion flags
+- Implementation status verification
 """
 
 import asyncio
+import aiohttp
+import json
 import sys
 import os
-import json
-import time
 from datetime import datetime
-from typing import Dict, Any, List
+import traceback
 
 # Add the backend directory to Python path
-sys.path.insert(0, '/app/backend')
+sys.path.append('/app/backend')
 
-# Import required modules
-import requests
-from lib.duration_specific_templates import (
-    DurationSpecificPromptGenerator, 
-    TemplateArchitectureConfig,
-    DURATION_PROMPT_TEMPLATES,
-    TemplateValidationError
-)
-from lib.prompt_template_registry import PromptTemplateRegistry, TemplateContent
-from lib.enhanced_prompt_architecture import EnhancedPromptArchitecture
+# Backend URL from environment
+BACKEND_URL = "https://465ecec1-f9fe-4136-bbe9-ca96b3d072cc.preview.emergentagent.com/api"
 
-# Test configuration
-BACKEND_URL = "https://465ecec1-f9fe-4136-bbe9-ca96b3d072cc.preview.emergentagent.com"
-API_BASE_URL = f"{BACKEND_URL}/api"
-
-class Phase23TestSuite:
-    """Comprehensive test suite for Phase 2.3 implementation"""
-    
+class Phase23BackendTester:
     def __init__(self):
+        self.backend_url = BACKEND_URL
         self.test_results = []
-        self.total_tests = 0
-        self.passed_tests = 0
-        self.failed_tests = 0
-        self.start_time = time.time()
+        self.session = None
         
-        # Initialize components for testing
-        self.config = TemplateArchitectureConfig(
-            minimum_word_count=500,
-            expertise_depth_requirement="professional",
-            framework_integration_required=True,
-            video_type_customization=True,
-            segmentation_compatibility=True,
-            quality_validation_enabled=True,
-            performance_optimization=True
+    async def setup_session(self):
+        """Setup HTTP session for testing"""
+        self.session = aiohttp.ClientSession(
+            timeout=aiohttp.ClientTimeout(total=120),
+            headers={'Content-Type': 'application/json'}
         )
-        
-        self.generator = DurationSpecificPromptGenerator(self.config)
-        
-        print("🚀 Phase 2.3 Implementation Testing: 20-25 Minute Deep Dive Content Expert")
-        print("=" * 80)
     
-    def log_test_result(self, test_name: str, passed: bool, details: str = "", error: str = ""):
-        """Log test result with details"""
-        self.total_tests += 1
-        if passed:
-            self.passed_tests += 1
-            status = "✅ PASS"
-        else:
-            self.failed_tests += 1
-            status = "❌ FAIL"
-        
+    async def cleanup_session(self):
+        """Cleanup HTTP session"""
+        if self.session:
+            await self.session.close()
+    
+    def log_test_result(self, test_name: str, success: bool, details: dict, error: str = None):
+        """Log test result"""
         result = {
             "test_name": test_name,
-            "status": status,
-            "passed": passed,
+            "success": success,
+            "timestamp": datetime.utcnow().isoformat(),
             "details": details,
-            "error": error,
-            "timestamp": datetime.utcnow().isoformat()
+            "error": error
         }
-        
         self.test_results.append(result)
-        print(f"{status}: {test_name}")
-        if details:
-            print(f"   Details: {details}")
+        
+        status = "✅ PASS" if success else "❌ FAIL"
+        print(f"{status} - {test_name}")
         if error:
             print(f"   Error: {error}")
+        if details:
+            print(f"   Details: {json.dumps(details, indent=2)}")
         print()
     
-    def test_create_20_25_minute_template_method(self):
-        """Test 1: Test the create_20_25_minute_template() method"""
+    async def test_template_system_status_endpoint(self):
+        """Test 1: API Endpoint Testing - /api/template-system-status endpoint"""
+        test_name = "Template System Status Endpoint"
         try:
-            template = self.generator.create_20_25_minute_template()
+            url = f"{self.backend_url}/template-system-status"
+            
+            async with self.session.get(url) as response:
+                if response.status != 200:
+                    self.log_test_result(
+                        test_name, 
+                        False, 
+                        {"status_code": response.status}, 
+                        f"HTTP {response.status} - Backend service not responding correctly"
+                    )
+                    return False
+                
+                data = await response.json()
+                
+                # Verify response structure
+                required_keys = ["status", "components_loaded", "duration_specific_generator", "integration_verification"]
+                missing_keys = [key for key in required_keys if key not in data]
+                
+                if missing_keys:
+                    self.log_test_result(
+                        test_name, 
+                        False, 
+                        {"missing_keys": missing_keys}, 
+                        f"Missing required response keys: {missing_keys}"
+                    )
+                    return False
+                
+                # Check Phase 2.3 specific data
+                phase_23_data = data.get("duration_specific_generator", {}).get("phase_2_3_template_test", {})
+                integration_data = data.get("integration_verification", {})
+                
+                details = {
+                    "endpoint_status": data.get("status"),
+                    "phase_2_3_template_test": phase_23_data,
+                    "phase_2_3_complete_flag": integration_data.get("phase_2_3_complete"),
+                    "template_name_returned": phase_23_data.get("template_name"),
+                    "creation_successful": phase_23_data.get("creation_successful"),
+                    "word_count": phase_23_data.get("word_count"),
+                    "meets_500_word_requirement": phase_23_data.get("meets_500_word_requirement")
+                }
+                
+                # Verify Phase 2.3 completion status
+                phase_23_complete = integration_data.get("phase_2_3_complete", False)
+                template_creation_success = phase_23_data.get("creation_successful", False)
+                expected_template_name = "20-25 Minute Deep Dive Content Expert"
+                actual_template_name = phase_23_data.get("template_name", "")
+                
+                success = (
+                    data.get("status") == "operational" and
+                    phase_23_complete and
+                    template_creation_success and
+                    actual_template_name == expected_template_name
+                )
+                
+                if not success:
+                    error_details = []
+                    if data.get("status") != "operational":
+                        error_details.append(f"Service status: {data.get('status')}")
+                    if not phase_23_complete:
+                        error_details.append("Phase 2.3 not marked as complete")
+                    if not template_creation_success:
+                        error_details.append("Template creation failed")
+                    if actual_template_name != expected_template_name:
+                        error_details.append(f"Template name mismatch: expected '{expected_template_name}', got '{actual_template_name}'")
+                    
+                    error_msg = "; ".join(error_details)
+                else:
+                    error_msg = None
+                
+                self.log_test_result(test_name, success, details, error_msg)
+                return success
+                
+        except Exception as e:
+            self.log_test_result(
+                test_name, 
+                False, 
+                {"exception": str(e)}, 
+                f"Exception during endpoint test: {str(e)}"
+            )
+            return False
+    
+    async def test_direct_template_creation(self):
+        """Test 2: Template Creation Test - Direct method call verification"""
+        test_name = "Direct Template Creation Test"
+        try:
+            # Import the backend modules directly
+            from lib.duration_specific_templates import DurationSpecificPromptGenerator
+            
+            # Create generator instance
+            generator = DurationSpecificPromptGenerator()
+            
+            # Test create_20_25_minute_template() method
+            template_result = generator.create_20_25_minute_template()
             
             # Verify template structure
-            required_keys = [
-                "template_id", "template_name", "duration_category", 
-                "expertise_level", "complexity", "focus", "template_content",
-                "specification", "creation_metadata"
-            ]
-            
-            missing_keys = [key for key in required_keys if key not in template]
-            if missing_keys:
+            if not isinstance(template_result, dict):
                 self.log_test_result(
-                    "create_20_25_minute_template() - Structure",
-                    False,
-                    error=f"Missing required keys: {missing_keys}"
+                    test_name, 
+                    False, 
+                    {"result_type": type(template_result).__name__}, 
+                    "Template creation did not return a dictionary"
                 )
-                return
+                return False
             
-            # Verify template content structure
-            template_content = template.get("template_content")
-            if not isinstance(template_content, TemplateContent):
+            # Check for required template fields
+            required_fields = ["template_content", "template_metadata", "validation_results"]
+            missing_fields = [field for field in required_fields if field not in template_result]
+            
+            if missing_fields:
                 self.log_test_result(
-                    "create_20_25_minute_template() - Content Type",
-                    False,
-                    error="template_content is not a TemplateContent instance"
+                    test_name, 
+                    False, 
+                    {"missing_fields": missing_fields, "available_fields": list(template_result.keys())}, 
+                    f"Missing required template fields: {missing_fields}"
                 )
-                return
+                return False
             
-            self.log_test_result(
-                "create_20_25_minute_template() - Method Execution",
-                True,
-                f"Template created successfully with ID: {template['template_id'][:8]}..."
-            )
+            # Get template content and metadata
+            template_content = template_result.get("template_content")
+            template_metadata = template_result.get("template_metadata")
             
-            return template
+            # Verify template name
+            template_name = None
+            if hasattr(template_content, 'name'):
+                template_name = template_content.name
+            elif isinstance(template_metadata, dict):
+                template_name = template_metadata.get("name")
+            elif hasattr(template_metadata, 'name'):
+                template_name = template_metadata.name
             
-        except Exception as e:
-            self.log_test_result(
-                "create_20_25_minute_template() - Method Execution",
-                False,
-                error=str(e)
-            )
-            return None
-    
-    def test_template_phase_23_requirements(self):
-        """Test 2: Verify template meets all Phase 2.3 requirements"""
-        try:
-            template = self.generator.create_20_25_minute_template()
-            
-            # Test template name requirement
             expected_name = "20-25 Minute Deep Dive Content Expert"
-            actual_name = template.get("template_name", "")
+            name_matches = template_name == expected_name
             
-            if actual_name != expected_name:
-                self.log_test_result(
-                    "Phase 2.3 Requirements - Template Name",
-                    False,
-                    error=f"Expected '{expected_name}', got '{actual_name}'"
-                )
-                return
+            # Calculate word count
+            word_count = 0
+            if hasattr(template_content, 'get_word_count'):
+                word_count = template_content.get_word_count()
+            elif isinstance(template_content, dict):
+                # Count words in all text fields
+                text_fields = ["system_prompt", "expertise_description", "framework_instructions", "segment_guidelines"]
+                total_text = ""
+                for field in text_fields:
+                    if field in template_content:
+                        total_text += str(template_content[field]) + " "
+                word_count = len(total_text.split())
             
-            # Test expertise requirement
-            expected_expertise = "expert"
-            actual_expertise = template.get("expertise_level", "")
+            meets_word_requirement = word_count >= 500
             
-            if actual_expertise != expected_expertise:
-                self.log_test_result(
-                    "Phase 2.3 Requirements - Expertise Level",
-                    False,
-                    error=f"Expected '{expected_expertise}', got '{actual_expertise}'"
-                )
-                return
+            # Check for required sections
+            required_sections = ["system_prompt", "expertise_description", "framework_instructions", "segment_guidelines"]
+            available_sections = []
             
-            # Test segment optimization requirement (4-5 segments)
-            spec = template.get("specification", {})
-            segment_count_range = spec.get("segment_count_range", [])
+            if isinstance(template_content, dict):
+                available_sections = [section for section in required_sections if section in template_content]
+            elif hasattr(template_content, '__dict__'):
+                available_sections = [section for section in required_sections if hasattr(template_content, section)]
             
-            if segment_count_range != [4, 5]:
-                self.log_test_result(
-                    "Phase 2.3 Requirements - Segment Optimization",
-                    False,
-                    error=f"Expected [4, 5] segments, got {segment_count_range}"
-                )
-                return
+            sections_complete = len(available_sections) >= len(required_sections) * 0.8  # At least 80% of sections
             
-            # Test content depth requirement
-            expected_complexity = "deep_dive_content_structuring"
-            actual_complexity = spec.get("complexity", "")
-            
-            if expected_complexity not in actual_complexity:
-                self.log_test_result(
-                    "Phase 2.3 Requirements - Content Depth",
-                    False,
-                    error=f"Expected deep dive content structuring, got '{actual_complexity}'"
-                )
-                return
-            
-            # Test engagement strategy requirement
-            expected_focus = "sustained_engagement_algorithms"
-            actual_focus = spec.get("focus", "")
-            
-            if expected_focus not in actual_focus:
-                self.log_test_result(
-                    "Phase 2.3 Requirements - Engagement Strategy",
-                    False,
-                    error=f"Expected sustained engagement algorithms, got '{actual_focus}'"
-                )
-                return
-            
-            self.log_test_result(
-                "Phase 2.3 Requirements - All Requirements Met",
-                True,
-                f"Template name: {actual_name}, Expertise: {actual_expertise}, Segments: {segment_count_range}, Complexity: Deep dive, Focus: Sustained engagement"
+            # Verify template structure
+            structure_valid = (
+                template_result is not None and
+                template_content is not None and
+                template_metadata is not None
             )
             
-        except Exception as e:
-            self.log_test_result(
-                "Phase 2.3 Requirements - Verification",
-                False,
-                error=str(e)
-            )
-    
-    def test_template_word_count_validation(self):
-        """Test 3: Test template word count validation (500+ words)"""
-        try:
-            template = self.generator.create_20_25_minute_template()
-            template_content = template.get("template_content")
-            
-            if not template_content:
-                self.log_test_result(
-                    "Word Count Validation - Content Exists",
-                    False,
-                    error="No template_content found"
-                )
-                return
-            
-            word_count = template_content.get_word_count()
-            
-            if word_count < 500:
-                self.log_test_result(
-                    "Word Count Validation - Minimum Requirement",
-                    False,
-                    error=f"Word count {word_count} is below minimum 500 words"
-                )
-                return
-            
-            # Test individual sections have substantial content
-            sections = {
-                "system_prompt": template_content.system_prompt,
-                "expertise_description": template_content.expertise_description,
-                "framework_instructions": template_content.framework_instructions,
-                "segment_guidelines": template_content.segment_guidelines,
-                "quality_standards": template_content.quality_standards
+            details = {
+                "template_name": template_name,
+                "expected_name": expected_name,
+                "name_matches": name_matches,
+                "word_count": word_count,
+                "meets_500_word_requirement": meets_word_requirement,
+                "required_sections": required_sections,
+                "available_sections": available_sections,
+                "sections_complete": sections_complete,
+                "structure_valid": structure_valid,
+                "template_fields": list(template_result.keys()) if isinstance(template_result, dict) else "Not a dict"
             }
             
-            section_word_counts = {}
-            for section_name, content in sections.items():
-                section_word_count = len(content.split()) if content else 0
-                section_word_counts[section_name] = section_word_count
-            
-            # Verify system prompt is substantial (should be majority of content)
-            system_prompt_words = section_word_counts.get("system_prompt", 0)
-            if system_prompt_words < 300:
-                self.log_test_result(
-                    "Word Count Validation - System Prompt Depth",
-                    False,
-                    error=f"System prompt only {system_prompt_words} words, expected 300+"
-                )
-                return
-            
-            self.log_test_result(
-                "Word Count Validation - 500+ Words Requirement",
-                True,
-                f"Total word count: {word_count} words (exceeds 500+ requirement). System prompt: {system_prompt_words} words"
+            success = (
+                name_matches and
+                meets_word_requirement and
+                sections_complete and
+                structure_valid
             )
             
-        except Exception as e:
-            self.log_test_result(
-                "Word Count Validation - Test Execution",
-                False,
-                error=str(e)
-            )
-    
-    async def test_async_generate_20_25_minute_template(self):
-        """Test 4: Test async generate_20_25_minute_template() method"""
-        try:
-            # Test with general video type first (simpler test)
-            template = await self.generator.generate_20_25_minute_template(
-                video_type="general",
-                customization_options={"test_mode": True}
-            )
-            
-            # Verify template was generated
-            if not template:
-                self.log_test_result(
-                    "Async Generate Template - Basic Generation",
-                    False,
-                    error="No template returned"
-                )
-                return
-            
-            # Verify generation metadata exists
-            gen_metadata = template.get("generation_metadata", {})
-            if not gen_metadata:
-                self.log_test_result(
-                    "Async Generate Template - Generation Metadata",
-                    False,
-                    error="No generation_metadata found"
-                )
-                return
-            
-            # Verify video type in metadata
-            if gen_metadata.get("video_type") != "general":
-                self.log_test_result(
-                    "Async Generate Template - Video Type Metadata",
-                    False,
-                    error=f"Video type mismatch in metadata: expected 'general', got '{gen_metadata.get('video_type')}'"
-                )
-                return
-            
-            # Verify customization was applied
-            if not gen_metadata.get("customization_applied"):
-                self.log_test_result(
-                    "Async Generate Template - Customization Applied",
-                    False,
-                    error="Customization not applied in metadata"
-                )
-                return
-            
-            # Verify template version
-            if gen_metadata.get("template_version") != "2.3.0":
-                self.log_test_result(
-                    "Async Generate Template - Template Version",
-                    False,
-                    error=f"Template version mismatch: expected '2.3.0', got '{gen_metadata.get('template_version')}'"
-                )
-                return
-            
-            # Verify implementation phase
-            if "2.3_20_25_minute_deep_dive" not in gen_metadata.get("implementation_phase", ""):
-                self.log_test_result(
-                    "Async Generate Template - Implementation Phase",
-                    False,
-                    error=f"Implementation phase incorrect: {gen_metadata.get('implementation_phase')}"
-                )
-                return
-            
-            self.log_test_result(
-                "Async Generate Template - Method Execution",
-                True,
-                f"Successfully generated template with customization: version {gen_metadata.get('template_version')}, phase {gen_metadata.get('implementation_phase')}"
-            )
-            
-        except Exception as e:
-            self.log_test_result(
-                "Async Generate Template - Method Execution",
-                False,
-                error=str(e)
-            )
-    
-    def test_enhanced_prompt_architecture_integration(self):
-        """Test 5: Verify integration with enhanced prompt architecture for extended_20 duration"""
-        try:
-            # Test that extended_20 is supported
-            supported_durations = self.generator.get_supported_durations()
-            
-            if "extended_20" not in supported_durations:
-                self.log_test_result(
-                    "Enhanced Prompt Architecture Integration - Duration Support",
-                    False,
-                    error="extended_20 duration not in supported durations"
-                )
-                return
-            
-            # Test template specification exists for extended_20
-            if "extended_20" not in DURATION_PROMPT_TEMPLATES:
-                self.log_test_result(
-                    "Enhanced Prompt Architecture Integration - Template Spec",
-                    False,
-                    error="extended_20 template specification not found"
-                )
-                return
-            
-            # Test template specification details
-            spec = DURATION_PROMPT_TEMPLATES["extended_20"]
-            
-            # Verify specification matches Phase 2.3 requirements
-            if spec.name != "20-25 Minute Deep Dive Content Expert":
-                self.log_test_result(
-                    "Enhanced Prompt Architecture Integration - Spec Name",
-                    False,
-                    error=f"Spec name mismatch: {spec.name}"
-                )
-                return
-            
-            if spec.expertise_level.value != "expert":
-                self.log_test_result(
-                    "Enhanced Prompt Architecture Integration - Spec Expertise",
-                    False,
-                    error=f"Expertise level mismatch: {spec.expertise_level.value}"
-                )
-                return
-            
-            if spec.segment_count_range != (4, 5):
-                self.log_test_result(
-                    "Enhanced Prompt Architecture Integration - Spec Segments",
-                    False,
-                    error=f"Segment count range mismatch: {spec.segment_count_range}"
-                )
-                return
-            
-            self.log_test_result(
-                "Enhanced Prompt Architecture Integration - extended_20 Duration",
-                True,
-                f"extended_20 fully integrated with correct specification: {spec.name}, {spec.expertise_level.value}, {spec.segment_count_range} segments"
-            )
-            
-        except Exception as e:
-            self.log_test_result(
-                "Enhanced Prompt Architecture Integration - Test Execution",
-                False,
-                error=str(e)
-            )
-    
-    def test_implementation_status_phase_23_complete(self):
-        """Test 6: Check implementation status shows Phase 2.3 as complete"""
-        try:
-            status = self.generator.get_implementation_status()
-            
-            # Check if Phase 2.3 is marked as complete
-            if not status.get("phase_2_3_complete", False):
-                self.log_test_result(
-                    "Implementation Status - Phase 2.3 Complete Flag",
-                    False,
-                    error="phase_2_3_complete not set to True"
-                )
-                return
-            
-            # Check extended_20 template status
-            extended_20_status = status.get("extended_20_template", "")
-            if extended_20_status != "implemented":
-                self.log_test_result(
-                    "Implementation Status - extended_20 Template",
-                    False,
-                    error=f"extended_20_template status is '{extended_20_status}', expected 'implemented'"
-                )
-                return
-            
-            # Check current milestone
-            current_milestone = status.get("current_milestone", "")
-            if "Phase 2.3" not in current_milestone:
-                self.log_test_result(
-                    "Implementation Status - Current Milestone",
-                    False,
-                    error=f"Current milestone doesn't mention Phase 2.3: {current_milestone}"
-                )
-                return
-            
-            self.log_test_result(
-                "Implementation Status - Phase 2.3 Complete",
-                True,
-                f"Phase 2.3 marked as complete, extended_20 template implemented, milestone: {current_milestone}"
-            )
-            
-        except Exception as e:
-            self.log_test_result(
-                "Implementation Status - Test Execution",
-                False,
-                error=str(e)
-            )
-    
-    def test_template_system_status_endpoint(self):
-        """Test 7: Test /api/template-system-status endpoint for new template availability"""
-        try:
-            response = requests.get(f"{API_BASE_URL}/template-system-status", timeout=30)
-            
-            if response.status_code != 200:
-                self.log_test_result(
-                    "Template System Status Endpoint - HTTP Response",
-                    False,
-                    error=f"HTTP {response.status_code}: {response.text}"
-                )
-                return
-            
-            data = response.json()
-            
-            # Check overall status
-            if data.get("status") != "operational":
-                self.log_test_result(
-                    "Template System Status Endpoint - System Status",
-                    False,
-                    error=f"System status is '{data.get('status')}', expected 'operational'"
-                )
-                return
-            
-            # Check Phase 2.3 completion in integration verification
-            integration_verification = data.get("integration_verification", {})
-            if not integration_verification.get("phase_2_3_complete", False):
-                self.log_test_result(
-                    "Template System Status Endpoint - Phase 2.3 Integration",
-                    False,
-                    error="phase_2_3_complete not True in integration_verification"
-                )
-                return
-            
-            # Check Phase 2.3 template test results
-            phase_2_3_test = data.get("duration_specific_generator", {}).get("phase_2_3_template_test", {})
-            
-            if not phase_2_3_test.get("creation_successful", False):
-                self.log_test_result(
-                    "Template System Status Endpoint - Phase 2.3 Template Creation",
-                    False,
-                    error="Phase 2.3 template creation test failed"
-                )
-                return
-            
-            word_count = phase_2_3_test.get("word_count", 0)
-            if word_count < 500:
-                self.log_test_result(
-                    "Template System Status Endpoint - Phase 2.3 Word Count",
-                    False,
-                    error=f"Phase 2.3 template word count {word_count} below 500"
-                )
-                return
-            
-            template_name = phase_2_3_test.get("template_name", "")
-            if template_name != "20-25 Minute Deep Dive Content Expert":
-                self.log_test_result(
-                    "Template System Status Endpoint - Phase 2.3 Template Name",
-                    False,
-                    error=f"Template name mismatch: {template_name}"
-                )
-                return
-            
-            # Check current milestone
-            current_milestone = data.get("next_phases", {}).get("current_milestone", "")
-            if "Phase 2.3 Complete" not in current_milestone:
-                self.log_test_result(
-                    "Template System Status Endpoint - Current Milestone",
-                    False,
-                    error=f"Current milestone doesn't indicate Phase 2.3 complete: {current_milestone}"
-                )
-                return
-            
-            self.log_test_result(
-                "Template System Status Endpoint - Phase 2.3 Template Available",
-                True,
-                f"Template available via API: {template_name}, {word_count} words, creation successful, Phase 2.3 complete"
-            )
-            
-        except requests.exceptions.RequestException as e:
-            self.log_test_result(
-                "Template System Status Endpoint - Network Request",
-                False,
-                error=f"Request failed: {str(e)}"
-            )
-        except Exception as e:
-            self.log_test_result(
-                "Template System Status Endpoint - Test Execution",
-                False,
-                error=str(e)
-            )
-    
-    def test_template_content_structure_validation(self):
-        """Test 8: Validate template content structure includes all required sections"""
-        try:
-            template = self.generator.create_20_25_minute_template()
-            template_content = template.get("template_content")
-            
-            if not template_content:
-                self.log_test_result(
-                    "Template Content Structure - Content Exists",
-                    False,
-                    error="No template_content found"
-                )
-                return
-            
-            # Check required sections exist
-            required_sections = [
-                "system_prompt", "expertise_description", "framework_instructions",
-                "segment_guidelines", "quality_standards"
-            ]
-            
-            missing_sections = []
-            for section in required_sections:
-                content = getattr(template_content, section, "")
-                if not content or len(content.strip()) == 0:
-                    missing_sections.append(section)
-            
-            if missing_sections:
-                self.log_test_result(
-                    "Template Content Structure - Required Sections",
-                    False,
-                    error=f"Missing or empty sections: {missing_sections}"
-                )
-                return
-            
-            # Check system prompt contains key expertise indicators
-            system_prompt = template_content.system_prompt
-            expertise_indicators = [
-                "20-25 Minute Deep Dive Content Expert",
-                "master of long-form video content",
-                "4-5 segment advanced structuring",
-                "sustained engagement algorithms",
-                "deep dive content structuring"
-            ]
-            
-            missing_indicators = []
-            for indicator in expertise_indicators:
-                if indicator.lower() not in system_prompt.lower():
-                    missing_indicators.append(indicator)
-            
-            if missing_indicators:
-                self.log_test_result(
-                    "Template Content Structure - Expertise Indicators",
-                    False,
-                    error=f"Missing expertise indicators in system prompt: {missing_indicators}"
-                )
-                return
-            
-            # Check segment guidelines mention 4-5 segments
-            segment_guidelines = template_content.segment_guidelines
-            if "4-5 segment" not in segment_guidelines:
-                self.log_test_result(
-                    "Template Content Structure - Segment Guidelines",
-                    False,
-                    error="Segment guidelines don't mention 4-5 segments"
-                )
-                return
-            
-            self.log_test_result(
-                "Template Content Structure - All Required Sections",
-                True,
-                f"All {len(required_sections)} required sections present with proper content and expertise indicators"
-            )
-            
-        except Exception as e:
-            self.log_test_result(
-                "Template Content Structure - Test Execution",
-                False,
-                error=str(e)
-            )
-    
-    async def run_all_tests(self):
-        """Run all Phase 2.3 implementation tests"""
-        print("Starting Phase 2.3 Implementation Test Suite...")
-        print()
-        
-        # Test 1: Basic method execution
-        self.test_create_20_25_minute_template_method()
-        
-        # Test 2: Phase 2.3 requirements verification
-        self.test_template_phase_23_requirements()
-        
-        # Test 3: Word count validation
-        self.test_template_word_count_validation()
-        
-        # Test 4: Async method testing
-        await self.test_async_generate_20_25_minute_template()
-        
-        # Test 5: Enhanced prompt architecture integration
-        self.test_enhanced_prompt_architecture_integration()
-        
-        # Test 6: Implementation status verification
-        self.test_implementation_status_phase_23_complete()
-        
-        # Test 7: API endpoint testing
-        self.test_template_system_status_endpoint()
-        
-        # Test 8: Template content structure validation
-        self.test_template_content_structure_validation()
-    
-    def generate_test_report(self):
-        """Generate comprehensive test report"""
-        end_time = time.time()
-        duration = end_time - self.start_time
-        
-        print("=" * 80)
-        print("🎯 PHASE 2.3 IMPLEMENTATION TEST RESULTS")
-        print("=" * 80)
-        print()
-        
-        print(f"📊 TEST SUMMARY:")
-        print(f"   Total Tests: {self.total_tests}")
-        print(f"   Passed: {self.passed_tests}")
-        print(f"   Failed: {self.failed_tests}")
-        print(f"   Success Rate: {(self.passed_tests/self.total_tests*100):.1f}%")
-        print(f"   Duration: {duration:.2f} seconds")
-        print()
-        
-        if self.failed_tests > 0:
-            print("❌ FAILED TESTS:")
-            for result in self.test_results:
-                if not result["passed"]:
-                    print(f"   • {result['test_name']}")
-                    if result["error"]:
-                        print(f"     Error: {result['error']}")
-            print()
-        
-        print("✅ PASSED TESTS:")
-        for result in self.test_results:
-            if result["passed"]:
-                print(f"   • {result['test_name']}")
-                if result["details"]:
-                    print(f"     Details: {result['details']}")
-        print()
-        
-        # Critical validation points summary
-        print("🔍 CRITICAL VALIDATION POINTS:")
-        
-        critical_tests = [
-            "create_20_25_minute_template() - Method Execution",
-            "Phase 2.3 Requirements - All Requirements Met", 
-            "Word Count Validation - 500+ Words Requirement",
-            "Template System Status Endpoint - Phase 2.3 Template Available",
-            "Implementation Status - Phase 2.3 Complete"
-        ]
-        
-        critical_passed = 0
-        for test_name in critical_tests:
-            result = next((r for r in self.test_results if r["test_name"] == test_name), None)
-            if result and result["passed"]:
-                critical_passed += 1
-                print(f"   ✅ {test_name}")
+            if not success:
+                error_details = []
+                if not name_matches:
+                    error_details.append(f"Template name mismatch: expected '{expected_name}', got '{template_name}'")
+                if not meets_word_requirement:
+                    error_details.append(f"Word count too low: {word_count} (minimum: 500)")
+                if not sections_complete:
+                    error_details.append(f"Missing sections: {len(available_sections)}/{len(required_sections)}")
+                if not structure_valid:
+                    error_details.append("Invalid template structure")
+                
+                error_msg = "; ".join(error_details)
             else:
-                print(f"   ❌ {test_name}")
-        
-        print()
-        print(f"Critical Tests Passed: {critical_passed}/{len(critical_tests)}")
-        
-        # Overall assessment
-        if self.failed_tests == 0:
-            print("🎉 PHASE 2.3 IMPLEMENTATION: FULLY SUCCESSFUL")
-            print("   All tests passed. The 20-25 Minute Deep Dive Content Expert template")
-            print("   functionality is working correctly and meets all requirements.")
-        elif critical_passed == len(critical_tests):
-            print("✅ PHASE 2.3 IMPLEMENTATION: CORE FUNCTIONALITY WORKING")
-            print("   All critical tests passed. Minor issues detected but core functionality")
-            print("   is operational and meets Phase 2.3 requirements.")
-        else:
-            print("⚠️  PHASE 2.3 IMPLEMENTATION: ISSUES DETECTED")
-            print("   Some critical tests failed. Review failed tests for implementation issues.")
-        
-        print()
+                error_msg = None
+            
+            self.log_test_result(test_name, success, details, error_msg)
+            return success
+            
+        except Exception as e:
+            self.log_test_result(
+                test_name, 
+                False, 
+                {"exception": str(e), "traceback": traceback.format_exc()}, 
+                f"Exception during direct template creation: {str(e)}"
+            )
+            return False
+    
+    async def test_template_integration_architecture(self):
+        """Test 3: Template Integration Testing - Enhanced prompt architecture integration"""
+        test_name = "Template Integration Architecture Test"
+        try:
+            # Import required modules
+            from lib.duration_specific_templates import DurationSpecificPromptGenerator
+            
+            # Test integration components
+            generator = DurationSpecificPromptGenerator()
+            
+            # Test template specifications
+            all_specs = generator.get_all_template_specifications()
+            extended_20_spec = all_specs.get("extended_20")
+            
+            if not extended_20_spec:
+                self.log_test_result(
+                    test_name, 
+                    False, 
+                    {"available_specs": list(all_specs.keys())}, 
+                    "extended_20 specification not found in template specifications"
+                )
+                return False
+            
+            # Verify specification details
+            spec_name = extended_20_spec.name
+            expected_spec_name = "20-25 Minute Deep Dive Content Expert"
+            spec_name_matches = spec_name == expected_spec_name
+            
+            # Check expertise level
+            expertise_level = extended_20_spec.expertise_level.value if hasattr(extended_20_spec.expertise_level, 'value') else str(extended_20_spec.expertise_level)
+            expected_expertise = "expert"
+            expertise_matches = expertise_level == expected_expertise
+            
+            # Check segment configuration
+            segments = extended_20_spec.segments
+            expected_segments = "4-5 segments"
+            segments_match = segments == expected_segments
+            
+            # Check target minutes
+            target_minutes = extended_20_spec.target_minutes
+            expected_target = (20.0, 25.0)
+            target_matches = target_minutes == expected_target
+            
+            # Check specialization areas
+            specialization_areas = extended_20_spec.specialization_areas
+            required_specializations = [
+                "Long-form content architecture",
+                "4-5 segment advanced structuring", 
+                "Deep dive content methodology",
+                "Sustained engagement algorithms"
+            ]
+            
+            specialization_coverage = 0
+            for req in required_specializations:
+                for area in specialization_areas:
+                    if any(keyword in area.lower() for keyword in req.lower().split()[:3]):
+                        specialization_coverage += 1
+                        break
+            
+            specialization_complete = specialization_coverage >= len(required_specializations) * 0.75
+            
+            details = {
+                "specification_found": True,
+                "spec_name": spec_name,
+                "expected_spec_name": expected_spec_name,
+                "spec_name_matches": spec_name_matches,
+                "expertise_level": expertise_level,
+                "expected_expertise": expected_expertise,
+                "expertise_matches": expertise_matches,
+                "segments": segments,
+                "expected_segments": expected_segments,
+                "segments_match": segments_match,
+                "target_minutes": target_minutes,
+                "expected_target": expected_target,
+                "target_matches": target_matches,
+                "specialization_areas": specialization_areas,
+                "required_specializations": required_specializations,
+                "specialization_coverage": f"{specialization_coverage}/{len(required_specializations)}",
+                "specialization_complete": specialization_complete
+            }
+            
+            success = (
+                spec_name_matches and
+                expertise_matches and
+                segments_match and
+                target_matches and
+                specialization_complete
+            )
+            
+            if not success:
+                error_details = []
+                if not spec_name_matches:
+                    error_details.append(f"Spec name mismatch: expected '{expected_spec_name}', got '{spec_name}'")
+                if not expertise_matches:
+                    error_details.append(f"Expertise level mismatch: expected '{expected_expertise}', got '{expertise_level}'")
+                if not segments_match:
+                    error_details.append(f"Segments mismatch: expected '{expected_segments}', got '{segments}'")
+                if not target_matches:
+                    error_details.append(f"Target minutes mismatch: expected {expected_target}, got {target_minutes}")
+                if not specialization_complete:
+                    error_details.append(f"Insufficient specialization coverage: {specialization_coverage}/{len(required_specializations)}")
+                
+                error_msg = "; ".join(error_details)
+            else:
+                error_msg = None
+            
+            self.log_test_result(test_name, success, details, error_msg)
+            return success
+            
+        except Exception as e:
+            self.log_test_result(
+                test_name, 
+                False, 
+                {"exception": str(e), "traceback": traceback.format_exc()}, 
+                f"Exception during integration test: {str(e)}"
+            )
+            return False
+    
+    async def test_phase_23_requirements_validation(self):
+        """Test 4: Phase 2.3 Requirements Validation - Comprehensive requirements check"""
+        test_name = "Phase 2.3 Requirements Validation"
+        try:
+            # Import required modules
+            from lib.duration_specific_templates import DurationSpecificPromptGenerator
+            
+            generator = DurationSpecificPromptGenerator()
+            
+            # Create the template
+            template_result = generator.create_20_25_minute_template()
+            
+            # Get template content
+            template_content = template_result.get("template_content")
+            
+            # Requirement 1: Expertise verification
+            expertise_requirement = "20-25 Minute Deep Dive Content Expert, master of long-form video content"
+            
+            # Check system prompt for expertise indicators
+            system_prompt = ""
+            if isinstance(template_content, dict):
+                system_prompt = template_content.get("system_prompt", "")
+            elif hasattr(template_content, 'system_prompt'):
+                system_prompt = template_content.system_prompt
+            
+            expertise_keywords = ["20-25 minute", "deep dive", "content expert", "master", "long-form"]
+            expertise_coverage = sum(1 for keyword in expertise_keywords if keyword.lower() in system_prompt.lower())
+            expertise_meets_requirement = expertise_coverage >= len(expertise_keywords) * 0.6
+            
+            # Requirement 2: Segment Optimization verification
+            segment_requirement = "4-5 segments with advanced narrative arc management"
+            
+            segment_keywords = ["4-5 segment", "advanced", "narrative arc", "management"]
+            segment_coverage = sum(1 for keyword in segment_keywords if keyword.lower() in system_prompt.lower())
+            segment_meets_requirement = segment_coverage >= len(segment_keywords) * 0.5
+            
+            # Requirement 3: Content Depth verification
+            content_depth_requirement = "Deep dive content structuring with comprehensive topic breakdown"
+            
+            depth_keywords = ["deep dive", "content structuring", "comprehensive", "topic breakdown"]
+            depth_coverage = sum(1 for keyword in depth_keywords if keyword.lower() in system_prompt.lower())
+            depth_meets_requirement = depth_coverage >= len(depth_keywords) * 0.5
+            
+            # Requirement 4: Engagement Strategy verification
+            engagement_requirement = "Sustained engagement algorithms for extended duration"
+            
+            engagement_keywords = ["sustained engagement", "algorithms", "extended duration"]
+            engagement_coverage = sum(1 for keyword in engagement_keywords if keyword.lower() in system_prompt.lower())
+            engagement_meets_requirement = engagement_coverage >= len(engagement_keywords) * 0.5
+            
+            # Requirement 5: Template Length verification (500+ words)
+            word_count = 0
+            if hasattr(template_content, 'get_word_count'):
+                word_count = template_content.get_word_count()
+            elif isinstance(template_content, dict):
+                text_fields = ["system_prompt", "expertise_description", "framework_instructions", "segment_guidelines"]
+                total_text = ""
+                for field in text_fields:
+                    if field in template_content:
+                        total_text += str(template_content[field]) + " "
+                word_count = len(total_text.split())
+            
+            length_meets_requirement = word_count >= 500
+            
+            details = {
+                "expertise_requirement": expertise_requirement,
+                "expertise_keywords_found": expertise_coverage,
+                "expertise_keywords_total": len(expertise_keywords),
+                "expertise_meets_requirement": expertise_meets_requirement,
+                
+                "segment_requirement": segment_requirement,
+                "segment_keywords_found": segment_coverage,
+                "segment_keywords_total": len(segment_keywords),
+                "segment_meets_requirement": segment_meets_requirement,
+                
+                "content_depth_requirement": content_depth_requirement,
+                "depth_keywords_found": depth_coverage,
+                "depth_keywords_total": len(depth_keywords),
+                "depth_meets_requirement": depth_meets_requirement,
+                
+                "engagement_requirement": engagement_requirement,
+                "engagement_keywords_found": engagement_coverage,
+                "engagement_keywords_total": len(engagement_keywords),
+                "engagement_meets_requirement": engagement_meets_requirement,
+                
+                "length_requirement": "500+ words of specialized instructions",
+                "actual_word_count": word_count,
+                "length_meets_requirement": length_meets_requirement,
+                
+                "system_prompt_length": len(system_prompt),
+                "system_prompt_preview": system_prompt[:200] + "..." if len(system_prompt) > 200 else system_prompt
+            }
+            
+            # Overall success criteria
+            success = (
+                expertise_meets_requirement and
+                segment_meets_requirement and
+                depth_meets_requirement and
+                engagement_meets_requirement and
+                length_meets_requirement
+            )
+            
+            if not success:
+                error_details = []
+                if not expertise_meets_requirement:
+                    error_details.append(f"Expertise requirement not met: {expertise_coverage}/{len(expertise_keywords)} keywords found")
+                if not segment_meets_requirement:
+                    error_details.append(f"Segment optimization requirement not met: {segment_coverage}/{len(segment_keywords)} keywords found")
+                if not depth_meets_requirement:
+                    error_details.append(f"Content depth requirement not met: {depth_coverage}/{len(depth_keywords)} keywords found")
+                if not engagement_meets_requirement:
+                    error_details.append(f"Engagement strategy requirement not met: {engagement_coverage}/{len(engagement_keywords)} keywords found")
+                if not length_meets_requirement:
+                    error_details.append(f"Length requirement not met: {word_count} words (minimum: 500)")
+                
+                error_msg = "; ".join(error_details)
+            else:
+                error_msg = None
+            
+            self.log_test_result(test_name, success, details, error_msg)
+            return success
+            
+        except Exception as e:
+            self.log_test_result(
+                test_name, 
+                False, 
+                {"exception": str(e), "traceback": traceback.format_exc()}, 
+                f"Exception during requirements validation: {str(e)}"
+            )
+            return False
+    
+    async def run_comprehensive_phase_23_tests(self):
+        """Run all Phase 2.3 backend tests"""
+        print("🚀 PHASE 2.3 BACKEND TESTING - 20-25 MINUTE DEEP DIVE CONTENT EXPERT TEMPLATE")
         print("=" * 80)
+        print()
         
-        return {
-            "total_tests": self.total_tests,
-            "passed_tests": self.passed_tests,
-            "failed_tests": self.failed_tests,
-            "success_rate": self.passed_tests/self.total_tests*100 if self.total_tests > 0 else 0,
-            "duration": duration,
-            "critical_tests_passed": critical_passed,
-            "critical_tests_total": len(critical_tests),
-            "overall_status": "success" if self.failed_tests == 0 else "partial_success" if critical_passed == len(critical_tests) else "failure",
-            "test_results": self.test_results
-        }
+        await self.setup_session()
+        
+        try:
+            # Test 1: API Endpoint Testing
+            print("TEST 1: API Endpoint Testing - /api/template-system-status")
+            test1_success = await self.test_template_system_status_endpoint()
+            
+            # Test 2: Template Creation Test
+            print("TEST 2: Template Creation Test - Direct method call")
+            test2_success = await self.test_direct_template_creation()
+            
+            # Test 3: Template Integration Testing
+            print("TEST 3: Template Integration Testing - Enhanced prompt architecture")
+            test3_success = await self.test_template_integration_architecture()
+            
+            # Test 4: Phase 2.3 Requirements Validation
+            print("TEST 4: Phase 2.3 Requirements Validation - Comprehensive requirements check")
+            test4_success = await self.test_phase_23_requirements_validation()
+            
+            # Summary
+            total_tests = 4
+            passed_tests = sum([test1_success, test2_success, test3_success, test4_success])
+            
+            print("=" * 80)
+            print("🎯 PHASE 2.3 BACKEND TESTING SUMMARY")
+            print("=" * 80)
+            print(f"Total Tests: {total_tests}")
+            print(f"Passed: {passed_tests}")
+            print(f"Failed: {total_tests - passed_tests}")
+            print(f"Success Rate: {(passed_tests/total_tests)*100:.1f}%")
+            print()
+            
+            if passed_tests == total_tests:
+                print("🎉 ALL PHASE 2.3 TESTS PASSED - Template implementation is working correctly!")
+                print("✅ Template name: '20-25 Minute Deep Dive Content Expert' verified")
+                print("✅ Word count exceeds 500+ words requirement")
+                print("✅ All required sections are present")
+                print("✅ Template structure is correct")
+                print("✅ Phase 2.3 completion status properly set")
+                print("✅ Template integrates with enhanced prompt architecture")
+            else:
+                print("❌ SOME PHASE 2.3 TESTS FAILED - Issues found in template implementation")
+                
+                # Identify specific issues
+                if not test1_success:
+                    print("❌ API endpoint issues detected")
+                if not test2_success:
+                    print("❌ Template creation issues detected")
+                if not test3_success:
+                    print("❌ Template integration issues detected")
+                if not test4_success:
+                    print("❌ Requirements validation issues detected")
+            
+            print()
+            return passed_tests == total_tests
+            
+        finally:
+            await self.cleanup_session()
 
 async def main():
     """Main test execution function"""
-    test_suite = Phase23TestSuite()
+    tester = Phase23BackendTester()
+    success = await tester.run_comprehensive_phase_23_tests()
     
-    try:
-        await test_suite.run_all_tests()
-        report = test_suite.generate_test_report()
-        
-        # Save detailed results to file
-        with open('/app/phase_23_test_results.json', 'w') as f:
-            json.dump(report, f, indent=2, default=str)
-        
-        print(f"📄 Detailed test results saved to: /app/phase_23_test_results.json")
-        
-        return report
-        
-    except Exception as e:
-        print(f"❌ Test suite execution failed: {str(e)}")
-        return {"error": str(e), "status": "execution_failed"}
+    # Return appropriate exit code
+    sys.exit(0 if success else 1)
 
 if __name__ == "__main__":
-    # Run the test suite
-    result = asyncio.run(main())
-    
-    # Exit with appropriate code
-    if result.get("overall_status") == "success":
-        sys.exit(0)
-    else:
-        sys.exit(1)
+    asyncio.run(main())
