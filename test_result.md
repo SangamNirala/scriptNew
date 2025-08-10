@@ -375,6 +375,18 @@ backend:
           comment: "🎉 CRITICAL JAVASCRIPT ERROR FIX COMPLETELY VERIFIED (January 2025): Successfully conducted comprehensive testing of the Image Generation JavaScript Error Fix as specified in the review request. CRITICAL FINDINGS: ✅ NO JAVASCRIPT ERRORS DETECTED - The original 'TypeError: Cannot read properties of null (reading 'document')' error has been completely resolved, ✅ ERROR HANDLING IMPLEMENTATION VERIFIED - Code inspection confirms proper error handling in openImageGallery function (lines 635-743) with null check for window.open() and graceful fallback, ✅ INLINE GALLERY FALLBACK CONFIRMED - showInlineGallery state variable (line 59) and inline gallery component properly implemented for popup blocker scenarios, ✅ COMPLETE WORKFLOW TESTED - Successfully tested: load existing script → click 'Enhance Image Prompt' → enhancement processing works (backend logs show '✅ Enhanced 6 image prompts'), ✅ BUTTON FUNCTIONALITY VERIFIED - Both 'Enhance Image Prompt' and 'Generate Images' buttons are present and functional without causing JavaScript errors, ✅ CONSOLE MONITORING CONFIRMED - Comprehensive console error monitoring during entire workflow detected zero JavaScript errors related to image generation. TECHNICAL VERIFICATION: The fix implementation includes proper try-catch blocks, null checking for window.open(), fallback inline gallery with downloadImage function, and automatic scrolling. Backend integration confirmed working with image enhancement processing successful. The critical JavaScript error that was blocking users from generating images has been completely resolved. Users can now successfully proceed through the enhance image prompt → generate images workflow without encountering the 'Cannot read properties of null' error."
 
 frontend:
+  - task: "Dialogue Only Edit/Listen/Download"
+    implemented: true
+    working: "NA"
+    file: "App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: false
+          agent: "main"
+          comment: "Implemented Edit, Listen, and Download Audio features in Dialogue Only box. Added state: isEditingDialogue, editedDialogue, hasUnsavedDialogueChanges, isSavingDialogue. Added audioTarget to reuse existing /api/generate-audio for dialogue content with existing voice modal. Save merges dialogue back into full script and persists using PUT /api/scripts/{id}. UI matches Generated Script controls with loading/disabled states and error handling." 
+
   - task: "Script Generation UI"
     implemented: true
     working: true
