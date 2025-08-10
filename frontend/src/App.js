@@ -1554,6 +1554,7 @@ const ScriptGenerator = () => {
                     <div key={script.id} className="bg-white/5 p-4 rounded-lg border border-white/10 hover:bg-white/10 transition-colors cursor-pointer"
                          onClick={() => {
                            setGeneratedScript(script.generated_script);
+                           setDialogueOnlyScript(extractDialogueOnly(script.generated_script));
                            setCurrentScriptId(script.id); // Set the script ID
                            setGeneratedWithPrompt("saved");
                            // Reset editing state if user switches scripts
