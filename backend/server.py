@@ -2822,62 +2822,38 @@ async def translate_script(request: ScriptTranslationRequest):
         logger.info(f"Translation requested: {request.source_language} -> {request.target_language}")
 
         original_text = request.text or ""
-
-        # 1) Mask all [ ... ] segments so they remain in English and keep positions
-        # We use distinctive placeholders unlikely to be altered by translators
-        bracket_pattern = re.compile(r"\[[^\]]+\]")
-        bracket_segments = bracket_pattern.findall(original_text)
+        
+        # Use simple, unique placeholders that translators won't modify
+        preserved_segments = {}
         masked_text = original_text
-        
-        # Replace bracketed segments with placeholders
-        for i, seg in enumerate(bracket_segments):
-            placeholder = f"§§BR_{i}§§"
-            masked_text = masked_text.replace(seg, placeholder, 1)
-        
-        # Also mask AI IMAGE PROMPT quoted content (keep English)
-        # Example line: AI IMAGE PROMPT: "..."
-        ai_image_pattern = re.compile(r"(AI\s+IMAGE\s+PROMPT\s*:?\s*)([\"“])([^\"”]+)([\"”])", re.IGNORECASE)
-        ai_image_segments = []  # store full quoted substrings including quotes
-        def _ai_masker(m):
-            idx = len(ai_image_segments)
-            # Preserve the entire AI IMAGE PROMPT structure including the prefix
-            full_structure = m.group(1) + m.group(2) + m.group(3) + m.group(4)
-            ai_image_segments.append(full_structure)
-            return f"§§IP_{idx}§§"
-        masked_text = ai_image_pattern.sub(_ai_masker, masked_text)
+        placeholder_counter = 0
 
-        # Helper to restore placeholders robustly after translation
-        def _restore_placeholders(text, segments, prefix):
-            restored = text
-            for i, seg in enumerate(segments):
-                canonical = f"§§{prefix}_{i}§§"
-                # Build tolerant regex: allow 1-3 leading/trailing §, optional spaces, and optional missing trailing §
-                pattern = re.compile(rf"[§]{1,3}\s*{prefix}_{i}\s*[§]{{0,3}}", re.IGNORECASE)
-                # If not found, try more permissive variants including plain token
-                if not pattern.search(restored):
-                    alt_patterns = [
-                        re.compile(rf"{prefix}_{i}", re.IGNORECASE),
-                        re.compile(rf"[§]{0,3}\s*{prefix}\s*_\s*{i}\s*[§]{{0,3}}", re.IGNORECASE),
-                    ]
-                    found = False
-                    for p in alt_patterns:
-                        if p.search(restored):
-                            restored = p.sub(seg, restored, count=1)
-                            found = True
-                            break
-                    if not found:
-                        # last attempt: direct string replace for common truncation like '§§BR_i§'
-                        common_var_1 = f"§§{prefix}_{i}§"
-                        common_var_2 = f"§{prefix}_{i}§§"
-                        if common_var_1 in restored:
-                            restored = restored.replace(common_var_1, seg)
-                        elif common_var_2 in restored:
-                            restored = restored.replace(common_var_2, seg)
-                else:
-                    restored = pattern.sub(seg, restored, count=1)
-            return restored
+        # 1) First preserve AI IMAGE PROMPT content (including the prefix and quotes)
+        # This matches: AI IMAGE PROMPT: "content" (with optional spacing and case variations)
+        ai_image_pattern = re.compile(r'(AI\s+IMAGE\s+PROMPT\s*:?\s*["\'])(.*?)(["\'])', re.IGNORECASE | re.DOTALL)
+        def ai_replacer(match):
+            nonlocal placeholder_counter
+            full_match = match.group(0)  # Complete AI IMAGE PROMPT: "content"
+            placeholder = f"XAIIPX{placeholder_counter}XAIIPX"
+            preserved_segments[placeholder] = full_match
+            placeholder_counter += 1
+            return placeholder
+        
+        masked_text = ai_image_pattern.sub(ai_replacer, masked_text)
+        
+        # 2) Then preserve bracketed content like [SCENE 1], [image descriptions], etc.
+        bracket_pattern = re.compile(r'\[[^\]]+\]')
+        def bracket_replacer(match):
+            nonlocal placeholder_counter
+            full_match = match.group(0)  # Complete [content]
+            placeholder = f"XBRX{placeholder_counter}XBRX"
+            preserved_segments[placeholder] = full_match
+            placeholder_counter += 1
+            return placeholder
+            
+        masked_text = bracket_pattern.sub(bracket_replacer, masked_text)
 
-        # 2) Prepare chunks for translation (on the masked text)
+        # 3) Prepare chunks for translation (on the masked text)
         try:
             if len(masked_text) > 4500:
                 words = masked_text.split()
@@ -2899,7 +2875,7 @@ async def translate_script(request: ScriptTranslationRequest):
             else:
                 chunks = [masked_text]
 
-            # 3) Translate each chunk using deep-translator
+            # 4) Translate each chunk using deep-translator
             translator = GoogleTranslator(source=request.source_language or "auto", target=request.target_language)
             translated_chunks = []
             for idx, chunk in enumerate(chunks):
@@ -2910,12 +2886,10 @@ async def translate_script(request: ScriptTranslationRequest):
                     translated_chunks.append(translated_chunk)
             translated_masked_text = " ".join(translated_chunks)
 
-            # 4) Unmask preserved segments (image prompts and bracketed) back to original English
+            # 5) Restore all preserved segments back to their original English content
             restored_text = translated_masked_text
-            # First restore AI image prompt quoted content
-            restored_text = _restore_placeholders(restored_text, ai_image_segments, "IP")
-            # Then restore bracketed segments
-            restored_text = _restore_placeholders(restored_text, bracket_segments, "BR")
+            for placeholder, original_content in preserved_segments.items():
+                restored_text = restored_text.replace(placeholder, original_content)
 
             return ScriptTranslationResponse(
                 original_text=original_text,
@@ -2937,6 +2911,7 @@ async def translate_script(request: ScriptTranslationRequest):
         raise
     except Exception as e:
         logger.error(f"Translation error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Translation error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Translation error: {str(e)}")
 
 # =============================================================================
