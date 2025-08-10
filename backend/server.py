@@ -2362,6 +2362,11 @@ async def generate_script_with_chain_of_thought(request: CoTScriptRequest):
     6. Quality Validation and Refinement
     """
     try:
+        # Validate duration parameter if provided
+        if hasattr(request, 'duration') and request.duration:
+            validated_duration = validate_duration(request.duration)
+            request.duration = validated_duration
+        
         # Get enhanced context if available
         enhanced_context = await context_system.get_enhanced_context(
             prompt=request.prompt,
