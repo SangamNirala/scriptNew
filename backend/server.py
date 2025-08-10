@@ -2264,13 +2264,27 @@ Generate a script so comprehensive that when input into AI video generation tool
         # Count estimated shots from the generated script
         shot_count = len([line for line in generated_script.split('\n') if 'SHOT' in line.upper() or '[0:' in line])
         if shot_count == 0:  # Fallback estimation
-            shot_count = {"short": 20, "medium": 45, "long": 90}.get(request.duration, 20)
+            shot_count = {
+                "short": 20, 
+                "medium": 45, 
+                "long": 90,
+                "extended_5": 150,   # 5-10 min: ~15 shots per min
+                "extended_10": 225,  # 10-15 min: ~15 shots per min
+                "extended_15": 300,  # 15-20 min: ~15 shots per min
+                "extended_20": 375,  # 20-25 min: ~15 shots per min
+                "extended_25": 450   # 25-30 min: ~15 shots per min
+            }.get(request.duration, 20)
         
         # Estimate production time
         production_time = {
             "short": "2-4 hours with AI tools",
             "medium": "4-8 hours with AI tools", 
-            "long": "8-16 hours with AI tools"
+            "long": "8-16 hours with AI tools",
+            "extended_5": "16-24 hours with AI tools",     # 5-10 min
+            "extended_10": "24-32 hours with AI tools",    # 10-15 min
+            "extended_15": "32-40 hours with AI tools",    # 15-20 min
+            "extended_20": "40-48 hours with AI tools",    # 20-25 min
+            "extended_25": "48-56 hours with AI tools"     # 25-30 min
         }.get(request.duration, "2-4 hours with AI tools")
         
         # Generate AI-specific tips
