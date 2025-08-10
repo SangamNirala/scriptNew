@@ -2582,6 +2582,147 @@ async def get_segment_generation_context(script_id: str, segment_number: int):
         logger.error(f"Error getting segment context: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to get segment context: {str(e)}")
 
+@api_router.post("/generate-script-advanced-continuity", response_model=AdvancedScriptWithContinuityResponse)
+async def generate_script_advanced_with_continuity(request: AdvancedScriptRequest):
+    """
+    Phase 2: Advanced Script Generation with Complete Narrative Continuity System
+    
+    This endpoint implements the complete Phase 2 Advanced Script Generation Logic including:
+    - Phase 1: Core Segmentation System (existing)
+    - Phase 2: Narrative Continuity System (new)
+    
+    Phase 2 Features:
+    - Story Arc Manager: Track narrative progression across segments
+    - Character Consistency Engine: Maintain character development flow
+    - Theme Continuity Tracker: Keep core messaging consistent
+    - Transition Generator: Create smooth bridges between segments
+    
+    This creates a comprehensive framework for generating long-form video content
+    (15-30 minutes) with sophisticated narrative management and consistency.
+    """
+    try:
+        logger.info(f"🎭 Starting Phase 2 Advanced Script Generation with Narrative Continuity")
+        logger.info(f"Request: {request.prompt[:100]}..., Duration: {request.duration}, Type: {request.video_type}")
+        
+        # Validate duration parameter
+        validated_duration = validate_duration(request.duration or "medium")
+        request.duration = validated_duration
+        
+        # Call the Phase 2 advanced script generator
+        generation_result = await advanced_script_generator.generate_advanced_script_with_continuity(
+            prompt=request.prompt,
+            video_type=request.video_type,
+            duration=request.duration
+        )
+        
+        if generation_result.get("status") != "success":
+            raise HTTPException(
+                status_code=500, 
+                detail=f"Phase 2 generation failed: {generation_result.get('error', 'Unknown error')}"
+            )
+        
+        # Extract results
+        phase1_results = generation_result.get("phase1_results", {})
+        phase2_results = generation_result.get("phase2_results", {})
+        generation_context = generation_result.get("generation_context", {})
+        
+        # Create the response
+        response = AdvancedScriptWithContinuityResponse(
+            original_prompt=request.prompt,
+            video_type=request.video_type,
+            duration=request.duration,
+            phase1_results=phase1_results,
+            phase2_results=phase2_results,
+            generation_context=generation_context,
+            ready_for_content_generation=generation_context.get("phase2_complete", False),
+            next_steps="Ready for actual segment content generation with complete narrative continuity"
+        )
+        
+        # Store in database
+        await db.advanced_scripts_continuity.insert_one(response.dict())
+        
+        # Log results
+        narrative_continuity = phase2_results.get('analysis_components', {})
+        total_segments = phase2_results.get('total_segments', 1)
+        
+        logger.info(f"✅ Phase 2 Advanced Script Generation Complete!")
+        logger.info(f"📊 Segmentation: {total_segments} segments planned")
+        logger.info(f"🎭 Narrative Components: Story Arc ✅, Character Consistency ✅, Theme Continuity ✅, Transitions ✅")
+        
+        # Log component status
+        story_arc_complete = bool(narrative_continuity.get('story_arc', {}).get('narrative_analysis_complete'))
+        character_complete = bool(narrative_continuity.get('character_consistency', {}).get('character_analysis_complete'))
+        theme_complete = bool(narrative_continuity.get('theme_continuity', {}).get('theme_analysis_complete'))
+        transitions_complete = bool(narrative_continuity.get('transitions', {}).get('transition_analysis_complete'))
+        
+        logger.info(f"🎬 Component Status: Story Arc: {story_arc_complete}, Character: {character_complete}, Theme: {theme_complete}, Transitions: {transitions_complete}")
+        
+        return response
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in Phase 2 Advanced Script Generation: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Phase 2 advanced script generation failed: {str(e)}")
+
+@api_router.get("/advanced-script-continuity-context/{script_id}/segment/{segment_number}")
+async def get_segment_narrative_context(script_id: str, segment_number: int):
+    """
+    Get enhanced narrative context for generating a specific segment (Phase 2)
+    
+    This endpoint provides comprehensive context combining Phase 1 segmentation
+    with Phase 2 narrative continuity analysis for segment content generation.
+    
+    Args:
+        script_id: ID of the advanced script with continuity from Phase 2
+        segment_number: Segment number to get context for (1-indexed)
+        
+    Returns:
+        Enhanced context needed for generating this specific segment with narrative continuity
+    """
+    try:
+        # Find the advanced script with continuity
+        script = await db.advanced_scripts_continuity.find_one({"id": script_id})
+        if not script:
+            raise HTTPException(status_code=404, detail="Advanced script with continuity not found")
+        
+        # Get the enhanced generation context
+        generation_context = script.get("generation_context", {})
+        
+        # Get segment-specific narrative context
+        segment_context = advanced_script_generator.get_segment_narrative_context(
+            generation_context, 
+            segment_number
+        )
+        
+        if segment_context.get("error"):
+            raise HTTPException(
+                status_code=500, 
+                detail=f"Failed to get segment narrative context: {segment_context['error']}"
+            )
+        
+        return {
+            "status": "success",
+            "script_id": script_id,
+            "segment_context": segment_context,
+            "original_script_data": {
+                "prompt": script.get("original_prompt"),
+                "video_type": script.get("video_type"),
+                "duration": script.get("duration")
+            },
+            "phase1_ready": segment_context.get("phase1_complete", False),
+            "phase2_ready": segment_context.get("phase2_complete", False),
+            "ready_for_content_generation": segment_context.get("ready_for_content_generation", False),
+            "narrative_continuity_ready": segment_context.get("narrative_continuity_ready", False),
+            "note": "This context includes complete Phase 2 narrative continuity for segment generation"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting segment narrative context: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get segment narrative context: {str(e)}")
+
 # Voice and TTS Endpoints
 
 def extract_clean_script(raw_script):
