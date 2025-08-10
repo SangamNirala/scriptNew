@@ -78,6 +78,9 @@ intelligent_qa_system = IntelligentQASystem(db, GEMINI_API_KEY)
 # STEP 2: Initialize Few-Shot Learning & Pattern Recognition System
 few_shot_generator = FewShotScriptGenerator(db, GEMINI_API_KEY)
 
+# Phase 1: Initialize Advanced Segmented Script Generation System
+advanced_script_generator = AdvancedScriptGenerator(GEMINI_API_KEY)
+
 # Duration validation and mapping
 VALID_DURATIONS = {
     "short": "Short (30s-1min)",
