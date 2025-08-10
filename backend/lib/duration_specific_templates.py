@@ -903,6 +903,52 @@ class DurationSpecificPromptGenerator:
             logger.error(f"Error creating base template structure: {str(e)}")
             raise TemplateValidationError(f"Base template creation failed: {str(e)}")
     
+    async def generate_15_20_minute_template(self, 
+                                           video_type: str = "general",
+                                           customization_options: Dict[str, Any] = None) -> Dict[str, Any]:
+        """
+        Generate complete 15-20 minute template with optional customization
+        
+        Args:
+            video_type: Video type for customization (educational, marketing, entertainment, general)
+            customization_options: Additional customization options
+            
+        Returns:
+            Complete 15-20 minute template ready for use
+        """
+        try:
+            logger.info(f"🎯 Generating complete 15-20 minute template for {video_type}")
+            
+            # Create base template
+            base_template = self.create_15_20_minute_template()
+            
+            # Apply customizations if requested
+            if video_type != "general" or customization_options:
+                customized_template = await self.customize_template(
+                    base_template, video_type, customization_options
+                )
+            else:
+                customized_template = base_template
+            
+            # Validate template
+            if self.config.quality_validation_enabled:
+                validation_results = await self.validate_template(customized_template)
+                customized_template["validation_results"] = validation_results
+                
+                if validation_results.get("overall_status") not in ["excellent", "good", "acceptable"]:
+                    logger.warning(f"Template validation concerns: {validation_results.get('overall_status')}")
+            
+            # Mark as complete
+            customized_template["template_status"] = "complete"
+            customized_template["generation_timestamp"] = datetime.utcnow().isoformat()
+            
+            logger.info(f"✅ Complete 15-20 minute template generated successfully")
+            return customized_template
+            
+        except Exception as e:
+            logger.error(f"Error generating 15-20 minute template: {str(e)}")
+            raise TemplateValidationError(f"15-20 minute template generation failed: {str(e)}")
+    
     async def customize_template(self, 
                                base_template: Dict[str, Any], 
                                video_type: str = "general",
