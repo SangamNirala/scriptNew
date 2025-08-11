@@ -369,7 +369,7 @@ class EnhancedPromptArchitectureTestSuite:
                          f"Cannot access template registry: {response}")
             return
             
-        templates = response.get("templates", [])
+        templates = response.get("available_templates", [])
         
         # Validate template specifications
         expected_templates = {
