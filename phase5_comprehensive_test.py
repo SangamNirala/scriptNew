@@ -8,7 +8,7 @@ import json
 import time
 
 # Get backend URL from frontend .env
-BACKEND_URL = "https://692556dc-9a80-418a-8d12-65b2cbc6f397.preview.emergentagent.com/api"
+BACKEND_URL = "https://f40cef1f-02c2-45f9-8b54-67d355c080d1.preview.emergentagent.com/api"
 
 def test_multi_model_validation():
     """Test Multi-Model Validation with sample data from review request"""
