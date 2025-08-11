@@ -61,6 +61,27 @@ db = client[os.environ['DB_NAME']]
 # Gemini configuration
 GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
 
+# Parallel Processing: Multiple Gemini API Keys for Concurrent Segment Generation
+GEMINI_API_KEYS_PARALLEL = [
+    os.environ.get('GEMINI_API_KEY'),    # Primary key
+    os.environ.get('GEMINI_API_KEY_2'),
+    os.environ.get('GEMINI_API_KEY_3'),
+    os.environ.get('GEMINI_API_KEY_4'),
+    os.environ.get('GEMINI_API_KEY_5'),
+    os.environ.get('GEMINI_API_KEY_6'),
+    os.environ.get('GEMINI_API_KEY_7'),
+    os.environ.get('GEMINI_API_KEY_8'),
+    os.environ.get('GEMINI_API_KEY_9'),
+    os.environ.get('GEMINI_API_KEY_10'),
+    os.environ.get('GEMINI_API_KEY_11'),
+    os.environ.get('GEMINI_API_KEY_12'),
+    os.environ.get('GEMINI_API_KEY_13'),
+    os.environ.get('GEMINI_API_KEY_14')
+]
+
+# Filter out None keys and ensure we have valid keys
+GEMINI_API_KEYS_PARALLEL = [key for key in GEMINI_API_KEYS_PARALLEL if key and key.strip()]
+
 # Initialize Context Integration System for Phase 2
 context_system = ContextIntegrationSystem()
 
