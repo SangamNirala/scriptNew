@@ -212,6 +212,19 @@ app = FastAPI()
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
 
+# Startup event handler to initialize templates
+@app.on_event("startup")
+async def startup_tasks():
+    """Perform startup tasks including template initialization"""
+    try:
+        logger.info("🚀 Server startup tasks beginning...")
+        await initialize_templates()
+        logger.info("✅ Server startup tasks completed successfully")
+    except Exception as e:
+        logger.error(f"❌ Server startup tasks failed: {str(e)}")
+        # Don't prevent server startup if template initialization fails
+        logger.warning("⚠️ Server will continue without pre-loaded templates")
+
 
 @api_router.get("/durations")
 async def get_available_durations():
