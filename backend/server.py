@@ -6901,6 +6901,9 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Log the number of available Gemini API keys for parallel processing
+logger.info(f"🔑 Parallel Processing: {len(GEMINI_API_KEYS_PARALLEL)} Gemini API keys available for concurrent segment generation")
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
