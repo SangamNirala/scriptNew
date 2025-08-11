@@ -411,7 +411,7 @@ class PromptTemplateRegistry(TemplateRegistry):
             
             if duration not in self.templates:
                 # Try loading from database
-                if self.db:
+                if self.db is not None:
                     template_data = await self._load_template_from_db(duration, version)
                     if template_data:
                         return template_data
