@@ -31,7 +31,7 @@ class Phase41EnhancedArchitectureDebugger:
     """Comprehensive debugger for Phase 4.1 Enhanced Prompt Architecture issues"""
     
     def __init__(self):
-        self.base_url = "https://ca44aec9-802c-40f7-9f2c-fff4bef11fc8.preview.emergentagent.com/api"
+        self.base_url = "https://66dd137f-57a9-42aa-8e2d-34fe8de7c238.preview.emergentagent.com/api"
         self.test_results = []
         self.error_details = []
         
