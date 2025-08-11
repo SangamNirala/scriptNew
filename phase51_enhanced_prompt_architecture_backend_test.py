@@ -97,7 +97,7 @@ class EnhancedPromptArchitectureTestSuite:
             return
             
         # Validate response structure
-        required_fields = ["templates", "registry_stats", "total_templates"]
+        required_fields = ["available_templates", "total_templates", "registry_info"]
         missing_fields = [field for field in required_fields if field not in response]
         
         if missing_fields:
