@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 class Phase1DurationTester:
     def __init__(self):
         # Use production backend URL from frontend/.env
-        self.base_url = "https://c6e53b0c-c2e3-433d-a597-4d2c4ba5aa29.preview.emergentagent.com/api"
+        self.base_url = "https://a779ad4a-5855-4219-82cc-d6cf5fbc2725.preview.emergentagent.com/api"
         self.session = requests.Session()
         self.session.headers.update({
             'Content-Type': 'application/json',
