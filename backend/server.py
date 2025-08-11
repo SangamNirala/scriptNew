@@ -5548,6 +5548,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_origins=[
         "*",
+        "https://script-gen-test.preview.emergentagent.com",
         "https://f40cef1f-02c2-45f9-8b54-67d355c080d1.preview.emergentagent.com",
         "https://f40cef1f-02c2-45f9-8b54-67d355c080d1.preview.emergentagent.com",
         "https://f40cef1f-02c2-45f9-8b54-67d355c080d1.preview.emergentagent.com",
