@@ -2433,7 +2433,17 @@ EXAMPLE OUTPUT FORMAT:
 Remember: You MUST create {shots_min}-{shots_max} shots to fill the {target_min}-{target_max} minute duration. Every visual description must be a perfect, ready-to-use AI image prompt that will generate stunning visuals when copied directly into any AI image generator. Quality content, not filler, but enough to fill the entire duration."""
             )
 
-            generated_script = await chat.send_message(script_message)
+            # Decide generation strategy based on duration requirements
+            if duration_requirements.get("generation_strategy") == "segmented":
+                logger.info("🧩 Using segment-based generation strategy for extended duration")
+                generated_script = await generate_segmented_script(
+                    chat=chat,
+                    request=request,
+                    duration_requirements=duration_requirements,
+                    generation_metadata=generation_metadata
+                )
+            else:
+                generated_script = await chat.send_message(script_message)
             
             # Analyze the quality of generated script
             quality_analysis = analyze_generation_quality(generated_script, duration_requirements)
