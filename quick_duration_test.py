@@ -12,7 +12,7 @@ import re
 from datetime import datetime
 
 # Backend URL from environment
-BACKEND_URL = "https://66dd137f-57a9-42aa-8e2d-34fe8de7c238.preview.emergentagent.com/api"
+BACKEND_URL = "https://7ddca776-a8d1-40eb-a60b-df8e9c11de93.preview.emergentagent.com/api"
 
 async def test_duration_scaling():
     """Quick test of duration scaling with timeout handling"""
