@@ -2095,7 +2095,8 @@ Create a script where every visual description is a perfect, ready-to-use AI ima
             original_prompt=request.prompt,
             generated_script=generated_script,
             video_type=request.video_type or "general",
-            duration=request.duration or "short"
+            duration=request.duration or "short",
+            generation_metadata=generation_metadata
         )
         
         # Add enhanced architecture metadata to database record
