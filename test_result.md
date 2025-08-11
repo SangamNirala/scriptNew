@@ -128,7 +128,38 @@ user_problem_statement: "You are an expert in text-to-speech (TTS) systems and u
 - Enhanced `extract_dialogue_with_timestamps()` function with bare timestamp handling
 - Added comprehensive timestamp cleanup in final processing stage
 
-**EXPECTED RESULT:** The Listen button in the Dialogue Only section should now generate audio WITHOUT timestamps, speaking only the actual dialogue content, matching the behavior of the Generated Script section.
+**NEW CRITICAL FIX IMPLEMENTED (January 2025) - SEGMENTED GENERATION FOR 3-5MIN DURATION:**
+
+**USER ISSUE IDENTIFIED:** When users select "Long (3-5min)" duration, the generated script doesn't contain consistent image prompts for all timestamps, unlike shorter durations (30sec-1min) which work properly.
+
+**ROOT CAUSE:** The "long" duration (3-5min) was using `single_pass` generation strategy instead of the more robust `segmented` strategy that extended durations use, resulting in inconsistent image prompt generation for longer content.
+
+**CRITICAL FIX IMPLEMENTED:**
+1. ✅ **Modified duration requirements for "long" duration (3-5min)**:
+   - Changed `generation_strategy` from "single_pass" to "segmented" 
+   - Changed `segments` from 1 to 3 (approximately 1-1.7 minutes per segment)
+   - Maintained all other parameters (shots_range: 90-150, target_minutes: 3.0-5.0, etc.)
+
+2. ✅ **Now "long" duration uses same strategy as extended durations**:
+   - Segmented generation ensures consistent image prompt creation
+   - Each segment gets individual attention for comprehensive image generation
+   - Better quality control and narrative flow across all timestamps
+
+**EXPECTED RESULT:** Users selecting "Long (3-5min)" will now get consistent, detailed image prompts for all timestamps, matching the quality of extended durations and resolving the reported inconsistency issue.
+
+**TECHNICAL CHANGE:** Updated `calculate_duration_requirements()` function in server.py to change "long" duration from single_pass to segmented strategy with 3 segments.
+
+  - task: "Fix Long Duration (3-5min) Image Generation Issue"
+    implemented: true
+    working: false
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: false
+          agent: "main"
+          comment: "CRITICAL FIX IMPLEMENTED FOR 3-5 MINUTE DURATION IMAGE GENERATION ISSUE (January 2025): Successfully identified and fixed the root cause where 'Long (3-5min)' duration was using single_pass generation strategy instead of segmented strategy, resulting in inconsistent image prompts. Updated calculate_duration_requirements() function to change 'long' duration from single_pass (1 segment) to segmented (3 segments) strategy, matching the approach used by extended durations that work correctly. This ensures consistent, detailed image prompts for all timestamps in 3-5 minute videos. Change maintains all other parameters (shots_range: 90-150, target_minutes: 3.0-5.0) while enabling better quality control through segment-based generation."
 
   - task: "Phase 3.3: Enhanced Prompt Generation Workflow System"
     implemented: true
