@@ -209,6 +209,7 @@ class ScriptResponse(BaseModel):
     generated_script: str
     video_type: str
     duration: str
+    generation_metadata: Optional[Dict[str, Any]] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 class ScriptUpdateRequest(BaseModel):
