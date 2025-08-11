@@ -2089,7 +2089,7 @@ Create a script where every visual description is a perfect, ready-to-use AI ima
 
         generated_script = await chat.send_message(script_message)
         
-        # Store the script in database
+        # Store the script in database with enhanced metadata
         script_data = ScriptResponse(
             original_prompt=request.prompt,
             generated_script=generated_script,
@@ -2097,8 +2097,14 @@ Create a script where every visual description is a perfect, ready-to-use AI ima
             duration=request.duration or "short"
         )
         
-        await db.scripts.insert_one(script_data.dict())
+        # Add enhanced architecture metadata to database record
+        script_dict = script_data.dict()
+        script_dict["generation_metadata"] = generation_metadata
+        script_dict["created_at"] = datetime.utcnow()
         
+        await db.scripts.insert_one(script_dict)
+        
+        logger.info(f"✅ Script generated successfully using {'Enhanced Architecture' if enhanced_compatible else 'Standard'} approach")
         return script_data
         
     except Exception as e:
