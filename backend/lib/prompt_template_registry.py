@@ -380,7 +380,7 @@ class PromptTemplateRegistry(TemplateRegistry):
             }
             
             # Persist to database if available
-            if self.db:
+            if self.db is not None:
                 await self._persist_template(template_data)
             
             logger.info(f"Template registered successfully: {template_id} v{version} for {duration}")
