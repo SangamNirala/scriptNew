@@ -2104,43 +2104,71 @@ async def generate_script(request: ScriptRequest):
             "generation_attempts": 0
         }
         
-        if enhanced_compatible:
-            # Phase 4.1: Use Enhanced Prompt Architecture for extended durations
-            try:
-                logger.info(f"🚀 Using Enhanced Prompt Architecture for {validated_duration} content")
-                
-                # Select duration-specific template
-                template_selection = await enhanced_prompt_architecture.select_duration_template(
-                    duration=validated_duration,
-                    video_type=request.video_type or "general"
-                )
-                
-                # Generate enhanced system prompt
-                enhanced_system_prompt = await enhanced_prompt_architecture.generate_enhanced_system_prompt(
-                    template_config=template_selection
-                )
-                
-                system_message = enhanced_system_prompt
-                generation_metadata.update({
-                    "template_id": template_selection.get("template_id"),
-                    "template_name": template_selection.get("template_name"),
-                    "suitability_score": template_selection.get("suitability_score"),
-                    "enhancement_level": "professional"
-                })
-                
-                logger.info(f"✅ Enhanced prompt generated: {template_selection.get('template_name')}")
-                
-            except Exception as e:
-                logger.warning(f"Enhanced prompt generation failed, falling back to standard: {str(e)}")
-                enhanced_compatible = False
-                generation_metadata["enhancement_fallback_reason"] = str(e)
+        # Auto-regeneration loop for quality assurance
+        max_attempts = 3
+        final_script = None
+        final_quality_analysis = None
         
-        # Fallback to standard system prompt for non-enhanced durations or enhancement failures
-        if not enhanced_compatible:
-            logger.info(f"📝 Using standard system prompt for {validated_duration} content")
-            system_message = f"""You are an elite AI Video Script Generator and Visual Prompt Architect who creates comprehensive, production-ready scripts specifically optimized for AI image/video generation platforms like MidJourney, DALL-E 3, Stable Diffusion, RunwayML, Pika Labs, and other AI visual content tools. You understand exactly what AI generators need to produce high-quality, professional visual content.
+        for attempt in range(max_attempts):
+            generation_metadata["generation_attempts"] = attempt + 1
+            logger.info(f"🎬 Script generation attempt {attempt + 1}/{max_attempts} for {validated_duration}")
+            
+            if enhanced_compatible:
+                # Phase 4.1: Use Enhanced Prompt Architecture for extended durations
+                try:
+                    logger.info(f"🚀 Using Enhanced Prompt Architecture for {validated_duration} content")
+                    
+                    # Select duration-specific template
+                    template_selection = await enhanced_prompt_architecture.select_duration_template(
+                        duration=validated_duration,
+                        video_type=request.video_type or "general"
+                    )
+                    
+                    # Generate enhanced system prompt
+                    enhanced_system_prompt = await enhanced_prompt_architecture.generate_enhanced_system_prompt(
+                        template_config=template_selection
+                    )
+                    
+                    system_message = enhanced_system_prompt
+                    generation_metadata.update({
+                        "template_id": template_selection.get("template_id"),
+                        "template_name": template_selection.get("template_name"),
+                        "suitability_score": template_selection.get("suitability_score"),
+                        "enhancement_level": "professional"
+                    })
+                    
+                    logger.info(f"✅ Enhanced prompt generated: {template_selection.get('template_name')}")
+                    
+                except Exception as e:
+                    logger.warning(f"Enhanced prompt generation failed, falling back to standard: {str(e)}")
+                    enhanced_compatible = False
+                    generation_metadata["enhancement_fallback_reason"] = str(e)
+            
+            # Fallback to enhanced standard system prompt for non-enhanced durations or enhancement failures
+            if not enhanced_compatible:
+                logger.info(f"📝 Using enhanced standard system prompt for {validated_duration} content")
+                
+                # Enhanced system prompt with duration-specific guidance
+                shots_min, shots_max = duration_requirements["shots_range"]
+                words_min, words_max = duration_requirements["total_words"]
+                target_min, target_max = duration_requirements["target_minutes"]
+                
+                system_message = f"""You are an elite AI Video Script Generator and Visual Prompt Architect who creates comprehensive, production-ready scripts specifically optimized for AI image/video generation platforms. You understand exactly what AI generators need to produce high-quality, professional visual content.
 
 🎬 CORE MISSION: Generate scripts where EACH SHOT is a standalone, copy-paste-ready AI image prompt that will produce stunning visuals when directly used in any AI image generator. Every shot description must be a complete, detailed visual prompt optimized for cross-platform AI generation.
+
+📊 CRITICAL DURATION REQUIREMENTS FOR {validated_duration.upper()} ({target_min}-{target_max} minutes):
+- MINIMUM SHOTS REQUIRED: {shots_min} shots
+- TARGET SHOTS RANGE: {shots_min}-{shots_max} shots  
+- SHOT TIMING: Each shot 2-3 seconds ({duration_requirements['pacing']} pacing)
+- CONTENT DEPTH: {duration_requirements['content_depth']} detail level
+- WORD COUNT TARGET: {words_min:,}-{words_max:,} words total
+
+⚠️ MANDATORY REQUIREMENTS:
+1. YOU MUST GENERATE AT LEAST {shots_min} SHOTS - This is non-negotiable
+2. Each shot must have {duration_requirements['words_per_shot'][0]}-{duration_requirements['words_per_shot'][1]} words minimum
+3. Content must fill the ENTIRE {target_min}-{target_max} minute duration
+4. NO SHORTCUTS - Every second of the duration must have corresponding content
 
 📋 MANDATORY AI IMAGE PROMPT STRUCTURE FOR EACH SHOT:
 
@@ -2190,41 +2218,39 @@ Each shot must be formatted as a complete AI image prompt following this structu
 
 **[DIALOGUE:]** (Confident, engaging tone) "What if I told you the secret to success isn't what you think?"
 
-8. **CROSS-PLATFORM OPTIMIZATION KEYWORDS**:
-   - Include keywords that work across MidJourney, DALL-E, Stable Diffusion
-   - Use proven prompt modifiers: "professional photography", "cinematic lighting", "ultra-realistic", "commercial quality"
-   - Add technical specs: camera model, lens, lighting setup for authenticity
-
-9. **COPY-PASTE READY FORMAT**:
-   - Each shot description can be directly copied and pasted into any AI image generator
-   - No editing needed - complete standalone prompts
-   - Optimized length for AI processing (detailed but not excessive)
-
-10. **VISUAL CONSISTENCY ELEMENTS**:
-   - Maintain character consistency across shots
-   - Consistent lighting and color palette
-   - Smooth visual progression between shots
-   - Professional production value throughout
-
 Remember: Each shot must be a COMPLETE, STANDALONE AI IMAGE PROMPT that produces stunning results when copied directly into MidJourney, DALL-E, Stable Diffusion, or any other AI image generator. Focus on rich visual details, professional photography terminology, and cross-platform compatibility."""
-            generation_metadata["enhancement_level"] = "standard"
-        
-        # Create a new chat instance for script generation
-        chat = LlmChat(
-            api_key=GEMINI_API_KEY,
-            session_id=f"script-{str(uuid.uuid4())[:8]}",
-            system_message=system_message
-        ).with_model("gemini", "gemini-2.0-flash")
+                generation_metadata["enhancement_level"] = "enhanced_standard"
+            
+            # Create a new chat instance for script generation
+            chat = LlmChat(
+                api_key=GEMINI_API_KEY,
+                session_id=f"script-{str(uuid.uuid4())[:8]}-attempt{attempt+1}",
+                system_message=system_message
+            ).with_model("gemini", "gemini-2.0-flash")
 
-        script_message = UserMessage(
-            text=f"""Create a comprehensive script for {request.video_type} content where EACH SHOT is a standalone, copy-paste-ready AI image prompt optimized for MidJourney, DALL-E, Stable Diffusion, and other AI image generators.
+            # Enhanced script message with specific duration requirements
+            shots_min, shots_max = duration_requirements["shots_range"]
+            words_min, words_max = duration_requirements["total_words"]
+            target_min, target_max = duration_requirements["target_minutes"]
+            
+            script_message = UserMessage(
+                text=f"""Create a comprehensive script for {request.video_type} content where EACH SHOT is a standalone, copy-paste-ready AI image prompt optimized for MidJourney, DALL-E, Stable Diffusion, and other AI image generators.
 
+CREATIVE BRIEF:
 "{request.prompt}"
 
-SPECIFICATIONS:
-- Duration target: {request.duration}
-- Video type: {request.video_type}
-- AI IMAGE GENERATOR OPTIMIZATION: Each shot must be a complete, ready-to-use AI image prompt
+🔥 CRITICAL DURATION SPECIFICATIONS FOR {validated_duration.upper()}:
+- EXACT DURATION TARGET: {target_min}-{target_max} minutes ({target_min * 60}-{target_max * 60} seconds)
+- MANDATORY SHOT COUNT: YOU MUST CREATE {shots_min}-{shots_max} SHOTS
+- SHOT TIMING: Each shot 2-3 seconds (approximately {shots_min//20}-{shots_max//20} shots per minute)
+- PACING STYLE: {duration_requirements['pacing']} pacing
+- CONTENT DEPTH: {duration_requirements['content_depth']} level
+
+⚠️ NON-NEGOTIABLE REQUIREMENTS:
+1. **MINIMUM {shots_min} SHOTS REQUIRED** - Count every shot you create
+2. **FILL ENTIRE DURATION** - No shortcuts, every second needs content
+3. **QUALITY OVER QUANTITY** - Each shot detailed but not filler
+4. **PROPER PROGRESSION** - Logical flow throughout {target_min}-{target_max} minutes
 
 🎯 CRITICAL REQUIREMENTS:
 
@@ -2235,7 +2261,7 @@ SPECIFICATIONS:
    **[0:XX-0:XX] AI IMAGE PROMPT:**
    "[Detailed subject description], [artistic style], [composition and framing], [lighting setup], [environment/background], [technical camera specs], [color palette], [mood/atmosphere], [quality modifiers]"
    
-   **[DIALOGUE:]** (Spoken content)
+   **[DIALOGUE:]** (Spoken content - {duration_requirements['words_per_shot'][0]}-{duration_requirements['words_per_shot'][1]} words per shot)
 
 2. **VISUAL PROMPT ELEMENTS** (Required in every shot):
    - **Subject Details**: Precise character description, pose, expression, clothing, accessories
@@ -2247,27 +2273,17 @@ SPECIFICATIONS:
    - **Colors**: Specific color palette, mood, contrast levels
    - **Quality Modifiers**: "ultra-high quality", "8K resolution", "sharp focus", "professional photography"
 
-3. **CROSS-PLATFORM OPTIMIZATION**:
-   - Use keywords that work across MidJourney, DALL-E, Stable Diffusion
-   - Include proven modifiers: "professional photography", "cinematic lighting", "commercial quality"
-   - Balance detail with prompt length for optimal AI processing
+3. **DURATION-SPECIFIC CONTENT STRUCTURE**:
+   - Opening Hook: First 10% of duration ({target_min * 0.1:.1f}-{target_max * 0.1:.1f} minutes)
+   - Content Development: 70% of duration ({target_min * 0.7:.1f}-{target_max * 0.7:.1f} minutes)
+   - Climax/Resolution: Final 20% of duration ({target_min * 0.2:.1f}-{target_max * 0.2:.1f} minutes)
 
-4. **COPY-PASTE READY**:
-   - Each shot description is a complete, standalone prompt
-   - No additional editing needed for AI image generation
-   - Optimized for direct use in any AI image generator
-
-5. **VISUAL CONSISTENCY**:
-   - Maintain character appearance across shots
-   - Consistent lighting and color schemes
-   - Smooth visual progression between scenes
-   - Professional production standards throughout
-
-6. **ENGAGEMENT & NARRATIVE**:
+4. **ENGAGEMENT & NARRATIVE** for {duration_requirements['content_depth']} depth:
    - Hook within first 3 seconds with compelling visual and dialogue
    - Visual variety every 2-3 seconds to maintain attention
-   - Strong emotional arc with visual storytelling
+   - Strong emotional arc with visual storytelling throughout {target_min}-{target_max} minutes
    - Clear narrative progression suitable for {request.video_type} content
+   - Retention elements every 30-60 seconds for longer durations
 
 EXAMPLE OUTPUT FORMAT:
 **[0:00-0:03] AI IMAGE PROMPT:**
@@ -2275,15 +2291,41 @@ EXAMPLE OUTPUT FORMAT:
 
 **[DIALOGUE:]** (Confident, engaging tone) "What if I told you the secret to success isn't what you think?"
 
-Create a script where every visual description is a perfect, ready-to-use AI image prompt that will generate stunning visuals when copied directly into any AI image generator."""
-        )
+Remember: You MUST create {shots_min}-{shots_max} shots to fill the {target_min}-{target_max} minute duration. Every visual description must be a perfect, ready-to-use AI image prompt that will generate stunning visuals when copied directly into any AI image generator. Quality content, not filler, but enough to fill the entire duration."""
+            )
 
-        generated_script = await chat.send_message(script_message)
+            generated_script = await chat.send_message(script_message)
+            
+            # Analyze the quality of generated script
+            quality_analysis = analyze_generation_quality(generated_script, duration_requirements)
+            
+            logger.info(f"📊 Generation Quality Analysis (Attempt {attempt + 1}):")
+            logger.info(f"   - Shot count: {quality_analysis['shot_count']} (target: {quality_analysis['target_shots_range']})")
+            logger.info(f"   - Word count: {quality_analysis['word_count']} (target: {quality_analysis['target_words_range']})")
+            logger.info(f"   - Quality score: {quality_analysis['quality_score']}%")
+            logger.info(f"   - Meets requirements: {quality_analysis['meets_minimum_requirements']}")
+            
+            # Store attempt data
+            generation_metadata[f"attempt_{attempt + 1}"] = quality_analysis
+            
+            # Check if quality is acceptable or if this is the last attempt
+            if quality_analysis["meets_minimum_requirements"] or attempt == max_attempts - 1:
+                final_script = generated_script
+                final_quality_analysis = quality_analysis
+                logger.info(f"✅ {'Script meets requirements' if quality_analysis['meets_minimum_requirements'] else 'Using best attempt'} after {attempt + 1} attempts")
+                break
+            else:
+                logger.warning(f"❌ Attempt {attempt + 1} failed quality check. Regenerating...")
+                continue
+        
+        # Final generation metadata
+        generation_metadata["final_quality_analysis"] = final_quality_analysis
+        generation_metadata["total_attempts"] = generation_metadata["generation_attempts"]
         
         # Store the script in database with enhanced metadata
         script_data = ScriptResponse(
             original_prompt=request.prompt,
-            generated_script=generated_script,
+            generated_script=final_script,
             video_type=request.video_type or "general",
             duration=request.duration or "short",
             generation_metadata=generation_metadata
