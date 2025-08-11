@@ -8,7 +8,7 @@ import json
 import time
 
 # Test direct connection to localhost
-BACKEND_URL = "http://localhost:8001"
+BACKEND_URL = "http://127.0.0.1:8001"
 API_BASE = f"{BACKEND_URL}/api"
 
 def test_backend_connectivity():
