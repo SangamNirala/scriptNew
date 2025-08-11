@@ -2338,7 +2338,20 @@ Remember: You MUST create {shots_min}-{shots_max} shots to fill the {target_min}
         
         await db.scripts.insert_one(script_dict)
         
-        logger.info(f"✅ Script generated successfully using {'Enhanced Architecture' if enhanced_compatible else 'Standard'} approach")
+        # Comprehensive logging for QA and debugging
+        logger.info(f"📊 COMPREHENSIVE GENERATION STATISTICS:")
+        logger.info(f"   🎯 Duration Selected: {validated_duration} ({duration_requirements['target_minutes']} minutes)")
+        logger.info(f"   📹 Final Shot Count: {final_quality_analysis['shot_count']} (target: {final_quality_analysis['target_shots_range']})")
+        logger.info(f"   📝 Final Word Count: {final_quality_analysis['word_count']:,} (target: {final_quality_analysis['target_words_range']})")
+        logger.info(f"   🎨 Video Type: {request.video_type}")
+        logger.info(f"   ⚡ Total Attempts: {generation_metadata['total_attempts']}")
+        logger.info(f"   ✅ Quality Score: {final_quality_analysis['quality_score']}%")
+        logger.info(f"   🎭 Enhancement Level: {generation_metadata['enhancement_level']}")
+        logger.info(f"   🏆 Requirements Met: {final_quality_analysis['meets_minimum_requirements']}")
+        logger.info(f"   📈 Shot Coverage: {final_quality_analysis['shot_coverage_percent']}%")
+        logger.info(f"   📊 Word Coverage: {final_quality_analysis['word_coverage_percent']}%")
+        
+        logger.info(f"✅ Script generated successfully using {'Enhanced Architecture' if enhanced_compatible else 'Enhanced Standard'} approach")
         return script_data
         
     except Exception as e:
