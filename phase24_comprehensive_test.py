@@ -25,7 +25,7 @@ from typing import Dict, Any, List
 sys.path.append('/app/backend')
 
 # Backend URL from environment
-BACKEND_URL = "https://7ddca776-a8d1-40eb-a60b-df8e9c11de93.preview.emergentagent.com/api"
+BACKEND_URL = "https://692556dc-9a80-418a-8d12-65b2cbc6f397.preview.emergentagent.com/api"
 
 class Phase24ComprehensiveTest:
     def __init__(self):

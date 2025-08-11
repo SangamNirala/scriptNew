@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 class Phase33EnhancedWorkflowTester:
     """Comprehensive tester for Phase 3.3 Enhanced Workflow System"""
     
-    def __init__(self, base_url: str = "https://7ddca776-a8d1-40eb-a60b-df8e9c11de93.preview.emergentagent.com"):
+    def __init__(self, base_url: str = "https://692556dc-9a80-418a-8d12-65b2cbc6f397.preview.emergentagent.com"):
         self.base_url = base_url.rstrip('/')
         self.api_base = f"{self.base_url}/api"
         self.test_results = []
