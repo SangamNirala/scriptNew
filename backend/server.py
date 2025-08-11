@@ -1892,17 +1892,62 @@ Improvement Ratio: {full_response.quality_metrics.improvement_ratio:.1f}x"""
 
 @api_router.post("/generate-script", response_model=ScriptResponse)
 async def generate_script(request: ScriptRequest):
-    """Generate an engaging video script based on the prompt"""
+    """
+    Phase 4.1: Enhanced Prompt Architecture Integrated Script Generation
+    
+    Generate an engaging video script with Enhanced Prompt Architecture for 15-30 minute content.
+    Maintains backward compatibility for shorter durations.
+    """
     try:
         # Validate duration parameter
         validated_duration = validate_duration(request.duration or "short")
         request.duration = validated_duration
         
-        # Create a new chat instance for script generation
-        chat = LlmChat(
-            api_key=GEMINI_API_KEY,
-            session_id=f"script-{str(uuid.uuid4())[:8]}",
-            system_message=f"""You are an elite AI Video Script Generator and Visual Prompt Architect who creates comprehensive, production-ready scripts specifically optimized for AI image/video generation platforms like MidJourney, DALL-E 3, Stable Diffusion, RunwayML, Pika Labs, and other AI visual content tools. You understand exactly what AI generators need to produce high-quality, professional visual content.
+        # Phase 4.1: Check if duration is compatible with Enhanced Prompt Architecture
+        enhanced_compatible = enhanced_prompt_architecture.validate_duration_compatibility(validated_duration)
+        
+        system_message = ""
+        generation_metadata = {
+            "enhanced_architecture_used": enhanced_compatible,
+            "duration": validated_duration,
+            "video_type": request.video_type or "general"
+        }
+        
+        if enhanced_compatible:
+            # Phase 4.1: Use Enhanced Prompt Architecture for extended durations
+            try:
+                logger.info(f"🚀 Using Enhanced Prompt Architecture for {validated_duration} content")
+                
+                # Select duration-specific template
+                template_selection = await enhanced_prompt_architecture.select_duration_template(
+                    duration=validated_duration,
+                    video_type=request.video_type or "general"
+                )
+                
+                # Generate enhanced system prompt
+                enhanced_system_prompt = await enhanced_prompt_architecture.generate_enhanced_system_prompt(
+                    template_config=template_selection
+                )
+                
+                system_message = enhanced_system_prompt
+                generation_metadata.update({
+                    "template_id": template_selection.get("template_id"),
+                    "template_name": template_selection.get("template_name"),
+                    "suitability_score": template_selection.get("suitability_score"),
+                    "enhancement_level": "professional"
+                })
+                
+                logger.info(f"✅ Enhanced prompt generated: {template_selection.get('template_name')}")
+                
+            except Exception as e:
+                logger.warning(f"Enhanced prompt generation failed, falling back to standard: {str(e)}")
+                enhanced_compatible = False
+                generation_metadata["enhancement_fallback_reason"] = str(e)
+        
+        # Fallback to standard system prompt for non-enhanced durations or enhancement failures
+        if not enhanced_compatible:
+            logger.info(f"📝 Using standard system prompt for {validated_duration} content")
+            system_message = f"""You are an elite AI Video Script Generator and Visual Prompt Architect who creates comprehensive, production-ready scripts specifically optimized for AI image/video generation platforms like MidJourney, DALL-E 3, Stable Diffusion, RunwayML, Pika Labs, and other AI visual content tools. You understand exactly what AI generators need to produce high-quality, professional visual content.
 
 🎬 CORE MISSION: Generate scripts where EACH SHOT is a standalone, copy-paste-ready AI image prompt that will produce stunning visuals when directly used in any AI image generator. Every shot description must be a complete, detailed visual prompt optimized for cross-platform AI generation.
 
@@ -1971,6 +2016,13 @@ Each shot must be formatted as a complete AI image prompt following this structu
    - Professional production value throughout
 
 Remember: Each shot must be a COMPLETE, STANDALONE AI IMAGE PROMPT that produces stunning results when copied directly into MidJourney, DALL-E, Stable Diffusion, or any other AI image generator. Focus on rich visual details, professional photography terminology, and cross-platform compatibility."""
+            generation_metadata["enhancement_level"] = "standard"
+        
+        # Create a new chat instance for script generation
+        chat = LlmChat(
+            api_key=GEMINI_API_KEY,
+            session_id=f"script-{str(uuid.uuid4())[:8]}",
+            system_message=system_message
         ).with_model("gemini", "gemini-2.0-flash")
 
         script_message = UserMessage(
