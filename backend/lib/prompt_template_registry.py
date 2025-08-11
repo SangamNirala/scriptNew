@@ -662,7 +662,7 @@ class PromptTemplateRegistry(TemplateRegistry):
     async def _persist_template(self, template_data: Dict[str, Any]):
         """Persist template to database"""
         try:
-            if self.db:
+            if self.db is not None:
                 await self.db.prompt_templates.insert_one(template_data)
                 logger.debug(f"Template persisted to database: {template_data['template_id']}")
         except Exception as e:
