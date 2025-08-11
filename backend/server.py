@@ -6241,7 +6241,6 @@ async def generate_enhanced_prompt_for_duration(duration: str, request: Enhanced
         template_selection = await enhanced_prompt_architecture.select_duration_template(
             duration=duration,
             video_type=request.video_type,
-            enable_customization=request.enable_customization,
             customization_options=request.customization_options or {}
         )
         
