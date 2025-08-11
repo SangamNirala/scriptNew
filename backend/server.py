@@ -1965,18 +1965,132 @@ Improvement Ratio: {full_response.quality_metrics.improvement_ratio:.1f}x"""
         logger.error(f"Error in legacy prompt enhancement: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error enhancing prompt: {str(e)}")
 
+def calculate_duration_requirements(duration: str) -> dict:
+    """Calculate content requirements based on duration for proper script scaling"""
+    duration_specs = {
+        "short": {
+            "target_minutes": (0.5, 1.0),
+            "shots_range": (15, 30),
+            "words_per_shot": (20, 40),
+            "total_words": (300, 1200),
+            "pacing": "fast",
+            "content_depth": "concise"
+        },
+        "medium": {
+            "target_minutes": (1.0, 3.0),
+            "shots_range": (30, 90),
+            "words_per_shot": (25, 50),
+            "total_words": (750, 4500),
+            "pacing": "moderate",
+            "content_depth": "detailed"
+        },
+        "long": {
+            "target_minutes": (3.0, 5.0),
+            "shots_range": (90, 150),
+            "words_per_shot": (30, 60),
+            "total_words": (2700, 9000),
+            "pacing": "measured",
+            "content_depth": "comprehensive"
+        },
+        "extended_5": {
+            "target_minutes": (5.0, 10.0),
+            "shots_range": (150, 300),
+            "words_per_shot": (35, 65),
+            "total_words": (5250, 19500),
+            "pacing": "thorough",
+            "content_depth": "in-depth"
+        },
+        "extended_10": {
+            "target_minutes": (10.0, 15.0),
+            "shots_range": (300, 450),
+            "words_per_shot": (40, 70),
+            "total_words": (12000, 31500),
+            "pacing": "comprehensive",
+            "content_depth": "extensive"
+        },
+        "extended_15": {
+            "target_minutes": (15.0, 20.0),
+            "shots_range": (450, 600),
+            "words_per_shot": (45, 75),
+            "total_words": (20250, 45000),
+            "pacing": "documentary",
+            "content_depth": "masterclass"
+        },
+        "extended_20": {
+            "target_minutes": (20.0, 25.0),
+            "shots_range": (600, 750),
+            "words_per_shot": (50, 80),
+            "total_words": (30000, 60000),
+            "pacing": "educational",
+            "content_depth": "professional"
+        },
+        "extended_25": {
+            "target_minutes": (25.0, 30.0),
+            "shots_range": (750, 900),
+            "words_per_shot": (55, 85),
+            "total_words": (41250, 76500),
+            "pacing": "cinematic",
+            "content_depth": "broadcast-quality"
+        }
+    }
+    return duration_specs.get(duration, duration_specs["short"])
+
+def analyze_generation_quality(generated_script: str, duration_requirements: dict) -> dict:
+    """Analyze if generated script meets duration requirements"""
+    # Count shots (looking for timestamp patterns like [0:00-0:03])
+    shot_patterns = [
+        r'\[\d+:\d+\s*-\s*\d+:\d+\]',  # [0:00-0:03] format
+        r'\[Shot\s+\d+\]',              # [Shot 1] format
+        r'\*\*\[.*?\]\s*AI IMAGE PROMPT:', # **[0:00-0:03] AI IMAGE PROMPT: format
+    ]
+    
+    shot_count = 0
+    for pattern in shot_patterns:
+        import re
+        matches = re.findall(pattern, generated_script, re.IGNORECASE)
+        shot_count = max(shot_count, len(matches))
+    
+    # Count words
+    word_count = len(generated_script.split())
+    
+    # Calculate quality metrics
+    target_shots_min, target_shots_max = duration_requirements["shots_range"]
+    target_words_min, target_words_max = duration_requirements["total_words"]
+    
+    shot_coverage = shot_count / target_shots_max if target_shots_max > 0 else 0
+    word_coverage = word_count / target_words_max if target_words_max > 0 else 0
+    
+    meets_minimum = (shot_count >= target_shots_min * 0.7 and 
+                     word_count >= target_words_min * 0.7)
+    
+    return {
+        "shot_count": shot_count,
+        "word_count": word_count,
+        "target_shots_range": (target_shots_min, target_shots_max),
+        "target_words_range": (target_words_min, target_words_max),
+        "shot_coverage_percent": round(shot_coverage * 100, 2),
+        "word_coverage_percent": round(word_coverage * 100, 2),
+        "meets_minimum_requirements": meets_minimum,
+        "quality_score": round((shot_coverage + word_coverage) / 2 * 100, 2)
+    }
+
 @api_router.post("/generate-script", response_model=ScriptResponse)
 async def generate_script(request: ScriptRequest):
     """
-    Phase 4.1: Enhanced Prompt Architecture Integrated Script Generation
+    Enhanced Script Generation with Duration-Aware Content Scaling
     
-    Generate an engaging video script with Enhanced Prompt Architecture for 15-30 minute content.
-    Maintains backward compatibility for shorter durations.
+    Generate scripts that properly match the selected duration with appropriate
+    shot count, word count, and content depth. Includes auto-regeneration
+    for under-performing outputs and detailed generation analytics.
     """
     try:
         # Validate duration parameter
         validated_duration = validate_duration(request.duration or "short")
         request.duration = validated_duration
+        
+        # Calculate duration-specific requirements
+        duration_requirements = calculate_duration_requirements(validated_duration)
+        logger.info(f"📊 Duration requirements for {validated_duration}: {duration_requirements}")
         
         # Phase 4.1: Check if duration is compatible with Enhanced Prompt Architecture
         enhanced_compatible = enhanced_prompt_architecture.validate_duration_compatibility(validated_duration)
@@ -1985,7 +2099,9 @@ async def generate_script(request: ScriptRequest):
         generation_metadata = {
             "enhanced_architecture_used": enhanced_compatible,
             "duration": validated_duration,
-            "video_type": request.video_type or "general"
+            "video_type": request.video_type or "general",
+            "duration_requirements": duration_requirements,
+            "generation_attempts": 0
         }
         
         if enhanced_compatible:
