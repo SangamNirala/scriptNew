@@ -20,7 +20,7 @@ from typing import Dict, List, Any, Optional
 from datetime import datetime
 
 # Backend URL from environment
-BACKEND_URL = "https://42a664c7-cfb0-482a-a5bd-f05ce6cec8de.preview.emergentagent.com/api"
+BACKEND_URL = "https://ca44aec9-802c-40f7-9f2c-fff4bef11fc8.preview.emergentagent.com/api"
 
 class EnhancedPromptArchitectureTestSuite:
     def __init__(self):
