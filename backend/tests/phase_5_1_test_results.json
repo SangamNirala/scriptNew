@@ -1,0 +1,83 @@
+{
+  "unit_tests": {
+    "template_registry_operations": {
+      "passed": false,
+      "details": "No templates found in registry",
+      "execution_time": 0.004895448684692383,
+      "timestamp": "2025-08-11T03:23:42.642094"
+    },
+    "duration_template_generation": {
+      "passed": true,
+      "details": "All 3 duration templates generated successfully with proper content length",
+      "execution_time": 0.002248525619506836,
+      "timestamp": "2025-08-11T03:23:42.644414"
+    },
+    "video_type_customization": {
+      "passed": false,
+      "details": "Duration template selection failed: Template selection failed: Template retrieval failed: No templates found for duration 'extended_15'",
+      "execution_time": 0.0015490055084228516,
+      "timestamp": "2025-08-11T03:23:42.646038"
+    },
+    "integration_methods": {
+      "passed": false,
+      "details": "Duration template selection failed: Template selection failed: Template retrieval failed: No templates found for duration 'extended_20'",
+      "execution_time": 0.0009737014770507812,
+      "timestamp": "2025-08-11T03:23:42.647073"
+    }
+  },
+  "integration_tests": {
+    "enhanced_prompt_to_segmentation": {
+      "passed": false,
+      "details": "Duration template selection failed: Template selection failed: Template retrieval failed: No templates found for duration 'extended_20'",
+      "execution_time": 0.0009696483612060547,
+      "timestamp": "2025-08-11T03:23:42.648132"
+    },
+    "template_selection_to_script_generation": {
+      "passed": false,
+      "details": "Duration template selection failed: Template selection failed: Template retrieval failed: No templates found for duration 'extended_15'",
+      "execution_time": 0.0009326934814453125,
+      "timestamp": "2025-08-11T03:23:42.649127"
+    },
+    "api_endpoints_compatibility": {
+      "passed": true,
+      "details": "API structure validation successful, tested 0 endpoints",
+      "execution_time": 0.04318976402282715,
+      "timestamp": "2025-08-11T03:23:42.692386"
+    }
+  },
+  "quality_tests": {
+    "template_effectiveness_validation": {
+      "passed": false,
+      "details": "Duration template selection failed: Template selection failed: Template retrieval failed: No templates found for duration 'extended_15'",
+      "execution_time": 0.0015172958374023438,
+      "timestamp": "2025-08-11T03:23:42.695473"
+    },
+    "segment_count_accuracy": {
+      "passed": false,
+      "details": "Template retrieval failed: No templates found for duration 'extended_15'",
+      "execution_time": 0.0008630752563476562,
+      "timestamp": "2025-08-11T03:23:42.696402"
+    },
+    "content_depth_appropriateness": {
+      "passed": false,
+      "details": "Duration template selection failed: Template selection failed: Template retrieval failed: No templates found for duration 'extended_15'",
+      "execution_time": 0.0009214878082275391,
+      "timestamp": "2025-08-11T03:23:42.697395"
+    },
+    "engagement_optimization_validation": {
+      "passed": false,
+      "details": "Duration template selection failed: Template selection failed: Template retrieval failed: No templates found for duration 'extended_15'",
+      "execution_time": 0.0008769035339355469,
+      "timestamp": "2025-08-11T03:23:42.698335"
+    }
+  },
+  "summary": {
+    "total_tests": 11,
+    "passed_tests": 2,
+    "failed_tests": 9,
+    "success_rate": 18.181818181818183,
+    "start_time": "2025-08-11T03:23:42.637071",
+    "end_time": "2025-08-11T03:23:42.698396",
+    "duration": 0.061325
+  }
+}
