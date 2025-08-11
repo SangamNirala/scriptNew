@@ -1710,22 +1710,21 @@ const ScriptGenerator = () => {
                       ) : (
                         <>
                           <span>🎨</span>
-
-                  {/* If audio was generated for dialogue, show a download button here too */}
-                  {lastGeneratedAudio && lastAudioTarget === 'dialogue' && (
-                    <button
-                      onClick={handleDownloadAudio}
-                      className="mt-3 px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 flex items-center space-x-2"
-                    >
-                      <span>💾</span>
-                      <span>Download Audio</span>
-                    </button>
-                  )}
-
                           <span>Enhance Image Prompt</span>
                         </>
                       )}
                     </button>
+
+                    {/* If audio was generated for dialogue, show a download button here too */}
+                    {lastGeneratedAudio && lastAudioTarget === 'dialogue' && (
+                      <button
+                        onClick={handleDownloadAudio}
+                        className="mt-3 px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 flex items-center space-x-2"
+                      >
+                        <span>💾</span>
+                        <span>Download Audio</span>
+                      </button>
+                    )}
                   </div>
                 </div>
                 
