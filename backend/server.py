@@ -141,7 +141,7 @@ async def initialize_templates():
         
         # Create and register 25-30 minute template
         template_25_30 = duration_specific_prompt_generator.create_25_30_minute_template()
-        template_content_25_30 = TemplateContent(**template_25_30)
+        template_content_25_30 = template_25_30["template_content"]  # Extract the TemplateContent object
         await prompt_template_registry.register_template(
             duration="extended_25",
             template_content=template_content_25_30,
