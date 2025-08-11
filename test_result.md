@@ -183,12 +183,66 @@ user_problem_statement: "You are an expert in text-to-speech (TTS) systems and u
           agent: "testing"
           comment: "🎉 PHASE 2 COMPREHENSIVE TESTING COMPLETED WITH EXCELLENT RESULTS: Successfully verified all Phase 2 Master Prompt Template V2.0 and Dynamic Context Integration functionality. CORE ISSUE RESOLVED: ✅ 'Error loading voices. Please refresh the page.' issue completely fixed - /api/voices endpoint working perfectly, returning 8 voices with proper structure (name, display_name, language, gender) and good variety (multiple genders and languages). ENHANCE PROMPT API VERIFIED: ✅ /api/enhance-prompt endpoint working excellently with review request sample data ('Create a video about healthy cooking tips', video_type: 'educational', industry_focus: 'health') - returns comprehensive enhanced prompts with all required fields: original_prompt, audience_analysis, enhancement_variations (3 variations), quality_metrics (7.0/10 overall score, 182.1x improvement ratio), recommendation, industry_insights, enhancement_methodology. BACKEND SERVICE STATUS: ✅ All backend services running properly - confirmed 3/3 core endpoints working (root, voices, scripts). DEPENDENCY VERIFICATION: ✅ All required dependencies properly installed and working: emergentintegrations (Gemini API), edge-tts (voice generation), MongoDB (database connection). PERFORMANCE: Enhanced prompt processing takes 30+ seconds due to complex AI processing but completes successfully with comprehensive results. Phase 2 functionality fully operational and meets all review request requirements."
 
+# Testing Data - Main Agent and testing sub agent both should log testing data below this section
+#====================================================================================================
+
+user_problem_statement: "You are an expert in text-to-speech (TTS) systems and user interface design. I want to improve the current audio generation feature by allowing users to choose from different voice options before generating speech audio from the script. After the script is generated, and before generating the audio, the system should prompt the user to select from multiple voice options (e.g., male, female, robotic, various accents). The selection should be presented through a dropdown menu or modal interface with clear labels (e.g., \"Male – US\", \"Female – UK\"). Once a voice is selected, the system should generate the audio using that specific voice model. Replace the current default male voice setup with a flexible voice engine that supports multiple voices. Use a free TTS engine with voice support like Edge-TTS."
+
+**CONTINUATION REQUEST:** When the "Enhance Prompt" button is clicked, the system should  to generate the three categorized enhanced prompts: Emotional Engagement Focus, Technical Excellence Focus, Viral Potential Focus. However, each enhanced prompt should be significantly upgraded in depth, clarity, and structure — making them fully optimized for generating high-quality, ready-to-use scripts. The enhancements should go beyond surface-level rewording and incorporate advanced prompt engineering techniques tailored to each focus area.
+
+**NEW FEATURE REQUEST:** In the Generated Script section, please add a new button labeled "Enhance Image Prompt" positioned below the "Listen" button. When clicked, it should automatically enhance all the image prompts associated with each shot by adding more descriptive text, visual and contextual details, and structuring the prompt in a way that is easily understood by any AI image generators. The goal is to produce high-quality, contextually accurate images when used with AI image generation tools.
+
+**CURRENT ISSUE (January 2025) - RESOLVED:** User reported unable to generate images - after clicking "enhance image prompt" and then "generate images", error occurs: "TypeError: Cannot read properties of null (reading 'document')". The root cause was that window.open() was returning null due to popup blockers, and the code was trying to access .document on null object. FIXED by implementing proper error handling and fallback inline image gallery display.
+
+**NEW CRITICAL ISSUE (January 2025) - FIXED:** Audio Generation Issue in Dialogue Only Section - When users click the "Listen" button in the Dialogue Only section, the audio includes both dialogue content AND timestamps (like "[0:00-0:03]"), which sounds unnatural. However, the "Listen" button in the Generated Script section works correctly - it only speaks the dialogue content without timestamps. 
+
+**ROOT CAUSE IDENTIFIED AND RESOLVED:** The issue was in the backend `extract_clean_script()` function. The frontend's `extractDialogueOnly` function creates dialogue content with bare timestamps like "0:00-0:03" (without square brackets), but the backend was only configured to detect timestamps in square brackets "[0:00-0:03]". When bare timestamps weren't detected, they weren't being removed during text processing, causing them to be spoken in the audio.
+
+**FIX IMPLEMENTED (January 2025):**
+1. ✅ Updated `extract_clean_script()` function to detect both bracketed `[0:00-0:03]` and bare `0:00-0:03` timestamp formats
+2. ✅ Enhanced `extract_dialogue_with_timestamps()` function to handle both timestamp formats:
+   - Added detection for bare timestamp lines: `0:00-0:03`
+   - Added timestamp removal for both formats during processing
+   - Enhanced final cleanup to remove any remaining timestamps
+3. ✅ Updated regex patterns to catch timestamps both at line beginnings and throughout text
+4. ✅ Maintained backward compatibility with existing Generated Script functionality
+
+**TECHNICAL CHANGES:**
+- Modified `extract_clean_script()` function detection regex to include `(?:^|\n)\d+:\d+\s*[-–]\s*\d+:\d+(?:\n|$)` pattern
+- Enhanced `extract_dialogue_with_timestamps()` function with bare timestamp handling
+- Added comprehensive timestamp cleanup in final processing stage
+
+**EXPECTED RESULT:** The Listen button in the Dialogue Only section should now generate audio WITHOUT timestamps, speaking only the actual dialogue content, matching the behavior of the Generated Script section.
+
+**PHASE 4.1 IMPLEMENTATION STATUS (January 2025):**
+After comprehensive testing, Phase 4.1 Enhanced Prompt Architecture Server Integration has been implemented with mixed results:
+
+✅ **BACKWARD COMPATIBILITY PERFECT:** All standard durations (short, medium, long) work flawlessly with existing architecture
+✅ **INTEGRATION FRAMEWORK COMPLETE:** Phase 4.1 integration structure correctly implemented with proper fallback mechanisms  
+✅ **DEPENDENCY RESOLUTION:** All required dependencies installed (emergentintegrations, edge-tts, deep-translator, motor, pymongo, google-search-results, newspaper3k, textstat, lxml, scikit-learn)
+❌ **ENHANCED ARCHITECTURE ISSUES:** Enhanced duration template selection failing due to empty template registry
+❌ **TEMPLATE INITIALIZATION MISSING:** No templates loaded into PromptTemplateRegistry during server startup
+
+**ROOT CAUSE ANALYSIS:**
+- Testing agent identified database comparison fix needed (Motor async driver objects)
+- Template registry correctly initialized but templates not loaded during startup  
+- Enhanced architecture falls back to standard mode when templates unavailable
+- Fallback mechanism prevents system crashes and maintains functionality
+
+**FIXES IMPLEMENTED:**
+1. ✅ Fixed database comparison issues (Motor driver compatibility)
+2. ✅ Added template initialization function to load duration-specific templates 
+3. ✅ Added startup event handler to initialize templates during server boot
+4. ✅ Registered all three enhanced templates (extended_15, extended_20, extended_25)
+
+**CURRENT STATUS:** Enhanced Prompt Architecture should now work correctly with templates properly loaded during server startup. Ready for testing validation.
+
 backend:
   - task: "Phase 4.1 Enhanced Prompt Architecture Server Integration"
     implemented: true
-    working: false
+    working: "pending_test"
     file: "server.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
     needs_retesting: true
     status_history:
@@ -201,6 +255,9 @@ backend:
         - working: false
           agent: "main"
           comment: "DEPENDENCY INSTALLATION COMPLETED: Successfully installed all required dependencies for Phase 4.1: emergentintegrations (with special index), edge-tts, deep-translator, motor, pymongo, google-search-results, newspaper3k, textstat, lxml, lxml_html_clean, scikit-learn. Backend service restarted successfully and Enhanced Prompt Architecture initialized correctly. Ready to investigate and fix the 'str' object has no attribute 'enable_template_caching' error in enhanced_prompt_architecture.select_duration_template() method."
+        - working: "pending_test"
+          agent: "main"
+          comment: "CRITICAL FIXES IMPLEMENTED: Based on testing agent analysis, identified and resolved root cause issues: 1) Fixed all database comparison issues from 'if self.db:' to 'if self.db is not None:' for Motor async MongoDB driver compatibility, 2) Added comprehensive template initialization function that loads all three duration-specific templates (extended_15, extended_20, extended_25) into PromptTemplateRegistry during server startup, 3) Added startup event handler to call initialize_templates() when server boots, 4) Templates are now properly registered with complete metadata (template names, descriptions, expertise areas, complexity levels, focus strategies). The empty template registry issue should be resolved. Enhanced Prompt Architecture should now work correctly with templates available for selection. Ready for comprehensive testing to validate fixes."
 
   - task: "Phase 1 Advanced Script Generation Logic System with Core Segmentation"
     implemented: true
