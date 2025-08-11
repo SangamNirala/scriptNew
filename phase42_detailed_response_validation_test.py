@@ -13,7 +13,7 @@ import sys
 from datetime import datetime
 
 # Backend URL Configuration
-BACKEND_URL = "https://fb037db3-96a1-42dd-83e1-fc5d66dc6674.preview.emergentagent.com/api"
+BACKEND_URL = "https://42a664c7-cfb0-482a-a5bd-f05ce6cec8de.preview.emergentagent.com/api"
 
 class DetailedResponseValidator:
     def __init__(self):
