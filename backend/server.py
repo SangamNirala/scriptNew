@@ -2669,13 +2669,27 @@ Remember: You MUST create {shots_min}-{shots_max} shots to fill the {target_min}
 
             # Decide generation strategy based on duration requirements
             if duration_requirements.get("generation_strategy") == "segmented":
-                logger.info("🧩 Using segment-based generation strategy for extended duration")
-                generated_script = await generate_segmented_script(
-                    chat=chat,
-                    request=request,
-                    duration_requirements=duration_requirements,
-                    generation_metadata=generation_metadata
+                # Check if we can use parallel processing (multiple API keys + extended duration)
+                can_use_parallel = (
+                    len(GEMINI_API_KEYS_PARALLEL) > 1 and 
+                    validated_duration in ["extended_5", "extended_10", "extended_15", "extended_20", "extended_25"]
                 )
+                
+                if can_use_parallel:
+                    logger.info(f"🚀 Using PARALLEL segment-based generation with {len(GEMINI_API_KEYS_PARALLEL)} API keys for {validated_duration}")
+                    generated_script = await generate_segmented_script_parallel(
+                        request=request,
+                        duration_requirements=duration_requirements,
+                        generation_metadata=generation_metadata
+                    )
+                else:
+                    logger.info("🧩 Using sequential segment-based generation (fallback)")
+                    generated_script = await generate_segmented_script(
+                        chat=chat,
+                        request=request,
+                        duration_requirements=duration_requirements,
+                        generation_metadata=generation_metadata
+                    )
             else:
                 generated_script = await chat.send_message(script_message)
             
