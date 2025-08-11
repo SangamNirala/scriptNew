@@ -671,7 +671,7 @@ class PromptTemplateRegistry(TemplateRegistry):
     async def _load_template_from_db(self, duration: str, version: str = None) -> Optional[Dict[str, Any]]:
         """Load template from database"""
         try:
-            if not self.db:
+            if self.db is None:
                 return None
             
             query = {"duration": duration}
