@@ -190,7 +190,7 @@ backend:
     file: "server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
         - working: false
           agent: "main"
@@ -198,6 +198,9 @@ backend:
         - working: false
           agent: "testing"
           comment: "🚨 PHASE 4.1 COMPREHENSIVE TESTING COMPLETED WITH MIXED RESULTS (35.7% success rate, 5/14 tests passed): CRITICAL FINDINGS: ✅ BACKWARD COMPATIBILITY PERFECT - All short, medium, long durations work flawlessly with standard architecture (100% success rate), ✅ INTEGRATION FRAMEWORK IMPLEMENTED - The Phase 4.1 integration structure is correctly in place with proper fallback mechanisms, ❌ ENHANCED ARCHITECTURE FAILING - All extended durations (extended_15, extended_20, extended_25) are falling back to standard mode due to implementation errors in enhanced_prompt_architecture.select_duration_template() method: 'str' object has no attribute 'enable_template_caching', ❌ TEMPLATE SELECTION NOT WORKING - Enhanced template selection failing for all video types (educational, marketing, entertainment, general) due to same underlying error, ✅ METADATA PARTIALLY WORKING - generation_metadata field successfully added to ScriptResponse model and returned in API responses, but missing enhanced fields (template_id, template_name, suitability_score) when enhanced architecture fails, ❌ ERROR HANDLING ISSUE - Invalid duration returns 500 instead of expected 400 status code. ASSESSMENT: Phase 4.1 integration framework is correctly implemented with excellent backward compatibility, but the underlying Enhanced Prompt Architecture modules have critical bugs preventing enhanced features from working. The fallback mechanism ensures system stability."
+        - working: false
+          agent: "main"
+          comment: "DEPENDENCY INSTALLATION COMPLETED: Successfully installed all required dependencies for Phase 4.1: emergentintegrations (with special index), edge-tts, deep-translator, motor, pymongo, google-search-results, newspaper3k, textstat, lxml, lxml_html_clean, scikit-learn. Backend service restarted successfully and Enhanced Prompt Architecture initialized correctly. Ready to investigate and fix the 'str' object has no attribute 'enable_template_caching' error in enhanced_prompt_architecture.select_duration_template() method."
 
   - task: "Phase 1 Advanced Script Generation Logic System with Core Segmentation"
     implemented: true
