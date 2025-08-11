@@ -152,7 +152,7 @@ user_problem_statement: "You are an expert in text-to-speech (TTS) systems and u
     file: "server.py, lib/duration_specific_templates.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
         - working: false
           agent: "main"
