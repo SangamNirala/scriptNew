@@ -334,7 +334,7 @@ backend:
     file: "server.py, lib/advanced_segmented_generator.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
         - working: true
           agent: "testing"
