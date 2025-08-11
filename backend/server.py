@@ -1995,8 +1995,8 @@ def calculate_duration_requirements(duration: str) -> dict:
             "total_words": (2700, 9000),
             "pacing": "measured",
             "content_depth": "comprehensive",
-            "generation_strategy": "single_pass",
-            "segments": 1
+            "generation_strategy": "segmented",
+            "segments": 3
         },
         "extended_5": {
             "target_minutes": (5.0, 10.0),
