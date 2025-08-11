@@ -27,7 +27,7 @@ import traceback
 sys.path.append('/app/backend')
 
 # Backend URL from environment
-BACKEND_URL = "https://b03732ae-2f6a-4aa1-bcf3-86fe8377d488.preview.emergentagent.com/api"
+BACKEND_URL = "https://6b14fb28-7a71-4ce9-9040-059c518ea0a8.preview.emergentagent.com/api"
 
 class Phase23BackendTester:
     def __init__(self):

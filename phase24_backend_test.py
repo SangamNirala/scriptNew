@@ -33,7 +33,7 @@ class Phase24TemplateTestSuite:
     """Comprehensive test suite for Phase 2.4: 25-30 Minute Template Implementation"""
     
     def __init__(self):
-        self.backend_url = "https://b03732ae-2f6a-4aa1-bcf3-86fe8377d488.preview.emergentagent.com/api"
+        self.backend_url = "https://6b14fb28-7a71-4ce9-9040-059c518ea0a8.preview.emergentagent.com/api"
         self.test_results = []
         self.total_tests = 0
         self.passed_tests = 0
