@@ -103,6 +103,63 @@ enhanced_prompt_architecture = EnhancedPromptArchitecture(
 )
 duration_specific_prompt_generator = DurationSpecificPromptGenerator()
 
+# Template Initialization Function
+async def initialize_templates():
+    """Initialize all duration-specific templates in the registry"""
+    try:
+        logger.info("🚀 Starting template initialization...")
+        
+        # Create and register 15-20 minute template
+        template_15_20 = duration_specific_prompt_generator.create_15_20_minute_template()
+        template_content_15_20 = TemplateContent(**template_15_20)
+        await prompt_template_registry.register_template(
+            duration="extended_15",
+            template_content=template_content_15_20,
+            template_name="15-20 Minute Content Specialist",
+            description="Professional template for 15-20 minute video content with specialized expertise",
+            expertise_areas=["Medium-form content", "Segment coordination", "Engagement optimization"],
+            complexity_level="moderate",
+            focus_strategy="balanced_pacing_engagement",
+            tags=["extended", "specialist", "medium-form"]
+        )
+        logger.info("✅ Registered 15-20 minute template")
+        
+        # Create and register 20-25 minute template  
+        template_20_25 = duration_specific_prompt_generator.create_20_25_minute_template()
+        template_content_20_25 = TemplateContent(**template_20_25)
+        await prompt_template_registry.register_template(
+            duration="extended_20",
+            template_content=template_content_20_25,
+            template_name="20-25 Minute Deep Dive Expert",
+            description="Expert template for 20-25 minute deep dive video content",
+            expertise_areas=["Long-form content", "Deep dive methodology", "Complex structuring"],
+            complexity_level="advanced",
+            focus_strategy="sustained_engagement_algorithms",
+            tags=["extended", "expert", "deep-dive"]
+        )
+        logger.info("✅ Registered 20-25 minute template")
+        
+        # Create and register 25-30 minute template
+        template_25_30 = duration_specific_prompt_generator.create_25_30_minute_template()
+        template_content_25_30 = TemplateContent(**template_25_30)
+        await prompt_template_registry.register_template(
+            duration="extended_25",
+            template_content=template_content_25_30,
+            template_name="25-30 Minute Comprehensive Content Architect",
+            description="Elite template for 25-30 minute comprehensive video content with broadcast quality",
+            expertise_areas=["Comprehensive architecture", "Elite coordination", "Broadcast quality"],
+            complexity_level="expert",
+            focus_strategy="peak_engagement_distribution",
+            tags=["extended", "architect", "comprehensive"]
+        )
+        logger.info("✅ Registered 25-30 minute template")
+        
+        logger.info("🎉 Template initialization completed successfully")
+        
+    except Exception as e:
+        logger.error(f"❌ Template initialization failed: {str(e)}")
+        raise e
+
 # Phase 3.2: Initialize Template Integration Manager
 from lib.template_integration_manager import TemplateIntegrationManager, IntegrationRequest, IntegrationResult, IntegrationStatus
 
