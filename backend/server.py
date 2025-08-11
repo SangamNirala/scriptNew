@@ -1974,7 +1974,9 @@ def calculate_duration_requirements(duration: str) -> dict:
             "words_per_shot": (20, 40),
             "total_words": (300, 1200),
             "pacing": "fast",
-            "content_depth": "concise"
+            "content_depth": "concise",
+            "generation_strategy": "single_pass",
+            "segments": 1
         },
         "medium": {
             "target_minutes": (1.0, 3.0),
@@ -1982,7 +1984,9 @@ def calculate_duration_requirements(duration: str) -> dict:
             "words_per_shot": (25, 50),
             "total_words": (750, 4500),
             "pacing": "moderate",
-            "content_depth": "detailed"
+            "content_depth": "detailed",
+            "generation_strategy": "single_pass",
+            "segments": 1
         },
         "long": {
             "target_minutes": (3.0, 5.0),
@@ -1990,7 +1994,9 @@ def calculate_duration_requirements(duration: str) -> dict:
             "words_per_shot": (30, 60),
             "total_words": (2700, 9000),
             "pacing": "measured",
-            "content_depth": "comprehensive"
+            "content_depth": "comprehensive",
+            "generation_strategy": "single_pass",
+            "segments": 1
         },
         "extended_5": {
             "target_minutes": (5.0, 10.0),
@@ -1998,7 +2004,9 @@ def calculate_duration_requirements(duration: str) -> dict:
             "words_per_shot": (35, 65),
             "total_words": (5250, 19500),
             "pacing": "thorough",
-            "content_depth": "in-depth"
+            "content_depth": "in-depth",
+            "generation_strategy": "segmented",
+            "segments": 3
         },
         "extended_10": {
             "target_minutes": (10.0, 15.0),
@@ -2006,7 +2014,9 @@ def calculate_duration_requirements(duration: str) -> dict:
             "words_per_shot": (40, 70),
             "total_words": (12000, 31500),
             "pacing": "comprehensive",
-            "content_depth": "extensive"
+            "content_depth": "extensive",
+            "generation_strategy": "segmented",
+            "segments": 5
         },
         "extended_15": {
             "target_minutes": (15.0, 20.0),
@@ -2014,7 +2024,9 @@ def calculate_duration_requirements(duration: str) -> dict:
             "words_per_shot": (45, 75),
             "total_words": (20250, 45000),
             "pacing": "documentary",
-            "content_depth": "masterclass"
+            "content_depth": "masterclass",
+            "generation_strategy": "segmented",
+            "segments": 6
         },
         "extended_20": {
             "target_minutes": (20.0, 25.0),
@@ -2022,7 +2034,9 @@ def calculate_duration_requirements(duration: str) -> dict:
             "words_per_shot": (50, 80),
             "total_words": (30000, 60000),
             "pacing": "educational",
-            "content_depth": "professional"
+            "content_depth": "professional",
+            "generation_strategy": "segmented",
+            "segments": 7
         },
         "extended_25": {
             "target_minutes": (25.0, 30.0),
@@ -2030,10 +2044,135 @@ def calculate_duration_requirements(duration: str) -> dict:
             "words_per_shot": (55, 85),
             "total_words": (41250, 76500),
             "pacing": "cinematic",
-            "content_depth": "broadcast-quality"
+            "content_depth": "broadcast-quality",
+            "generation_strategy": "segmented",
+            "segments": 8
         }
     }
     return duration_specs.get(duration, duration_specs["short"])
+
+async def generate_script_segment(chat: any, segment_info: dict, request: any, duration_requirements: dict) -> str:
+    """Generate a single segment of the script with specific shot requirements"""
+    
+    shots_per_segment = segment_info["shots_per_segment"]
+    segment_number = segment_info["segment_number"]
+    total_segments = segment_info["total_segments"]
+    start_time_minutes = segment_info["start_time_minutes"]
+    end_time_minutes = segment_info["end_time_minutes"]
+    
+    # Calculate exact timing for shots within this segment
+    start_seconds = int(start_time_minutes * 60)
+    end_seconds = int(end_time_minutes * 60)
+    segment_duration_seconds = end_seconds - start_seconds
+    seconds_per_shot = max(2, segment_duration_seconds // shots_per_segment)
+    
+    # Generate shot timing breakdown for this segment
+    shot_timings = []
+    current_second = start_seconds
+    for shot_num in range(shots_per_segment):
+        shot_start = current_second
+        shot_end = min(current_second + seconds_per_shot, end_seconds)
+        shot_timings.append((shot_start, shot_end))
+        current_second = shot_end
+        
+    # Create detailed segment message
+    segment_message = UserMessage(
+        text=f"""Generate SEGMENT {segment_number} of {total_segments} for the video script based on this brief:
+
+CREATIVE BRIEF: "{request.prompt}"
+
+🎯 SEGMENT {segment_number} SPECIFICATIONS:
+- Time Range: {start_time_minutes:.1f} - {end_time_minutes:.1f} minutes ({start_seconds} - {end_seconds} seconds)
+- MANDATORY SHOTS FOR THIS SEGMENT: EXACTLY {shots_per_segment} SHOTS
+- Shot Timing: Each shot {seconds_per_shot} seconds average
+- Content Focus: {"Opening Hook & Introduction" if segment_number == 1 else "Content Development" if segment_number < total_segments else "Climax & Resolution"}
+- Video Type: {request.video_type}
+- Depth Level: {duration_requirements['content_depth']}
+
+⚠️ CRITICAL REQUIREMENTS FOR THIS SEGMENT:
+1. **YOU MUST CREATE EXACTLY {shots_per_segment} SHOTS** - No more, no less
+2. **EXACT TIMING**: Use these specific timestamps:
+   {chr(10).join([f"   Shot {i+1}: [{shot_timings[i][0]//60}:{shot_timings[i][0]%60:02d}-{shot_timings[i][1]//60}:{shot_timings[i][1]%60:02d}]" for i in range(len(shot_timings))])}
+
+3. **COMPLETE AI IMAGE PROMPTS**: Each shot must be a standalone AI image prompt
+4. **NARRATIVE PROGRESSION**: This segment should flow logically {"as the opening" if segment_number == 1 else "from previous segments" if segment_number > 1 else ""} and {"lead into the next segment" if segment_number < total_segments else "conclude the video"}
+
+🎨 FORMAT FOR EACH SHOT:
+**[{shot_timings[0][0]//60}:{shot_timings[0][0]%60:02d}-{shot_timings[0][1]//60}:{shot_timings[0][1]%60:02d}] AI IMAGE PROMPT:**
+"[Complete detailed AI image prompt with subject, style, composition, lighting, environment, technical specs, colors, mood - ready to copy-paste into MidJourney/DALL-E/Stable Diffusion]"
+
+**[DIALOGUE:]** (Tone: {duration_requirements['pacing']}) "[Spoken content - {duration_requirements['words_per_shot'][0]}-{duration_requirements['words_per_shot'][1]} words]"
+
+GENERATE ALL {shots_per_segment} SHOTS FOR THIS SEGMENT NOW."""
+    )
+    
+    return await chat.send_message(segment_message)
+
+async def generate_segmented_script(chat: any, request: any, duration_requirements: dict, generation_metadata: dict) -> str:
+    """Generate script using segment-based approach for extended durations"""
+    
+    segments = duration_requirements["segments"]
+    total_shots = (duration_requirements["shots_range"][0] + duration_requirements["shots_range"][1]) // 2
+    shots_per_segment = max(1, total_shots // segments)
+    
+    # Calculate time distribution across segments
+    total_minutes = (duration_requirements["target_minutes"][0] + duration_requirements["target_minutes"][1]) / 2
+    minutes_per_segment = total_minutes / segments
+    
+    logger.info(f"🎬 Using segmented generation: {segments} segments, ~{shots_per_segment} shots per segment")
+    
+    # Generate each segment
+    all_segments = []
+    for segment_num in range(1, segments + 1):
+        start_time = (segment_num - 1) * minutes_per_segment
+        end_time = segment_num * minutes_per_segment
+        
+        # Adjust shots for last segment to ensure we hit target
+        current_shots_per_segment = shots_per_segment
+        if segment_num == segments:
+            # Calculate remaining shots needed
+            shots_generated_so_far = (segment_num - 1) * shots_per_segment
+            remaining_shots_needed = total_shots - shots_generated_so_far
+            current_shots_per_segment = max(shots_per_segment, remaining_shots_needed)
+        
+        segment_info = {
+            "segment_number": segment_num,
+            "total_segments": segments,
+            "shots_per_segment": current_shots_per_segment,
+            "start_time_minutes": start_time,
+            "end_time_minutes": end_time
+        }
+        
+        logger.info(f"   Generating segment {segment_num}/{segments}: {start_time:.1f}-{end_time:.1f} min, {current_shots_per_segment} shots")
+        
+        try:
+            segment_content = await generate_script_segment(chat, segment_info, request, duration_requirements)
+            all_segments.append(segment_content)
+            
+            # Brief pause between segments to avoid rate limiting
+            await asyncio.sleep(1)
+            
+        except Exception as e:
+            logger.warning(f"Segment {segment_num} generation failed: {str(e)}")
+            # Generate a fallback segment
+            fallback_content = f"""**SEGMENT {segment_num} - FALLBACK GENERATED**
+            
+{chr(10).join([f'''**[{int(start_time + i * (end_time - start_time) / current_shots_per_segment)}:00-{int(start_time + (i+1) * (end_time - start_time) / current_shots_per_segment)}:00] AI IMAGE PROMPT:**
+"Professional video content, cinematic style, high quality production, {request.video_type} theme, photorealistic, 8K resolution"
+
+**[DIALOGUE:]** (Engaging tone) "Content continues for {request.video_type} video about: {request.prompt}"
+''' for i in range(current_shots_per_segment)])}"""
+            all_segments.append(fallback_content)
+    
+    # Combine all segments
+    final_script = "\n\n".join(all_segments)
+    generation_metadata["segmented_generation"] = {
+        "total_segments": segments,
+        "shots_per_segment": shots_per_segment,
+        "total_target_shots": total_shots
+    }
+    
+    return final_script
 
 def analyze_generation_quality(generated_script: str, duration_requirements: dict) -> dict:
     """Analyze if generated script meets duration requirements"""
