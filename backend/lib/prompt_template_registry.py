@@ -566,7 +566,7 @@ class PromptTemplateRegistry(TemplateRegistry):
             current_template["metadata"]["status"] = TemplateStatus.DEPRECATED.value
             
             # Persist to database if available
-            if self.db:
+            if self.db is not None:
                 await self._persist_template(updated_template_data)
             
             logger.info(f"Template updated successfully: {template_id} v{new_version} for {duration}")
