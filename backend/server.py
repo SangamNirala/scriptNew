@@ -5684,6 +5684,36 @@ async def test_template_integration_workflow():
         logger.error(f"Phase 3.2 integration workflow test failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Integration workflow test failed: {str(e)}")
 
+# Phase 4.2: Enhanced Prompt Template API Endpoints Models
+
+class EnhancedPromptRequest(BaseModel):
+    duration: str = Field(..., description="Duration type (extended_15, extended_20, extended_25)")
+    video_type: Optional[str] = Field("general", description="Video type (educational, marketing, entertainment, general)")
+    enable_customization: Optional[bool] = Field(True, description="Enable template customization")
+    customization_options: Optional[Dict[str, Any]] = Field(None, description="Optional customization parameters")
+
+class EnhancedPromptResponse(BaseModel):
+    template_info: Dict[str, Any] = Field(..., description="Template metadata and information")
+    enhanced_system_prompt: str = Field(..., description="Generated enhanced system prompt")
+    segmentation_compatibility: Dict[str, Any] = Field(..., description="Segmentation compatibility analysis")
+    customizations_applied: List[str] = Field(..., description="List of applied customizations")
+    generation_metadata: Dict[str, Any] = Field(..., description="Generation process metadata")
+
+class TemplateListResponse(BaseModel):
+    available_templates: List[Dict[str, Any]] = Field(..., description="List of available templates")
+    total_templates: int = Field(..., description="Total number of templates")
+    registry_info: Dict[str, Any] = Field(..., description="Registry status information")
+
+class CompatibilityRequest(BaseModel):
+    duration: str = Field(..., description="Duration to validate compatibility for")
+    segmentation_plan: Dict[str, Any] = Field(..., description="Segmentation plan to validate against")
+    
+class CompatibilityResponse(BaseModel):
+    compatible: bool = Field(..., description="Whether template is compatible")
+    compatibility_score: float = Field(..., description="Compatibility score (0.0-1.0)")
+    analysis: Dict[str, Any] = Field(..., description="Detailed compatibility analysis")
+    recommendations: List[str] = Field(..., description="Recommendations for optimization")
+
 # Phase 3.3: Enhanced Workflow Generation Endpoints
 
 class EnhancedWorkflowRequest(BaseModel):
