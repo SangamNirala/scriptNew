@@ -106,7 +106,7 @@ class EnhancedPromptArchitectureTestSuite:
             return
             
         # Validate we have 3 enhanced templates
-        templates = response.get("templates", [])
+        templates = response.get("available_templates", [])
         expected_durations = ["extended_15", "extended_20", "extended_25"]
         found_durations = [t.get("duration") for t in templates]
         
