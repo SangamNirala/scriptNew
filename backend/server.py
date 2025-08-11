@@ -2072,6 +2072,219 @@ def calculate_duration_requirements(duration: str) -> dict:
     }
     return duration_specs.get(duration, duration_specs["short"])
 
+async def generate_script_segment_parallel(api_key: str, segment_info: dict, request: any, duration_requirements: dict, narrative_context: dict = None) -> str:
+    """Generate a single segment of the script with specific shot requirements using dedicated API key"""
+    
+    shots_per_segment = segment_info["shots_per_segment"]
+    segment_number = segment_info["segment_number"]
+    total_segments = segment_info["total_segments"]
+    start_time_minutes = segment_info["start_time_minutes"]
+    end_time_minutes = segment_info["end_time_minutes"]
+    
+    # Calculate exact timing for shots within this segment
+    start_seconds = int(start_time_minutes * 60)
+    end_seconds = int(end_time_minutes * 60)
+    segment_duration_seconds = end_seconds - start_seconds
+    seconds_per_shot = max(2, segment_duration_seconds // shots_per_segment)
+    
+    # Generate shot timing breakdown for this segment
+    shot_timings = []
+    current_second = start_seconds
+    for shot_num in range(shots_per_segment):
+        shot_start = current_second
+        shot_end = min(current_second + seconds_per_shot, end_seconds)
+        shot_timings.append((shot_start, shot_end))
+        current_second = shot_end
+    
+    # Enhanced system message for parallel processing with narrative continuity
+    system_message = f"""You are an elite AI Video Script Generator creating SEGMENT {segment_number} of {total_segments} for a {duration_requirements['content_depth']} level script. This segment MUST maintain narrative continuity with other segments while being independently excellent.
+
+🎬 NARRATIVE CONTINUITY CONTEXT:
+{f"- PREVIOUS CONTEXT: {narrative_context.get('previous_context', 'N/A')}" if narrative_context else ""}
+{f"- STORY ARC POSITION: {narrative_context.get('story_position', 'N/A')}" if narrative_context else ""}
+{f"- TRANSITION FROM: {narrative_context.get('transition_from', 'N/A')}" if narrative_context else ""}
+{f"- TRANSITION TO: {narrative_context.get('transition_to', 'N/A')}" if narrative_context else ""}
+
+🎯 SEGMENT {segment_number} CRITICAL REQUIREMENTS:
+- This is part of a larger {total_segments}-segment narrative
+- MUST create smooth transitions that work with other segments
+- Content focus: {"Opening Hook & Introduction" if segment_number == 1 else "Content Development & Progression" if segment_number < total_segments else "Climax & Resolution"}
+- Maintain consistent tone and style throughout the entire {duration_requirements['target_minutes'][1]}-minute duration
+
+📊 TECHNICAL SPECIFICATIONS:
+- Duration: {start_time_minutes:.1f} - {end_time_minutes:.1f} minutes
+- EXACTLY {shots_per_segment} shots required
+- Each shot ~{seconds_per_shot} seconds
+- {duration_requirements['content_depth']} content depth
+- {duration_requirements['pacing']} pacing style"""
+
+    # Create dedicated chat instance for this segment using the provided API key
+    chat = LlmChat(
+        api_key=api_key,
+        session_id=f"parallel-segment-{segment_number}-{str(uuid.uuid4())[:8]}",
+        system_message=system_message
+    ).with_model("gemini", "gemini-2.0-flash")
+    
+    # Create detailed segment message with narrative continuity
+    segment_message = UserMessage(
+        text=f"""Generate SEGMENT {segment_number} of {total_segments} for the video script based on this brief:
+
+CREATIVE BRIEF: "{request.prompt}"
+
+🎯 SEGMENT {segment_number} SPECIFICATIONS:
+- Time Range: {start_time_minutes:.1f} - {end_time_minutes:.1f} minutes ({start_seconds} - {end_seconds} seconds)
+- MANDATORY SHOTS FOR THIS SEGMENT: EXACTLY {shots_per_segment} SHOTS
+- Shot Timing: Each shot {seconds_per_shot} seconds average
+- Content Focus: {"Opening Hook & Introduction" if segment_number == 1 else "Content Development" if segment_number < total_segments else "Climax & Resolution"}
+- Video Type: {request.video_type}
+- Depth Level: {duration_requirements['content_depth']}
+
+⚠️ CRITICAL REQUIREMENTS FOR THIS SEGMENT:
+1. **YOU MUST CREATE EXACTLY {shots_per_segment} SHOTS** - No more, no less
+2. **EXACT TIMING**: Use these specific timestamps:
+   {chr(10).join([f"   Shot {i+1}: [{shot_timings[i][0]//60}:{shot_timings[i][0]%60:02d}-{shot_timings[i][1]//60}:{shot_timings[i][1]%60:02d}]" for i in range(len(shot_timings))])}
+
+3. **COMPLETE AI IMAGE PROMPTS**: Each shot must be a standalone AI image prompt
+4. **NARRATIVE PROGRESSION**: This segment should flow logically {"as the opening" if segment_number == 1 else "from previous segments" if segment_number > 1 else ""} and {"lead into the next segment" if segment_number < total_segments else "conclude the video"}
+
+🎨 FORMAT FOR EACH SHOT:
+**[{shot_timings[0][0]//60}:{shot_timings[0][0]%60:02d}-{shot_timings[0][1]//60}:{shot_timings[0][1]%60:02d}] AI IMAGE PROMPT:**
+"[Complete detailed AI image prompt with subject, style, composition, lighting, environment, technical specs, colors, mood - ready to copy-paste into MidJourney/DALL-E/Stable Diffusion]"
+
+**[DIALOGUE:]** (Tone: {duration_requirements['pacing']}) "[Spoken content - {duration_requirements['words_per_shot'][0]}-{duration_requirements['words_per_shot'][1]} words]"
+
+GENERATE ALL {shots_per_segment} SHOTS FOR THIS SEGMENT NOW."""
+    )
+    
+    try:
+        logger.info(f"   🚀 Generating segment {segment_number}/{total_segments} using parallel API key #{api_key[-4:]}...")
+        segment_content = await chat.send_message(segment_message)
+        logger.info(f"   ✅ Segment {segment_number}/{total_segments} completed successfully")
+        return segment_content
+    except Exception as e:
+        logger.error(f"   ❌ Segment {segment_number}/{total_segments} failed: {str(e)}")
+        raise e
+
+async def generate_segmented_script_parallel(request: any, duration_requirements: dict, generation_metadata: dict) -> str:
+    """Generate script using parallel segment-based approach for extended durations with multiple API keys"""
+    
+    segments = duration_requirements["segments"]
+    total_shots = (duration_requirements["shots_range"][0] + duration_requirements["shots_range"][1]) // 2
+    shots_per_segment = max(1, total_shots // segments)
+    
+    # Calculate time distribution across segments
+    total_minutes = (duration_requirements["target_minutes"][0] + duration_requirements["target_minutes"][1]) / 2
+    minutes_per_segment = total_minutes / segments
+    
+    logger.info(f"🚀 PARALLEL PROCESSING: {segments} segments, ~{shots_per_segment} shots per segment using {len(GEMINI_API_KEYS_PARALLEL)} API keys")
+    
+    # Create narrative context for continuity across segments
+    narrative_contexts = {}
+    for segment_num in range(1, segments + 1):
+        narrative_contexts[segment_num] = {
+            "story_position": "Opening" if segment_num == 1 else "Development" if segment_num < segments else "Conclusion",
+            "previous_context": f"Building from segment {segment_num-1} content" if segment_num > 1 else "Fresh start",
+            "transition_to": f"Leading into segment {segment_num+1}" if segment_num < segments else "Final conclusion",
+            "transition_from": f"Continuing from segment {segment_num-1}" if segment_num > 1 else "Opening hook"
+        }
+    
+    # Prepare segment tasks for parallel execution
+    segment_tasks = []
+    for segment_num in range(1, segments + 1):
+        start_time = (segment_num - 1) * minutes_per_segment
+        end_time = segment_num * minutes_per_segment
+        
+        # Adjust shots for last segment to ensure we hit target
+        current_shots_per_segment = shots_per_segment
+        if segment_num == segments:
+            # Calculate remaining shots needed
+            shots_generated_so_far = (segment_num - 1) * shots_per_segment
+            remaining_shots_needed = total_shots - shots_generated_so_far
+            current_shots_per_segment = max(shots_per_segment, remaining_shots_needed)
+        
+        segment_info = {
+            "segment_number": segment_num,
+            "total_segments": segments,
+            "shots_per_segment": current_shots_per_segment,
+            "start_time_minutes": start_time,
+            "end_time_minutes": end_time
+        }
+        
+        # Use different API keys for each segment (cycle through available keys)
+        api_key_index = (segment_num - 1) % len(GEMINI_API_KEYS_PARALLEL)
+        selected_api_key = GEMINI_API_KEYS_PARALLEL[api_key_index]
+        
+        logger.info(f"   Preparing segment {segment_num}/{segments}: {start_time:.1f}-{end_time:.1f} min, {current_shots_per_segment} shots, API Key #{selected_api_key[-4:]}...")
+        
+        # Create task for this segment
+        task = generate_script_segment_parallel(
+            api_key=selected_api_key,
+            segment_info=segment_info,
+            request=request,
+            duration_requirements=duration_requirements,
+            narrative_context=narrative_contexts[segment_num]
+        )
+        segment_tasks.append(task)
+    
+    # Execute all segments in parallel
+    logger.info(f"🎬 STARTING PARALLEL EXECUTION: {segments} segments running simultaneously...")
+    start_time = asyncio.get_event_loop().time()
+    
+    try:
+        # Run all segment generations concurrently
+        segment_results = await asyncio.gather(*segment_tasks, return_exceptions=True)
+        
+        end_time = asyncio.get_event_loop().time()
+        total_time = end_time - start_time
+        logger.info(f"🎉 PARALLEL EXECUTION COMPLETED in {total_time:.1f} seconds (vs ~{segments * 30:.0f}s sequential)")
+        
+        # Process results and handle any exceptions
+        all_segments = []
+        successful_segments = 0
+        
+        for i, result in enumerate(segment_results):
+            segment_num = i + 1
+            if isinstance(result, Exception):
+                logger.warning(f"❌ Segment {segment_num} failed with exception: {str(result)}")
+                # Generate fallback content
+                fallback_content = f"""**SEGMENT {segment_num} - PARALLEL GENERATION FALLBACK**
+
+**[{int(minutes_per_segment * (segment_num-1) * 60)}:00-{int(minutes_per_segment * segment_num * 60)}:00] AI IMAGE PROMPT:**
+"Professional video content, cinematic style, high quality production, {request.video_type} theme, photorealistic, 8K resolution, engaging composition"
+
+**[DIALOGUE:]** (Engaging tone) "Content continues seamlessly for {request.video_type} video about: {request.prompt}"
+"""
+                all_segments.append(fallback_content)
+            else:
+                successful_segments += 1
+                all_segments.append(result)
+                logger.info(f"✅ Segment {segment_num} processed successfully")
+        
+        logger.info(f"📊 PARALLEL GENERATION SUMMARY: {successful_segments}/{segments} segments successful, {total_time:.1f}s total time")
+        
+        # Combine all segments
+        final_script = "\n\n".join(all_segments)
+        
+        # Update generation metadata
+        generation_metadata.update({
+            "parallel_generation": {
+                "total_segments": segments,
+                "shots_per_segment": shots_per_segment,
+                "total_target_shots": total_shots,
+                "api_keys_used": len(GEMINI_API_KEYS_PARALLEL),
+                "successful_segments": successful_segments,
+                "execution_time_seconds": round(total_time, 1),
+                "time_saved_seconds": round((segments * 30) - total_time, 1),
+                "parallel_efficiency": round(total_time / (segments * 30) * 100, 1)
+            }
+        })
+        
+        return final_script
+        
+    except Exception as e:
+        logger.error(f"❌ PARALLEL EXECUTION FAILED: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Parallel segment generation failed: {str(e)}")
+        
 async def generate_script_segment(chat: any, segment_info: dict, request: any, duration_requirements: dict) -> str:
     """Generate a single segment of the script with specific shot requirements"""
     
