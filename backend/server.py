@@ -5991,6 +5991,567 @@ async def test_enhanced_workflow_system():
         logger.error(f"Phase 3.3 enhanced workflow test failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Enhanced workflow test failed: {str(e)}")
 
+# Phase 4.2: Enhanced Prompt Template API Endpoints Implementation
+
+@api_router.get("/enhanced-prompt-templates", response_model=TemplateListResponse)
+async def list_enhanced_prompt_templates():
+    """
+    List all available enhanced templates with metadata.
+    Returns comprehensive information about all templates in the registry.
+    """
+    try:
+        logger.info("📋 Listing all enhanced prompt templates...")
+        
+        # Get available templates from registry
+        available_durations = await prompt_template_registry.list_available_templates()
+        
+        # Get detailed information for each template
+        template_details = []
+        for duration in available_durations:
+            try:
+                if duration in ["extended_15", "extended_20", "extended_25"]:  # Only enhanced durations
+                    template_data = await prompt_template_registry.get_template(duration)
+                    if template_data:
+                        # Extract template metadata
+                        metadata = template_data.get("metadata", {})
+                        template_info = {
+                            "template_id": template_data.get("template_id"),
+                            "duration": duration,
+                            "template_name": metadata.get("template_name"),
+                            "description": metadata.get("description"),
+                            "complexity_level": metadata.get("complexity_level"),
+                            "focus_strategy": metadata.get("focus_strategy"),
+                            "word_count": metadata.get("word_count"),
+                            "usage_count": metadata.get("usage_count", 0),
+                            "effectiveness_score": metadata.get("effectiveness_score", 0.0),
+                            "segment_count_range": metadata.get("segment_count_range"),
+                            "expertise_areas": metadata.get("expertise_areas", []),
+                            "status": metadata.get("status"),
+                            "version": template_data.get("version"),
+                            "last_used": metadata.get("last_used")
+                        }
+                        template_details.append(template_info)
+            except Exception as e:
+                logger.warning(f"Could not get details for template {duration}: {str(e)}")
+                continue
+        
+        # Get registry statistics
+        registry_stats = await prompt_template_registry.get_registry_statistics()
+        
+        response = TemplateListResponse(
+            available_templates=template_details,
+            total_templates=len(template_details),
+            registry_info={
+                "registry_id": registry_stats.get("registry_info", {}).get("registry_id"),
+                "total_templates_in_registry": registry_stats.get("template_statistics", {}).get("total_templates", 0),
+                "active_templates": registry_stats.get("health_metrics", {}).get("active_templates", 0),
+                "total_usage": registry_stats.get("usage_statistics", {}).get("total_retrievals", 0),
+                "average_effectiveness": registry_stats.get("usage_statistics", {}).get("average_effectiveness", 0.0),
+                "registry_uptime_hours": registry_stats.get("registry_info", {}).get("uptime_hours", 0),
+                "last_updated": datetime.utcnow().isoformat()
+            }
+        )
+        
+        logger.info(f"✅ Listed {len(template_details)} enhanced templates")
+        return response
+        
+    except Exception as e:
+        logger.error(f"Failed to list enhanced prompt templates: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to list templates: {str(e)}")
+
+@api_router.post("/enhanced-prompt-templates", response_model=EnhancedPromptResponse)
+async def test_enhanced_prompt_generation(request: EnhancedPromptRequest):
+    """
+    Test template generation for any duration with customization options.
+    Generates enhanced system prompt with specified parameters for testing purposes.
+    """
+    try:
+        logger.info(f"🧪 Testing enhanced prompt generation for {request.duration} ({request.video_type})")
+        
+        # Validate duration compatibility
+        if not enhanced_prompt_architecture.validate_duration_compatibility(request.duration):
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Duration '{request.duration}' not supported for enhanced templates"
+            )
+        
+        # Select optimal template
+        template_selection = await enhanced_prompt_architecture.select_duration_template(
+            duration=request.duration,
+            video_type=request.video_type,
+            enable_customization=request.enable_customization,
+            customization_options=request.customization_options or {}
+        )
+        
+        # Generate enhanced system prompt
+        enhanced_prompt = await enhanced_prompt_architecture.generate_enhanced_system_prompt(
+            template_config=template_selection
+        )
+        
+        # Analyze segmentation compatibility
+        segmentation_compatibility = await enhanced_prompt_architecture.integrate_with_segmentation({
+            "duration": request.duration,
+            "video_type": request.video_type,
+            "template_id": template_selection.get("template_id")
+        })
+        
+        # Extract applied customizations
+        customizations_applied = []
+        if template_selection.get("customization_config"):
+            config = template_selection["customization_config"]
+            if config.get("video_type_adaptations"):
+                customizations_applied.append(f"Video type adaptation: {request.video_type}")
+            if config.get("focus_area_enhancements"):
+                customizations_applied.append("Focus area enhancements applied")
+            if config.get("dynamic_adjustments"):
+                customizations_applied.append("Dynamic adjustments applied")
+            if request.enable_customization:
+                customizations_applied.append("Template customization enabled")
+        
+        # Generate metadata
+        generation_metadata = {
+            "test_generation": True,
+            "generation_timestamp": datetime.utcnow().isoformat(),
+            "template_selected": template_selection.get("template_id"),
+            "template_name": template_selection.get("template_name"),
+            "suitability_score": template_selection.get("suitability_score"),
+            "selection_reasoning": template_selection.get("selection_reasoning"),
+            "prompt_length_chars": len(enhanced_prompt),
+            "customization_enabled": request.enable_customization,
+            "video_type": request.video_type,
+            "duration_target": request.duration
+        }
+        
+        response = EnhancedPromptResponse(
+            template_info={
+                "template_id": template_selection.get("template_id"),
+                "template_name": template_selection.get("template_name"),
+                "duration": request.duration,
+                "video_type": request.video_type,
+                "suitability_score": template_selection.get("suitability_score"),
+                "selection_reasoning": template_selection.get("selection_reasoning"),
+                "template_metadata": template_selection.get("template_data", {}).get("metadata", {})
+            },
+            enhanced_system_prompt=enhanced_prompt,
+            segmentation_compatibility=segmentation_compatibility,
+            customizations_applied=customizations_applied,
+            generation_metadata=generation_metadata
+        )
+        
+        logger.info(f"✅ Enhanced prompt generated successfully ({len(enhanced_prompt)} chars)")
+        return response
+        
+    except Exception as e:
+        logger.error(f"Failed to test enhanced prompt generation: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Template generation test failed: {str(e)}")
+
+@api_router.get("/enhanced-prompt-templates/{duration}", response_model=Dict[str, Any])
+async def get_enhanced_prompt_template_details(duration: str):
+    """
+    Retrieve specific duration template details and metadata.
+    Returns comprehensive information about a specific template.
+    """
+    try:
+        logger.info(f"🔍 Getting template details for duration: {duration}")
+        
+        # Validate duration
+        if not enhanced_prompt_architecture.validate_duration_compatibility(duration):
+            raise HTTPException(
+                status_code=400,
+                detail=f"Duration '{duration}' not supported for enhanced templates"
+            )
+        
+        # Get template data
+        template_data = await prompt_template_registry.get_template(duration)
+        if not template_data:
+            raise HTTPException(
+                status_code=404,
+                detail=f"No template found for duration '{duration}'"
+            )
+        
+        # Get comprehensive metadata
+        template_metadata = await prompt_template_registry.get_template_metadata(duration)
+        
+        # Get template effectiveness data
+        template_id = template_data.get("template_id")
+        
+        # Compile response
+        response = {
+            "template_details": {
+                "template_id": template_id,
+                "duration": duration,
+                "template_name": template_data.get("metadata", {}).get("template_name"),
+                "description": template_data.get("metadata", {}).get("description"),
+                "version": template_data.get("version"),
+                "created_at": template_data.get("metadata", {}).get("created_at"),
+                "updated_at": template_data.get("metadata", {}).get("updated_at"),
+                "status": template_data.get("metadata", {}).get("status")
+            },
+            "template_specifications": {
+                "complexity_level": template_data.get("metadata", {}).get("complexity_level"),
+                "focus_strategy": template_data.get("metadata", {}).get("focus_strategy"),
+                "segment_count_range": template_data.get("metadata", {}).get("segment_count_range"),
+                "expertise_areas": template_data.get("metadata", {}).get("expertise_areas", []),
+                "word_count": template_data.get("metadata", {}).get("word_count"),
+                "template_hash": template_data.get("metadata", {}).get("template_hash")
+            },
+            "usage_statistics": template_metadata.get("usage_statistics", {}),
+            "effectiveness_data": template_metadata.get("effectiveness_data", {}),
+            "version_history": template_metadata.get("version_info", {}),
+            "customization_options": template_data.get("content", {}).get("customization_options", {}),
+            "supported_video_types": ["educational", "marketing", "entertainment", "general"],
+            "integration_compatibility": {
+                "segmentation_system": True,
+                "narrative_continuity": True,
+                "content_depth_scaling": True,
+                "quality_consistency": True
+            },
+            "retrieved_at": datetime.utcnow().isoformat(),
+            "registry_id": template_metadata.get("registry_info", {}).get("registry_id")
+        }
+        
+        logger.info(f"✅ Retrieved template details for {duration}")
+        return response
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get template details: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve template details: {str(e)}")
+
+@api_router.post("/enhanced-prompt-templates/{duration}", response_model=EnhancedPromptResponse)
+async def generate_enhanced_prompt_for_duration(duration: str, request: EnhancedPromptRequest):
+    """
+    Generate enhanced system prompt for specific duration with video type customization.
+    Creates production-ready enhanced system prompt with full customization.
+    """
+    try:
+        logger.info(f"🎨 Generating enhanced prompt for {duration} with {request.video_type} customization")
+        
+        # Override duration from URL parameter
+        request.duration = duration
+        
+        # Validate duration compatibility
+        if not enhanced_prompt_architecture.validate_duration_compatibility(duration):
+            raise HTTPException(
+                status_code=400,
+                detail=f"Duration '{duration}' not supported for enhanced templates"
+            )
+        
+        # Select and customize template
+        template_selection = await enhanced_prompt_architecture.select_duration_template(
+            duration=duration,
+            video_type=request.video_type,
+            enable_customization=request.enable_customization,
+            customization_options=request.customization_options or {}
+        )
+        
+        # Generate enhanced system prompt with full integration
+        integration_context = {
+            "duration": duration,
+            "video_type": request.video_type,
+            "segmentation_plan": {
+                "total_segments": template_selection.get("segment_compatibility", {}).get("expected_range", [1, 3])[1],
+                "segment_duration_minutes": 5,  # Default segment duration
+            },
+            "narrative_continuity_required": True,
+            "content_depth_scaling": True,
+            "quality_consistency": True
+        }
+        
+        enhanced_prompt = await enhanced_prompt_architecture.generate_enhanced_system_prompt(
+            template_config=template_selection,
+            integration_context=integration_context
+        )
+        
+        # Comprehensive segmentation analysis
+        segmentation_compatibility = await enhanced_prompt_architecture.integrate_with_segmentation({
+            "duration": duration,
+            "video_type": request.video_type,
+            "template_id": template_selection.get("template_id"),
+            "integration_context": integration_context
+        })
+        
+        # Extract detailed customizations
+        customizations_applied = []
+        customization_config = template_selection.get("customization_config", {})
+        
+        # Video type adaptations
+        video_adaptations = customization_config.get("video_type_adaptations", {})
+        for key, value in video_adaptations.items():
+            if value:
+                customizations_applied.append(f"Video adaptation: {key.replace('_', ' ').title()}")
+        
+        # Focus area enhancements
+        focus_enhancements = customization_config.get("focus_area_enhancements", {})
+        for key, value in focus_enhancements.items():
+            if value:
+                customizations_applied.append(f"Focus enhancement: {key.replace('_', ' ').title()}")
+        
+        # Dynamic adjustments
+        dynamic_adjustments = customization_config.get("dynamic_adjustments", {})
+        if dynamic_adjustments.get("tone_adjustment"):
+            customizations_applied.append(f"Tone adjustment: {dynamic_adjustments['tone_adjustment']}")
+        if dynamic_adjustments.get("complexity_scaling", {}).get("adaptive_scaling"):
+            customizations_applied.append("Adaptive complexity scaling enabled")
+        
+        # Integration customizations
+        integration_reqs = customization_config.get("integration_requirements", {})
+        for key, value in integration_reqs.items():
+            if value:
+                customizations_applied.append(f"Integration: {key.replace('_', ' ').title()}")
+        
+        # Custom options
+        if request.customization_options:
+            for key, value in request.customization_options.items():
+                customizations_applied.append(f"Custom option: {key} = {value}")
+        
+        # Generation metadata
+        generation_metadata = {
+            "production_generation": True,
+            "generation_timestamp": datetime.utcnow().isoformat(),
+            "template_id": template_selection.get("template_id"),
+            "template_name": template_selection.get("template_name"),
+            "suitability_score": template_selection.get("suitability_score"),
+            "selection_reasoning": template_selection.get("selection_reasoning"),
+            "prompt_length_chars": len(enhanced_prompt),
+            "customization_enabled": request.enable_customization,
+            "total_customizations": len(customizations_applied),
+            "video_type": request.video_type,
+            "duration_target": duration,
+            "integration_context_applied": bool(integration_context),
+            "segmentation_compatible": segmentation_compatibility.get("compatible", False)
+        }
+        
+        response = EnhancedPromptResponse(
+            template_info={
+                "template_id": template_selection.get("template_id"),
+                "template_name": template_selection.get("template_name"),
+                "duration": duration,
+                "video_type": request.video_type,
+                "suitability_score": template_selection.get("suitability_score"),
+                "selection_reasoning": template_selection.get("selection_reasoning"),
+                "customization_config": customization_config,
+                "template_metadata": template_selection.get("template_data", {}).get("metadata", {})
+            },
+            enhanced_system_prompt=enhanced_prompt,
+            segmentation_compatibility=segmentation_compatibility,
+            customizations_applied=customizations_applied,
+            generation_metadata=generation_metadata
+        )
+        
+        logger.info(f"✅ Enhanced prompt generated for {duration} ({len(enhanced_prompt)} chars, {len(customizations_applied)} customizations)")
+        return response
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to generate enhanced prompt for {duration}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Enhanced prompt generation failed: {str(e)}")
+
+@api_router.post("/validate-template-compatibility", response_model=CompatibilityResponse)
+async def validate_template_compatibility(request: CompatibilityRequest):
+    """
+    Validate template compatibility with segmentation system and return compatibility analysis.
+    Provides detailed analysis of how well a template works with given segmentation requirements.
+    """
+    try:
+        logger.info(f"🔍 Validating template compatibility for {request.duration}")
+        
+        # Validate duration
+        if not enhanced_prompt_architecture.validate_duration_compatibility(request.duration):
+            raise HTTPException(
+                status_code=400,
+                detail=f"Duration '{request.duration}' not supported for enhanced templates"
+            )
+        
+        # Get template for analysis
+        template_data = await prompt_template_registry.get_template(request.duration)
+        if not template_data:
+            raise HTTPException(
+                status_code=404,
+                detail=f"No template found for duration '{request.duration}'"
+            )
+        
+        # Extract segmentation plan details
+        segmentation_plan = request.segmentation_plan
+        required_segments = segmentation_plan.get("total_segments", 1)
+        segment_duration = segmentation_plan.get("segment_duration_minutes", 5)
+        total_duration_minutes = segmentation_plan.get("total_duration_minutes", required_segments * segment_duration)
+        
+        # Get template specifications
+        metadata = template_data.get("metadata", {})
+        template_segment_range = metadata.get("segment_count_range", (1, 3))
+        template_min_segments = template_segment_range[0]
+        template_max_segments = template_segment_range[1]
+        
+        # Duration compatibility mapping
+        duration_targets = {
+            "extended_15": (15.0, 20.0),  # 15-20 minutes
+            "extended_20": (20.0, 25.0),  # 20-25 minutes
+            "extended_25": (25.0, 30.0)   # 25-30 minutes
+        }
+        
+        duration_range = duration_targets.get(request.duration, (15.0, 30.0))
+        duration_min, duration_max = duration_range
+        
+        # Compatibility analysis
+        analysis_results = {}
+        compatibility_issues = []
+        recommendations = []
+        
+        # 1. Segment count compatibility
+        segments_compatible = template_min_segments <= required_segments <= template_max_segments
+        analysis_results["segment_count_compatibility"] = {
+            "compatible": segments_compatible,
+            "template_range": template_segment_range,
+            "required_segments": required_segments,
+            "within_range": segments_compatible
+        }
+        
+        if not segments_compatible:
+            if required_segments < template_min_segments:
+                compatibility_issues.append(f"Required segments ({required_segments}) below template minimum ({template_min_segments})")
+                recommendations.append(f"Consider increasing segment count to at least {template_min_segments}")
+            else:
+                compatibility_issues.append(f"Required segments ({required_segments}) above template maximum ({template_max_segments})")
+                recommendations.append(f"Consider reducing segment count to maximum {template_max_segments}")
+        
+        # 2. Duration compatibility
+        duration_compatible = duration_min <= total_duration_minutes <= duration_max
+        analysis_results["duration_compatibility"] = {
+            "compatible": duration_compatible,
+            "template_range_minutes": duration_range,
+            "planned_duration_minutes": total_duration_minutes,
+            "within_range": duration_compatible
+        }
+        
+        if not duration_compatible:
+            if total_duration_minutes < duration_min:
+                compatibility_issues.append(f"Planned duration ({total_duration_minutes} min) below template target ({duration_min}-{duration_max} min)")
+                recommendations.append(f"Consider extending content to reach minimum {duration_min} minutes")
+            else:
+                compatibility_issues.append(f"Planned duration ({total_duration_minutes} min) above template target ({duration_min}-{duration_max} min)")
+                recommendations.append(f"Consider condensing content to stay within {duration_max} minutes")
+        
+        # 3. Segment duration analysis
+        avg_segment_duration = total_duration_minutes / max(required_segments, 1)
+        optimal_segment_duration = (duration_min + duration_max) / 2 / ((template_min_segments + template_max_segments) / 2)
+        
+        segment_duration_compatible = abs(avg_segment_duration - optimal_segment_duration) <= 2.0  # 2-minute tolerance
+        analysis_results["segment_duration_compatibility"] = {
+            "compatible": segment_duration_compatible,
+            "average_segment_duration": avg_segment_duration,
+            "optimal_segment_duration": optimal_segment_duration,
+            "duration_difference": abs(avg_segment_duration - optimal_segment_duration)
+        }
+        
+        if not segment_duration_compatible:
+            if avg_segment_duration < optimal_segment_duration - 2:
+                compatibility_issues.append("Segments may be too short for template complexity")
+                recommendations.append("Consider adding more content per segment or reducing segment count")
+            else:
+                compatibility_issues.append("Segments may be too long for optimal engagement")
+                recommendations.append("Consider breaking content into more segments or reducing content per segment")
+        
+        # 4. Content complexity alignment
+        template_complexity = metadata.get("complexity_level", "moderate").lower()
+        planned_complexity = segmentation_plan.get("complexity_level", "moderate").lower()
+        
+        complexity_levels = {"basic": 1, "moderate": 2, "advanced": 3, "expert": 4, "elite": 5}
+        template_complexity_score = complexity_levels.get(template_complexity, 2)
+        planned_complexity_score = complexity_levels.get(planned_complexity, 2)
+        
+        complexity_compatible = abs(template_complexity_score - planned_complexity_score) <= 1
+        analysis_results["complexity_alignment"] = {
+            "compatible": complexity_compatible,
+            "template_complexity": template_complexity,
+            "planned_complexity": planned_complexity,
+            "alignment_score": 1.0 - (abs(template_complexity_score - planned_complexity_score) / 4)
+        }
+        
+        if not complexity_compatible:
+            if planned_complexity_score < template_complexity_score:
+                compatibility_issues.append("Planned content complexity below template level")
+                recommendations.append(f"Consider increasing content complexity to match template ({template_complexity})")
+            else:
+                compatibility_issues.append("Planned content complexity above template level")  
+                recommendations.append(f"Consider simplifying content to match template ({template_complexity})")
+        
+        # 5. Focus strategy alignment
+        template_focus = metadata.get("focus_strategy", "balanced").lower()
+        planned_focus = segmentation_plan.get("focus_strategy", "balanced").lower()
+        
+        focus_compatible = template_focus == planned_focus or "balanced" in [template_focus, planned_focus]
+        analysis_results["focus_strategy_alignment"] = {
+            "compatible": focus_compatible,
+            "template_focus": template_focus,
+            "planned_focus": planned_focus,
+            "alignment": "exact" if template_focus == planned_focus else "compatible" if focus_compatible else "misaligned"
+        }
+        
+        if not focus_compatible:
+            compatibility_issues.append(f"Focus strategy mismatch: template ({template_focus}) vs planned ({planned_focus})")
+            recommendations.append(f"Consider adjusting segmentation strategy to align with template focus ({template_focus})")
+        
+        # Calculate overall compatibility score
+        compatibility_scores = [
+            1.0 if segments_compatible else 0.0,
+            1.0 if duration_compatible else 0.5,  # Partial credit for duration
+            1.0 if segment_duration_compatible else 0.7,  # Partial credit for segment duration
+            analysis_results["complexity_alignment"]["alignment_score"],
+            1.0 if focus_compatible else 0.6  # Partial credit for focus
+        ]
+        
+        overall_compatibility_score = sum(compatibility_scores) / len(compatibility_scores)
+        overall_compatible = overall_compatibility_score >= 0.7  # 70% threshold
+        
+        # Generate additional recommendations
+        if overall_compatible:
+            recommendations.insert(0, "Template is well-suited for the planned segmentation")
+            if overall_compatibility_score >= 0.9:
+                recommendations.append("Excellent compatibility - proceed with confidence")
+        else:
+            recommendations.insert(0, "Template compatibility issues detected - review recommendations")
+            recommendations.append("Consider selecting a different template or adjusting segmentation plan")
+        
+        response = CompatibilityResponse(
+            compatible=overall_compatible,
+            compatibility_score=round(overall_compatibility_score, 3),
+            analysis={
+                "overall_assessment": "compatible" if overall_compatible else "incompatible",
+                "compatibility_score": overall_compatibility_score,
+                "detailed_analysis": analysis_results,
+                "compatibility_issues": compatibility_issues,
+                "template_info": {
+                    "template_id": template_data.get("template_id"),
+                    "template_name": metadata.get("template_name"),
+                    "duration": request.duration,
+                    "complexity_level": template_complexity,
+                    "focus_strategy": template_focus,
+                    "segment_range": template_segment_range
+                },
+                "segmentation_plan_summary": {
+                    "total_segments": required_segments,
+                    "segment_duration_minutes": segment_duration,
+                    "total_duration_minutes": total_duration_minutes,
+                    "complexity_level": planned_complexity,
+                    "focus_strategy": planned_focus
+                },
+                "validation_timestamp": datetime.utcnow().isoformat()
+            },
+            recommendations=recommendations
+        )
+        
+        logger.info(f"✅ Template compatibility validated: {overall_compatibility_score:.1%} compatible")
+        return response
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to validate template compatibility: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Compatibility validation failed: {str(e)}")
+
 # Include the router in the main app
 app.include_router(api_router)
 
