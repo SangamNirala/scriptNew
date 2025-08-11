@@ -96,7 +96,11 @@ advanced_generation_workflow = AdvancedGenerationWorkflow(GEMINI_API_KEY)
 
 # Phase 1.1-2.2: Initialize Enhanced Prompt Template System
 prompt_template_registry = PromptTemplateRegistry(db)
-enhanced_prompt_architecture = EnhancedPromptArchitecture(prompt_template_registry, GEMINI_API_KEY, db)
+enhanced_prompt_architecture = EnhancedPromptArchitecture(
+    template_registry=prompt_template_registry, 
+    config=None,  # Use default config
+    db_connection=db
+)
 duration_specific_prompt_generator = DurationSpecificPromptGenerator()
 
 # Phase 3.2: Initialize Template Integration Manager
