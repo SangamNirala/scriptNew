@@ -153,7 +153,7 @@ class TemplateRegistry:
     
     async def _ensure_collection(self):
         """Ensure MongoDB collection exists if using database storage"""
-        if self.db:
+        if self.db is not None:
             try:
                 # Create indexes for efficient querying
                 await self.db.prompt_templates.create_index("duration")
