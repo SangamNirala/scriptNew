@@ -459,7 +459,7 @@ class PromptTemplateRegistry(TemplateRegistry):
             available_durations = list(self.templates.keys())
             
             # Also check database for additional templates
-            if self.db:
+            if self.db is not None:
                 try:
                     db_durations = await self.db.prompt_templates.distinct("duration")
                     available_durations.extend([d for d in db_durations if d not in available_durations])
